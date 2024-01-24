@@ -1,93 +1,104 @@
 # db-ally
 
+Repository is created with deepsense.ai project template boilerplate. Adapt to your needs.
+Documentation is available at [https://deepsense-ai.github.io/ds-template/](https://deepsense-ai.github.io/ds-template/).
 
 
-## Getting started
+# Setup developer environment
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+To start, you need to setup your local machine.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## Setup venv
 
-## Add your files
+You need to setup virtual environment, simplest way is to run from project root directory:
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+```bash
+$ . ./setup_dev_env.sh
+$ source venv/bin/activate
+```
+This will create a new venv and run `pip install -r requirements-dev.txt`.
+Last line shows how to activate the environment.
+
+## Install pre-commit
+
+To ensure code quality we use pre-commit hook with several checks. Setup it by:
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/deepsense.ai/g-internal/db-ally.git
-git branch -M main
-git push -uf origin main
+pre-commit install
 ```
 
-## Integrate with your tools
+All updated files will be reformatted and linted before the commit.
 
-- [ ] [Set up project integrations](https://gitlab.com/deepsense.ai/g-internal/db-ally/-/settings/integrations)
+To reformat and lint all files in the project, use:
 
-## Collaborate with your team
+`pre-commit run --all-files`
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+The used linters are configured in `.pre-commit-config.yaml`. You can use `pre-commit autoupdate` to bump tools to the latest versions.
 
-## Test and Deploy
+## Autoreload within notebooks
 
-Use the built-in continuous integration in GitLab.
+When you install project's package add below code (before imports) in your notebook:
+```
+# Load the "autoreload" extension
+%load_ext autoreload
+# Change mode to always reload modules: you change code in src, it gets loaded
+%autoreload 2
+```
+Read more about different modes in [documentation](https://ipython.org/ipython-doc/3/config/extensions/autoreload.html).
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+All code should be in `src/` to make reusability and review straightforward, keep notebooks simple for exploratory data analysis.
+See also [Cookiecutter Data Science opinion](https://drivendata.github.io/cookiecutter-data-science/#notebooks-are-for-exploration-and-communication).
 
-***
+# Project documentation
 
-# Editing this README
+In `docs/` directory are Sphinx RST/Markdown files.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+To build documentation locally, in your configured environment, you can use `build_docs.sh` script:
 
-## Suggestions for a good README
+```bash
+$ ./build_docs.sh
+```
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+Then open `public/index.html` file.
 
-## Name
-Choose a self-explaining name for your project.
+Please read the official [Sphinx documentation](https://www.sphinx-doc.org/en/master/) for more details.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+### GitLab Pages Documentation
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+By default **Gitlab** pipelines have `pages` step which will build sphinx documentation automatically on main branch - and it will push it to **GitLab Pages** to be statically hosted.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+To access it, you need to have a link, which can be found on **GitLab -> Settings -> Pages** page.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+Only people with repository access can view it.
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+Please read more about it [here](https://docs.gitlab.com/ee/user/project/pages/index.html).# Semantic version bump
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+To bump version of the library please use `bump2version` which will update all version strings.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+NOTE: Configuration is in `.bumpversion.cfg` and **this is a main file defining version which should be updated only with bump2version**.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+For convenience there is bash script which will create commit, to use it call:
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+```bash
+# to create a new commit by increasing one semvar:
+$ ./bump_version.sh minor
+$ ./bump_version.sh major
+$ ./bump_version.sh patch
+# to see what is going to change run:
+$ ./bump_version.sh --dry-run major
+```
+Script updates **VERSION** file and setup.cfg automatically uses that version.
 
-## License
-For open source projects, say how it is licensed.
+You can configure it to update version string in other files as well - please check out the bump2version configuration file.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+
+
+On GitLab CI, you can build development, test package and upload it manually as minor.major.patch-dev{BUILD_NUMBER} to PIP registry.
+
+Every MR keeps package for 7 days each (check `package` artifact).
+
+On the main branch you can trigger _release_ which uploads minor.major.patch version to PIP registry.
+
+
