@@ -3,7 +3,7 @@ default:
     - all-ds
 
 variables:
-  PYTHON_DOCKER_IMAGE: python:3.9-buster
+  PYTHON_DOCKER_IMAGE: python:3.8-buster
   DOCKER_REGISTRY: $CI_REGISTRY/$CI_PROJECT_PATH
   PRECOMMIT_IMAGE: $DOCKER_REGISTRY/precommit
 
