@@ -51,6 +51,7 @@ licenses.txt
 *.pkl
 *.mar
 *.torchscript
+*.ipynb
 **/.ipynb_checkpoints
 **/dist/
 **/checkpoints/
