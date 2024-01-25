@@ -62,7 +62,6 @@ licenses.txt
 pyvenv.cfg
 pip-selfcheck.json
 
-
 # Unit test / coverage reports
 htmlcov/
 .tox/
@@ -83,3 +82,7 @@ report.xml
 
 # CMake
 cmake-build-*/
+
+# Terraform
+**/.terraform.lock.hcl
+**/.terraform

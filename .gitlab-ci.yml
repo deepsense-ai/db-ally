@@ -77,6 +77,21 @@ stages:
     - docker tag $PRECOMMIT_IMAGE:dev-$CI_COMMIT_SHA $PRECOMMIT_IMAGE:latest
     - docker push $PRECOMMIT_IMAGE:latest
 
+
+#########################################
+
+"Deploy terraform":
+  image:
+    name: google/cloud-sdk:latest
+    entrypoint: [""]
+  stage: deploy
+  script:
+    - chmod +x .gitlab/ci/terraform_apply.sh
+    - sh -x .gitlab/ci/terraform_apply.sh dev
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+
 #########################################
 
 # Jobs to enforce code quality and style consistency.
