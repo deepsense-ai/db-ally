@@ -97,9 +97,7 @@ async def calculate_valid_sql(dataset: List[Text2SQLResult], db_connector: DBCon
     return valid_sqls / len(dataset)
 
 
-async def _calculate_ves_for_signle_example(
-    example: Text2SQLResult, db_connector: DBConnector, reps: int = 100
-) -> float:
+async def _calculate_ves_for_signle_example(example: Text2SQLResult, db_connector: DBConnector, reps: int = 5) -> float:
     ves = 0
     exec_acc_score = await _check_exec_acc(example, db_connector)
 

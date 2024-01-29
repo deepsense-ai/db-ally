@@ -7,16 +7,15 @@ GPT4_PROMPTS: Dict[PromptType, List[Dict[str, str]]] = {
         {
             "role": "system",
             "content": (
-                "You are given the following SQL tables:" "\n\n{schema}\n\n"
+                "You are given the following SQL tables:"
+                "\n\n{schema}\n\n"
                 "Your job is to write queries given a user’s request."
                 "Please return only the query, do not provide any extra text or explanation."
             ),
         },
         {
             "role": "user",
-            "content": (
-                "{question}"
-            ),
+            "content": ("{question}"),
         },
     ]
 }

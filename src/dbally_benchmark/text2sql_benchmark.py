@@ -1,8 +1,8 @@
 import asyncio
 import json
+from copy import deepcopy
 from pathlib import Path
 from typing import Any, List, Optional
-from copy import deepcopy
 
 import asyncpg
 import hydra
@@ -39,7 +39,7 @@ async def _run_text2sql_for_single_example(example: Text2SQLExample, llm_client:
     db_schema = _load_db_schema(example.db_id)
 
     prompt_template = PROMPT_TEMPLATES[llm_client.model_type][PromptType.TEXT2SQL]
-    
+
     prompt = deepcopy(prompt_template)
 
     prompt[0]["content"] = prompt_template[0]["content"].format(schema=db_schema)
