@@ -1,7 +1,7 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Any, List
+from typing import Any, List, Optional
 
 import asyncpg
 import hydra
@@ -12,29 +12,50 @@ from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
 
 from dbally.config import CoreConfig
+from dbally.constants import PromptType
 from dbally.db_connectors.pgsql_db import PGSqlConnector
-from dbally.paths import PATH_EXPERIMENTS
+from dbally.generation_utils.prompt_templates import PROMPT_TEMPLATES
+from dbally.llm_client.base import LLMClient
+from dbally.llm_client.llm_client_factory import llm_client_factory
+from dbally.paths import PATH_EXPERIMENTS, PATH_SCHEMAS
 from dbally_benchmark.config import BenchmarkConfig
 from dbally_benchmark.dataset import Text2SQLDataset, Text2SQLExample, Text2SQLResult
 from dbally_benchmark.metrics import calculate_dataset_metrics
 from dbally_benchmark.utils import batch, get_datetime_str
 
 
-async def _run_text2sql_for_single_example(
-    example: Text2SQLExample,
-) -> str:
-    # TODO: Replace with an actual model :).
+def _load_db_schema(db_name: str, encoding: Optional[str] = None) -> str:
+    db_schema_filename = db_name + ".sql"
+    db_schema_path = PATH_SCHEMAS / db_schema_filename
+
+    with open(db_schema_path, encoding=encoding) as file_handle:
+        db_schema = file_handle.read()
+
+    return db_schema
+
+
+async def _run_text2sql_for_single_example(example: Text2SQLExample, llm_client: LLMClient) -> str:
+    db_schema = _load_db_schema(example.db_id)
+
+    prompt_template = PROMPT_TEMPLATES[llm_client.model_type][PromptType.TEXT2SQL]
+
+    prompt_template[0]["content"] = prompt_template[0]["content"].format(schema=db_schema)
+    prompt_template[1]["content"] = prompt_template[1]["content"].format(question=example.question)
+
+    response = llm_client.text_generation(prompt_template)
+
     return Text2SQLResult(
-        db_id=example.db_id, question=example.question, ground_truth_sql=example.SQL, predicted_sql=example.SQL
+        db_id=example.db_id, question=example.question, ground_truth_sql=example.SQL, predicted_sql=response
     )
 
 
-async def run_text2sql_for_dataset(dataset: Text2SQLDataset) -> List[Text2SQLResult]:
+async def run_text2sql_for_dataset(dataset: Text2SQLDataset, llm_client: LLMClient) -> List[Text2SQLResult]:
     """
     Transforms questions into SQL queries using a Text2SQL model.
 
     Args:
         dataset: The dataset containing questions to be transformed into SQL queries.
+        llm_client: LLM client.
 
     Returns:
         A list of Text2SQLResult objects representing the predictions.
@@ -43,7 +64,9 @@ async def run_text2sql_for_dataset(dataset: Text2SQLDataset) -> List[Text2SQLRes
     results: List[Text2SQLResult] = []
 
     for group in batch(dataset, 5):
-        current_results = await asyncio.gather(*[_run_text2sql_for_single_example(example) for example in group])
+        current_results = await asyncio.gather(
+            *[_run_text2sql_for_single_example(example, llm_client) for example in group]
+        )
         results = [*current_results, *results]
 
     return results
@@ -66,6 +89,8 @@ async def evaluate(cfg: DictConfig) -> Any:
     connection_pool = await asyncpg.create_pool(dsn=core_cfg.database_conn_string)
     db_connector = PGSqlConnector(connection_pool=connection_pool)
 
+    llm_client = llm_client_factory()
+
     run = None
     if cfg.neptune.log:
         run = neptune.init_run(
@@ -76,10 +101,8 @@ async def evaluate(cfg: DictConfig) -> Any:
         run["sys/tags"].add(list(cfg.neptune.tags))
 
     logger.info(f"Running Text2SQ predictions for dataset {cfg.dataset_path}")
-    evaluation_dataset = Text2SQLDataset.from_json_file(Path(cfg.dataset_path))
-    text2sql_results = await run_text2sql_for_dataset(
-        dataset=evaluation_dataset,
-    )
+    evaluation_dataset = Text2SQLDataset.from_json_file(Path(cfg.dataset_path), db_ids=cfg.db_ids)
+    text2sql_results = await run_text2sql_for_dataset(dataset=evaluation_dataset, llm_client=llm_client)
 
     logger.info("Calculating metrics")
     metrics = await calculate_dataset_metrics(text2sql_results, db_connector)
