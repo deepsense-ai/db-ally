@@ -153,8 +153,8 @@ async def calculate_dataset_metrics(dataset: List[Text2SQLResult], db_connector:
     """
 
     metrics = {
-        "exact_match": calculate_exact_match(dataset),
         "valid_sql": await calculate_valid_sql(dataset, db_connector),
+        "exact_match": calculate_exact_match(dataset),
         "execution_accuracy": await calculate_exec_acc(dataset, db_connector),
         "valid_efficiency_score": await calculate_ves(dataset, db_connector),
     }

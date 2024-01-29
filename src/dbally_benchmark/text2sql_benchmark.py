@@ -2,6 +2,7 @@ import asyncio
 import json
 from pathlib import Path
 from typing import Any, List, Optional
+from copy import deepcopy
 
 import asyncpg
 import hydra
@@ -38,11 +39,13 @@ async def _run_text2sql_for_single_example(example: Text2SQLExample, llm_client:
     db_schema = _load_db_schema(example.db_id)
 
     prompt_template = PROMPT_TEMPLATES[llm_client.model_type][PromptType.TEXT2SQL]
+    
+    prompt = deepcopy(prompt_template)
 
-    prompt_template[0]["content"] = prompt_template[0]["content"].format(schema=db_schema)
-    prompt_template[1]["content"] = prompt_template[1]["content"].format(question=example.question)
+    prompt[0]["content"] = prompt_template[0]["content"].format(schema=db_schema)
+    prompt[1]["content"] = prompt_template[1]["content"].format(question=example.question)
 
-    response = llm_client.text_generation(prompt_template)
+    response = await llm_client.text_generation(prompt)
 
     return Text2SQLResult(
         db_id=example.db_id, question=example.question, ground_truth_sql=example.SQL, predicted_sql=response
@@ -100,20 +103,20 @@ async def evaluate(cfg: DictConfig) -> Any:
         run["config"] = stringify_unsupported(cfg)
         run["sys/tags"].add(list(cfg.neptune.tags))
 
+    metrics_file_name, results_file_name = "metrics.json", "eval_results.json"
+
     logger.info(f"Running Text2SQ predictions for dataset {cfg.dataset_path}")
     evaluation_dataset = Text2SQLDataset.from_json_file(Path(cfg.dataset_path), db_ids=cfg.db_ids)
     text2sql_results = await run_text2sql_for_dataset(dataset=evaluation_dataset, llm_client=llm_client)
 
+    with open(output_dir / results_file_name, "w", encoding="utf-8") as outfile:
+        json.dump([result.model_dump() for result in text2sql_results], outfile, indent=4)
+
     logger.info("Calculating metrics")
     metrics = await calculate_dataset_metrics(text2sql_results, db_connector)
 
-    metrics_file_name, results_file_name = "metrics.json", "eval_results.json"
-
-    with open(output_dir / results_file_name, "w", encoding="utf-8") as outfile:
-        json.dump([result.model_dump() for result in text2sql_results], outfile)
-
     with open(output_dir / metrics_file_name, "w", encoding="utf-8") as outfile:
-        json.dump(metrics, outfile)
+        json.dump(metrics, outfile, indent=4)
 
     logger.info(f"Text2SQL predictions saved under directory: {output_dir}")
 

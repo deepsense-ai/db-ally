@@ -13,7 +13,7 @@ class LLMClient(ABC):
     model_type: GenerationModelType
 
     @abstractmethod
-    def text_generation(
+    async def text_generation(
         self,
         messages: List[Dict[str, str]],
         *,

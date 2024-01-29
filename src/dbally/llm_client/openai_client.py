@@ -3,7 +3,7 @@
 
 from typing import Dict, List, Optional
 
-from openai import OpenAI
+from openai import AsyncOpenAI
 
 from dbally.constants import GenerationModelType
 from dbally.llm_client.base import LLMClient
@@ -14,9 +14,9 @@ class OpenAIClient(LLMClient):
 
     def __init__(self) -> None:
         self.model_type = GenerationModelType.GPT4
-        self._client = OpenAI()
+        self._client = AsyncOpenAI()
 
-    def text_generation(
+    async def text_generation(
         self,
         messages: List[Dict[str, str]],
         *,
@@ -33,7 +33,7 @@ class OpenAIClient(LLMClient):
         Returns:
             text response from LLM
         """
-        response = self._client.chat.completions.create(
+        response = await self._client.chat.completions.create(
             model="gpt-4",
             messages=messages,
             temperature=temperature,
