@@ -1,12 +1,12 @@
 import ast
-from typing import Union, Optional
+from typing import Optional, Union
 
 
 class IQLError(Exception):
     """Base exception for all IQL parsing related exceptions."""
 
     def __init__(self, message: str, node: Union[ast.stmt, ast.expr], source: str) -> None:
-        message = message + ": " + source[node.col_offset: node.end_col_offset]
+        message = message + ": " + source[node.col_offset : node.end_col_offset]
 
         super().__init__(message)
         self.node = node
@@ -17,7 +17,7 @@ class IQLArgumentParsingError(IQLError):
     """Raised when an argument cannot be parsed into a valid IQL."""
 
     def __init__(self, node: Union[ast.stmt, ast.expr], source: str) -> None:
-        message = f"Not a valid IQL argument"
+        message = "Not a valid IQL argument"
         super().__init__(message, node, source)
 
 

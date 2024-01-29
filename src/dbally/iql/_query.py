@@ -1,4 +1,3 @@
-
 from ._parser import IQLParser
 from ._syntax import IQL
 
@@ -14,7 +13,7 @@ class IQLQuery:
         self.root = root
 
     @classmethod
-    def parse(cls, source: str) -> 'IQLQuery':
+    def parse(cls, source: str) -> "IQLQuery":
         """
         Parse IQL string to IQLQuery object.
 

@@ -1,7 +1,7 @@
 import ast
-from typing import Union, Any
+from typing import Any, Union
 
-from dbally.iql._exceptions import IQLArgumentParsingError, IQLUnsupportedSyntaxError, IQLError
+from dbally.iql._exceptions import IQLArgumentParsingError, IQLError, IQLUnsupportedSyntaxError
 from dbally.iql._syntax import IQL
 
 
@@ -18,6 +18,7 @@ class IQLParser:
         Parse IQL string to root IQL.Node.
 
         :return: IQL.Node which is root of the tree representing IQL query.
+        :raises IQLError: if parsing fails.
         """
         ast_tree = ast.parse(self.source)
         first_element = ast_tree.body[0]
@@ -31,9 +32,9 @@ class IQLParser:
     def _parse_node(self, node: Union[ast.expr, ast.Expr]) -> IQL.Node:
         if isinstance(node, ast.BoolOp):
             return self._parse_bool_op(node)
-        elif isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
             return IQL.Not(self._parse_node(node.operand))
-        elif isinstance(node, ast.Call):
+        if isinstance(node, ast.Call):
             return self._parse_call(node)
 
         raise IQLUnsupportedSyntaxError(node, self.source)
@@ -41,12 +42,12 @@ class IQLParser:
     def _parse_bool_op(self, node: ast.BoolOp) -> IQL.BoolOp:
         if isinstance(node.op, ast.Not):
             return IQL.Not(self._parse_node(node.values[0]))
-        elif isinstance(node.op, ast.And):
+        if isinstance(node.op, ast.And):
             return IQL.And([self._parse_node(x) for x in node.values])
-        elif isinstance(node.op, ast.Or):
+        if isinstance(node.op, ast.Or):
             return IQL.Or([self._parse_node(x) for x in node.values])
-        else:
-            raise IQLUnsupportedSyntaxError(node, self.source, context="BoolOp")
+
+        raise IQLUnsupportedSyntaxError(node, self.source, context="BoolOp")
 
     def _parse_call(self, node: ast.Call) -> IQL.FunctionCall:
         func = node.func
