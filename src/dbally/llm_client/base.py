@@ -4,13 +4,13 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
 
-from dbally.constants import GenerationModelType
+from dbally.constants import GenerationModel
 
 
 class LLMClient(ABC):
     """General interface for interacting with LLMs."""
 
-    model_type: GenerationModelType
+    model_type: GenerationModel
 
     @abstractmethod
     async def text_generation(

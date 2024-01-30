@@ -1,13 +1,12 @@
 from enum import Enum
 
-
-class PromptType(str, Enum):
-    """Class representing prompt pattern type."""
-
-    TEXT2SQL = "Text2SQL"
+from dbally.data_models.generation_model import GenerationModelConfig
 
 
-class GenerationModelType(str, Enum):
-    """Class representing generation model type."""
+class GenerationModel(str, Enum):
+    """Enum representing generation model instance."""
 
     GPT4 = "GPT4"
+
+
+GENERATION_MODEL_CONFIG = {GenerationModel.GPT4: GenerationModelConfig(model_name="gpt4")}

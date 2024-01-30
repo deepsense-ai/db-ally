@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 
 from openai import AsyncOpenAI
 
-from dbally.constants import GenerationModelType
+from dbally.constants import GenerationModel
 from dbally.llm_client.base import LLMClient
 
 
@@ -13,7 +13,7 @@ class OpenAIClient(LLMClient):
     """Interface for interacting with OpenAI models."""
 
     def __init__(self) -> None:
-        self.model_type = GenerationModelType.GPT4
+        self.model_type = GenerationModel.GPT4
         self._client = AsyncOpenAI()
 
     async def text_generation(

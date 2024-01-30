@@ -2,7 +2,7 @@ import asyncio
 from typing import Dict, List
 
 from dbally.db_connectors.base import DBConnector
-from dbally_benchmark.dataset import Text2SQLResult
+from dbally_benchmark.text2sql.dataset import Text2SQLResult
 from dbally_benchmark.utils import batch
 
 
