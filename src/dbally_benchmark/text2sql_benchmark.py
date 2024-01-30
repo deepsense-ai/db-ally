@@ -12,7 +12,6 @@ from loguru import logger
 from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
 
-from dbally.config import CoreConfig
 from dbally.constants import PromptType
 from dbally.db_connectors.pgsql_db import PGSqlConnector
 from dbally.generation_utils.prompt_templates import PROMPT_TEMPLATES
@@ -88,11 +87,10 @@ async def evaluate(cfg: DictConfig) -> Any:
     cfg = instantiate(cfg)
     benchmark_cfg = BenchmarkConfig()
 
-    core_cfg = CoreConfig()
-    connection_pool = await asyncpg.create_pool(dsn=core_cfg.database_conn_string)
+    connection_pool = await asyncpg.create_pool(dsn=benchmark_cfg.database_conn_string)
     db_connector = PGSqlConnector(connection_pool=connection_pool)
 
-    llm_client = llm_client_factory()
+    llm_client = llm_client_factory(benchmark_cfg.generation_model_type)
 
     run = None
     if cfg.neptune.log:

@@ -1,20 +1,25 @@
 from pydantic.v1 import BaseSettings
 
-from dbally.paths import PATH_ROOT
+from dbally.constants import GenerationModelType
+from dbally_benchmark.paths import PATH_PACKAGE
 
 
 class BenchmarkConfig(BaseSettings):
     """db-ally Benchmark configuration."""
 
+    generation_model_type: GenerationModelType = GenerationModelType.GPT4
+
+    database_conn_string: str = ""
+
     neptune_project: str = "deepsense-ai/db-ally"
     neptune_api_token: str = ""
-    openai_api_key: str = ""
 
     class Config:
         """Config for env class."""
 
-        env_file = PATH_ROOT / ".env"
+        env_file = str(PATH_PACKAGE / ".env")
         env_file_encoding = "utf-8"
+        extra = "allow"
 
 
 config = BenchmarkConfig()

@@ -1,7 +1,8 @@
-from pydantic import BaseModel
+from dataclasses import dataclass
 
 
-class QueryResult(BaseModel):
+@dataclass
+class QueryResult:
     """Class for storing query execution results."""
 
     sql_query: str
