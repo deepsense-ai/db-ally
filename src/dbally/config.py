@@ -7,7 +7,7 @@ from dbally.paths import PATH_ROOT
 class CoreConfig(BaseSettings):
     """db-ally configuration"""
 
-    database_conn_string: str = ""
+    pg_conn_string: str = ""
 
     generation_model_type: GenerationModelType = GenerationModelType.GPT4
 

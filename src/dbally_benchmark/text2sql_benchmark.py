@@ -14,13 +14,13 @@ from omegaconf import DictConfig
 
 from dbally.constants import PromptType
 from dbally.db_connectors.pgsql_db import PGSqlConnector
-from dbally.generation_utils.prompt_templates import PROMPT_TEMPLATES
 from dbally.llm_client.base import LLMClient
 from dbally.llm_client.llm_client_factory import llm_client_factory
 from dbally.paths import PATH_EXPERIMENTS, PATH_SCHEMAS
 from dbally_benchmark.config import BenchmarkConfig
 from dbally_benchmark.dataset import Text2SQLDataset, Text2SQLExample, Text2SQLResult
 from dbally_benchmark.metrics import calculate_dataset_metrics
+from dbally_benchmark.prompt_templates import PROMPT_TEMPLATES
 from dbally_benchmark.utils import batch, get_datetime_str
 
 
@@ -87,7 +87,7 @@ async def evaluate(cfg: DictConfig) -> Any:
     cfg = instantiate(cfg)
     benchmark_cfg = BenchmarkConfig()
 
-    connection_pool = await asyncpg.create_pool(dsn=benchmark_cfg.database_conn_string)
+    connection_pool = await asyncpg.create_pool(dsn=benchmark_cfg.pg_conn_string)
     db_connector = PGSqlConnector(connection_pool=connection_pool)
 
     llm_client = llm_client_factory(benchmark_cfg.generation_model_type)
