@@ -1,8 +1,8 @@
 import ast
 from typing import Any, Union
 
+from dbally.iql import syntax
 from dbally.iql._exceptions import IQLArgumentParsingError, IQLError, IQLUnsupportedSyntaxError
-from dbally.iql._syntax import IQL
 
 
 class IQLParser:
@@ -13,7 +13,7 @@ class IQLParser:
     def __init__(self, source: str):
         self.source = source
 
-    def parse(self) -> IQL.Node:
+    def parse(self) -> syntax.Node:
         """
         Parse IQL string to root IQL.Node.
 
@@ -29,27 +29,27 @@ class IQLParser:
         root = self._parse_node(first_element.value)
         return root
 
-    def _parse_node(self, node: Union[ast.expr, ast.Expr]) -> IQL.Node:
+    def _parse_node(self, node: Union[ast.expr, ast.Expr]) -> syntax.Node:
         if isinstance(node, ast.BoolOp):
             return self._parse_bool_op(node)
         if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
-            return IQL.Not(self._parse_node(node.operand))
+            return syntax.Not(self._parse_node(node.operand))
         if isinstance(node, ast.Call):
             return self._parse_call(node)
 
         raise IQLUnsupportedSyntaxError(node, self.source)
 
-    def _parse_bool_op(self, node: ast.BoolOp) -> IQL.BoolOp:
+    def _parse_bool_op(self, node: ast.BoolOp) -> syntax.BoolOp:
         if isinstance(node.op, ast.Not):
-            return IQL.Not(self._parse_node(node.values[0]))
+            return syntax.Not(self._parse_node(node.values[0]))
         if isinstance(node.op, ast.And):
-            return IQL.And([self._parse_node(x) for x in node.values])
+            return syntax.And([self._parse_node(x) for x in node.values])
         if isinstance(node.op, ast.Or):
-            return IQL.Or([self._parse_node(x) for x in node.values])
+            return syntax.Or([self._parse_node(x) for x in node.values])
 
         raise IQLUnsupportedSyntaxError(node, self.source, context="BoolOp")
 
-    def _parse_call(self, node: ast.Call) -> IQL.FunctionCall:
+    def _parse_call(self, node: ast.Call) -> syntax.FunctionCall:
         func = node.func
 
         if not isinstance(func, ast.Name):
@@ -60,7 +60,7 @@ class IQLParser:
         for arg in node.args:
             args.append(self._parse_arg(arg))
 
-        return IQL.FunctionCall(func.id, args)
+        return syntax.FunctionCall(func.id, args)
 
     def _parse_arg(self, arg: ast.expr) -> Any:
         if isinstance(arg, ast.List):

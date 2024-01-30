@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from dbally.iql import IQL, IQLArgumentParsingError, IQLQuery, IQLUnsupportedSyntaxError
+from dbally.iql import IQLArgumentParsingError, IQLQuery, IQLUnsupportedSyntaxError, syntax
 
 
 def test_iql_parser():
@@ -11,20 +11,20 @@ def test_iql_parser():
     )
 
     not_op = parsed.root
-    assert isinstance(not_op, IQL.Not)
+    assert isinstance(not_op, syntax.Not)
 
     and_op = not_op.child
-    assert isinstance(and_op, IQL.And)
+    assert isinstance(and_op, syntax.And)
 
     name_filter, city_filter, company_filter = and_op.children
 
-    assert isinstance(name_filter, IQL.FunctionCall)
+    assert isinstance(name_filter, syntax.FunctionCall)
     assert name_filter.arguments[0] == ["John", "Anne"]
 
-    assert isinstance(city_filter, IQL.FunctionCall)
+    assert isinstance(city_filter, syntax.FunctionCall)
     assert city_filter.arguments[0] == "cracow"
 
-    assert isinstance(company_filter, IQL.FunctionCall)
+    assert isinstance(company_filter, syntax.FunctionCall)
     assert company_filter.arguments[0] == "deepsense.ai"
 
 

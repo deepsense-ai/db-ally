@@ -1,5 +1,5 @@
+from . import syntax
 from ._parser import IQLParser
-from ._syntax import IQL
 
 
 class IQLQuery:
@@ -7,9 +7,9 @@ class IQLQuery:
     IQLQuery container. It stores IQL as a syntax tree defined in `IQL` class.
     """
 
-    root: IQL.Node
+    root: syntax.Node
 
-    def __init__(self, root: IQL.Node):
+    def __init__(self, root: syntax.Node):
         self.root = root
 
     @classmethod
