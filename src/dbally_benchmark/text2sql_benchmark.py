@@ -16,9 +16,9 @@ from dbally.constants import GENERATION_MODEL_CONFIG
 from dbally.db_connectors.pgsql_db import PGSqlConnector
 from dbally.llm_client.base import LLMClient
 from dbally.llm_client.llm_client_factory import llm_client_factory
-from dbally.paths import PATH_EXPERIMENTS, PATH_SCHEMAS
 from dbally.prompts.prompt_builder import PromptBuilder
 from dbally_benchmark.config import BenchmarkConfig
+from dbally_benchmark.paths import PATH_EXPERIMENTS, PATH_SCHEMAS
 from dbally_benchmark.text2sql.dataset import Text2SQLDataset, Text2SQLExample, Text2SQLResult
 from dbally_benchmark.text2sql.metrics import calculate_dataset_metrics
 from dbally_benchmark.text2sql.prompt_templates import TEXT2SQL_PROMPT_TEMPLATES

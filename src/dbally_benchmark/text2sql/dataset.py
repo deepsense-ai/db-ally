@@ -6,7 +6,7 @@ from typing import Iterator
 
 from pydantic import BaseModel, RootModel
 
-from dbally.io import load_data
+from dbally_benchmark.io import load_data
 
 
 class DifficultyLevel(str, enum.Enum):
