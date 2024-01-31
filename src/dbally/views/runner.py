@@ -1,6 +1,4 @@
-import ast
-from typing import List
-
+from dbally.iql import IQLActions, IQLQuery
 from dbally.views.registry import ViewRegistry, default_registry
 
 
@@ -25,14 +23,8 @@ class Runner:
 
         :raises ValueError: If the given string is not a valid python expression
         """
-        parsed_tree = ast.parse(filters)
-
-        first_element = parsed_tree.body[0]
-
-        if not isinstance(first_element, ast.Expr):
-            raise ValueError(f"{first_element} is not a valid python expression")
-
-        self.view.apply_filters(first_element.value)
+        parsed = IQLQuery.parse(filters)
+        self.view.apply_filters(parsed)
 
     def apply_actions(self, actions: str) -> None:
         """
@@ -43,16 +35,8 @@ class Runner:
 
         :raises ValueError: If the given string is not a valid python call
         """
-        parsed_tree = ast.parse(actions)
-        calls: List[ast.Call] = []
-
-        for element in parsed_tree.body:
-            if isinstance(element, ast.Expr) and isinstance(element.value, ast.Call):
-                calls.append(element.value)
-            else:
-                raise ValueError(f"{element} on line {element.lineno} is not a valid python call")
-
-        self.view.apply_actions(calls)
+        parsed = IQLActions.parse(actions)
+        self.view.apply_actions(parsed)
 
     def generate_sql(self) -> str:
         """

@@ -1,7 +1,8 @@
 import abc
-import ast
 from dataclasses import dataclass
 from typing import List
+
+from dbally.iql import IQLActions, IQLQuery
 
 
 @dataclass
@@ -44,19 +45,19 @@ class AbstractBaseView(metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def apply_filters(self, filters: ast.expr) -> None:
+    def apply_filters(self, filters: IQLQuery) -> None:
         """
         Applies the chosen filters to the view.
 
-        :param filters: AST node representing the filters to apply
+        :param filters: IQLQuery object representing the filters to apply
         """
 
     @abc.abstractmethod
-    def apply_actions(self, actions: List[ast.Call]) -> None:
+    def apply_actions(self, actions: IQLActions) -> None:
         """
         Applies the chosen actions to the view.
 
-        :param actions: List of AST nodes representing the actions to apply
+        :param actions: IQLActions object representing the actions to apply
         """
 
     # TODO: this should probably be changed to method that executes the query and returns the result

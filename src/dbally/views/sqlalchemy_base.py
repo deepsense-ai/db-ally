@@ -1,9 +1,9 @@
 import abc
-import ast
-from typing import Callable, List, Tuple
+from typing import Callable, Tuple
 
 import sqlalchemy
 
+from dbally.iql import IQLActions, IQLQuery, syntax
 from dbally.views import decorators
 from dbally.views.methods_base import MethodsBaseView
 
@@ -23,19 +23,19 @@ class SqlAlchemyBaseView(MethodsBaseView):
         Creates the initial SqlAlchemy select object, which will be used to build the query.
         """
 
-    def apply_filters(self, filters: ast.expr) -> None:
+    def apply_filters(self, filters: IQLQuery) -> None:
         """
         Applies the chosen filters to the view.
 
-        :param filters: AST node representing the filters to apply
+        :param filters: IQLQuery object representing the filters to apply
         """
-        self._select = self._select.where(self._build_filter_node(filters))
+        self._select = self._select.where(self._build_filter_node(filters.root))
 
-    def apply_actions(self, actions: List[ast.Call]) -> None:
+    def apply_actions(self, actions: IQLActions) -> None:
         """
         Applies the chosen actions to the view.
 
-        :param actions: List of AST nodes representing the actions to apply
+        :param actions: IQLActions object representing the actions to apply
         """
         for action in actions:
             self._select = self._build_action_call(action)
@@ -48,76 +48,72 @@ class SqlAlchemyBaseView(MethodsBaseView):
         """
         return str(self._select.compile(compile_kwargs={"literal_binds": True}))
 
-    def _build_filter_node(self, node: ast.expr) -> sqlalchemy.ColumnElement:
+    def _build_filter_node(self, node: syntax.Node) -> sqlalchemy.ColumnElement:
         """
-        Converts a filter node from the AST to a SQLAlchemy expression.
+        Converts a filter node from the IQLQuery to a SQLAlchemy expression.
         """
-        if isinstance(node, ast.BoolOp):
+        if isinstance(node, syntax.BoolOp):
             return self._build_filter_bool_op(node)
-        if isinstance(node, ast.Call):
+        if isinstance(node, syntax.FunctionCall):
             return self._build_filter_call(node)
 
         raise ValueError(f"Unsupported grammar: {node}")
 
-    def _build_filter_bool_op(self, bool_op: ast.BoolOp) -> sqlalchemy.ColumnElement:
+    def _build_filter_bool_op(self, bool_op: syntax.BoolOp) -> sqlalchemy.ColumnElement:
         """
-        Converts a boolean operator node from the AST to a SQLAlchemy expression.
+        Converts a boolean operator node from the IQL BoolOp to a SQLAlchemy expression.
         """
-        if isinstance(bool_op.op, ast.Not):
-            return sqlalchemy.not_(self._build_filter_node(bool_op.values[0]))
+        return bool_op.match(
+            not_=lambda x: sqlalchemy.not_(self._build_filter_node(x.child)),
+            and_=lambda x: sqlalchemy.and_(*[self._build_filter_node(child) for child in x.children]),
+            or_=lambda x: sqlalchemy.or_(*[self._build_filter_node(child) for child in x.children]),
+        )
 
-        joiner = {ast.Or: sqlalchemy.or_, ast.And: sqlalchemy.and_}[type(bool_op.op)]
-        return joiner(*[self._build_filter_node(value) for value in bool_op.values])
-
-    def _method_with_args_from_ast_call(self, call_obj: ast.Call, method_decorator: Callable) -> Tuple[Callable, list]:
+    def _method_with_args_from_call(
+        self, func: syntax.FunctionCall, method_decorator: Callable
+    ) -> Tuple[Callable, list]:
         """
-        Converts a method call node from the AST to a method object and its arguments.
+        Converts a IQL FunctionCall node to a method object and its arguments.
         """
-        func = call_obj.func
         decorator_name = method_decorator.__name__
 
-        if not isinstance(func, ast.Name):
-            raise ValueError(f"Incorrect grammar: {call_obj}")
+        if not hasattr(self, func.name):
+            raise ValueError(f"The {decorator_name} method {func.name} doesn't exists")
 
-        if not hasattr(self, func.id):
-            raise ValueError(f"The {decorator_name} method {func.id} doesn't exists")
-
-        method = getattr(self, func.id)
+        method = getattr(self, func.name)
 
         if (
             not hasattr(method, "_methodDecorator")
             or method._methodDecorator != method_decorator  # pylint: disable=protected-access
         ):
-            raise ValueError(f"The method {func.id} is not decorated with {decorator_name}")
+            raise ValueError(f"The method {func.name} is not decorated with {decorator_name}")
 
         method_arguments = {n: a for n, a in method.__annotations__.items() if n not in self.HIDDEN_ARGUMENTS}
 
-        if len(call_obj.args) != len(method_arguments):
-            print(call_obj.args, method_arguments)
-            raise ValueError(f"The {decorator_name} method {func.id} has incorrect number of arguments")
+        if len(func.arguments) != len(method_arguments):
+            print(func.arguments, method_arguments)
+            raise ValueError(f"The {decorator_name} method {func.name} has incorrect number of arguments")
 
         args = []
-        for arg, (_, arg_type) in zip(call_obj.args, method_arguments.items()):
-            if not isinstance(arg, ast.Constant):
-                raise ValueError(f"The {decorator_name} method {func.id} has incorrect argument type")
-            if not isinstance(arg.value, arg_type):
-                raise ValueError(f"The {decorator_name} method {func.id} has incorrect argument type")
-            args.append(arg.value)
+        for arg, (_, arg_type) in zip(func.arguments, method_arguments.items()):
+            if not isinstance(arg, arg_type):
+                raise ValueError(f"The {decorator_name} method {func.name} has incorrect argument type")
+            args.append(arg)
 
         return method, args
 
-    def _build_filter_call(self, call_obj: ast.Call) -> sqlalchemy.ColumnElement:
+    def _build_filter_call(self, func: syntax.FunctionCall) -> sqlalchemy.ColumnElement:
         """
-        Converts a filter call node from the AST to a SQLAlchemy expression, based on calling
+        Converts a IQL FunctonCall filter to a SQLAlchemy expression, based on calling
         the corresponding filter method.
         """
-        method, args = self._method_with_args_from_ast_call(call_obj, decorators.view_filter)
+        method, args = self._method_with_args_from_call(func, decorators.view_filter)
         return method(*args)
 
-    def _build_action_call(self, action: ast.Call) -> sqlalchemy.Select:
+    def _build_action_call(self, action: syntax.FunctionCall) -> sqlalchemy.Select:
         """
-        Converts an action call node from the AST to an modified SQLAlchemy select object, based on calling
+        Converts an IQL FunctionCall action to a modified SQLAlchemy select object, based on calling
         the corresponding action method.
         """
-        method, args = self._method_with_args_from_ast_call(action, decorators.view_action)
+        method, args = self._method_with_args_from_call(action, decorators.view_action)
         return method(self._select, *args)
