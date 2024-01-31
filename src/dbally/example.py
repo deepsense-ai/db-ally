@@ -74,7 +74,7 @@ class HelloView(SqlAlchemyBaseView):
 if __name__ == "__main__":
     # TODO: Replace the example with automated tests and documentation
 
-    print("Avialiable views:")
+    print("Available views:")
     print(default_registry.list())
     print()
 

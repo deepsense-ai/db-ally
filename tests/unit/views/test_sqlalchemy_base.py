@@ -1,8 +1,8 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name
-import ast
 
 import sqlalchemy
 
+from dbally.iql import IQLActions, IQLQuery
 from dbally.views.decorators import view_action, view_filter
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
@@ -43,9 +43,8 @@ def test_filter_sql_generation() -> None:
     Tests that the SQL generation based on filters works correctly
     """
     mock_view = MockSqlAlchemyView()
-    expression = ast.parse('method_foo(1) and method_bar("London", 2020)').body[0]
-    assert isinstance(expression, ast.Expr)
-    mock_view.apply_filters(expression.value)
+    query = IQLQuery.parse('method_foo(1) and method_bar("London", 2020)')
+    mock_view.apply_filters(query)
     sql = mock_view.generate_sql().replace("\n", "")
     assert sql == "SELECT 'test' AS foo WHERE 1 AND 'hello London in 2020'"
 
@@ -55,8 +54,7 @@ def test_action_sql_generation() -> None:
     Tests that the SQL generation based on actions works correctly
     """
     mock_view = MockSqlAlchemyView()
-    calls = ast.parse("action_baz()\naction_qux(5)").body
-    assert len(calls) == 2
-    mock_view.apply_actions([c.value for c in calls if isinstance(c, ast.Expr) and isinstance(c.value, ast.Call)])
+    actions = IQLActions.parse("action_baz()\naction_qux(5)")
+    mock_view.apply_actions(actions)
     sql = mock_view.generate_sql().replace("\n", "")
     assert sql == "SELECT 'test' AS foo ORDER BY foo LIMIT 5"

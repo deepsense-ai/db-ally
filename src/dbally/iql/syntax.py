@@ -1,6 +1,6 @@
 import sys
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any, Callable, List
 
 if sys.version_info > (3, 10):
     from typing import TypeGuard
@@ -38,6 +38,27 @@ class BoolOp(Node):
     """
     Base class for boolean operator nodes.
     """
+
+    def match(self, not_: Callable[["Not"], Any], and_: Callable[["And"], Any], or_: Callable[["Or"], Any]) -> Any:
+        """
+        Match syntax for convenient query building based on BoolOp type.
+
+        :param not_: Callable executed when node is Not
+        :param and_: Callable executed when node is And
+        :param or_: Callable executed when node is Or
+
+        :returns: Result of chosen callable.
+
+        :raises ValueError: if node is not of any supported boolean types
+        """
+        if isinstance(self, Not):
+            return not_(self)
+        if isinstance(self, And):
+            return and_(self)
+        if isinstance(self, Or):
+            return or_(self)
+
+        raise ValueError(f"Unsupported BoolOp type {type(self)}")
 
 
 @dataclass

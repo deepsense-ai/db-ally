@@ -1,5 +1,5 @@
 import ast
-from typing import Any, Union
+from typing import Any, List, Union
 
 from dbally.iql import syntax
 from dbally.iql._exceptions import IQLArgumentParsingError, IQLError, IQLUnsupportedSyntaxError
@@ -28,6 +28,25 @@ class IQLParser:
 
         root = self._parse_node(first_element.value)
         return root
+
+    def parse_actions(self) -> List[syntax.FunctionCall]:
+        """
+        Parse IQL string to list of IQL actions.
+
+        :return: list of IQL syntax.FunctionCall objects
+
+        :raises IQLError: if parsing fails.
+        """
+        ast_tree = ast.parse(self.source)
+        calls = []
+
+        for element in ast_tree.body:
+            if isinstance(element, ast.Expr) and isinstance(element.value, ast.Call):
+                calls.append(self._parse_call(element.value))
+            else:
+                raise IQLError("Not a valid action", element, self.source)
+
+        return calls
 
     def _parse_node(self, node: Union[ast.expr, ast.Expr]) -> syntax.Node:
         if isinstance(node, ast.BoolOp):
