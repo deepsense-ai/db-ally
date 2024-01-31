@@ -75,6 +75,7 @@ coverage.xml
 
 # dotenv
 .env
+src/dbally_benchmark/.env
 
 # coverage and pytest reports
 coverage.xml
