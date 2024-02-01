@@ -36,17 +36,6 @@ repos:
           - id: pyupgrade
             args: [--py38-plus]
 
-      # Used to have proper type annotations for library code.
-    - repo: https://github.com/pre-commit/mirrors-mypy
-      rev: v1.6.1
-      hooks:
-          - id: mypy
-            args: []
-            # You can add additional plugins for mypy below
-            # such as types-python-dateutil
-            additional_dependencies: []
-            exclude: (/test_|setup.py|/tests/|docs/)
-
       # Sort imports alphabetically, and automatically separated into sections and by type.
     - repo: https://github.com/timothycrosley/isort
       rev: 5.12.0

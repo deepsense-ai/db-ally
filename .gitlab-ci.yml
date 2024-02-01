@@ -171,6 +171,8 @@ tests:
     # generate pip freeze
     - pip freeze > requirements-freeze.txt
     - cat requirements-freeze.txt
+    # test type hints
+    - mypy .
     # run with coverage to not execute tests twice
     - coverage run -m pytest -v -p no:warnings --junitxml=report.xml tests/
     - coverage report
