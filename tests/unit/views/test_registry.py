@@ -1,8 +1,8 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name
 
-import ast
 from typing import List
 
+from dbally.iql import IQLActions, IQLQuery
 from dbally.views.base import AbstractBaseView, ExposedFunction
 from dbally.views.decorators import view
 from dbally.views.registry import ViewRegistry, default_registry
@@ -19,10 +19,10 @@ class MockViewBase(AbstractBaseView):
     def list_actions(self) -> List[ExposedFunction]:
         return []
 
-    def apply_filters(self, filters: ast.expr) -> None:
+    def apply_filters(self, filters: IQLQuery) -> None:
         ...
 
-    def apply_actions(self, actions: List[ast.Call]) -> None:
+    def apply_actions(self, actions: IQLActions) -> None:
         ...
 
     def generate_sql(self) -> str:

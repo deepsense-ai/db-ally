@@ -1,8 +1,7 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name
 
-import ast
-from typing import List
 
+from dbally.iql import IQLActions, IQLQuery
 from dbally.views.base import MethodParamWithTyping
 from dbally.views.decorators import view_action, view_filter
 from dbally.views.methods_base import MethodsBaseView
@@ -33,10 +32,10 @@ class MockMethodsBase(MethodsBaseView):
     def action_qux(self, idx: int) -> str:
         return f"hello {idx}"
 
-    def apply_filters(self, filters: ast.expr) -> None:
+    def apply_filters(self, filters: IQLQuery) -> None:
         ...
 
-    def apply_actions(self, actions: List[ast.Call]) -> None:
+    def apply_actions(self, actions: IQLActions) -> None:
         ...
 
     def generate_sql(self) -> str:

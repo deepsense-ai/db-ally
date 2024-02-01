@@ -15,3 +15,4 @@ myst-parser # adds markdown to sphinx
 sphinxcontrib-mermaid # adds option to have diagrams in sphinx
 # for bumping version strings
 bump2version>=1.0.1,<2.0.0
+mypy==1.8.0
