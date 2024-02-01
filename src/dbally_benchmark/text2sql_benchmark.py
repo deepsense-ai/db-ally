@@ -37,7 +37,7 @@ def _load_db_schema(db_name: str, encoding: Optional[str] = None) -> str:
 
 async def _run_text2sql_for_single_example(
     example: Text2SQLExample, llm_client: LLMClient, prompt_builder: PromptBuilder
-) -> str:
+) -> Text2SQLResult:
     db_schema = _load_db_schema(example.db_id)
 
     prompt_template = TEXT2SQL_PROMPT_TEMPLATES[llm_client.model_type]
