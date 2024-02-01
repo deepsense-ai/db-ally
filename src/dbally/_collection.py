@@ -27,7 +27,7 @@ class IQLGeneratorMock:
         return "filter_by_eye_color('Blue') and taller_than(180.0)", "sort_by_gender()"
 
 
-class DBAllyCollection:
+class Collection:
     """
     Collection is a container for a set of views that can be used by db-ally to answer user questions.
     It also stores configuration such as LLM model choice, vector db or available data sources.
