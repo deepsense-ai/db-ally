@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Iterator, List
+from typing import Any, Iterator
 
 
 def get_datetime_str() -> str:
@@ -12,12 +12,12 @@ def get_datetime_str() -> str:
     return datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
 
-def batch(iterable: List, per_batch: int = 1) -> Iterator:
+def batch(iterable: Any, per_batch: int = 1) -> Iterator:
     """
     Splits an list into batches of a specified size.
 
     Args:
-        iterable: The list to be batched.
+        iterable: The iterable to be batched.
         per_batch: The number of elements per batch. Default is 1.
 
     Yields:

@@ -1,47 +1,36 @@
-# disable args docstring check as args are documented in huggingface InferenceClient and OpenAI
-# pylint: disable=W9015,R0914
+from typing import Union
 
-from typing import Dict, List, Optional
-
-from openai import AsyncOpenAI
-
-from dbally.constants import GenerationModel
+from dbally.data_models.llm_options import LLMOptions
 from dbally.llm_client.base import LLMClient
+from dbally.prompts.prompt_builder import ChatFormat
 
 
 class OpenAIClient(LLMClient):
-    """Interface for interacting with OpenAI models."""
+    """LLM Client for OpenAI endpoints."""
 
-    def __init__(self) -> None:
-        self.model_type = GenerationModel.GPT4
+    def __init__(self, model_name: str):
+        try:
+            from openai import AsyncOpenAI  # pylint: disable=import-outside-toplevel
+        except ImportError as exc:
+            raise ImportError("You need to install openai package to use GPT models") from exc
+
+        super().__init__(model_name)
         self._client = AsyncOpenAI()
 
-    async def text_generation(
-        self,
-        messages: List[Dict[str, str]],
-        *,
-        max_new_tokens: Optional[int] = 128,
-        stop_sequences: Optional[List[str]] = None,
-        temperature: Optional[float] = 0.0,
-        top_p: Optional[float] = 1.0,
-        frequency_penalty: Optional[float] = 0.5,
-        presence_penalty: Optional[float] = 0.0
-    ) -> str:
+    async def _call(self, prompt: Union[str, ChatFormat], options: LLMOptions) -> str:
         """
-        Given a prompt, generate the following text.
+        Calls OpenAI API endpoint.
+
+        Args:
+            prompt: Prompt as an OpenAI client style list.
+            options: Additional settings used by LLM.
 
         Returns:
-            text response from LLM
+            Response string from LLM.
         """
+
         response = await self._client.chat.completions.create(
-            model="gpt-4",
-            messages=messages,
-            temperature=temperature,
-            stop=stop_sequences,
-            top_p=top_p,
-            max_tokens=max_new_tokens,
-            frequency_penalty=frequency_penalty,
-            presence_penalty=presence_penalty,
+            messages=prompt, model=self._model_name, **options.dict()  # type: ignore
         )
 
-        return response.choices[0].message.content
+        return response.choices[0].message.content  # type: ignore
