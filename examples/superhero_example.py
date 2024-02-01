@@ -1,6 +1,7 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc
 import asyncio
 
+import pandas as pd
 import sqlalchemy
 from config import config
 from sqlalchemy import create_engine
@@ -108,6 +109,7 @@ async def main():
 
     response = await superheros_db.ask("What heroes have blue eyes and are taller than 180cm?")
     print(response)
+    print(pd.read_sql_query(response, engine))
 
 
 if __name__ == "__main__":
