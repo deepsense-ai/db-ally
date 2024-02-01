@@ -1,4 +1,5 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc
+import asyncio
 
 import pandas as pd
 import sqlalchemy
@@ -6,14 +7,14 @@ from config import config
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 
-from dbally import Runner, SqlAlchemyBaseView, decorators, default_registry
+import dbally
+from dbally import SqlAlchemyBaseView, decorators
 
 engine = create_engine(config.pg_connection_string + "/superhero")
 SuperheroModel = automap_base()
 SuperheroModel.prepare(autoload_with=engine, reflect=True)
 
 
-@decorators.view()
 class SuperheroView(SqlAlchemyBaseView):
     """
     View used as an example
@@ -102,33 +103,14 @@ class SuperheroView(SqlAlchemyBaseView):
         return select.order_by(self._subquery.c.gender_id)
 
 
+async def main():
+    superheros_db = dbally.create_collection("superheros_db")
+    superheros_db.register_view(SuperheroView)
+
+    response = await superheros_db.ask("What heroes have blue eyes and are taller than 180cm?")
+    print(response)
+    print(pd.read_sql_query(response, engine))
+
+
 if __name__ == "__main__":
-    print("Available views:")
-    print(default_registry.list())
-    print()
-
-    print("Superhero details:")
-    view = default_registry.get("SuperheroView")
-    print()
-
-    print("Filters:")
-    print("\n".join([str(f) for f in view.list_filters()]))
-    print()
-
-    print("Actions:")
-    print("\n".join([str(a) for a in view.list_actions()]))
-    print()
-
-    print("SQL:")
-    r = Runner("SuperheroView")
-    r.apply_filters(
-        "((filter_by_superhero_name('Hawkgirl') or filter_by_superhero_name('Hawkman')) "
-        + "and filter_by_eye_color('Blue') and taller_than(180.0))"
-    )
-    r.apply_actions("sort_by_gender()")
-
-    generated_sql = r.generate_sql()
-    print(generated_sql)
-
-    print("Result:")
-    print(pd.read_sql_query(generated_sql, engine))
+    asyncio.run(main())
