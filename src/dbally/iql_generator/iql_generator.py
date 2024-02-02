@@ -52,7 +52,9 @@ class IQLGenerator:
         self._promptify_view = promptify_view or _promptify_view
         self.last_prompt: Union[str, ChatFormat, None] = None  # todo: drop it when we have auditing
 
-    def generate_iql(self, filters: List[ExposedFunction], actions: List[ExposedFunction], question: str) -> str:
+    def generate_iql(
+        self, filters: List[ExposedFunction], actions: List[ExposedFunction], question: str
+    ) -> Tuple[str, str]:
         # todo: add more generation-related arguments here once BaseLLM interface is established
         """Uses LLM to generate IQL in text form
 
@@ -71,9 +73,9 @@ class IQLGenerator:
             fmt={"filters": filters_for_prompt, "actions": actions_for_prompt, "question": question},
         )
         llm_response = self._llm_client.generate(_prompt, self._prompt_template.response_format)
-        iql = self._prompt_template.llm_response_parser(llm_response)
+        iql_filters, iql_actions = self._prompt_template.llm_response_parser(llm_response)
         self.last_prompt = _prompt
-        return iql
+        return iql_filters, iql_actions
 
 
 # todo: after default __repr__ for filters/actions is implemented, replace this body with str()

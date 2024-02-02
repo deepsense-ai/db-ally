@@ -59,4 +59,4 @@ def test_iql_generation(llm_client, view):
     assert actions_in_prompt == {"sort_by_id()", "group_by_name()"}
 
     response = iql_generator.generate_iql(view.list_filters(), view.list_actions(), "Mock_question")
-    assert response == "LLM IQL mock answer"
+    assert response == ("LLM IQL mock answer", "")

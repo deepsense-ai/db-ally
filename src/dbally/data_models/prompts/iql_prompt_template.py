@@ -72,7 +72,7 @@ def _convert_llm_json_response_to_iql(llm_response_json: str) -> str:
         A string containing IQL for filters, newline, IQL for actions
     """
     llm_response_dict = json.loads(llm_response_json)
-    return (llm_response_dict.get("filters") + "\n" + (llm_response_dict.get("actions") or "")).strip()
+    return llm_response_dict.get("filters"), llm_response_dict.get("actions") or ""
 
 
 default_iql_template = IQLPromptTemplate(
