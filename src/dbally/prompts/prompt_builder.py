@@ -3,7 +3,7 @@ from typing import Dict, Optional, Union
 from transformers import AutoTokenizer
 from transformers.tokenization_utils import PreTrainedTokenizer
 
-from dbally.data_models.prompt_templates import ChatFormat, PromptTemplate
+from dbally.data_models.prompts.prompt_template import ChatFormat, PromptTemplate
 
 
 class PromptBuilder:
@@ -25,7 +25,7 @@ class PromptBuilder:
             if not model_name.startswith("gpt"):
                 self._tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    def _format_prompt(self, prompt_template: PromptTemplate, fmt: Dict[str, str]) -> PromptTemplate:
+    def _format_prompt(self, prompt_template: PromptTemplate, fmt: Dict[str, str]) -> ChatFormat:
         """
         Format prompt using provided arguments
 
@@ -34,12 +34,9 @@ class PromptBuilder:
             fmt: formatting dict
 
         Returns:
-            PromptTemplate
+            ChatFormat formatted prompt
         """
-        for message in prompt_template.chat:
-            content = message["content"].format(**fmt)
-            message["content"] = content
-        return prompt_template
+        return tuple({**msg, "content": msg["content"].format(**fmt)} for msg in prompt_template.chat)
 
     def build(self, prompt_template: PromptTemplate, fmt: Dict[str, str]) -> Union[str, ChatFormat]:
         """Build prompt
@@ -56,7 +53,7 @@ class PromptBuilder:
             KeyError: If fmt does not fill all template arguments.
         """
 
-        prompt = self._format_prompt(prompt_template, fmt).chat
+        prompt = self._format_prompt(prompt_template, fmt)
         if self._tokenizer is not None:
             prompt = self._tokenizer.apply_chat_template(prompt, tokenize=False, add_generation_prompt=True)
         return prompt
