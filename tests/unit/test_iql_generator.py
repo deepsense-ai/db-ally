@@ -1,3 +1,5 @@
+# mypy: disable-error-code="empty-body"
+
 from typing import Dict, Union
 
 import pytest
@@ -16,23 +18,23 @@ class MockLLMClient:
 
 class MockView(SqlAlchemyBaseView):
     def get_select(self) -> sqlalchemy.Select:
-        pass
+        ...
 
     @decorators.view_filter()
     def filter_by_id(self, idx: int) -> sqlalchemy.ColumnElement:
-        pass
+        ...
 
     @decorators.view_filter()
     def filter_by_name(self, city: str) -> sqlalchemy.ColumnElement:
-        pass
+        ...
 
     @decorators.view_action()
     def sort_by_id(self, select: sqlalchemy.Select) -> sqlalchemy.Select:
-        pass
+        ...
 
     @decorators.view_action()
     def group_by_name(self, select: sqlalchemy.Select) -> sqlalchemy.Select:
-        pass
+        ...
 
 
 @pytest.fixture
