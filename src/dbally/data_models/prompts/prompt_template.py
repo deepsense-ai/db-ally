@@ -1,12 +1,8 @@
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Optional
 
 from typing_extensions import Self
 
-ChatFormat = Tuple[Dict[str, str], ...]
-
-
-class PromptTemplateError(Exception):
-    """Error raised on incorrect PromptTemplate construction"""
+from dbally.data_models.prompts.common_validation_utils import ChatFormat, PromptTemplateError
 
 
 def _check_chat_order(chat: ChatFormat) -> ChatFormat:
@@ -53,11 +49,11 @@ class PromptTemplate:
         self,
         chat: ChatFormat,
         response_format: Optional[Dict[str, str]] = None,
-        llm_response_parser: Optional[Callable] = None,
+        llm_response_parser: Callable = lambda x: x,
     ):
         self.chat: ChatFormat = _check_chat_order(chat)
         self.response_format = response_format
-        self.llm_response_parser = llm_response_parser or (lambda x: x)
+        self.llm_response_parser = llm_response_parser
 
     def add_user_message(self, content: str) -> Self:
         """

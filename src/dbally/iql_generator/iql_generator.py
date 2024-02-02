@@ -49,7 +49,7 @@ class IQLGenerator:
         self._llm_client = llm_client
         self._prompt_template = prompt_template or copy.deepcopy(default_iql_template)
         self._prompt_builder = prompt_builder or PromptBuilder()
-        self._promptify_view = promptify_view or _promptify_view
+        self._promptify_view = promptify_view or _promptify_filters_and_actions
         self.last_prompt: Union[str, ChatFormat, None] = None  # todo: drop it when we have auditing
 
     def generate_iql(
@@ -79,7 +79,7 @@ class IQLGenerator:
 
 
 # todo: after default __repr__ for filters/actions is implemented, replace this body with str()
-def _promptify_view(filters: List[ExposedFunction], actions: List[ExposedFunction]) -> Tuple[str, str]:
+def _promptify_filters_and_actions(filters: List[ExposedFunction], actions: List[ExposedFunction]) -> Tuple[str, str]:
     """
     Formats filters/actions for prompt
 
