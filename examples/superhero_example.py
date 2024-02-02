@@ -105,7 +105,7 @@ class SuperheroView(SqlAlchemyBaseView):
 
 async def main():
     superheros_db = dbally.create_collection("superheros_db")
-    superheros_db.register_view(SuperheroView)
+    superheros_db.add(SuperheroView)
 
     response = await superheros_db.ask("What heroes have blue eyes and are taller than 180cm?")
     print(response)

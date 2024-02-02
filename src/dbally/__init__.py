@@ -1,7 +1,6 @@
 """ dbally """
 
 from dbally.views import decorators
-from dbally.views.registry import ViewRegistry, default_registry
 from dbally.views.runner import Runner
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
@@ -14,6 +13,4 @@ __all__ = [
     "decorators",
     "SqlAlchemyBaseView",
     "Runner",
-    "default_registry",
-    "ViewRegistry",
 ]

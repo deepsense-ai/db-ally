@@ -1,9 +1,9 @@
-from typing import List, Optional, Tuple, Type
+import textwrap
+from typing import Dict, List, Optional, Tuple, Type
 
 from dbally.iql import IQLActions, IQLQuery
 from dbally.view_selection.random_view_selector import RandomViewSelector
 from dbally.views.base import AbstractBaseView, ExposedFunction
-from dbally.views.registry import ViewRegistry
 
 
 class IQLGeneratorMock:
@@ -35,19 +35,47 @@ class Collection:
 
     def __init__(self, name: str):
         self.name = name
-        self._registry = ViewRegistry()
+        self._views: Dict[str, Type[AbstractBaseView]] = {}
         self._view_selector = RandomViewSelector()
         self._iql_generator = IQLGeneratorMock()
 
-    def register_view(self, view: Type[AbstractBaseView], name: Optional[str] = None) -> None:
+    def add(self, view: Type[AbstractBaseView], name: Optional[str] = None) -> None:
         """
         Register new view that will be available to query via the collection.
 
         Args:
-            view: a view type to be registered in a collection
-            name: optional name of the view
+            view: a view type to be added to the collection
+            name: optional name of the view (defaults to the name of the class)
+
+        Raises:
+            ValueError: if view with the given name is already registered
         """
-        self._registry.register(view, name=name)
+        if name is None:
+            name = view.__name__
+
+        if name in self._views:
+            raise ValueError(f"View with name {name} is already registered")
+
+        self._views[name] = view
+
+    def get(self, name: str) -> AbstractBaseView:
+        """
+        Returns an instance of the view with the given name
+
+        :param name: Name of the view to return
+        :return: View instance
+        """
+        return self._views[name]()
+
+    def list(self) -> Dict[str, str]:
+        """
+        Lists all registered view names and their descriptions
+
+        :return: Dictionary of view names and descriptions
+        """
+        return {
+            name: (textwrap.dedent(view.__doc__).strip() if view.__doc__ else "") for name, view in self._views.items()
+        }
 
     async def ask(self, question: str) -> str:
         """
@@ -71,7 +99,7 @@ class Collection:
         """
 
         # select view
-        views = self._registry.list()
+        views = self.list()
 
         if len(views) == 0:
             raise ValueError("Empty collection")
@@ -80,7 +108,7 @@ class Collection:
         else:
             selected_view = await self._view_selector.select_view(question, views)
 
-        view = self._registry.get(selected_view)
+        view = self.get(selected_view)
 
         filter_list, action_list = view.list_filters(), view.list_actions()
 

@@ -1,5 +1,5 @@
+from dbally._collection import Collection
 from dbally.iql import IQLActions, IQLQuery
-from dbally.views.registry import ViewRegistry, default_registry
 
 
 class Runner:
@@ -10,10 +10,10 @@ class Runner:
     :param registry: Registry to use (defaults to the default registry)
     """
 
-    def __init__(self, view_name: str, registry: ViewRegistry = default_registry) -> None:
-        self.registry = registry
+    def __init__(self, view_name: str, collection: Collection) -> None:
+        self.collection = collection
         self.view_name = view_name
-        self.view = self.registry.get(view_name)
+        self.view = self.collection.get(view_name)
 
     def apply_filters(self, filters: str) -> None:
         """
