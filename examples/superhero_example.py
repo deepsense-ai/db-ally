@@ -103,8 +103,8 @@ class SuperheroCountByPowerView(SuperheroView, SuperheroFilterMixin):
     """
 
     def __init__(self) -> None:
-        super().__init__()
         self._superhero_count = sqlalchemy.func.count(SuperheroModel.classes.superhero.id).label("superhero_count")
+        super().__init__()
 
     def get_select(self) -> sqlalchemy.Select:
         """
@@ -114,7 +114,7 @@ class SuperheroCountByPowerView(SuperheroView, SuperheroFilterMixin):
         return (
             sqlalchemy.select(
                 SuperheroModel.classes.superpower.power_name,
-                sqlalchemy.func.count(SuperheroModel.classes.superhero.id).label("superhero_count"),
+                self._superhero_count,
             )
             .join(hero_power, hero_power.c.hero_id == SuperheroModel.classes.superhero.id)
             .join(SuperheroModel.classes.superpower, SuperheroModel.classes.superpower.id == hero_power.c.power_id)
