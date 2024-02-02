@@ -1,11 +1,11 @@
 from typing import Dict
 
 from dbally.constants import GenerationModel
-from dbally.data_models.prompt_templates import PromptTemplate
+from dbally.data_models.prompts import PromptTemplate
 
 TEXT2SQL_PROMPT_TEMPLATES: Dict[GenerationModel, PromptTemplate] = {
     GenerationModel.GPT4: PromptTemplate(
-        [
+        (
             {
                 "role": "system",
                 "content": (
@@ -19,6 +19,6 @@ TEXT2SQL_PROMPT_TEMPLATES: Dict[GenerationModel, PromptTemplate] = {
                 "role": "user",
                 "content": ("{question}"),
             },
-        ]
+        )
     )
 }

@@ -1,16 +1,17 @@
 import pytest
 
-from dbally.data_models.prompt_templates import PromptTemplate, PromptTemplateError
+from dbally.data_models.prompts.iql_prompt_template import IQLPromptTemplate
+from dbally.data_models.prompts.prompt_template import ChatFormat, PromptTemplate, PromptTemplateError
 from dbally.prompts.prompt_builder import PromptBuilder
 
 
 @pytest.fixture()
 def simple_template():
     simple_template = PromptTemplate(
-        chat=[
+        chat=(
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": "{question}"},
-        ]
+        )
     )
     return simple_template
 
@@ -29,10 +30,10 @@ def hf_prompt_builder():
 
 def test_openai_client_prompt(default_prompt_builder, simple_template):
     prompt = default_prompt_builder.build(simple_template, fmt={"question": "Example user question?"})
-    assert prompt == [
+    assert prompt == (
         {"content": "You are a helpful assistant.", "role": "system"},
         {"content": "Example user question?", "role": "user"},
-    ]
+    )
 
 
 def test_text_prompt(hf_prompt_builder, simple_template):
@@ -48,29 +49,29 @@ def test_missing_format_dict(default_prompt_builder, simple_template):
 
 
 @pytest.mark.parametrize(
-    "invalid_template",
+    "invalid_chat",
     [
-        [
+        (
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": "{question}"},
             {"role": "user", "content": "{question}"},
-        ],
-        [
+        ),
+        (
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "assistant", "content": "{question}"},
             {"role": "assistant", "content": "{question}"},
-        ],
-        [
+        ),
+        (
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": "{question}"},
             {"role": "assistant", "content": "{question}"},
             {"role": "system", "content": "{question}"},
-        ],
+        ),
     ],
 )
-def test_chat_order_validation(invalid_template):
+def test_chat_order_validation(invalid_chat):
     with pytest.raises(PromptTemplateError):
-        _ = PromptTemplate(chat=invalid_template)
+        _ = PromptTemplate(chat=invalid_chat)
 
 
 def test_dynamic_few_shot(default_prompt_builder, simple_template):
@@ -83,3 +84,44 @@ def test_dynamic_few_shot(default_prompt_builder, simple_template):
         )
         == 4
     )
+
+
+@pytest.mark.parametrize(
+    "invalid_chat",
+    [
+        (
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "{question}"},
+        ),
+        (
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "Hello"},
+        ),
+        (
+            {"role": "system", "content": "You are a helpful assistant. {filters} {actions}}"},
+            {"role": "user", "content": "Hello"},
+        ),
+    ],
+    ids=["Missing filters and actions", "Missing filters, actions, question", "Missing question"],
+)
+def test_bad_iql_prompt_template(invalid_chat: ChatFormat):
+    with pytest.raises(PromptTemplateError):
+        _ = IQLPromptTemplate(invalid_chat)
+
+
+@pytest.mark.parametrize(
+    "chat",
+    [
+        (
+            {"role": "system", "content": "You are a helpful assistant.{filters}{actions}"},
+            {"role": "user", "content": "{question}"},
+        ),
+        (
+            {"role": "system", "content": "{filters}{filters}{filters}{actions}}}"},
+            {"role": "user", "content": "{question}"},
+        ),
+    ],
+    ids=["Good template", "Good template with repeating variables"],
+)
+def test_good_iql_prompt_template(chat: ChatFormat):
+    _ = IQLPromptTemplate(chat)

@@ -6,6 +6,8 @@ class CoreConfig(BaseSettings):
     """db-ally configuration"""
 
     pg_connection_string: str
+    openai_api_key: str
+    anyscale_api_key: str
 
     class Config:
         """Config for env class."""

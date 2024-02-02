@@ -1,15 +1,15 @@
-from typing import Dict, List
+from typing import Callable, Dict, Optional, Tuple
 
 from typing_extensions import Self
 
-ChatFormat = List[Dict[str, str]]
+ChatFormat = Tuple[Dict[str, str], ...]
 
 
 class PromptTemplateError(Exception):
     """Error raised on incorrect PromptTemplate construction"""
 
 
-def check_chat_order(chat: ChatFormat) -> ChatFormat:
+def _check_chat_order(chat: ChatFormat) -> ChatFormat:
     """
     Pydantic validator. Checks if the chat template is constructed correctly (system, user, assistant alternating).
 
@@ -43,10 +43,21 @@ def check_chat_order(chat: ChatFormat) -> ChatFormat:
 class PromptTemplate:
     """
     Class for prompt templates
+
+    Attributes:
+        response_format: Optional argument used in the OpenAI API - used to force json output
+        llm_response_parser: Function parsing the LLM response into IQL
     """
 
-    def __init__(self, chat: ChatFormat):
-        self.chat = check_chat_order(chat)
+    def __init__(
+        self,
+        chat: ChatFormat,
+        response_format: Optional[Dict[str, str]] = None,
+        llm_response_parser: Optional[Callable] = None,
+    ):
+        self.chat: ChatFormat = _check_chat_order(chat)
+        self.response_format = response_format
+        self.llm_response_parser = llm_response_parser or (lambda x: x)
 
     def add_user_message(self, content: str) -> Self:
         """
@@ -58,9 +69,7 @@ class PromptTemplate:
         Returns:
             PromptTemplate with appended user message
         """
-        self.chat.append({"role": "user", "content": content})
-        _ = check_chat_order(self.chat)
-        return self
+        return self.__class__((*self.chat, {"role": "user", "content": content}))
 
     def add_assistant_message(self, content: str) -> Self:
         """
@@ -72,6 +81,4 @@ class PromptTemplate:
         Returns:
             PromptTemplate with appended assistant message
         """
-        self.chat.append({"role": "assistant", "content": content})
-        _ = check_chat_order(self.chat)
-        return self
+        return self.__class__((*self.chat, {"role": "assistant", "content": content}))
