@@ -1,6 +1,5 @@
 from pydantic.v1 import BaseSettings
 
-from dbally.constants import GenerationModel
 from dbally_benchmark.paths import PATH_PACKAGE
 
 
@@ -9,7 +8,7 @@ class BenchmarkConfig(BaseSettings):
 
     pg_conn_string: str = ""
 
-    generation_model: GenerationModel = GenerationModel.GPT4
+    model_name: str = "gpt-4"
 
     neptune_project: str = "deepsense-ai/db-ally"
     neptune_api_token: str = ""

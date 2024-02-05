@@ -32,7 +32,7 @@ class Text2SQLDataset(RootModel):
 
     root: list[Text2SQLExample]
 
-    def __iter__(self) -> Iterator[Text2SQLExample]:
+    def __iter__(self) -> Iterator[Text2SQLExample]:  # type: ignore
         return iter(self.root)
 
     def __len__(self):

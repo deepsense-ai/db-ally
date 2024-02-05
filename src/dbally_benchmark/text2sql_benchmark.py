@@ -1,6 +1,5 @@
 import asyncio
 import json
-from copy import deepcopy
 from pathlib import Path
 from typing import Any, List, Optional
 
@@ -12,16 +11,14 @@ from loguru import logger
 from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
 
-from dbally.constants import GENERATION_MODEL_CONFIG
 from dbally.db_connectors.pgsql_db import PGSqlConnector
 from dbally.llm_client.base import LLMClient
-from dbally.llm_client.llm_client_factory import llm_client_factory
-from dbally.prompts.prompt_builder import PromptBuilder
+from dbally.llm_client.openai_client import OpenAIClient
 from dbally_benchmark.config import BenchmarkConfig
 from dbally_benchmark.paths import PATH_EXPERIMENTS, PATH_SCHEMAS
 from dbally_benchmark.text2sql.dataset import Text2SQLDataset, Text2SQLExample, Text2SQLResult
 from dbally_benchmark.text2sql.metrics import calculate_dataset_metrics
-from dbally_benchmark.text2sql.prompt_templates import TEXT2SQL_PROMPT_TEMPLATES
+from dbally_benchmark.text2sql.prompt_template import TEXT2SQL_PROMPT_TEMPLATE
 from dbally_benchmark.utils import batch, get_datetime_str
 
 
@@ -35,17 +32,11 @@ def _load_db_schema(db_name: str, encoding: Optional[str] = None) -> str:
     return db_schema
 
 
-async def _run_text2sql_for_single_example(
-    example: Text2SQLExample, llm_client: LLMClient, prompt_builder: PromptBuilder
-) -> Text2SQLResult:
+async def _run_text2sql_for_single_example(example: Text2SQLExample, llm_client: LLMClient) -> Text2SQLResult:
     db_schema = _load_db_schema(example.db_id)
 
-    prompt_template = TEXT2SQL_PROMPT_TEMPLATES[llm_client.model_type]
-
-    prompt = deepcopy(prompt_template)
-
     response = await llm_client.text_generation(
-        prompt_builder.build(prompt, {"schema": db_schema, "question": example.question})  # type: ignore
+        TEXT2SQL_PROMPT_TEMPLATE, {"schema": db_schema, "question": example.question}
     )
 
     return Text2SQLResult(
@@ -53,16 +44,13 @@ async def _run_text2sql_for_single_example(
     )
 
 
-async def run_text2sql_for_dataset(
-    dataset: Text2SQLDataset, llm_client: LLMClient, prompt_builder: PromptBuilder
-) -> List[Text2SQLResult]:
+async def run_text2sql_for_dataset(dataset: Text2SQLDataset, llm_client: LLMClient) -> List[Text2SQLResult]:
     """
     Transforms questions into SQL queries using a Text2SQL model.
 
     Args:
         dataset: The dataset containing questions to be transformed into SQL queries.
         llm_client: LLM client.
-        prompt_builder: Prompt builder.
 
     Returns:
         A list of Text2SQLResult objects representing the predictions.
@@ -72,7 +60,7 @@ async def run_text2sql_for_dataset(
 
     for group in batch(dataset, 5):
         current_results = await asyncio.gather(
-            *[_run_text2sql_for_single_example(example, llm_client, prompt_builder) for example in group]
+            *[_run_text2sql_for_single_example(example, llm_client) for example in group]
         )
         results = [*current_results, *results]
 
@@ -95,9 +83,8 @@ async def evaluate(cfg: DictConfig) -> Any:
     connection_pool = await asyncpg.create_pool(dsn=benchmark_cfg.pg_conn_string)
     db_connector = PGSqlConnector(connection_pool=connection_pool)
 
-    llm_client = llm_client_factory(benchmark_cfg.generation_model)
-
-    prompt_builder = PromptBuilder(model_name=GENERATION_MODEL_CONFIG[benchmark_cfg.generation_model].model_name)
+    if "gpt" in benchmark_cfg.model_name:
+        llm_client = OpenAIClient(benchmark_cfg.model_name)
 
     run = None
     if cfg.neptune.log:
@@ -112,9 +99,7 @@ async def evaluate(cfg: DictConfig) -> Any:
 
     logger.info(f"Running Text2SQ predictions for dataset {cfg.dataset_path}")
     evaluation_dataset = Text2SQLDataset.from_json_file(Path(cfg.dataset_path), db_ids=cfg.db_ids)
-    text2sql_results = await run_text2sql_for_dataset(
-        dataset=evaluation_dataset, llm_client=llm_client, prompt_builder=prompt_builder
-    )
+    text2sql_results = await run_text2sql_for_dataset(dataset=evaluation_dataset, llm_client=llm_client)
 
     with open(output_dir / results_file_name, "w", encoding="utf-8") as outfile:
         json.dump([result.model_dump() for result in text2sql_results], outfile, indent=4)
