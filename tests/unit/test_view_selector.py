@@ -32,6 +32,7 @@ def llm_client():
 
 @pytest.fixture
 def views():
+    dbally.use_openai_llm(openai_api_key="sk-fake")
     mock_collection = dbally.create_collection("mock_collection")
     mock_collection.add(MockView1)
     mock_collection.add(MockView2)
