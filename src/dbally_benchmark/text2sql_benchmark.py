@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 from pathlib import Path
 from typing import Any, List, Optional
 
@@ -95,6 +96,14 @@ async def evaluate(cfg: DictConfig) -> Any:
         run["config"] = stringify_unsupported(cfg)
         run["sys/tags"].add(list(cfg.neptune.tags))
 
+        if "CI_MERGE_REQUEST_IID" in os.environ:
+            merge_request_project_url = os.getenv("CI_MERGE_REQUEST_PROJECT_URL")
+            merge_request_iid = os.getenv("CI_MERGE_REQUEST_IID")
+            merge_request_sha = os.getenv("CI_COMMIT_SHA")
+
+            run["merge_request_url"] = f"{merge_request_project_url}/-/merge_requests/{merge_request_iid}"
+            run["merge_request_sha"] = merge_request_sha
+
     metrics_file_name, results_file_name = "metrics.json", "eval_results.json"
 
     logger.info(f"Running Text2SQ predictions for dataset {cfg.dataset_path}")
@@ -113,13 +122,14 @@ async def evaluate(cfg: DictConfig) -> Any:
     logger.info(f"Text2SQL predictions saved under directory: {output_dir}")
 
     if run:
+        run["config/prompt_template"] = stringify_unsupported(TEXT2SQL_PROMPT_TEMPLATE.chat)
         run[f"evaluation/{metrics_file_name}"].upload((output_dir / metrics_file_name).as_posix())
         run[f"evaluation/{results_file_name}"].upload((output_dir / results_file_name).as_posix())
         run["evaluation/metrics"] = stringify_unsupported(metrics)
         logger.info("Evaluation results logged to neptune")
 
 
-@hydra.main(version_base=None, config_path="../experiment_config", config_name="evaluate_text2sql_config")
+@hydra.main(version_base=None, config_path="experiment_config", config_name="evaluate_text2sql_config")
 def main(cfg: DictConfig):
     """
     Runs Text2SQL evaluation for a single dataset defined in hydra config.

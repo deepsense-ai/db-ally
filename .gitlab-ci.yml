@@ -6,6 +6,7 @@ variables:
   PYTHON_DOCKER_IMAGE: python:3.8-buster
   DOCKER_REGISTRY: $CI_REGISTRY/$CI_PROJECT_PATH
   PRECOMMIT_IMAGE: $DOCKER_REGISTRY/precommit
+  BENCHMARK_IMAGE: $DOCKER_REGISTRY/benchmark
 
 
 # run CI on default branch or MR only
@@ -18,6 +19,7 @@ stages:
   - preparation
   - lint
   - tests
+  - benchmark
   - pages
   - package
   - deploy
@@ -77,6 +79,59 @@ stages:
     - docker tag $PRECOMMIT_IMAGE:dev-$CI_COMMIT_SHA $PRECOMMIT_IMAGE:latest
     - docker push $PRECOMMIT_IMAGE:latest
 
+"benchmark docker":
+  stage: preparation
+  image: docker:23
+  interruptible: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes:
+        - docker/benchmark/Dockerfile
+        - src/*
+        - data/*
+  services:
+    - docker:dind
+  before_script:
+    - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+  script:
+    - set -e
+    - docker pull $BENCHMARK_IMAGE:latest || true
+    - >
+      docker build -t $BENCHMARK_IMAGE:dev-$CI_COMMIT_SHA
+      --pull
+      --cache-from $BENCHMARK_IMAGE:latest
+      --label "org.opencontainers.image.title=$CI_PROJECT_TITLE"
+      --label "org.opencontainers.image.url=$CI_PROJECT_URL"
+      --label "org.opencontainers.image.version=$CI_COMMIT_REF_NAME"
+      --label "org.opencontainers.image.created=$CI_JOB_STARTED_AT"
+      --label "org.opencontainers.image.revision=$CI_COMMIT_SHA"
+      -f docker/benchmark/Dockerfile .
+    - docker push $BENCHMARK_IMAGE:dev-$CI_COMMIT_SHA
+
+# Here, the goal is to tag the "master" branch of previous step as "latest"
+"Publish benchmark docker":
+  stage: preparation
+  image: docker:23
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes:
+        - docker/benchmark/Dockerfile
+        - src/*
+        - data/*
+      when: always
+  services:
+    - docker:dind
+  before_script:
+    - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+  needs: ["benchmark docker"]
+  variables:
+    GIT_STRATEGY: none
+  script:
+    # Because we have no guarantee that this job will be picked up by the same runner
+    # that built the image in the previous step, we pull it again locally
+    - docker pull $BENCHMARK_IMAGE:dev-$CI_COMMIT_SHA
+    - docker tag $BENCHMARK_IMAGE:dev-$CI_COMMIT_SHA $BENCHMARK_IMAGE:latest
+    - docker push $BENCHMARK_IMAGE:latest
 
 #########################################
 
@@ -190,6 +245,43 @@ tests:
         coverage_format: cobertura
         path: coverage.xml
     expire_in: "30 days"
+
+# Job for running benchmark
+benchmark:
+  image: $BENCHMARK_IMAGE:latest
+  stage: benchmark
+  interruptible: true
+  script:
+    - TODO
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes:
+        - docker/benchmark/Dockerfile
+        - src/dbally/*
+        - src/dbally_benchmark/*
+        - data/*
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
+
+# this runs whenever docker is prebuilt
+# instead of standard benchmark job
+benchmark-changed:
+  image: $BENCHMARK_IMAGE:dev-$CI_COMMIT_SHA
+  stage: benchmark
+  interruptible: true
+  script:
+    - TODO
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - docker/benchmark/Dockerfile
+        - src/dbally/*
+        - src/dbally_benchmark/*
+        - data/*
+      when: manual
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: never
 
 # Job for scanning for vulnerabilities:
 "trivy security scan":
