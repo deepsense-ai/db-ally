@@ -58,7 +58,7 @@ class Text2SQLDataset(RootModel):
         dataset_obj = cls.model_validate_json(data)
 
         if db_ids:
-            dataset_obj.root = [item for item in dataset_obj.root if item.db_id in db_ids][:2]
+            dataset_obj.root = [item for item in dataset_obj.root if item.db_id in db_ids]
 
         return dataset_obj
 
