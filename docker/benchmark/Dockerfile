@@ -7,3 +7,4 @@ COPY pyproject.toml setup.cfg ./
 COPY src/ src/
 
 RUN pip install --no-cache-dir --upgrade -e .[benchmark]
+RUN pip install openai~=1.10.0

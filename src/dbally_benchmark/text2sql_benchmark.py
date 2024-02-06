@@ -128,6 +128,8 @@ async def evaluate(cfg: DictConfig) -> Any:
         run["evaluation/metrics"] = stringify_unsupported(metrics)
         logger.info("Evaluation results logged to neptune")
 
+    await connection_pool.close()
+
 
 @hydra.main(version_base=None, config_path="experiment_config", config_name="evaluate_text2sql_config")
 def main(cfg: DictConfig):
