@@ -2,5 +2,5 @@ output_path: "text2sql_evaluation"
 dataset_path: "data/text2sql/superhero.json"
 db_ids: ["superhero"]
 neptune:
-  log: True
+  log: False
   tags: ["Text2SQL", "superhero", 'gpt-3.5']
