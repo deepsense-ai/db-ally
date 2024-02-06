@@ -1,49 +1,8 @@
 import json
-import re
-from typing import Callable, Dict, List, Optional, Set
+from typing import Callable, Dict, Optional, Tuple
 
-from dbally.data_models.prompts.prompt_template import ChatFormat, PromptTemplate, PromptTemplateError
-
-
-def _extract_variables(text: str) -> List[str]:
-    """
-    Given a text string, extract all variables that can be filled using .format
-
-    Args:
-        text: string to process
-
-    Returns:
-        list of variables extracted from text
-    """
-    pattern = r"\{([^}]+)\}"
-    return re.findall(pattern, text)
-
-
-def _check_prompt_variables(chat: ChatFormat, variables_to_check: Set[str]) -> ChatFormat:
-    """
-    Function validates a given chat to make sure it contains variables required.
-
-    Args:
-        chat: chat to validate
-        variables_to_check: set of variables to assert
-
-    Raises:
-        PromptTemplateError: If required variables are missing
-
-    Returns:
-        Chat, if it's valid.
-    """
-    variables = []
-    for message in chat:
-        content = message["content"]
-        variables.extend(_extract_variables(content))
-    if not set(variables_to_check).issubset(variables):
-        raise PromptTemplateError(
-            "Cannot construct an IQL prompt template from the provided chat, "
-            "because it lacks necessary string variables. "
-            "The IQL chat needs to contain 'filters', 'actions' and 'question' arguments."
-        )
-    return chat
+from dbally.data_models.prompts.common_validation_utils import _check_prompt_variables
+from dbally.data_models.prompts.prompt_template import ChatFormat, PromptTemplate
 
 
 class IQLPromptTemplate(PromptTemplate):
@@ -55,13 +14,13 @@ class IQLPromptTemplate(PromptTemplate):
         self,
         chat: ChatFormat,
         response_format: Optional[Dict[str, str]] = None,
-        llm_response_parser: Optional[Callable] = None,
+        llm_response_parser: Callable = lambda x: x,
     ):
         super().__init__(chat, response_format, llm_response_parser)
         self.chat = _check_prompt_variables(chat, {"filters", "actions", "question"})
 
 
-def _convert_llm_json_response_to_iql(llm_response_json: str) -> str:
+def _convert_llm_json_response_to_iql(llm_response_json: str) -> Tuple[str, str]:
     """
     Converts LLM json response to IQL
 
@@ -72,7 +31,7 @@ def _convert_llm_json_response_to_iql(llm_response_json: str) -> str:
         A string containing IQL for filters, newline, IQL for actions
     """
     llm_response_dict = json.loads(llm_response_json)
-    return (llm_response_dict.get("filters") + "\n" + (llm_response_dict.get("actions") or "")).strip()
+    return llm_response_dict.get("filters"), llm_response_dict.get("actions") or ""
 
 
 default_iql_template = IQLPromptTemplate(

@@ -1,10 +1,11 @@
 # Requirements as needed for development for this project.
 # ---------------------------------------------------------
 # Install current project
--e.
+-e.[openai]
 # developer tools:
 pre-commit
 pytest>=6.2.5
+pytest-asyncio>=0.23.4
 pytest-cov
 # for getting dependency licenses and docs:
 pip-licenses>=4.0.0,<5.0.0

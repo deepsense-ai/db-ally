@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 from dbally._collection import Collection
 from dbally.views.runner import Runner
 from tests.unit.views.test_sqlalchemy_base import MockSqlAlchemyView
@@ -7,7 +9,7 @@ def test_runner() -> None:
     """
     Tests that the runner works correctly
     """
-    collection = Collection("foo")
+    collection = Collection("foo", iql_generator=Mock(), view_selector=Mock())
     collection.add(MockSqlAlchemyView)
     runner = Runner("MockSqlAlchemyView", collection)
     runner.apply_filters("method_foo(1) and method_bar('London', 2020)")

@@ -1,19 +1,13 @@
 # mypy: disable-error-code="empty-body"
 
-from typing import Dict, Union
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 import sqlalchemy
 
 from dbally import SqlAlchemyBaseView, decorators
 from dbally.data_models.prompts.iql_prompt_template import default_iql_template
-from dbally.data_models.prompts.prompt_template import ChatFormat
 from dbally.iql_generator.iql_generator import IQLGenerator
-
-
-class MockLLMClient:
-    def generate(self, prompt: Union[str, ChatFormat], response_format: Dict[str, str]) -> str:
-        return """{"filters": "LLM IQL mock answer"}"""
 
 
 class MockView(SqlAlchemyBaseView):
@@ -45,10 +39,13 @@ def view():
 
 @pytest.fixture
 def llm_client():
-    return MockLLMClient()
+    mock_client = Mock()
+    mock_client.text_generation = AsyncMock(return_value='{"filters": "LLM IQL mock answer"}')
+    return mock_client
 
 
-def test_iql_generation(llm_client, view):
+@pytest.mark.asyncio
+async def test_iql_generation(llm_client, view):
     iql_generator = IQLGenerator(llm_client, default_iql_template)
 
     filters_for_prompt, actions_for_prompt = iql_generator._promptify_view(view.list_filters(), view.list_actions())
@@ -58,5 +55,5 @@ def test_iql_generation(llm_client, view):
     assert filters_in_prompt == {"filter_by_id(idx: int)", "filter_by_name(city: str)"}
     assert actions_in_prompt == {"sort_by_id()", "group_by_name()"}
 
-    response = iql_generator.generate_iql(view.list_filters(), view.list_actions(), "Mock_question")
-    assert response == "LLM IQL mock answer"
+    response = await iql_generator.generate_iql(view.list_filters(), view.list_actions(), "Mock_question")
+    assert response == ("LLM IQL mock answer", "")

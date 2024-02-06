@@ -2,7 +2,8 @@ import textwrap
 from typing import Dict, List, Optional, Tuple, Type
 
 from dbally.iql import IQLActions, IQLQuery
-from dbally.view_selection.random_view_selector import RandomViewSelector
+from dbally.iql_generator.iql_generator import IQLGenerator
+from dbally.view_selection.base import ViewSelector
 from dbally.views.base import AbstractBaseView, ExposedFunction
 
 
@@ -33,11 +34,11 @@ class Collection:
     It also stores configuration such as LLM model choice, vector db or available data sources.
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, view_selector: ViewSelector, iql_generator: IQLGenerator):
         self.name = name
         self._views: Dict[str, Type[AbstractBaseView]] = {}
-        self._view_selector = RandomViewSelector()
-        self._iql_generator = IQLGeneratorMock()
+        self._view_selector = view_selector
+        self._iql_generator = iql_generator
 
     def add(self, view: Type[AbstractBaseView], name: Optional[str] = None) -> None:
         """
@@ -112,7 +113,9 @@ class Collection:
 
         filter_list, action_list = view.list_filters(), view.list_actions()
 
-        iql_filters, iql_actions = await self._iql_generator.generate_iql(question, filter_list, action_list)
+        iql_filters, iql_actions = await self._iql_generator.generate_iql(
+            question=question, filters=filter_list, actions=action_list
+        )
 
         filters = IQLQuery.parse(iql_filters)
         actions = IQLActions.parse(iql_actions)

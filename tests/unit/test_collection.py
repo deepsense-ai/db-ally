@@ -1,6 +1,7 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name
 
 from typing import List
+from unittest.mock import Mock
 
 import pytest
 
@@ -53,7 +54,7 @@ def mock_collection() -> Collection:
     """
     Returns a collection with two mock views
     """
-    collection = Collection("foo")
+    collection = Collection("foo", view_selector=Mock(), iql_generator=Mock())
     collection.add(MockView1)
     collection.add(MockView2)
     return collection

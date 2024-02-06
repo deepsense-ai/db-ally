@@ -20,6 +20,10 @@ class IQLParser:
         :return: IQL.Node which is root of the tree representing IQL query.
         :raises IQLError: if parsing fails.
         """
+        self.source = self.source.replace(" OR ", " or ")
+        self.source = self.source.replace(" AND ", " and ")
+        self.source = self.source.replace(" NOT ", " not ")
+
         ast_tree = ast.parse(self.source)
         first_element = ast_tree.body[0]
 
