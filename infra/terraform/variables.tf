@@ -6,6 +6,7 @@ variable "database_names" {
   default = [
     "california_schools",
     "card_games",
+    "clothes_retail",
     "codebase_community",
     "debit_card_specializing",
     "european_football_2",
