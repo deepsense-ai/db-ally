@@ -1,13 +1,13 @@
 import copy
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, Optional
 
-from dbally.data_models.prompts import ChatFormat, IQLPromptTemplate, default_view_selector_template
-from dbally.iql_generator.iql_generator import BaseLLMClient
+from dbally.data_models.prompts import IQLPromptTemplate, default_view_selector_template
+from dbally.llm_client.base import LLMClient
 from dbally.prompts import PromptBuilder
 from dbally.view_selection.base import ViewSelector
 
 
-class DefaultViewSelector(ViewSelector):
+class LLMViewSelector(ViewSelector):
     """
     ViewSelector utilises the LLM model to select the best view to answer the user question.
 
@@ -20,7 +20,7 @@ class DefaultViewSelector(ViewSelector):
 
     def __init__(
         self,
-        llm_client: BaseLLMClient,  # temporary
+        llm_client: LLMClient,
         prompt_template: Optional[IQLPromptTemplate] = None,
         prompt_builder: Optional[PromptBuilder] = None,
         promptify_views: Optional[Callable] = None,
@@ -29,7 +29,6 @@ class DefaultViewSelector(ViewSelector):
         self._prompt_template = prompt_template or copy.deepcopy(default_view_selector_template)
         self._prompt_builder = prompt_builder or PromptBuilder()
         self._promptify_views = promptify_views or _promptify_views
-        self.last_prompt: Union[str, ChatFormat, None] = None  # todo: drop it when we have auditing
 
     async def select_view(self, question: str, views: Dict[str, str]) -> str:
         """
@@ -45,12 +44,10 @@ class DefaultViewSelector(ViewSelector):
 
         views_for_prompt = self._promptify_views(views)
 
-        _prompt = self._prompt_builder.build(
+        llm_response = await self._llm_client.text_generation(
             self._prompt_template,
             fmt={"views": views_for_prompt, "question": question},
         )
-        self.last_prompt = _prompt
-        llm_response = self._llm_client.generate(_prompt, self._prompt_template.response_format)
         selected_view = self._prompt_template.llm_response_parser(llm_response)
         return selected_view
 

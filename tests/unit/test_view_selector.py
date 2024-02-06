@@ -1,19 +1,12 @@
 # mypy: disable-error-code="empty-body"
-
-from typing import Dict, Union
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 import sqlalchemy
 
 import dbally
 from dbally import SqlAlchemyBaseView
-from dbally.data_models.prompts.prompt_template import ChatFormat
-from dbally.view_selection.default_view_selector import DefaultViewSelector
-
-
-class MockLLMClient:
-    def generate(self, prompt: Union[str, ChatFormat], response_format: Dict[str, str]) -> str:
-        return "MockView1"
+from dbally.view_selection.llm_view_selector import LLMViewSelector
 
 
 class MockView1(SqlAlchemyBaseView):
@@ -32,7 +25,9 @@ class MockView2(SqlAlchemyBaseView):
 
 @pytest.fixture
 def llm_client():
-    return MockLLMClient()
+    llm_client = Mock()
+    llm_client.text_generation = AsyncMock(return_value="MockView1")
+    return llm_client
 
 
 @pytest.fixture
@@ -45,7 +40,7 @@ def views():
 
 @pytest.mark.asyncio
 async def test_view_selection(llm_client, views):
-    view_selector = DefaultViewSelector(llm_client)
+    view_selector = LLMViewSelector(llm_client)
 
     view = await view_selector.select_view("Mock question?", views)
     assert view == "MockView1"

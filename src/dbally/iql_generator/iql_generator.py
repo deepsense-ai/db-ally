@@ -1,31 +1,11 @@
 import copy
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 from dbally.data_models.prompts.iql_prompt_template import IQLPromptTemplate, default_iql_template
 from dbally.data_models.prompts.prompt_template import ChatFormat
+from dbally.llm_client.base import LLMClient
 from dbally.prompts.prompt_builder import PromptBuilder
 from dbally.views.base import ExposedFunction
-
-
-# todo: replace with real LLM client once it's available
-class BaseLLMClient:
-    "Placeholder, waiting for real BaseLLMClient from another MR"
-
-    def __init__(self, api_key: str) -> None:
-        from openai import OpenAI  # pylint: disable=C0415
-
-        self.api_key = api_key
-        self._llm_client = OpenAI(api_key=api_key)
-
-    def generate(  # pylint: disable=C0116,W9011
-        self,
-        prompt: Union[str, ChatFormat],
-        response_format: Union[None, Dict[str, str]],
-    ) -> str:
-        llm_response = self._llm_client.chat.completions.create(
-            model="gpt-3.5-turbo-1106", messages=prompt, response_format=response_format
-        )
-        return llm_response.choices[0].message.content
 
 
 class IQLGenerator:
@@ -41,7 +21,7 @@ class IQLGenerator:
 
     def __init__(
         self,
-        llm_client: BaseLLMClient,
+        llm_client: LLMClient,
         prompt_template: Optional[IQLPromptTemplate] = None,
         prompt_builder: Optional[PromptBuilder] = None,
         promptify_view: Optional[Callable] = None,
@@ -52,7 +32,7 @@ class IQLGenerator:
         self._promptify_view = promptify_view or _promptify_filters_and_actions
         self.last_prompt: Union[str, ChatFormat, None] = None  # todo: drop it when we have auditing
 
-    def generate_iql(
+    async def generate_iql(
         self, filters: List[ExposedFunction], actions: List[ExposedFunction], question: str
     ) -> Tuple[str, str]:
         # todo: add more generation-related arguments here once BaseLLM interface is established
@@ -72,7 +52,10 @@ class IQLGenerator:
             self._prompt_template,
             fmt={"filters": filters_for_prompt, "actions": actions_for_prompt, "question": question},
         )
-        llm_response = self._llm_client.generate(_prompt, self._prompt_template.response_format)
+        llm_response = await self._llm_client.text_generation(
+            template=self._prompt_template,
+            fmt={"filters": filters_for_prompt, "actions": actions_for_prompt, "question": question},
+        )
         iql_filters, iql_actions = self._prompt_template.llm_response_parser(llm_response)
         self.last_prompt = _prompt
         return iql_filters, iql_actions

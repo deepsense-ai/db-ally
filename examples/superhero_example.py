@@ -131,10 +131,20 @@ class SuperheroCountByPowerView(SuperheroView, SuperheroFilterMixin):
 
 
 async def main():
+    dbally.use_openai_llm(
+        model_name="gpt-4",
+        openai_api_key=config.openai_api_key,  # You can pass key directly or just have OPENAI_API_KEY env var defined.
+    )
+
     superheros_db = dbally.create_collection("superheros_db")
     superheros_db.add(SuperheroView)
+    superheros_db.add(SuperheroCountByPowerView)
 
-    response = await superheros_db.ask("What heroes have blue eyes and are taller than 180cm?")
+    response = await superheros_db.ask("What heroes have blue eyes and are taller than 180.5cm?")
+    print(response)
+    print(pd.read_sql_query(response, engine))
+
+    response = await superheros_db.ask("Count power of female heros")
     print(response)
     print(pd.read_sql_query(response, engine))
 
