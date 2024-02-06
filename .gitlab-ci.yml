@@ -252,7 +252,7 @@ benchmark:
   stage: benchmark
   interruptible: true
   script:
-    - TODO
+    - . run_benchmark.sh
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       changes:
@@ -271,7 +271,7 @@ benchmark-changed:
   stage: benchmark
   interruptible: true
   script:
-    - TODO
+    - . run_benchmark.sh
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
