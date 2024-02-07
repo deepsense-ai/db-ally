@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
 
-. venv/bin/activate
-
 pip-licenses --from=mixed  --ignore-packages `cat .libraries-whitelist.txt`> licenses.txt
 cat licenses.txt
 
