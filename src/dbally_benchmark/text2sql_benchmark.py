@@ -107,7 +107,9 @@ async def evaluate(cfg: DictConfig) -> Any:
     metrics_file_name, results_file_name = "metrics.json", "eval_results.json"
 
     logger.info(f"Running Text2SQ predictions for dataset {cfg.dataset_path}")
-    evaluation_dataset = Text2SQLDataset.from_json_file(Path(cfg.dataset_path), db_ids=cfg.db_ids)
+    evaluation_dataset = Text2SQLDataset.from_json_file(
+        Path(cfg.dataset_path), db_ids=cfg.db_ids, difficulty_levels=cfg.difficulty_levels
+    )
     text2sql_results = await run_text2sql_for_dataset(dataset=evaluation_dataset, llm_client=llm_client)
 
     with open(output_dir / results_file_name, "w", encoding="utf-8") as outfile:

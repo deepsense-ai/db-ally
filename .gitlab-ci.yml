@@ -6,7 +6,7 @@ variables:
   PYTHON_DOCKER_IMAGE: python:3.8-buster
   DOCKER_REGISTRY: $CI_REGISTRY/$CI_PROJECT_PATH
   PRECOMMIT_IMAGE: $DOCKER_REGISTRY/precommit
-  BENCHMARK_IMAGE: $DOCKER_REGISTRY/benchmark
+  TESTS_IMAGE: $DOCKER_REGISTRY/tests
 
 
 # run CI on default branch or MR only
@@ -79,14 +79,14 @@ stages:
     - docker tag $PRECOMMIT_IMAGE:dev-$CI_COMMIT_SHA $PRECOMMIT_IMAGE:latest
     - docker push $PRECOMMIT_IMAGE:latest
 
-"benchmark docker":
+"tests docker":
   stage: preparation
   image: docker:23
   interruptible: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       changes:
-        - docker/benchmark/Dockerfile
+        - docker/tests/Dockerfile
         - src/*
         - data/*
   services:
@@ -95,27 +95,27 @@ stages:
     - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
     - set -e
-    - docker pull $BENCHMARK_IMAGE:latest || true
+    - docker pull $TESTS_IMAGE:latest || true
     - >
-      docker build -t $BENCHMARK_IMAGE:dev-$CI_COMMIT_SHA
+      docker build -t $TESTS_IMAGE:dev-$CI_COMMIT_SHA
       --pull
-      --cache-from $BENCHMARK_IMAGE:latest
+      --cache-from $TESTS_IMAGE:latest
       --label "org.opencontainers.image.title=$CI_PROJECT_TITLE"
       --label "org.opencontainers.image.url=$CI_PROJECT_URL"
       --label "org.opencontainers.image.version=$CI_COMMIT_REF_NAME"
       --label "org.opencontainers.image.created=$CI_JOB_STARTED_AT"
       --label "org.opencontainers.image.revision=$CI_COMMIT_SHA"
-      -f docker/benchmark/Dockerfile .
-    - docker push $BENCHMARK_IMAGE:dev-$CI_COMMIT_SHA
+      -f docker/gitlab_ci/Dockerfile .
+    - docker push $TESTS_IMAGE:dev-$CI_COMMIT_SHA
 
 # Here, the goal is to tag the "master" branch of previous step as "latest"
-"Publish benchmark docker":
+"Publish tests docker":
   stage: preparation
   image: docker:23
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       changes:
-        - docker/benchmark/Dockerfile
+        - docker/tests/Dockerfile
         - src/*
         - data/*
       when: always
@@ -123,15 +123,15 @@ stages:
     - docker:dind
   before_script:
     - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-  needs: ["benchmark docker"]
+  needs: ["tests docker"]
   variables:
     GIT_STRATEGY: none
   script:
     # Because we have no guarantee that this job will be picked up by the same runner
     # that built the image in the previous step, we pull it again locally
-    - docker pull $BENCHMARK_IMAGE:dev-$CI_COMMIT_SHA
-    - docker tag $BENCHMARK_IMAGE:dev-$CI_COMMIT_SHA $BENCHMARK_IMAGE:latest
-    - docker push $BENCHMARK_IMAGE:latest
+    - docker pull $TESTS_IMAGE:dev-$CI_COMMIT_SHA
+    - docker tag $TESTS_IMAGE:dev-$CI_COMMIT_SHA $TESTS_IMAGE:latest
+    - docker push $TESTS_IMAGE:latest
 
 #########################################
 
@@ -211,12 +211,9 @@ lint-precommit-changed:
 
 # Job to run pytest with code coverage + license check
 tests:
-  image: $PYTHON_DOCKER_IMAGE
+  image: $TESTS_IMAGE:latest
   stage: tests
   interruptible: true
-  before_script:
-    - . setup_dev_env.sh
-    - pip install build twine bump2version
   script:
     # fused check license here as it would take more time to do it in different place.
     - ./check_licenses.sh
@@ -232,6 +229,61 @@ tests:
     - coverage run -m pytest -v -p no:warnings --junitxml=report.xml tests/
     - coverage report
     - coverage xml
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes:
+        - docker/tests/Dockerfile
+        - src/dbally/*
+        - src/dbally_benchmark/*
+        - data/*
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  artifacts:
+    when: always
+    paths:
+      - licenses.txt
+      - requirements-freeze.txt
+      - dist/*
+    reports:
+      junit: "report.xml"
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    expire_in: "30 days"
+
+# this runs whenever docker is prebuilt
+# instead of standard benchmark job
+tests-changed:
+  image: $TESTS_IMAGE:dev-$CI_COMMIT_SHA
+  stage: tests
+  interruptible: true
+  script:
+    # fused check license here as it would take more time to do it in different place.
+    - ./check_licenses.sh
+    # test package building
+    - echo ${CI_PIPELINE_IID} >> src/dbally/VERSION
+    - python -m build
+    # generate pip freeze
+    - pip freeze > requirements-freeze.txt
+    - cat requirements-freeze.txt
+    # test type hints
+    - mypy .
+    # run with coverage to not execute tests twice
+    - coverage run -m pytest -v -p no:warnings --junitxml=report.xml tests/
+    - coverage report
+    - coverage xml
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - docker/tests/Dockerfile
+        - src/dbally/*
+        - src/dbally_benchmark/*
+        - data/*
+      when: always
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: never
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     when: always
@@ -248,15 +300,15 @@ tests:
 
 # Job for running benchmark
 benchmark:
-  image: $BENCHMARK_IMAGE:latest
+  image: $TESTS_IMAGE:latest
   stage: benchmark
   interruptible: true
   script:
-    - . run_benchmark.sh
+    - python src/dbally_benchmark/text2sql_benchmark.py
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       changes:
-        - docker/benchmark/Dockerfile
+        - docker/tests/Dockerfile
         - src/dbally/*
         - src/dbally_benchmark/*
         - data/*
@@ -267,15 +319,15 @@ benchmark:
 # this runs whenever docker is prebuilt
 # instead of standard benchmark job
 benchmark-changed:
-  image: $BENCHMARK_IMAGE:dev-$CI_COMMIT_SHA
+  image: $TESTS_IMAGE:dev-$CI_COMMIT_SHA
   stage: benchmark
   interruptible: true
   script:
-    - . run_benchmark.sh
+    - python src/dbally_benchmark/text2sql_benchmark.py
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
-        - docker/benchmark/Dockerfile
+        - docker/tests/Dockerfile
         - src/dbally/*
         - src/dbally_benchmark/*
         - data/*
