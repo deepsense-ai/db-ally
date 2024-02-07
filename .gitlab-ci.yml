@@ -382,14 +382,12 @@ benchmark-changed:
 
 # Job to build and deploy release version - note: cannot deploy two same versions!
 "Release package to PIP registry":
-  image: $PYTHON_DOCKER_IMAGE
+  image: $TESTS_IMAGE
   stage: deploy
   environment: release
   when: manual
   allow_failure: true
   needs: [tests]
-  before_script:
-    - pip install build twine bump2version
   script:
     - bump2version --verbose release
     - python -m build
