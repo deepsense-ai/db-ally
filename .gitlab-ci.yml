@@ -83,12 +83,6 @@ stages:
   stage: preparation
   image: docker:23
   interruptible: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      changes:
-        - docker/tests/Dockerfile
-        - src/*
-        - data/*
   services:
     - docker:dind
   before_script:
@@ -107,31 +101,6 @@ stages:
       --label "org.opencontainers.image.revision=$CI_COMMIT_SHA"
       -f docker/tests/Dockerfile .
     - docker push $TESTS_IMAGE:dev-$CI_COMMIT_SHA
-
-# Here, the goal is to tag the "master" branch of previous step as "latest"
-"Publish tests docker":
-  stage: preparation
-  image: docker:23
-  rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      changes:
-        - docker/tests/Dockerfile
-        - src/*
-        - data/*
-      when: always
-  services:
-    - docker:dind
-  before_script:
-    - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-  needs: ["tests docker"]
-  variables:
-    GIT_STRATEGY: none
-  script:
-    # Because we have no guarantee that this job will be picked up by the same runner
-    # that built the image in the previous step, we pull it again locally
-    - docker pull $TESTS_IMAGE:dev-$CI_COMMIT_SHA
-    - docker tag $TESTS_IMAGE:dev-$CI_COMMIT_SHA $TESTS_IMAGE:latest
-    - docker push $TESTS_IMAGE:latest
 
 #########################################
 
@@ -211,51 +180,6 @@ lint-precommit-changed:
 
 # Job to run pytest with code coverage + license check
 tests:
-  image: $TESTS_IMAGE:latest
-  stage: tests
-  interruptible: true
-  script:
-    # fused check license here as it would take more time to do it in different place.
-    - ./check_licenses.sh
-    # test package building
-    - echo ${CI_PIPELINE_IID} >> src/dbally/VERSION
-    - python -m build
-    # generate pip freeze
-    - pip freeze > requirements-freeze.txt
-    - cat requirements-freeze.txt
-    # test type hints
-    - mypy .
-    # run with coverage to not execute tests twice
-    - coverage run -m pytest -v -p no:warnings --junitxml=report.xml tests/
-    - coverage report
-    - coverage xml
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      changes:
-        - docker/tests/Dockerfile
-        - src/dbally/*
-        - src/dbally_benchmark/*
-        - data/*
-      when: never
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: manual
-  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
-  artifacts:
-    when: always
-    paths:
-      - licenses.txt
-      - requirements-freeze.txt
-      - dist/*
-    reports:
-      junit: "report.xml"
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage.xml
-    expire_in: "30 days"
-
-# this runs whenever docker is prebuilt
-# instead of standard benchmark job
-tests-changed:
   image: $TESTS_IMAGE:dev-$CI_COMMIT_SHA
   stage: tests
   interruptible: true
@@ -274,16 +198,6 @@ tests-changed:
     - coverage run -m pytest -v -p no:warnings --junitxml=report.xml tests/
     - coverage report
     - coverage xml
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      changes:
-        - docker/tests/Dockerfile
-        - src/dbally/*
-        - src/dbally_benchmark/*
-        - data/*
-      when: always
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: never
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     when: always
@@ -300,40 +214,14 @@ tests-changed:
 
 # Job for running benchmark
 benchmark:
-  image: $TESTS_IMAGE:latest
-  stage: benchmark
-  interruptible: true
-  script:
-    - python src/dbally_benchmark/text2sql_benchmark.py
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      changes:
-        - docker/tests/Dockerfile
-        - src/dbally/*
-        - src/dbally_benchmark/*
-        - data/*
-      when: never
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: manual
-
-# this runs whenever docker is prebuilt
-# instead of standard benchmark job
-benchmark-changed:
   image: $TESTS_IMAGE:dev-$CI_COMMIT_SHA
   stage: benchmark
   interruptible: true
   script:
     - python src/dbally_benchmark/text2sql_benchmark.py
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      changes:
-        - docker/tests/Dockerfile
-        - src/dbally/*
-        - src/dbally_benchmark/*
-        - data/*
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       when: manual
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: never
 
 # Job for scanning for vulnerabilities:
 "trivy security scan":
@@ -369,9 +257,9 @@ benchmark-changed:
 # Job for building & deploying to pip registry
 # version builded from tests job.
 "Deploy test dev package to PIP registry":
-  image: $TESTS_IMAGE
+  image: $TESTS_IMAGE:dev-$CI_COMMIT_SHA
   stage: package
-  needs: [tests-changed]
+  needs: [tests]
   environment: testing
   when: manual
   allow_failure: true
@@ -380,12 +268,12 @@ benchmark-changed:
 
 # Job to build and deploy release version - note: cannot deploy two same versions!
 "Release package to PIP registry":
-  image: $TESTS_IMAGE
+  image: $TESTS_IMAGE:dev-$CI_COMMIT_SHA
   stage: deploy
   environment: release
   when: manual
   allow_failure: true
-  needs: [tests-changed]
+  needs: [tests]
   script:
     - bump2version --verbose release
     - python -m build
