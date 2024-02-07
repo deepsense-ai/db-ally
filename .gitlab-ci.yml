@@ -369,14 +369,12 @@ benchmark-changed:
 # Job for building & deploying to pip registry
 # version builded from tests job.
 "Deploy test dev package to PIP registry":
-  image: $PYTHON_DOCKER_IMAGE
+  image: $TESTS_IMAGE
   stage: package
-  needs: [tests]
+  needs: [tests-changed]
   environment: testing
   when: manual
   allow_failure: true
-  before_script:
-    - pip install build twine
   script:
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
 
@@ -387,7 +385,7 @@ benchmark-changed:
   environment: release
   when: manual
   allow_failure: true
-  needs: [tests]
+  needs: [tests-changed]
   script:
     - bump2version --verbose release
     - python -m build
