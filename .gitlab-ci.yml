@@ -105,7 +105,7 @@ stages:
       --label "org.opencontainers.image.version=$CI_COMMIT_REF_NAME"
       --label "org.opencontainers.image.created=$CI_JOB_STARTED_AT"
       --label "org.opencontainers.image.revision=$CI_COMMIT_SHA"
-      -f docker/gitlab_ci/Dockerfile .
+      -f docker/tests/Dockerfile .
     - docker push $TESTS_IMAGE:dev-$CI_COMMIT_SHA
 
 # Here, the goal is to tag the "master" branch of previous step as "latest"
