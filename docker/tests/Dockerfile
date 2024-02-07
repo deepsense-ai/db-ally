@@ -1,9 +1,9 @@
 FROM python:3.8-buster
 
-WORKDIR /gitlab_ci
+WORKDIR /tests
 RUN python -m pip install --no-cache-dir --upgrade pip
 
-COPY pyproject.toml setup.cfg requirements-dev.txt ./
+COPY pyproject.toml setup.cfg requirements-dev.txt check_licenses.sh ./
 COPY src/ src/
 COPY data/ data/
 
