@@ -3,6 +3,7 @@ from typing import Callable, Dict, Optional, Tuple
 
 from dbally.data_models.prompts.common_validation_utils import _check_prompt_variables
 from dbally.data_models.prompts.prompt_template import ChatFormat, PromptTemplate
+from dbally.utils.errors import UnsupportedQueryError
 
 
 class IQLPromptTemplate(PromptTemplate):
@@ -29,7 +30,14 @@ def _convert_llm_json_response_to_iql(llm_response_json: str) -> Tuple[str, str]
 
     Returns:
         A string containing IQL for filters, newline, IQL for actions
+
+    Raises:
+        UnsuppotedQueryError: When IQL generator is unable to construct a query
+        with given filters and actions.
     """
+
+    if llm_response_json == "UnsupportedQueryError":
+        raise UnsupportedQueryError
     llm_response_dict = json.loads(llm_response_json)
     return llm_response_dict.get("filters"), llm_response_dict.get("actions") or ""
 

@@ -6,6 +6,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import RequestEnd, RequestStart
 from dbally.iql import IQLActions, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
+from dbally.utils.errors import NoViewFoundError
 from dbally.view_selection.base import ViewSelector
 from dbally.views.base import AbstractBaseView, ExposedFunction
 
@@ -75,7 +76,13 @@ class Collection:
 
         :param name: Name of the view to return
         :return: View instance
+
+        :raises NoViewFoundError: If there is no view with the given name
         """
+
+        if name not in self._views:
+            raise NoViewFoundError
+
         return self._views[name]()
 
     def list(self) -> Dict[str, str]:
