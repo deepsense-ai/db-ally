@@ -8,7 +8,7 @@ class BenchmarkConfig(BaseSettings):
 
     pg_conn_string: str = ""
     openai_api_key: str = ""
-    model_name: str = "gpt-3.5"
+    model_name: str = "gpt-4-turbo-preview"
 
     neptune_project: str = "deepsense-ai/db-ally"
     neptune_api_token: str = ""

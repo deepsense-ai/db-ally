@@ -137,7 +137,7 @@ async def evaluate(cfg: DictConfig) -> Any:
     await connection_pool.close()
 
 
-@hydra.main(version_base=None, config_path="experiment_config", config_name="evaluate_text2sql_config")
+@hydra.main(version_base=None, config_path="experiment_config", config_name="evaluate_dbally_config")
 def main(cfg: DictConfig):
     """
     Runs db-ally evaluation for a single dataset defined in hydra config.

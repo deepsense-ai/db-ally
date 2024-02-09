@@ -3,5 +3,5 @@ dataset_path: "data/superhero.json"
 db_ids: ["superhero"]
 difficulty_levels: ["simple"]
 neptune:
-  log: True
+  log: False
   tags: ["db-ally", "superhero", 'gpt-4-turbo-preview']
