@@ -6,6 +6,7 @@ variables:
   PYTHON_DOCKER_IMAGE: python:3.8-buster
   DOCKER_REGISTRY: $CI_REGISTRY/$CI_PROJECT_PATH
   PRECOMMIT_IMAGE: $DOCKER_REGISTRY/precommit
+  TESTS_IMAGE: $DOCKER_REGISTRY/tests
 
 
 # run CI on default branch or MR only
@@ -18,6 +19,7 @@ stages:
   - preparation
   - lint
   - tests
+  - benchmark
   - pages
   - package
   - deploy
@@ -77,6 +79,28 @@ stages:
     - docker tag $PRECOMMIT_IMAGE:dev-$CI_COMMIT_SHA $PRECOMMIT_IMAGE:latest
     - docker push $PRECOMMIT_IMAGE:latest
 
+"tests docker":
+  stage: preparation
+  image: docker:23
+  interruptible: true
+  services:
+    - docker:dind
+  before_script:
+    - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+  script:
+    - set -e
+    - docker pull $TESTS_IMAGE:latest || true
+    - >
+      docker build -t $TESTS_IMAGE:dev-$CI_COMMIT_SHA
+      --pull
+      --cache-from $TESTS_IMAGE:latest
+      --label "org.opencontainers.image.title=$CI_PROJECT_TITLE"
+      --label "org.opencontainers.image.url=$CI_PROJECT_URL"
+      --label "org.opencontainers.image.version=$CI_COMMIT_REF_NAME"
+      --label "org.opencontainers.image.created=$CI_JOB_STARTED_AT"
+      --label "org.opencontainers.image.revision=$CI_COMMIT_SHA"
+      -f docker/tests/Dockerfile .
+    - docker push $TESTS_IMAGE:dev-$CI_COMMIT_SHA
 
 #########################################
 
@@ -156,12 +180,9 @@ lint-precommit-changed:
 
 # Job to run pytest with code coverage + license check
 tests:
-  image: $PYTHON_DOCKER_IMAGE
+  image: $TESTS_IMAGE:dev-$CI_COMMIT_SHA
   stage: tests
   interruptible: true
-  before_script:
-    - . setup_dev_env.sh
-    - pip install build twine bump2version
   script:
     # fused check license here as it would take more time to do it in different place.
     - ./check_licenses.sh
@@ -190,6 +211,17 @@ tests:
         coverage_format: cobertura
         path: coverage.xml
     expire_in: "30 days"
+
+# Job for running benchmark
+benchmark:
+  image: $TESTS_IMAGE:dev-$CI_COMMIT_SHA
+  stage: benchmark
+  interruptible: true
+  script:
+    - python src/dbally_benchmark/text2sql_benchmark.py
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
 
 # Job for scanning for vulnerabilities:
 "trivy security scan":
@@ -225,27 +257,23 @@ tests:
 # Job for building & deploying to pip registry
 # version builded from tests job.
 "Deploy test dev package to PIP registry":
-  image: $PYTHON_DOCKER_IMAGE
+  image: $TESTS_IMAGE:dev-$CI_COMMIT_SHA
   stage: package
   needs: [tests]
   environment: testing
   when: manual
   allow_failure: true
-  before_script:
-    - pip install build twine
   script:
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
 
 # Job to build and deploy release version - note: cannot deploy two same versions!
 "Release package to PIP registry":
-  image: $PYTHON_DOCKER_IMAGE
+  image: $TESTS_IMAGE:dev-$CI_COMMIT_SHA
   stage: deploy
   environment: release
   when: manual
   allow_failure: true
   needs: [tests]
-  before_script:
-    - pip install build twine bump2version
   script:
     - bump2version --verbose release
     - python -m build

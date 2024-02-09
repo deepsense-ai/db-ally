@@ -42,12 +42,15 @@ class Text2SQLDataset(RootModel):
         return self.root[key]
 
     @classmethod
-    def from_json_file(cls, file_path: Path, db_ids: list[str] | None) -> Text2SQLDataset:
+    def from_json_file(
+        cls, file_path: Path, difficulty_levels: list[str] | None = None, db_ids: list[str] | None = None
+    ) -> Text2SQLDataset:
         """
         Constructor for loading the dataset from a json file.
 
         Args:
             file_path: File from which the dataset should be read.
+            difficulty_levels: Difficulty levels by which the dataset will be filtered.
             db_ids: Database ids by which the dataset will be filtered.
 
         Returns:
@@ -59,6 +62,10 @@ class Text2SQLDataset(RootModel):
 
         if db_ids:
             dataset_obj.root = [item for item in dataset_obj.root if item.db_id in db_ids]
+
+        if difficulty_levels:
+            difficulty_levels = [DifficultyLevel(level) for level in difficulty_levels]
+            dataset_obj.root = [item for item in dataset_obj.root if item.difficulty in difficulty_levels]
 
         return dataset_obj
 
