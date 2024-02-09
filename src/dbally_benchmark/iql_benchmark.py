@@ -40,7 +40,7 @@ async def _run_dbally_for_single_example(example: Text2SQLExample, collection: C
     )
 
 
-async def run_dbally_for_dataset(dataset: Text2SQLDataset, collection: Collection) -> list[Text2SQLResult]:
+async def run_dbally_for_dataset(dataset: Text2SQLDataset, collection: Collection) -> List[Text2SQLResult]:
     """
     Transforms questions into SQL queries using a IQL approach.
 
