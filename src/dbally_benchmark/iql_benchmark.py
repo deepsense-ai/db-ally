@@ -22,7 +22,6 @@ from dbally_benchmark.config import BenchmarkConfig
 from dbally_benchmark.paths import PATH_EXPERIMENTS
 from dbally_benchmark.text2sql.dataset import Text2SQLDataset, Text2SQLExample, Text2SQLResult
 from dbally_benchmark.text2sql.metrics import calculate_dataset_metrics
-from dbally_benchmark.text2sql.prompt_template import TEXT2SQL_PROMPT_TEMPLATE
 from dbally_benchmark.text2sql.views import SuperheroCountByPowerView, SuperheroView
 from dbally_benchmark.utils import batch, get_datetime_str
 
@@ -34,6 +33,8 @@ async def _run_dbally_for_single_example(example: Text2SQLExample, collection: C
         response = "UnsupportedQueryError"
     except NoViewFoundError:
         response = "NoViewFoundError"
+    except Exception:  # pylint: disable=broad-exception-caught
+        response = "Error"
 
     return Text2SQLResult(
         db_id=example.db_id, question=example.question, ground_truth_sql=example.SQL, predicted_sql=response
@@ -126,8 +127,8 @@ async def evaluate(cfg: DictConfig) -> Any:
     logger.info(f"db-ally predictions saved under directory: {output_dir}")
 
     if run:
-        run["config/view_selection_prompt_template"] = stringify_unsupported(TEXT2SQL_PROMPT_TEMPLATE.chat)
-        run["config/view_selection_prompt_template"] = stringify_unsupported(default_view_selector_template)
+        run["config/iql_prompt_template"] = stringify_unsupported(default_iql_template.chat)
+        run["config/view_selection_prompt_template"] = stringify_unsupported(default_view_selector_template.chat)
         run["config/iql_prompt_template"] = stringify_unsupported(default_iql_template)
         run[f"evaluation/{metrics_file_name}"].upload((output_dir / metrics_file_name).as_posix())
         run[f"evaluation/{results_file_name}"].upload((output_dir / results_file_name).as_posix())

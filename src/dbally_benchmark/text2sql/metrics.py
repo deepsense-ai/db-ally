@@ -158,6 +158,27 @@ def calculate_no_view_found_error_ratio(dataset: List[Text2SQLResult]) -> float:
     return total_no_view_found_error_ratio / len(dataset)
 
 
+def calculate_undefined_error_ratio(dataset: List[Text2SQLResult]) -> float:
+    """
+    Calculates ratio of unspecified errors for a given dataset.
+
+    Args:
+        dataset: List containing Text2SQLResult objects that
+        represents (ground truth query, predicted query).
+
+    Returns:
+        Errors ratio.
+    """
+
+    total_no_view_found_error_ratio: float = 0
+
+    for example in dataset:
+        if example.predicted_sql == "Error":
+            total_no_view_found_error_ratio += 1
+
+    return total_no_view_found_error_ratio / len(dataset)
+
+
 def calculate_unsupported_query_error_ratio(dataset: List[Text2SQLResult]) -> float:
     """
     Calculates ratio of UnsupportedQueryError for a given dataset.
@@ -189,14 +210,16 @@ async def calculate_dataset_metrics(dataset: List[Text2SQLResult], db_connector:
         db_connector: DBConnector.
 
     Returns:
-        Dictionary containing: exact match, no view found error ratio, unsupported query error ratio,
-        valid SQL, execution accuracy and valid efficiency score.
+        Dictionary containing: exact match, no view found error ratio, undefined error ratio,
+        unsupported query error ratio, valid SQL, execution accuracy
+        and valid efficiency score.
     """
 
     metrics = {
         "valid_sql": await calculate_valid_sql(dataset, db_connector),
         "no_view_found_error": calculate_no_view_found_error_ratio(dataset),
         "unsupported_query_error": calculate_unsupported_query_error_ratio(dataset),
+        "undefined_error": calculate_undefined_error_ratio(dataset),
         "exact_match": calculate_exact_match(dataset),
         "execution_accuracy": await calculate_exec_acc(dataset, db_connector),
         "valid_efficiency_score": await calculate_ves(dataset, db_connector),
