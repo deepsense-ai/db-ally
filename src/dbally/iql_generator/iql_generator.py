@@ -1,6 +1,7 @@
 import copy
 from typing import Callable, List, Optional, Tuple, Union
 
+from dbally.audit.event_store import EventStore
 from dbally.data_models.prompts.iql_prompt_template import IQLPromptTemplate, default_iql_template
 from dbally.data_models.prompts.prompt_template import ChatFormat
 from dbally.llm_client.base import LLMClient
@@ -33,7 +34,8 @@ class IQLGenerator:
         self.last_prompt: Union[str, ChatFormat, None] = None  # todo: drop it when we have auditing
 
     async def generate_iql(
-        self, filters: List[ExposedFunction], actions: List[ExposedFunction], question: str
+        self, filters: List[ExposedFunction], actions: List[ExposedFunction], question: str,
+        event_store: EventStore
     ) -> Tuple[str, str]:
         # todo: add more generation-related arguments here once BaseLLM interface is established
         """Uses LLM to generate IQL in text form
@@ -55,6 +57,7 @@ class IQLGenerator:
         llm_response = await self._llm_client.text_generation(
             template=self._prompt_template,
             fmt={"filters": filters_for_prompt, "actions": actions_for_prompt, "question": question},
+            event_store=event_store
         )
         iql_filters, iql_actions = self._prompt_template.llm_response_parser(llm_response)
         self.last_prompt = _prompt

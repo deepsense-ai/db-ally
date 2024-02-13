@@ -1,6 +1,7 @@
 import copy
 from typing import Callable, Dict, Optional
 
+from dbally.audit.event_store import EventStore
 from dbally.data_models.prompts import IQLPromptTemplate, default_view_selector_template
 from dbally.llm_client.base import LLMClient
 from dbally.prompts import PromptBuilder
@@ -30,7 +31,7 @@ class LLMViewSelector(ViewSelector):
         self._prompt_builder = prompt_builder or PromptBuilder()
         self._promptify_views = promptify_views or _promptify_views
 
-    async def select_view(self, question: str, views: Dict[str, str]) -> str:
+    async def select_view(self, question: str, views: Dict[str, str], event_store: EventStore) -> str:
         """
         Based on user question and list of available views select most relevant one.
 
@@ -47,6 +48,7 @@ class LLMViewSelector(ViewSelector):
         llm_response = await self._llm_client.text_generation(
             self._prompt_template,
             fmt={"views": views_for_prompt, "question": question},
+            event_store=event_store
         )
         selected_view = self._prompt_template.llm_response_parser(llm_response)
         return selected_view

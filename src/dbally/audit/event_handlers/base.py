@@ -1,16 +1,22 @@
 import abc
 from abc import ABC
+from typing import Optional
 
-class BaseEventHandler(ABC):
-    
+
+class EventHandler(ABC):
+
     @abc.abstractmethod
-    def start(self, user_input: dict):
-        pass
-    
-    @abc.abstractmethod
-    def notify(self, event: dict):
+    def request_start(self, user_input: dict):
         pass
 
     @abc.abstractmethod
-    def end(self, output: dict):
+    def event_start(self, event: dict) -> Optional[dict]:
+        pass
+
+    @abc.abstractmethod
+    def event_end(self, event: dict, start_event_payload: Optional[dict]) -> Optional[dict]:
+        pass
+
+    @abc.abstractmethod
+    def request_end(self, output: dict):
         pass

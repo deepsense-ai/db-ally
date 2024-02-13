@@ -1,24 +1,47 @@
 from contextlib import contextmanager
+from typing import Type, List
 
-from dbally.audit.event_handlers.base import BaseEventHandler
+from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_span import EventSpan
 
 
 class EventStore:
+    _handlers: List[EventHandler]
 
     def __init__(self):
-        self._subscribers = []
+        self._handlers = []
 
-    def subscribe(self, event_handler: BaseEventHandler):
-        self._subscribers.append(event_handler)
+    @classmethod
+    def initialize_with_handlers(cls, event_handlers: List[Type[EventHandler]]):
+        instance = cls()
 
-    def send_event(self, event: dict):
-        for subscriber in self._subscribers:
-            subscriber.notify(event)
+        for handler in event_handlers:
+            handler_instance = handler()
+            instance.subscribe(handler_instance)
 
-@contextmanager
-def process_event(event: dict, event_store: EventStore):
+        return instance
 
-    span = EventSpan()
-    yield span
-    event_store.send_event(span._data)
+    def request_start(self, event: dict):
+        for handler in self._handlers:
+            handler.request_start(event)
+
+    def request_end(self, event: dict):
+        for handler in self._handlers:
+            handler.request_end(event)
+
+    def subscribe(self, event_handler: EventHandler):
+        self._handlers.append(event_handler)
+
+    @contextmanager
+    def process_event(self, event: dict):
+        handler_outputs = {}
+
+        for handler in self._handlers:
+            output = handler.event_start(event)
+            handler_outputs[handler] = output
+
+        span = EventSpan()
+        yield span
+
+        for handler in self._handlers:
+            handler.event_end(span._data, handler_outputs[handler])

@@ -1,6 +1,7 @@
 import random
 from typing import Dict
 
+from dbally.audit.event_store import EventStore
 from dbally.view_selection.base import ViewSelector
 
 
@@ -9,7 +10,7 @@ class RandomViewSelector(ViewSelector):
     Mock View Selector selecting a random view.
     """
 
-    async def select_view(self, question: str, views: Dict[str, str]) -> str:
+    async def select_view(self, question: str, views: Dict[str, str], event_store: EventStore) -> str:
         """
         Dummy implementation returning random view.
 
