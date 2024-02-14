@@ -1,10 +1,8 @@
-from contextlib import contextmanager
-
-
 class EventSpan:
+    """Helper class for logging events."""
 
     def __init__(self):
-        self._data = None
+        self.data = None
 
     def __call__(self, data: dict):
-        self._data = data
+        self.data = data

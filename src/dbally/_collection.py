@@ -3,6 +3,7 @@ from typing import Dict, List, Optional, Tuple, Type
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_store import EventStore
+from dbally.data_models.audit import RequestEnd, RequestStart
 from dbally.iql import IQLActions, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.view_selection.base import ViewSelector
@@ -36,7 +37,13 @@ class Collection:
     It also stores configuration such as LLM model choice, vector db or available data sources.
     """
 
-    def __init__(self, name: str, view_selector: ViewSelector, iql_generator: IQLGenerator, event_handlers: List[Type[EventHandler]]) -> None:
+    def __init__(
+        self,
+        name: str,
+        view_selector: ViewSelector,
+        iql_generator: IQLGenerator,
+        event_handlers: List[Type[EventHandler]],
+    ) -> None:
         self.name = name
         self._views: Dict[str, Type[AbstractBaseView]] = {}
         self._view_selector = view_selector
@@ -103,9 +110,7 @@ class Collection:
         """
         event_store = EventStore.initialize_with_handlers(self._event_handlers)
 
-        event_store.request_start({
-            "question": question
-        })
+        event_store.request_start(RequestStart(question=question))
 
         # select view
         views = self.list()
@@ -122,8 +127,7 @@ class Collection:
         filter_list, action_list = view.list_filters(), view.list_actions()
 
         iql_filters, iql_actions = await self._iql_generator.generate_iql(
-            question=question, filters=filter_list, actions=action_list,
-            event_store=event_store
+            question=question, filters=filter_list, actions=action_list, event_store=event_store
         )
 
         filters = IQLQuery.parse(iql_filters)
@@ -133,6 +137,6 @@ class Collection:
         view.apply_actions(actions)
         sql = view.generate_sql()
 
-        event_store.request_end({"sql": sql})
+        event_store.request_end(RequestEnd(sql=sql))
 
         return sql

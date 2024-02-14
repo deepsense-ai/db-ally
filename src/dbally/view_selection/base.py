@@ -15,6 +15,7 @@ class ViewSelector(abc.ABC):
         Args:
             question: user question.
             views: dictionary of available view names with corresponding descriptions.
+            event_store: event store used to audit the selection process.
 
         Returns:
             most relevant view name.

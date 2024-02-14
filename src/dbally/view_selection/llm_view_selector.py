@@ -38,6 +38,7 @@ class LLMViewSelector(ViewSelector):
         Args:
             question: user question.
             views: dictionary of available view names with corresponding descriptions.
+            event_store: event store used to audit the selection process.
 
         Returns:
             most relevant view name.
@@ -46,9 +47,7 @@ class LLMViewSelector(ViewSelector):
         views_for_prompt = self._promptify_views(views)
 
         llm_response = await self._llm_client.text_generation(
-            self._prompt_template,
-            fmt={"views": views_for_prompt, "question": question},
-            event_store=event_store
+            self._prompt_template, fmt={"views": views_for_prompt, "question": question}, event_store=event_store
         )
         selected_view = self._prompt_template.llm_response_parser(llm_response)
         return selected_view

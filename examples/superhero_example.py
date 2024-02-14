@@ -143,12 +143,8 @@ async def main():
     superheros_db.add(SuperheroCountByPowerView)
 
     response = await superheros_db.ask("What heroes have blue eyes and are taller than 180.5cm?")
-    print(response)
-    print(pd.read_sql_query(response, engine))
 
     response = await superheros_db.ask("Count power of female heros")
-    print(response)
-    print(pd.read_sql_query(response, engine))
 
 
 if __name__ == "__main__":

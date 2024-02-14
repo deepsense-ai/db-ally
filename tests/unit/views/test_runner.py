@@ -9,7 +9,7 @@ def test_runner() -> None:
     """
     Tests that the runner works correctly
     """
-    collection = Collection("foo", iql_generator=Mock(), view_selector=Mock())
+    collection = Collection("foo", iql_generator=Mock(), view_selector=Mock(), event_handlers=[])
     collection.add(MockSqlAlchemyView)
     runner = Runner("MockSqlAlchemyView", collection)
     runner.apply_filters("method_foo(1) and method_bar('London', 2020)")

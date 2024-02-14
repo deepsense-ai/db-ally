@@ -1,8 +1,7 @@
-from typing import Optional, Type, List
+from typing import List, Optional, Type
 
 from ._collection import Collection
 from .audit.event_handlers.base import EventHandler
-from .audit.event_store import EventStore
 from .iql_generator.iql_generator import IQLGenerator
 from .llm_client.base import LLMClient
 from .llm_client.openai_client import OpenAIClient
@@ -25,19 +24,24 @@ def use_openai_llm(model_name: str = "gpt-3.5-turbo", openai_api_key: Optional[s
 
 
 def use_event_handler(event_handler: Type[EventHandler]) -> None:
-    global default_event_handlers
+    """
+    Set default event handler to be used by all collections.
+
+    Args:
+        event_handler: The event handler to be used.
+    """
+    global default_event_handlers  # pylint: disable=W0602
     default_event_handlers.append(event_handler)
 
 
-def create_collection(
-    name: str,
-    event_handlers: Optional[List[Type[EventHandler]]] = None) -> Collection:
+def create_collection(name: str, event_handlers: Optional[List[Type[EventHandler]]] = None) -> Collection:
     """
     Create a new collection that is a container for registering views, configuration and main entrypoint to db-ally
     features.
 
     Args:
          name: The name of the collection
+         event_handlers: The event handlers to be used by the collection
 
     Returns:
         a new instance of DBAllyCollection
@@ -53,5 +57,4 @@ def create_collection(
     iql_generator = IQLGenerator(llm_client=llm_client)
     event_handlers = event_handlers or default_event_handlers
 
-    return Collection(name, view_selector=view_selector, iql_generator=iql_generator,
-                      event_handlers=event_handlers)
+    return Collection(name, view_selector=view_selector, iql_generator=iql_generator, event_handlers=event_handlers)

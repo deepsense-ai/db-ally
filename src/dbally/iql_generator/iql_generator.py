@@ -34,8 +34,7 @@ class IQLGenerator:
         self.last_prompt: Union[str, ChatFormat, None] = None  # todo: drop it when we have auditing
 
     async def generate_iql(
-        self, filters: List[ExposedFunction], actions: List[ExposedFunction], question: str,
-        event_store: EventStore
+        self, filters: List[ExposedFunction], actions: List[ExposedFunction], question: str, event_store: EventStore
     ) -> Tuple[str, str]:
         # todo: add more generation-related arguments here once BaseLLM interface is established
         """Uses LLM to generate IQL in text form
@@ -44,6 +43,7 @@ class IQLGenerator:
             question: user question
             filters: list of filters exposed by the view
             actions: list of actions exposed by the view
+            event_store: event store used to audit the generation process
 
         Returns:
             IQL - iql generated based on the user question
@@ -57,7 +57,7 @@ class IQLGenerator:
         llm_response = await self._llm_client.text_generation(
             template=self._prompt_template,
             fmt={"filters": filters_for_prompt, "actions": actions_for_prompt, "question": question},
-            event_store=event_store
+            event_store=event_store,
         )
         iql_filters, iql_actions = self._prompt_template.llm_response_parser(llm_response)
         self.last_prompt = _prompt

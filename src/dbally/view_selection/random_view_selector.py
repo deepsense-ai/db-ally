@@ -17,6 +17,7 @@ class RandomViewSelector(ViewSelector):
         Args:
             question: user question.
             views: dictionary of available view names with corresponding descriptions.
+            event_store: event store used to audit the selection process.
 
         Returns:
             random view name.
