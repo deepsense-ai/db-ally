@@ -81,14 +81,11 @@ class EventStore:
             Event span.
         """
 
-        handler_outputs: dict[EventHandler] = {}
-
         for handler in self._handlers:
-            output = handler.event_start(event)
-            handler_outputs[handler] = output
+            handler.event_start(event)
 
         span = EventSpan()
         yield span
 
         for handler in self._handlers:
-            handler.event_end(span.data, handler_outputs[handler])
+            handler.event_end(span.data)

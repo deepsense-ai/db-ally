@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Union
 
 from rich import print as pprint
 from rich.console import Console
@@ -44,13 +44,12 @@ class CLIEventHandler(EventHandler):
             pprint("[cyan bold]PROMPT: ")
             self._print_syntax(f"{event.prompt}", "text")
 
-    def event_end(self, event: LLMEvent, start_event_payload: Optional[dict]) -> None:
+    def event_end(self, event: LLMEvent) -> None:
         """
         Log the end of the event.
 
         Args:
             event: Event to be logged.
-            start_event_payload: Start event payload.
         """
 
         pprint(f"[green bold]RESPONSE: {event.response}")

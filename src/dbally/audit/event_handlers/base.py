@@ -1,6 +1,6 @@
 import abc
 from abc import ABC
-from typing import Optional, Union
+from typing import Union
 
 from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart
 
@@ -29,13 +29,12 @@ class EventHandler(ABC):
         """
 
     @abc.abstractmethod
-    def event_end(self, event: Union[LLMEvent], start_event_payload: Optional[dict]) -> None:
+    def event_end(self, event: Union[LLMEvent]) -> None:
         """
         Log the end of the event.
 
         Args:
             event: Event to be logged.
-            start_event_payload: Start event payload.
         """
 
     @abc.abstractmethod
