@@ -2,7 +2,7 @@ import abc
 from abc import ABC
 from typing import Optional, Union
 
-from dbally.data_models.audit import LLMEvent, RequestStart
+from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart
 
 
 class EventHandler(ABC):
@@ -39,7 +39,7 @@ class EventHandler(ABC):
         """
 
     @abc.abstractmethod
-    def request_end(self, output: dict) -> None:
+    def request_end(self, output: RequestEnd) -> None:
         """
         Log the end of the request.
 

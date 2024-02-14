@@ -81,7 +81,7 @@ class EventStore:
             Event span.
         """
 
-        handler_outputs = {}
+        handler_outputs: dict[EventHandler] = {}
 
         for handler in self._handlers:
             output = handler.event_start(event)
