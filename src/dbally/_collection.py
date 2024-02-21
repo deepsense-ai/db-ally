@@ -42,7 +42,7 @@ class Collection:
         name: str,
         view_selector: ViewSelector,
         iql_generator: IQLGenerator,
-        event_handlers: List[Type[EventHandler]],
+        event_handlers: List[EventHandler],
     ) -> None:
         self.name = name
         self._views: Dict[str, Type[AbstractBaseView]] = {}

@@ -15,7 +15,7 @@ from dbally.audit.event_handlers.base import EventHandler
 from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart
 
 
-class CLIEventHandler(EventHandler):
+class CLIEventHandler(EventHandler[None, None]):
     """
     CLI event handler interface.
     """
@@ -31,7 +31,7 @@ class CLIEventHandler(EventHandler):
         else:
             print(content)
 
-    async def request_start(self, user_request: RequestStart) -> Optional[dict]:
+    async def request_start(self, user_request: RequestStart) -> None:
         """
         Log the start of the request.
 
@@ -43,9 +43,7 @@ class CLIEventHandler(EventHandler):
         pprint("[grey53]\n=======================================")
         pprint("[grey53]=======================================\n")
 
-        return None
-
-    async def event_start(self, event: Union[LLMEvent], request_context: Optional[dict] = None) -> Optional[dict]:
+    async def event_start(self, event: Union[LLMEvent], request_context: None) -> None:
         """
         Log the start of the event.
 
@@ -64,13 +62,9 @@ class CLIEventHandler(EventHandler):
             else:
                 self._print_syntax(f"{event.prompt}", "text")
 
-        return None
-
-    async def event_end(
-        self, event: Union[None, LLMEvent], request_context: Optional[dict] = None, event_context: Optional[dict] = None
-    ) -> None:
+    async def event_end(self, event: Union[None, LLMEvent], request_context: None, event_context: None) -> None:
         """
-        Log the end of the event.
+        Log the end of the event.`
 
         Args:
             event: Event to be logged.

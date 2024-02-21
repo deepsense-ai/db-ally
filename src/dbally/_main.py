@@ -1,4 +1,4 @@
-from typing import List, Optional, Type
+from typing import List, Optional
 
 from ._collection import Collection
 from .audit.event_handlers.base import EventHandler
@@ -34,7 +34,7 @@ def use_event_handler(event_handler: EventHandler) -> None:
     default_event_handlers.append(event_handler)
 
 
-def create_collection(name: str, event_handlers: Optional[List[Type[EventHandler]]] = None) -> Collection:
+def create_collection(name: str, event_handlers: Optional[List[EventHandler]] = None) -> Collection:
     """
     Create a new collection that is a container for registering views, configuration and main entrypoint to db-ally
     features.
