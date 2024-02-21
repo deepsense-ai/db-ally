@@ -110,7 +110,7 @@ class Collection:
         """
         event_tracker = EventTracker.initialize_with_handlers(self._event_handlers)
 
-        await event_tracker.request_start(RequestStart(question=question))
+        await event_tracker.request_start(RequestStart(question=question, collection_name=self.name))
 
         # select view
         views = self.list()

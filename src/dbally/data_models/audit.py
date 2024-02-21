@@ -30,6 +30,7 @@ class RequestStart:
     Class representing request start data.
     """
 
+    collection_name: str
     question: str
 
 
