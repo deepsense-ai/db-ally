@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from typing import AsyncIterator, Dict, List, Optional
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_span import EventSpan
@@ -12,15 +10,15 @@ class EventTracker:
     """
     Container for event handlers and is responsible for processing events."""
 
-    _handlers: list[EventHandler]
-    _request_contexts: dict[EventHandler, dict | None]
+    _handlers: List[EventHandler]
+    _request_contexts: Dict[EventHandler, Optional[dict]]
 
     def __init__(self) -> None:
         self._handlers = []
         self._request_contexts = {}
 
     @classmethod
-    def initialize_with_handlers(cls, event_handlers: list[EventHandler]) -> EventTracker:
+    def initialize_with_handlers(cls, event_handlers: List[EventHandler]) -> "EventTracker":
         """
         Initialize the event store with a list of event handlers.
 
