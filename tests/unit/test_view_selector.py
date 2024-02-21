@@ -6,7 +6,7 @@ import sqlalchemy
 
 import dbally
 from dbally import SqlAlchemyBaseView
-from dbally.audit.event_store import EventStore
+from dbally.audit.event_tracker import EventTracker
 from dbally.view_selection.llm_view_selector import LLMViewSelector
 
 
@@ -32,8 +32,8 @@ def llm_client():
 
 
 @pytest.fixture
-def event_store():
-    return EventStore()
+def event_tracker():
+    return EventTracker()
 
 
 @pytest.fixture
@@ -46,8 +46,8 @@ def views():
 
 
 @pytest.mark.asyncio
-async def test_view_selection(llm_client, event_store, views):
+async def test_view_selection(llm_client, event_tracker, views):
     view_selector = LLMViewSelector(llm_client)
 
-    view = await view_selector.select_view("Mock question?", views, event_store)
+    view = await view_selector.select_view("Mock question?", views, event_tracker)
     assert view == "MockView1"

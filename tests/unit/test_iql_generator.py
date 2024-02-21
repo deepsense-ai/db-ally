@@ -6,7 +6,7 @@ import pytest
 import sqlalchemy
 
 from dbally import SqlAlchemyBaseView, decorators
-from dbally.audit.event_store import EventStore
+from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.prompts.iql_prompt_template import default_iql_template
 from dbally.iql_generator.iql_generator import IQLGenerator
 
@@ -46,12 +46,12 @@ def llm_client():
 
 
 @pytest.fixture
-def event_store():
-    return EventStore()
+def event_tracker():
+    return EventTracker()
 
 
 @pytest.mark.asyncio
-async def test_iql_generation(llm_client, event_store, view):
+async def test_iql_generation(llm_client, event_tracker, view):
     iql_generator = IQLGenerator(llm_client, default_iql_template)
 
     filters_for_prompt, actions_for_prompt = iql_generator._promptify_view(view.list_filters(), view.list_actions())
@@ -61,5 +61,7 @@ async def test_iql_generation(llm_client, event_store, view):
     assert filters_in_prompt == {"filter_by_id(idx: int)", "filter_by_name(city: str)"}
     assert actions_in_prompt == {"sort_by_id()", "group_by_name()"}
 
-    response = await iql_generator.generate_iql(view.list_filters(), view.list_actions(), "Mock_question", event_store)
+    response = await iql_generator.generate_iql(
+        view.list_filters(), view.list_actions(), "Mock_question", event_tracker
+    )
     assert response == ("LLM IQL mock answer", "")

@@ -2,7 +2,7 @@ import textwrap
 from typing import Dict, List, Optional, Tuple, Type
 
 from dbally.audit.event_handlers.base import EventHandler
-from dbally.audit.event_store import EventStore
+from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import RequestEnd, RequestStart
 from dbally.iql import IQLActions, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
@@ -108,9 +108,9 @@ class Collection:
         Raises:
             ValueError: if collection is empty
         """
-        event_store = EventStore.initialize_with_handlers(self._event_handlers)
+        event_tracker = EventTracker.initialize_with_handlers(self._event_handlers)
 
-        event_store.request_start(RequestStart(question=question))
+        event_tracker.request_start(RequestStart(question=question))
 
         # select view
         views = self.list()
@@ -120,14 +120,14 @@ class Collection:
         if len(views) == 1:
             selected_view = next(iter(views))
         else:
-            selected_view = await self._view_selector.select_view(question, views, event_store)
+            selected_view = await self._view_selector.select_view(question, views, event_tracker)
 
         view = self.get(selected_view)
 
         filter_list, action_list = view.list_filters(), view.list_actions()
 
         iql_filters, iql_actions = await self._iql_generator.generate_iql(
-            question=question, filters=filter_list, actions=action_list, event_store=event_store
+            question=question, filters=filter_list, actions=action_list, event_tracker=event_tracker
         )
 
         filters = IQLQuery.parse(iql_filters)
@@ -137,6 +137,6 @@ class Collection:
         view.apply_actions(actions)
         sql = view.generate_sql()
 
-        event_store.request_end(RequestEnd(sql=sql))
+        event_tracker.request_end(RequestEnd(sql=sql))
 
         return sql

@@ -12,7 +12,7 @@ from loguru import logger
 from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
 
-from dbally.audit.event_store import EventStore
+from dbally.audit.event_tracker import EventTracker
 from dbally.db_connectors.pgsql_db import PGSqlConnector
 from dbally.llm_client.base import LLMClient
 from dbally.llm_client.openai_client import OpenAIClient
@@ -35,12 +35,12 @@ def _load_db_schema(db_name: str, encoding: Optional[str] = None) -> str:
 
 
 async def _run_text2sql_for_single_example(example: Text2SQLExample, llm_client: LLMClient) -> Text2SQLResult:
-    event_store = EventStore()
+    event_tracker = EventTracker()
 
     db_schema = _load_db_schema(example.db_id)
 
     response = await llm_client.text_generation(
-        TEXT2SQL_PROMPT_TEMPLATE, {"schema": db_schema, "question": example.question}, event_store=event_store
+        TEXT2SQL_PROMPT_TEMPLATE, {"schema": db_schema, "question": example.question}, event_tracker=event_tracker
     )
 
     return Text2SQLResult(

@@ -8,7 +8,7 @@ from dbally.audit.event_span import EventSpan
 from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart
 
 
-class EventStore:
+class EventTracker:
     """
     Container for event handlers and is responsible for processing events."""
 
@@ -18,7 +18,7 @@ class EventStore:
         self._handlers = []
 
     @classmethod
-    def initialize_with_handlers(cls, event_handlers: list[type[EventHandler]]) -> EventStore:
+    def initialize_with_handlers(cls, event_handlers: list[type[EventHandler]]) -> EventTracker:
         """
         Initialize the event store with a list of event handlers.
 
@@ -70,7 +70,7 @@ class EventStore:
         self._handlers.append(event_handler)
 
     @contextmanager
-    def process_event(self, event: LLMEvent) -> Iterator[EventSpan]:
+    def track_event(self, event: LLMEvent) -> Iterator[EventSpan]:
         """
         Context manager for processing an event.
 

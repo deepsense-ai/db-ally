@@ -4,7 +4,7 @@
 import abc
 from typing import List, Optional, Union
 
-from dbally.audit.event_store import EventStore
+from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import LLMEvent
 from dbally.data_models.llm_options import LLMOptions
 from dbally.prompts.prompt_builder import ChatFormat, PromptBuilder, PromptTemplate
@@ -21,7 +21,7 @@ class LLMClient(abc.ABC):
         self,
         template: PromptTemplate,
         fmt: dict,
-        event_store: EventStore,
+        event_tracker: EventTracker,
         *,
         frequency_penalty: Optional[float] = 0.0,
         max_tokens: Optional[int] = 128,
@@ -55,7 +55,7 @@ class LLMClient(abc.ABC):
 
         event = LLMEvent(prompt=prompt, type=type(template).__name__)
 
-        with event_store.process_event(event) as span:
+        with event_tracker.track_event(event) as span:
             event.response = await self._call(prompt, options)
             span(event)
 
