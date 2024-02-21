@@ -8,7 +8,7 @@ from .llm_client.openai_client import OpenAIClient
 from .view_selection.llm_view_selector import LLMViewSelector
 
 default_llm_client: Optional[LLMClient] = None
-default_event_handlers: List[Type[EventHandler]] = []
+default_event_handlers: List[EventHandler] = []
 
 
 def use_openai_llm(model_name: str = "gpt-3.5-turbo", openai_api_key: Optional[str] = None) -> None:
@@ -23,7 +23,7 @@ def use_openai_llm(model_name: str = "gpt-3.5-turbo", openai_api_key: Optional[s
     default_llm_client = OpenAIClient(model_name=model_name, api_key=openai_api_key)
 
 
-def use_event_handler(event_handler: Type[EventHandler]) -> None:
+def use_event_handler(event_handler: EventHandler) -> None:
     """
     Set default event handler to be used by all collections.
 

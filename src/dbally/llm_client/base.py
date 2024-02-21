@@ -55,7 +55,7 @@ class LLMClient(abc.ABC):
 
         event = LLMEvent(prompt=prompt, type=type(template).__name__)
 
-        with event_tracker.track_event(event) as span:
+        async with event_tracker.track_event(event) as span:
             event.response = await self._call(prompt, options)
             span(event)
 

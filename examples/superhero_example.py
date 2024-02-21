@@ -135,7 +135,7 @@ async def main():
         model_name="gpt-4",
         openai_api_key=config.openai_api_key,  # You can pass key directly or just have OPENAI_API_KEY env var defined.
     )
-    dbally.use_event_handler(CLIEventHandler)
+    dbally.use_event_handler(CLIEventHandler())
 
     superheros_db = dbally.create_collection("superheros_db")
     superheros_db.add(SuperheroView)
