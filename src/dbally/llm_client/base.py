@@ -56,13 +56,13 @@ class LLMClient(abc.ABC):
         event = LLMEvent(prompt=prompt, type=type(template).__name__)
 
         async with event_tracker.track_event(event) as span:
-            event.response = await self._call(prompt, options)
+            event.response = await self._call(prompt, options, event)
             span(event)
 
         return event.response
 
     @abc.abstractmethod
-    async def _call(self, prompt: Union[str, ChatFormat], options: LLMOptions) -> str:
+    async def _call(self, prompt: Union[str, ChatFormat], options: LLMOptions, event: LLMEvent) -> str:
         """
         Calls LLM API endpoint.
 

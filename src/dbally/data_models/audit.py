@@ -23,6 +23,10 @@ class LLMEvent:
     type: str
     response: Optional[str] = None
 
+    completion_tokens: Optional[int] = None
+    prompt_tokens: Optional[int] = None
+    total_tokens: Optional[int] = None
+
 
 @dataclass
 class RequestStart:
