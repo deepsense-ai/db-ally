@@ -15,7 +15,7 @@ from dbally.audit.event_handlers.base import EventHandler
 from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart
 
 
-class CLIEventHandler(EventHandler[None, None]):
+class CLIEventHandler(EventHandler):
     """
     CLI event handler interface.
     """
