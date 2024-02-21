@@ -8,7 +8,8 @@ try:
     RICH_OUTPUT = True
 except ImportError:
     RICH_OUTPUT = False
-    pprint = print  # TODO: remove color tags from bare print
+    # TODO: remove color tags from bare print
+    pprint = print  # type: ignore
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart
@@ -60,7 +61,7 @@ class CLIEventHandler(EventHandler):
             else:
                 self._print_syntax(f"{event.prompt}", "text")
 
-    def event_end(self, event: LLMEvent) -> None:
+    def event_end(self, event: Union[None, LLMEvent]) -> None:
         """
         Log the end of the event.
 
@@ -68,9 +69,10 @@ class CLIEventHandler(EventHandler):
             event: Event to be logged.
         """
 
-        pprint(f"\n[green bold]RESPONSE: {event.response}")
-        pprint("[grey53]\n=======================================")
-        pprint("[grey53]=======================================\n")
+        if isinstance(event, LLMEvent):
+            pprint(f"\n[green bold]RESPONSE: {event.response}")
+            pprint("[grey53]\n=======================================")
+            pprint("[grey53]=======================================\n")
 
     def request_end(self, output: RequestEnd) -> None:
         """

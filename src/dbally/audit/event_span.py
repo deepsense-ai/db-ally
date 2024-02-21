@@ -1,10 +1,14 @@
+from typing import Any, Optional
+
 from dbally.data_models.audit import LLMEvent
 
 
 class EventSpan:
     """Helper class for logging events."""
 
-    def __init__(self):
+    data: Optional[Any]
+
+    def __init__(self) -> None:
         self.data = None
 
     def __call__(self, data: LLMEvent) -> None:

@@ -29,7 +29,7 @@ class EventHandler(ABC):
         """
 
     @abc.abstractmethod
-    def event_end(self, event: Union[LLMEvent]) -> None:
+    def event_end(self, event: Union[None, LLMEvent]) -> None:
         """
         Log the end of the event.
 
