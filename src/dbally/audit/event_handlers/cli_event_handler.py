@@ -1,8 +1,14 @@
 from typing import Union
 
-from rich import print as pprint
-from rich.console import Console
-from rich.syntax import Syntax
+try:
+    from rich import print as pprint
+    from rich.console import Console
+    from rich.syntax import Syntax
+
+    RICH_OUTPUT = True
+except ImportError:
+    RICH_OUTPUT = False
+    pprint = print  # TODO: remove color tags from bare print
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart
@@ -15,11 +21,14 @@ class CLIEventHandler(EventHandler):
 
     def __init__(self) -> None:
         super().__init__()
-        self._console = Console()
+        self._console = Console() if RICH_OUTPUT else None
 
     def _print_syntax(self, content: str, lexer: str) -> None:
-        console_content = Syntax(content, lexer, word_wrap=True)
-        self._console.print(console_content)
+        if self._console:
+            console_content = Syntax(content, lexer, word_wrap=True)
+            self._console.print(console_content)
+        else:
+            print(content)
 
     def request_start(self, user_request: RequestStart) -> None:
         """
@@ -29,7 +38,9 @@ class CLIEventHandler(EventHandler):
             user_request: The start of the request.
         """
 
-        pprint(f"[orange3 bold]Request starts... \n[orange3 bold]MESSAGE: [grey53]{user_request.question}\n")
+        pprint(f"[orange3 bold]Request starts... \n[orange3 bold]MESSAGE: [grey53]{user_request.question}")
+        pprint("[grey53]\n=======================================")
+        pprint("[grey53]=======================================\n")
 
     def event_start(self, event: Union[LLMEvent]) -> None:
         """
@@ -41,8 +52,13 @@ class CLIEventHandler(EventHandler):
 
         if isinstance(event, LLMEvent):
             pprint(f"[cyan bold]LLM event starts... \n[cyan bold]LLM EVENT PROMPT TYPE: [grey53]{event.type}")
-            pprint("[cyan bold]PROMPT: ")
-            self._print_syntax(f"{event.prompt}", "text")
+
+            if isinstance(event.prompt, tuple):
+                for msg in event.prompt:
+                    pprint(f"\n[orange3]{msg['role']}")
+                    self._print_syntax(msg["content"], "text")
+            else:
+                self._print_syntax(f"{event.prompt}", "text")
 
     def event_end(self, event: LLMEvent) -> None:
         """
@@ -52,7 +68,7 @@ class CLIEventHandler(EventHandler):
             event: Event to be logged.
         """
 
-        pprint(f"[green bold]RESPONSE: {event.response}")
+        pprint(f"\n[green bold]RESPONSE: {event.response}")
         pprint("[grey53]\n=======================================")
         pprint("[grey53]=======================================\n")
 
