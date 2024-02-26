@@ -55,7 +55,7 @@ def mock_collection() -> Collection:
     """
     Returns a collection with two mock views
     """
-    collection = Collection("foo", view_selector=Mock(), iql_generator=Mock(), event_handlers=[])
+    collection = Collection("foo", view_selector=Mock(), iql_generator=Mock(), nl_responder=Mock(), event_handlers=[])
     collection.add(MockView1)
     collection.add(MockView2)
     return collection

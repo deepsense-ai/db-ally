@@ -1,12 +1,16 @@
 import textwrap
 from typing import Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
+from sqlalchemy import Engine, text
+
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
+from dbally.data_models.answer import Answer
 from dbally.data_models.audit import RequestEnd, RequestStart
 from dbally.iql import IQLActions, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.utils.errors import NoViewFoundError
+from dbally.nl_responder.nl_responder import NLResponder
 from dbally.view_selection.base import ViewSelector
 from dbally.views.base import AbstractBaseView, ExecutionResult, ExposedFunction
 
@@ -44,12 +48,14 @@ class Collection:
         view_selector: ViewSelector,
         iql_generator: IQLGenerator,
         event_handlers: List[EventHandler],
+        nl_responder: NLResponder,
     ) -> None:
         self.name = name
         self._views: Dict[str, Callable[[], AbstractBaseView]] = {}
         self._builders: Dict[str, Callable[[], AbstractBaseView]] = {}
         self._view_selector = view_selector
         self._iql_generator = iql_generator
+        self._nl_responder = nl_responder
         self._event_handlers = event_handlers
 
     T = TypeVar("T", bound=AbstractBaseView)
@@ -100,7 +106,7 @@ class Collection:
             name: (textwrap.dedent(view.__doc__).strip() if view.__doc__ else "") for name, view in self._views.items()
         }
 
-    async def ask(self, question: str, dry_run: bool = False) -> ExecutionResult:
+    async def ask(self, question: str, dry_run: bool = False, return_natural_response: bool = False) -> ExecutionResult:
         """
         Ask question in a text form and retrieve the answer based on the available views.
 
@@ -114,6 +120,7 @@ class Collection:
         Args:
              question: question in text form
              dry_run: if True, only generate the query without executing it
+             return_natural_response: if True, the natural response will be included in the answer
 
         Returns:
             SQL query - TODO: it should execute query and return results
@@ -152,5 +159,3 @@ class Collection:
         result = view.execute(dry_run=dry_run)
 
         await event_tracker.request_end(RequestEnd(result=result))
-
-        return result
