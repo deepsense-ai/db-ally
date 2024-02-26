@@ -3,12 +3,15 @@ import asyncio
 
 import sqlalchemy
 from config import config
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.automap import automap_base
 
 import dbally
 from dbally import SqlAlchemyBaseView, decorators
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
+from dbally.llm_client.openai_client import OpenAIClient
+from dbally.data_models.prompts.prompt_template import PromptTemplate
+from dbally.audit.event_tracker import EventTracker
 
 engine = create_engine(config.pg_connection_string + "/superhero")
 SuperheroModel = automap_base()
@@ -129,7 +132,6 @@ class SuperheroCountByPowerView(SuperheroView, SuperheroFilterMixin):
     def sort_by_superhero_count_descending(self, select: sqlalchemy.Select) -> sqlalchemy.Select:
         return select.order_by(self._superhero_count.desc())
 
-
 async def main():
     dbally.use_openai_llm(
         model_name="gpt-4",
@@ -141,9 +143,26 @@ async def main():
     superheros_db.add(SuperheroView, lambda: SuperheroView(engine))
     superheros_db.add(SuperheroCountByPowerView, lambda: SuperheroCountByPowerView(engine))
 
-    await superheros_db.ask("What heroes have blue eyes and are taller than 180.5cm?")
-
-    await superheros_db.ask("Count power of female heros")
+    sql = await superheros_db.ask("What heroes have Blue eyes and are taller than 180.5cm?")
+    print(sql)
+    
+    with engine.connect() as connection:
+        result = connection.execute(text(sql))
+        # print(result.mappings().all())
+    
+    llm_client = OpenAIClient("gpt-4-turbo-preview")
+    res = await llm_client.text_generation(TEXT_QA_PROMPT, {"context": result.mappings().all(), "question": "What heroes have Blue eyes and are taller than 180.5cm?"}, event_tracker=event_tracker)
+    print(res)   
+            
+    sql = await superheros_db.ask("Count power of female heros")
+    print(sql)
+    with engine.connect() as connection:
+        result = connection.execute(text(sql))
+        # print(result.mappings().all())
+    
+    llm_client = OpenAIClient("gpt-4-turbo-preview")
+    res = await llm_client.text_generation(TEXT_QA_PROMPT, {"context": result.mappings().all(), "question": "Count power of female heros"}, event_tracker=event_tracker)
+    print(res) 
 
 
 if __name__ == "__main__":
