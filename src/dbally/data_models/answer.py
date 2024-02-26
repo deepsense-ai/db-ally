@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 class AnswerMetadata:
     """Class for storing metadata associated with answer."""
 
-    query_execution_time: Optional[float] = None
+    execution_time: Optional[float] = None
 
 
 @dataclass

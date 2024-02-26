@@ -1,11 +1,12 @@
 import textwrap
 from typing import Callable, Dict, List, Optional, Tuple, Type, TypeVar
+from typing import Dict, List, Optional, Tuple, Type
 
 from sqlalchemy import Engine, text
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.answer import Answer
+from dbally.data_models.answer import Answer, AnswerMetadata
 from dbally.data_models.audit import RequestEnd, RequestStart
 from dbally.iql import IQLActions, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
