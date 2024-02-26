@@ -43,7 +43,7 @@ class Collection:
         name: str,
         view_selector: ViewSelector,
         iql_generator: IQLGenerator,
-        event_handlers: List[Type[EventHandler]],
+        event_handlers: List[EventHandler],
     ) -> None:
         self.name = name
         self._views: Dict[str, Type[AbstractBaseView]] = {}
@@ -117,7 +117,7 @@ class Collection:
         """
         event_tracker = EventTracker.initialize_with_handlers(self._event_handlers)
 
-        event_tracker.request_start(RequestStart(question=question))
+        await event_tracker.request_start(RequestStart(question=question, collection_name=self.name))
 
         # select view
         views = self.list()
@@ -144,6 +144,6 @@ class Collection:
         view.apply_actions(actions)
         sql = view.generate_sql()
 
-        event_tracker.request_end(RequestEnd(sql=sql))
+        await event_tracker.request_end(RequestEnd(sql=sql))
 
         return sql

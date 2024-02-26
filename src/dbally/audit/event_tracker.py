@@ -1,7 +1,5 @@
-from __future__ import annotations
-
-from contextlib import contextmanager
-from typing import Iterator
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, Dict, List, Optional
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_span import EventSpan
@@ -12,13 +10,15 @@ class EventTracker:
     """
     Container for event handlers and is responsible for processing events."""
 
-    _handlers: list[EventHandler]
+    _handlers: List[EventHandler]
+    _request_contexts: Dict[EventHandler, Optional[dict]]
 
     def __init__(self) -> None:
         self._handlers = []
+        self._request_contexts = {}
 
     @classmethod
-    def initialize_with_handlers(cls, event_handlers: list[type[EventHandler]]) -> EventTracker:
+    def initialize_with_handlers(cls, event_handlers: List[EventHandler]) -> "EventTracker":
         """
         Initialize the event store with a list of event handlers.
 
@@ -32,12 +32,11 @@ class EventTracker:
         instance = cls()
 
         for handler in event_handlers:
-            handler_instance = handler()
-            instance.subscribe(handler_instance)
+            instance.subscribe(handler)
 
         return instance
 
-    def request_start(self, request_start: RequestStart) -> None:
+    async def request_start(self, request_start: RequestStart) -> None:
         """
         Notify all event handlers about request start.
 
@@ -46,9 +45,9 @@ class EventTracker:
         """
 
         for handler in self._handlers:
-            handler.request_start(request_start)
+            self._request_contexts[handler] = await handler.request_start(request_start)
 
-    def request_end(self, request_end: RequestEnd) -> None:
+    async def request_end(self, request_end: RequestEnd) -> None:
         """
         Notify all event handlers about request end.
 
@@ -57,7 +56,7 @@ class EventTracker:
         """
 
         for handler in self._handlers:
-            handler.request_end(request_end)
+            await handler.request_end(request_end, request_context=self._request_contexts[handler])
 
     def subscribe(self, event_handler: EventHandler) -> None:
         """
@@ -69,8 +68,8 @@ class EventTracker:
 
         self._handlers.append(event_handler)
 
-    @contextmanager
-    def track_event(self, event: LLMEvent) -> Iterator[EventSpan]:
+    @asynccontextmanager
+    async def track_event(self, event: LLMEvent) -> AsyncIterator[EventSpan]:
         """
         Context manager for processing an event.
 
@@ -81,11 +80,15 @@ class EventTracker:
             Event span.
         """
 
+        contexts = {}
+
         for handler in self._handlers:
-            handler.event_start(event)
+            contexts[handler] = await handler.event_start(event, request_context=self._request_contexts[handler])
 
         span = EventSpan()
         yield span
 
         for handler in self._handlers:
-            handler.event_end(span.data)
+            await handler.event_end(
+                span.data, event_context=contexts[handler], request_context=self._request_contexts[handler]
+            )

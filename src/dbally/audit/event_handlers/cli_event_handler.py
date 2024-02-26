@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional, Union
 
 try:
     from rich import print as pprint
@@ -31,7 +31,7 @@ class CLIEventHandler(EventHandler):
         else:
             print(content)
 
-    def request_start(self, user_request: RequestStart) -> None:
+    async def request_start(self, user_request: RequestStart) -> None:
         """
         Log the start of the request.
 
@@ -43,12 +43,13 @@ class CLIEventHandler(EventHandler):
         pprint("[grey53]\n=======================================")
         pprint("[grey53]=======================================\n")
 
-    def event_start(self, event: Union[LLMEvent]) -> None:
+    async def event_start(self, event: Union[LLMEvent], request_context: None) -> None:
         """
         Log the start of the event.
 
         Args:
             event: Event to be logged.
+            request_context: Optional context passed from request_start method
         """
 
         if isinstance(event, LLMEvent):
@@ -61,12 +62,14 @@ class CLIEventHandler(EventHandler):
             else:
                 self._print_syntax(f"{event.prompt}", "text")
 
-    def event_end(self, event: Union[None, LLMEvent]) -> None:
+    async def event_end(self, event: Union[None, LLMEvent], request_context: None, event_context: None) -> None:
         """
-        Log the end of the event.
+        Log the end of the event.`
 
         Args:
             event: Event to be logged.
+            request_context: Optional context passed from request_start method
+            event_context: Optional context passed from event_start method
         """
 
         if isinstance(event, LLMEvent):
@@ -74,12 +77,13 @@ class CLIEventHandler(EventHandler):
             pprint("[grey53]\n=======================================")
             pprint("[grey53]=======================================\n")
 
-    def request_end(self, output: RequestEnd) -> None:
+    async def request_end(self, output: RequestEnd, request_context: Optional[dict] = None) -> None:
         """
         Log the end of the request.
 
         Args:
             output: The output of the request. In this case - PSQL query.
+            request_context: Optional context passed from request_start method
         """
 
         pprint("[green bold]REQUEST OUTPUT:")

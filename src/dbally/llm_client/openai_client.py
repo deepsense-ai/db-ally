@@ -1,5 +1,6 @@
 from typing import Optional, Union
 
+from dbally.data_models.audit import LLMEvent
 from dbally.data_models.llm_options import LLMOptions
 from dbally.llm_client.base import LLMClient
 from dbally.prompts.prompt_builder import ChatFormat
@@ -17,7 +18,7 @@ class OpenAIClient(LLMClient):
         super().__init__(model_name)
         self._client = AsyncOpenAI(api_key=api_key)
 
-    async def _call(self, prompt: Union[str, ChatFormat], options: LLMOptions) -> str:
+    async def _call(self, prompt: Union[str, ChatFormat], options: LLMOptions, event: LLMEvent) -> str:
         """
         Calls OpenAI API endpoint.
 
@@ -32,5 +33,9 @@ class OpenAIClient(LLMClient):
         response = await self._client.chat.completions.create(
             messages=prompt, model=self._model_name, **options.dict()  # type: ignore
         )
+
+        event.completion_tokens = response.usage.completion_tokens
+        event.prompt_tokens = response.usage.prompt_tokens
+        event.total_tokens = response.usage.total_tokens
 
         return response.choices[0].message.content  # type: ignore
