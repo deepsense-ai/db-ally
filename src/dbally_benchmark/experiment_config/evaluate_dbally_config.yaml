@@ -1,7 +1,7 @@
-output_path: "text2sql_evaluation"
+output_path: "dbally_evaluation"
 dataset_path: "data/superhero.json"
 db_ids: ["superhero"]
 difficulty_levels: ["simple"]
 neptune:
   log: False
-  tags: ["Text2SQL", "superhero", 'gpt-4-turbo-preview']
+  tags: ["db-ally", "superhero", 'gpt-4-turbo-preview']

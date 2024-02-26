@@ -7,6 +7,7 @@ import pytest
 
 from dbally._collection import Collection
 from dbally.iql import IQLActions, IQLQuery
+from dbally.utils.errors import NoViewFoundError
 from dbally.views.base import AbstractBaseView, ExposedFunction
 
 
@@ -85,7 +86,7 @@ def test_get_not_found(collection: Collection) -> None:
     try:
         collection.get("Foo")
         assert False
-    except KeyError:
+    except NoViewFoundError:
         assert True
 
 
