@@ -5,8 +5,9 @@ from pydantic_settings import BaseSettings
 class CoreConfig(BaseSettings):
     """db-ally configuration"""
 
-    pg_connection_string: str = "postgresql://developer:EzB9rIF%5E%25fF8jKM4@35.205.190.141:5432"
-    openai_api_key: str = "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"
+    pg_connection_string: str = ""
+    openai_api_key: str = ""
+    anyscale_api_key: str = ""
 
     class Config:
         """Config for env class."""
