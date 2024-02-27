@@ -1,10 +1,11 @@
 import abc
-from typing import Callable, Tuple
+from typing import Callable, Optional, Tuple
 
 import sqlalchemy
 
 from dbally.iql import IQLActions, IQLQuery, syntax
 from dbally.views import decorators
+from dbally.views.base import ExecutionResult
 from dbally.views.methods_base import MethodsBaseView
 
 
@@ -13,9 +14,10 @@ class SqlAlchemyBaseView(MethodsBaseView):
     Base class for views that use SQLAlchemy to generate SQL queries.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, sqlalchemy_engine: Optional[sqlalchemy.engine.Engine] = None) -> None:
         super().__init__()
         self._select = self.get_select()
+        self._sqlalchemy_engine = sqlalchemy_engine
 
     @abc.abstractmethod
     def get_select(self) -> sqlalchemy.Select:
@@ -117,3 +119,22 @@ class SqlAlchemyBaseView(MethodsBaseView):
         """
         method, args = self._method_with_args_from_call(action, decorators.view_action)
         return method(self._select, *args)
+
+    def execute(self) -> ExecutionResult:
+        """
+        Executes the generated SQL query and returns the results.
+
+        :return: Query results
+
+        :raises ValueError: If no SQLAlchemy engine was provided during initialization
+        """
+        if self._sqlalchemy_engine is None:
+            raise ValueError("No SQLAlchemy engine provided")
+        with self._sqlalchemy_engine.connect() as connection:
+            results = connection.execute(self._select)
+            return ExecutionResult(
+                # The underscore is used by sqlalchemy to avoid conflicts with column names
+                # pylint: disable=protected-access
+                results=[dict(row._mapping) for row in results.fetchall()],
+                context={"sql": str(self._select.compile(compile_kwargs={"literal_binds": True}))},
+            )

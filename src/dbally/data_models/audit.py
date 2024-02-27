@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Optional, Union
 
 from dbally.data_models.prompts.prompt_template import ChatFormat
+from dbally.views.base import ExecutionResult
 
 
 class EventType(Enum):
@@ -44,4 +45,4 @@ class RequestEnd:
     Class representing request end data.
     """
 
-    sql: str
+    result: ExecutionResult

@@ -1,5 +1,6 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc
 import asyncio
+from typing import Optional
 
 import sqlalchemy
 from config import config
@@ -102,9 +103,9 @@ class SuperheroCountByPowerView(SuperheroView, SuperheroFilterMixin):
     View used to count the number of superheroes with a specific power.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, sqlalchemy_engine: Optional[sqlalchemy.engine.Engine] = None) -> None:
         self._superhero_count = sqlalchemy.func.count(SuperheroModel.classes.superhero.id).label("superhero_count")
-        super().__init__()
+        super().__init__(sqlalchemy_engine)
 
     def get_select(self) -> sqlalchemy.Select:
         """
@@ -138,8 +139,8 @@ async def main():
     dbally.use_event_handler(CLIEventHandler())
 
     superheros_db = dbally.create_collection("superheros_db")
-    superheros_db.add(SuperheroView)
-    superheros_db.add(SuperheroCountByPowerView)
+    superheros_db.add(SuperheroView, lambda: SuperheroView(engine))
+    superheros_db.add(SuperheroCountByPowerView, lambda: SuperheroCountByPowerView(engine))
 
     await superheros_db.ask("What heroes have blue eyes and are taller than 180.5cm?")
 

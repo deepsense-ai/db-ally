@@ -2,7 +2,7 @@
 
 
 from dbally.iql import IQLActions, IQLQuery
-from dbally.views.base import MethodParamWithTyping
+from dbally.views.base import ExecutionResult, MethodParamWithTyping
 from dbally.views.decorators import view_action, view_filter
 from dbally.views.methods_base import MethodsBaseView
 
@@ -40,6 +40,9 @@ class MockMethodsBase(MethodsBaseView):
 
     def generate_sql(self) -> str:
         return "test"
+
+    def execute(self) -> ExecutionResult:
+        return ExecutionResult(results=[], context={})
 
 
 def test_list_filters() -> None:

@@ -8,7 +8,7 @@ import pytest
 from dbally._collection import Collection
 from dbally.iql import IQLActions, IQLQuery
 from dbally.utils.errors import NoViewFoundError
-from dbally.views.base import AbstractBaseView, ExposedFunction
+from dbally.views.base import AbstractBaseView, ExecutionResult, ExposedFunction
 
 
 class MockViewBase(AbstractBaseView):
@@ -30,6 +30,9 @@ class MockViewBase(AbstractBaseView):
 
     def generate_sql(self) -> str:
         return "test"
+
+    def execute(self) -> ExecutionResult:
+        return ExecutionResult(results=[], context={})
 
 
 class MockView1(MockViewBase):
@@ -103,6 +106,6 @@ def test_add_custom_name(collection: Collection) -> None:
     """
     Tests that the add method works correctly when a custom name is provided
     """
-    collection.add(MockView3, "Foo")
+    collection.add(MockView3, name="Foo")
     assert len(collection.list()) == 3
     assert isinstance(collection.get("Foo"), MockView3)
