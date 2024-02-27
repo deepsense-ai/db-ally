@@ -28,7 +28,8 @@ from dbally_benchmark.utils import batch, get_datetime_str
 
 async def _run_dbally_for_single_example(example: Text2SQLExample, collection: Collection) -> Text2SQLResult:
     try:
-        response = await collection.ask(example.question)
+        result = await collection.ask(example.question, dry_run=True)
+        response = result.context["sql"]
     except UnsupportedQueryError:
         response = "UnsupportedQueryError"
     except NoViewFoundError:

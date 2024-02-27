@@ -1,6 +1,6 @@
 import abc
 from dataclasses import dataclass
-from typing import List
+from typing import Any, Dict, List
 
 from dbally.iql import IQLActions, IQLQuery
 
@@ -24,6 +24,16 @@ class ExposedFunction:
     name: str
     description: str
     parameters: List[MethodParamWithTyping]
+
+
+@dataclass
+class ExecutionResult:
+    """
+    Represents the result of the query execution.
+    """
+
+    results: List[Dict[str, Any]]
+    context: Dict[str, Any]
 
 
 class AbstractBaseView(metaclass=abc.ABCMeta):
@@ -60,9 +70,15 @@ class AbstractBaseView(metaclass=abc.ABCMeta):
         :param actions: IQLActions object representing the actions to apply
         """
 
-    # TODO: this should probably be changed to method that executes the query and returns the result
+    # TODO: this should probably be replaced with a `dry_run` option on `execute`
     @abc.abstractmethod
     def generate_sql(self) -> str:
         """
         Generates SQL based on the applied filters and actions.
+        """
+
+    @abc.abstractmethod
+    def execute(self) -> ExecutionResult:
+        """
+        Executes the query and returns the result.
         """

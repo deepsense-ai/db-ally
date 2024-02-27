@@ -82,6 +82,6 @@ class LangsmithEventHandler(EventHandler[RunTree, RunTree]):
             output: The output of the request. In this case - PSQL query.
             request_context: Optional context passed from request_start method
         """
-        request_context.end(outputs={"sql": output.sql})
+        request_context.end(outputs={"sql": output.result.context["sql"]})
         res = request_context.post(exclude_child_runs=False)
         res.result()

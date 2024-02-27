@@ -1,5 +1,7 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, duplicate-code
 
+from typing import Optional
+
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
@@ -99,9 +101,9 @@ class SuperheroCountByPowerView(SuperheroView, SuperheroFilterMixin):
     View used to count the number of superheroes with a specific power.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, sqlalchemy_engine: Optional[sqlalchemy.engine.Engine] = None) -> None:
         self._superhero_count = sqlalchemy.func.count(SuperheroModel.classes.superhero.id).label("superhero_count")
-        super().__init__()
+        super().__init__(sqlalchemy_engine)
 
     def get_select(self) -> sqlalchemy.Select:
         """

@@ -1,5 +1,5 @@
 import textwrap
-from typing import Dict, List, Optional, Tuple, Type
+from typing import Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
@@ -8,7 +8,7 @@ from dbally.iql import IQLActions, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.utils.errors import NoViewFoundError
 from dbally.view_selection.base import ViewSelector
-from dbally.views.base import AbstractBaseView, ExposedFunction
+from dbally.views.base import AbstractBaseView, ExecutionResult, ExposedFunction
 
 
 class IQLGeneratorMock:
@@ -46,17 +46,21 @@ class Collection:
         event_handlers: List[EventHandler],
     ) -> None:
         self.name = name
-        self._views: Dict[str, Type[AbstractBaseView]] = {}
+        self._views: Dict[str, Callable[[], AbstractBaseView]] = {}
+        self._builders: Dict[str, Callable[[], AbstractBaseView]] = {}
         self._view_selector = view_selector
         self._iql_generator = iql_generator
         self._event_handlers = event_handlers
 
-    def add(self, view: Type[AbstractBaseView], name: Optional[str] = None) -> None:
+    T = TypeVar("T", bound=AbstractBaseView)
+
+    def add(self, view: Type[T], builder: Optional[Callable[[], T]] = None, name: Optional[str] = None) -> None:
         """
         Register new view that will be available to query via the collection.
 
         Args:
             view: a view type to be added to the collection
+            builder: optional factory function that will be used to create the view instance
             name: optional name of the view (defaults to the name of the class)
 
         Raises:
@@ -65,10 +69,11 @@ class Collection:
         if name is None:
             name = view.__name__
 
-        if name in self._views:
+        if name in self._views or name in self._builders:
             raise ValueError(f"View with name {name} is already registered")
 
         self._views[name] = view
+        self._builders[name] = builder or view
 
     def get(self, name: str) -> AbstractBaseView:
         """
@@ -83,7 +88,7 @@ class Collection:
         if name not in self._views:
             raise NoViewFoundError
 
-        return self._views[name]()
+        return self._builders[name]()
 
     def list(self) -> Dict[str, str]:
         """
@@ -95,7 +100,7 @@ class Collection:
             name: (textwrap.dedent(view.__doc__).strip() if view.__doc__ else "") for name, view in self._views.items()
         }
 
-    async def ask(self, question: str) -> str:
+    async def ask(self, question: str, dry_run: bool = False) -> ExecutionResult:
         """
         Ask question in a text form and retrieve the answer based on the available views.
 
@@ -108,6 +113,7 @@ class Collection:
 
         Args:
              question: question in text form
+             dry_run: if True, only generate the query without executing it
 
         Returns:
             SQL query - TODO: it should execute query and return results
@@ -142,8 +148,17 @@ class Collection:
 
         view.apply_filters(filters)
         view.apply_actions(actions)
-        sql = view.generate_sql()
 
-        await event_tracker.request_end(RequestEnd(sql=sql))
+        if dry_run:
+            result = ExecutionResult(
+                results=[],
+                context={
+                    "sql": view.generate_sql(),
+                },
+            )
+        else:
+            result = view.execute()
 
-        return sql
+        await event_tracker.request_end(RequestEnd(result=result))
+
+        return result
