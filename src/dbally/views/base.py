@@ -1,6 +1,6 @@
 import abc
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from dbally.iql import IQLActions, IQLQuery
 
@@ -34,6 +34,7 @@ class ExecutionResult:
 
     results: List[Dict[str, Any]]
     context: Dict[str, Any]
+    execution_time: Optional[float] = None
 
 
 class AbstractBaseView(metaclass=abc.ABCMeta):
@@ -70,15 +71,10 @@ class AbstractBaseView(metaclass=abc.ABCMeta):
         :param actions: IQLActions object representing the actions to apply
         """
 
-    # TODO: this should probably be replaced with a `dry_run` option on `execute`
     @abc.abstractmethod
-    def generate_sql(self) -> str:
-        """
-        Generates SQL based on the applied filters and actions.
-        """
-
-    @abc.abstractmethod
-    def execute(self) -> ExecutionResult:
+    def execute(self, dry_run: bool = False) -> ExecutionResult:
         """
         Executes the query and returns the result.
+
+        :param dry_run: if True, only generate the query without executing it
         """

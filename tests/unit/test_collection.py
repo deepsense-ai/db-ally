@@ -28,10 +28,7 @@ class MockViewBase(AbstractBaseView):
     def apply_actions(self, actions: IQLActions) -> None:
         ...
 
-    def generate_sql(self) -> str:
-        return "test"
-
-    def execute(self) -> ExecutionResult:
+    def execute(self, dry_run=False) -> ExecutionResult:
         return ExecutionResult(results=[], context={})
 
 
