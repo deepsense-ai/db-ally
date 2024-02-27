@@ -57,7 +57,7 @@ def calculate_exec_acc(dataset: List[Text2SQLResult], engine: Engine) -> float:
     Args:
         dataset: List containing Text2SQLResult objects that
         represents (ground truth query, predicted query).
-        engine: AsyncEngine.
+        engine: Engine.
 
     Returns:
         Execution accuracy score.
@@ -90,7 +90,7 @@ def calculate_valid_sql(dataset: List[Text2SQLResult], engine: Engine) -> float:
     Args:
         dataset: List containing Text2SQLResult objects that
         represents (ground truth query, predicted query).
-        engine: AsyncEngine.
+        engine: Engine.
 
     Returns:
         Valid SQL score.
@@ -132,7 +132,7 @@ def calculate_ves(dataset: List[Text2SQLResult], engine: Engine) -> float:
     Args:
         dataset: List containing Text2SQLResult objects that
         represents (ground truth query, predicted query).
-        engine: AsyncEngine.
+        engine: Engine.
 
     Returns:
         Valid efficiency score.
@@ -217,7 +217,7 @@ def calculate_dataset_metrics(dataset: List[Text2SQLResult], engine: Engine) -> 
     Args:
         dataset: List containing Text2SQLResult objects that
         represents (ground truth query, predicted query).
-        engine: AsyncEngine.
+        engine: Engine.
 
     Returns:
         Dictionary containing: exact match, no view found error ratio, undefined error ratio,
