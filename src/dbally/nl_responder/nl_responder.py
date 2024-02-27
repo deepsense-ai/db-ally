@@ -1,7 +1,8 @@
 import copy
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence, Union
 
 import pandas as pd
+from sqlalchemy.engine import RowMapping
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.answer import Answer
@@ -52,7 +53,7 @@ class NLResponder:
         return llm_response
 
 
-def _promptify_rows(rows: List[Dict]) -> str:
+def _promptify_rows(rows: Union[Sequence[RowMapping], List[Dict]]) -> str:
     """
     Formats rows into a markdown table.
 

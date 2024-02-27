@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List, Sequence, Union
 
 
 @dataclass
@@ -7,4 +8,4 @@ class QueryResult:
 
     sql_query: str
     execution_time: float
-    rows: list
+    rows: Union[Sequence, List]

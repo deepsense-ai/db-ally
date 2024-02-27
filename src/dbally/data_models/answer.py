@@ -1,5 +1,7 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence, Union
+
+from sqlalchemy.engine import RowMapping
 
 
 @dataclass
@@ -14,6 +16,6 @@ class Answer:
     """Class representing db-ally answer."""
 
     sql: str
-    rows: List[Dict]
+    rows: Union[Sequence[RowMapping], List[Dict]]
     metadata: Optional[AnswerMetadata] = None
     content: Optional[str] = None

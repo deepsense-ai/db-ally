@@ -4,19 +4,18 @@ import os
 from pathlib import Path
 from typing import Any, List
 
-import asyncpg
 import hydra
 import neptune
 from hydra.utils import instantiate
 from loguru import logger
 from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
+from sqlalchemy import Engine, create_engine
 
 import dbally
 from dbally._collection import Collection
 from dbally.data_models.prompts.iql_prompt_template import default_iql_template
 from dbally.data_models.prompts.view_selector_prompt_template import default_view_selector_template
-from dbally.db_connectors.pgsql_db import PGSqlConnector
 from dbally.utils.errors import NoViewFoundError, UnsupportedQueryError
 from dbally_benchmark.config import BenchmarkConfig
 from dbally_benchmark.paths import PATH_EXPERIMENTS
@@ -26,29 +25,34 @@ from dbally_benchmark.text2sql.views import SuperheroCountByPowerView, Superhero
 from dbally_benchmark.utils import batch, get_datetime_str
 
 
-async def _run_dbally_for_single_example(example: Text2SQLExample, collection: Collection) -> Text2SQLResult:
+async def _run_dbally_for_single_example(
+    example: Text2SQLExample, engine: Engine, collection: Collection
+) -> Text2SQLResult:
     try:
         result = await collection.ask(example.question, dry_run=True)
         response = result.context["sql"]
     except UnsupportedQueryError:
-        response = "UnsupportedQueryError"
+        sql = "UnsupportedQueryError"
     except NoViewFoundError:
-        response = "NoViewFoundError"
+        sql = "NoViewFoundError"
     except Exception:  # pylint: disable=broad-exception-caught
-        response = "Error"
+        sql = "Error"
 
     return Text2SQLResult(
-        db_id=example.db_id, question=example.question, ground_truth_sql=example.SQL, predicted_sql=response
+        db_id=example.db_id, question=example.question, ground_truth_sql=example.SQL, predicted_sql=sql
     )
 
 
-async def run_dbally_for_dataset(dataset: Text2SQLDataset, collection: Collection) -> List[Text2SQLResult]:
+async def run_dbally_for_dataset(
+    dataset: Text2SQLDataset, collection: Collection, engine: Engine
+) -> List[Text2SQLResult]:
     """
     Transforms questions into SQL queries using a IQL approach.
 
     Args:
         dataset: The dataset containing questions to be transformed into SQL queries.
         collection: Container for a set of views used by db-ally.
+        engine: Engine.
 
     Returns:
         A list of Text2SQLResult objects representing the predictions.
@@ -58,7 +62,7 @@ async def run_dbally_for_dataset(dataset: Text2SQLDataset, collection: Collectio
 
     for group in batch(dataset, 5):
         current_results = await asyncio.gather(
-            *[_run_dbally_for_single_example(example, collection) for example in group]
+            *[_run_dbally_for_single_example(example, engine, collection) for example in group]
         )
         results = [*current_results, *results]
 
@@ -78,8 +82,7 @@ async def evaluate(cfg: DictConfig) -> Any:
     cfg = instantiate(cfg)
     benchmark_cfg = BenchmarkConfig()
 
-    connection_pool = await asyncpg.create_pool(dsn=benchmark_cfg.pg_conn_string)
-    db_connector = PGSqlConnector(connection_pool=connection_pool)
+    engine = create_engine(benchmark_cfg.pg_conn_string)
 
     if "gpt" in benchmark_cfg.model_name:
         dbally.use_openai_llm(
@@ -114,13 +117,13 @@ async def evaluate(cfg: DictConfig) -> Any:
     evaluation_dataset = Text2SQLDataset.from_json_file(
         Path(cfg.dataset_path), db_ids=cfg.db_ids, difficulty_levels=cfg.difficulty_levels
     )
-    dbally_results = await run_dbally_for_dataset(dataset=evaluation_dataset, collection=superheros_db)
+    dbally_results = await run_dbally_for_dataset(dataset=evaluation_dataset, collection=superheros_db, engine=engine)
 
     with open(output_dir / results_file_name, "w", encoding="utf-8") as outfile:
         json.dump([result.model_dump() for result in dbally_results], outfile, indent=4)
 
     logger.info("Calculating metrics")
-    metrics = await calculate_dataset_metrics(dbally_results, db_connector)
+    metrics = calculate_dataset_metrics(dbally_results, engine)
 
     with open(output_dir / metrics_file_name, "w", encoding="utf-8") as outfile:
         json.dump(metrics, outfile, indent=4)
@@ -134,9 +137,7 @@ async def evaluate(cfg: DictConfig) -> Any:
         run[f"evaluation/{metrics_file_name}"].upload((output_dir / metrics_file_name).as_posix())
         run[f"evaluation/{results_file_name}"].upload((output_dir / results_file_name).as_posix())
         run["evaluation/metrics"] = stringify_unsupported(metrics)
-        logger.info("Evaluation results logged to neptune")
-
-    await connection_pool.close()
+        logger.info(f"Evaluation results logged to neptune at {run.get_url()}")
 
 
 @hydra.main(version_base=None, config_path="experiment_config", config_name="evaluate_dbally_config")

@@ -65,7 +65,7 @@ class Text2SQLDataset(RootModel):
 
         if difficulty_levels:
             difficulty_levels = [DifficultyLevel(level) for level in difficulty_levels]
-            dataset_obj.root = [item for item in dataset_obj.root if item.difficulty in difficulty_levels]
+            dataset_obj.root = [item for item in dataset_obj.root if item.difficulty in difficulty_levels][:2]
 
         return dataset_obj
 

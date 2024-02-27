@@ -1,9 +1,19 @@
-import asyncio
+import time
 from typing import Dict, List
 
-from dbally.db_connectors.base import DBConnector
+from sqlalchemy import Engine, text
+
+from dbally.data_models.db_query import QueryResult
 from dbally_benchmark.text2sql.dataset import Text2SQLResult
 from dbally_benchmark.utils import batch
+
+
+def _run_query(query: str, engine: Engine) -> QueryResult:
+    with engine.connect() as connection:
+        start_time = time.time()
+        rows = connection.execute(text(query)).mappings().all()
+        execution_time = time.time() - start_time
+    return QueryResult(sql_query=query, execution_time=execution_time, rows=rows)
 
 
 def calculate_exact_match(dataset: List[Text2SQLResult]) -> float:
@@ -28,10 +38,10 @@ def calculate_exact_match(dataset: List[Text2SQLResult]) -> float:
     return exact_query_matches / len(dataset)
 
 
-async def _check_exec_acc(example: Text2SQLResult, db_connector: DBConnector) -> bool:
-    gt_query_result = await db_connector.run_query(example.ground_truth_sql)
+def _check_exec_acc(example: Text2SQLResult, engine: Engine) -> bool:
+    gt_query_result = _run_query(example.ground_truth_sql, engine)
     try:
-        pred_query_result = await db_connector.run_query(example.predicted_sql)
+        pred_query_result = _run_query(example.predicted_sql, engine)
     except:  # noqa: E722, pylint: disable=bare-except
         return False
 
@@ -39,7 +49,7 @@ async def _check_exec_acc(example: Text2SQLResult, db_connector: DBConnector) ->
     return gt_query_result.rows == pred_query_result.rows
 
 
-async def calculate_exec_acc(dataset: List[Text2SQLResult], db_connector: DBConnector) -> float:
+def calculate_exec_acc(dataset: List[Text2SQLResult], engine: Engine) -> float:
     """
     Calculates execution accuracy score i.e. the proportion of examples in the evaluation set for
     which the executed results of both the predicted and ground-truth SQLs are identical.
@@ -47,7 +57,7 @@ async def calculate_exec_acc(dataset: List[Text2SQLResult], db_connector: DBConn
     Args:
         dataset: List containing Text2SQLResult objects that
         represents (ground truth query, predicted query).
-        db_connector: DBConnector.
+        engine: AsyncEngine.
 
     Returns:
         Execution accuracy score.
@@ -56,7 +66,7 @@ async def calculate_exec_acc(dataset: List[Text2SQLResult], db_connector: DBConn
     rows_matches = 0
 
     for group in batch(dataset, 5):
-        results = await asyncio.gather(*[_check_exec_acc(example, db_connector) for example in group])
+        results = [_check_exec_acc(example, engine) for example in group]
 
         for result in results:
             rows_matches += result
@@ -64,15 +74,15 @@ async def calculate_exec_acc(dataset: List[Text2SQLResult], db_connector: DBConn
     return rows_matches / len(dataset)
 
 
-async def _check_valid_sql(example: Text2SQLResult, db_connector: DBConnector) -> bool:
+def _check_valid_sql(example: Text2SQLResult, engine: Engine) -> bool:
     try:
-        await db_connector.run_query(example.predicted_sql)
+        _run_query(example.predicted_sql, engine)
     except:  # noqa: E722, pylint: disable=bare-except
         return False
     return True
 
 
-async def calculate_valid_sql(dataset: List[Text2SQLResult], db_connector: DBConnector) -> float:
+def calculate_valid_sql(dataset: List[Text2SQLResult], engine: Engine) -> float:
     """
     Calculates the proportion of examples in the evaluation set for
     which the predicted SQLs are correct SQL queries.
@@ -80,7 +90,7 @@ async def calculate_valid_sql(dataset: List[Text2SQLResult], db_connector: DBCon
     Args:
         dataset: List containing Text2SQLResult objects that
         represents (ground truth query, predicted query).
-        db_connector: DBConnector.
+        engine: AsyncEngine.
 
     Returns:
         Valid SQL score.
@@ -89,7 +99,7 @@ async def calculate_valid_sql(dataset: List[Text2SQLResult], db_connector: DBCon
     valid_sqls = 0
 
     for group in batch(dataset, 5):
-        results = await asyncio.gather(*[_check_valid_sql(example, db_connector) for example in group])
+        results = [_check_valid_sql(example, engine) for example in group]
 
         for result in results:
             valid_sqls += result
@@ -97,16 +107,16 @@ async def calculate_valid_sql(dataset: List[Text2SQLResult], db_connector: DBCon
     return valid_sqls / len(dataset)
 
 
-async def _calculate_ves_for_single_example(example: Text2SQLResult, db_connector: DBConnector, reps: int = 5) -> float:
+def _calculate_ves_for_single_example(example: Text2SQLResult, engine: Engine, reps: int = 5) -> float:
     ves = 0
-    exec_acc_score = await _check_exec_acc(example, db_connector)
+    exec_acc_score = _check_exec_acc(example, engine)
 
     if exec_acc_score is False:
         return ves
 
     for group in batch([example] * reps, 5):
-        gt_results = await asyncio.gather(*[db_connector.run_query(example.ground_truth_sql) for example in group])
-        pred_results = await asyncio.gather(*[db_connector.run_query(example.predicted_sql) for example in group])
+        gt_results = [_run_query(example.ground_truth_sql, engine) for example in group]
+        pred_results = [_run_query(example.predicted_sql, engine) for example in group]
 
         for gt_result, pred_result in zip(gt_results, pred_results):
             ves += (gt_result.execution_time / pred_result.execution_time) ** (1 / 2)
@@ -114,7 +124,7 @@ async def _calculate_ves_for_single_example(example: Text2SQLResult, db_connecto
     return ves / reps
 
 
-async def calculate_ves(dataset: List[Text2SQLResult], db_connector: DBConnector) -> float:
+def calculate_ves(dataset: List[Text2SQLResult], engine: Engine) -> float:
     """
     Calculates valid efficiency score that measures the efficiency of valid SQLs generated
     by models. More details about this metric can be found here: https://arxiv.org/pdf/2305.03111.pdf.
@@ -122,7 +132,7 @@ async def calculate_ves(dataset: List[Text2SQLResult], db_connector: DBConnector
     Args:
         dataset: List containing Text2SQLResult objects that
         represents (ground truth query, predicted query).
-        db_connector: DBConnector.
+        engine: AsyncEngine.
 
     Returns:
         Valid efficiency score.
@@ -131,7 +141,7 @@ async def calculate_ves(dataset: List[Text2SQLResult], db_connector: DBConnector
     total_ves: float = 0
 
     for example in dataset:
-        ves = await _calculate_ves_for_single_example(example, db_connector)
+        ves = _calculate_ves_for_single_example(example, engine)
         total_ves += ves
 
     return total_ves / len(dataset)
@@ -200,14 +210,14 @@ def calculate_unsupported_query_error_ratio(dataset: List[Text2SQLResult]) -> fl
     return total_unsupported_query_error_ratio / len(dataset)
 
 
-async def calculate_dataset_metrics(dataset: List[Text2SQLResult], db_connector: DBConnector) -> Dict[str, float]:
+def calculate_dataset_metrics(dataset: List[Text2SQLResult], engine: Engine) -> Dict[str, float]:
     """
     Calculates Text2SQL evaluation metrics for a given dataset.
 
     Args:
         dataset: List containing Text2SQLResult objects that
         represents (ground truth query, predicted query).
-        db_connector: DBConnector.
+        engine: AsyncEngine.
 
     Returns:
         Dictionary containing: exact match, no view found error ratio, undefined error ratio,
@@ -216,13 +226,13 @@ async def calculate_dataset_metrics(dataset: List[Text2SQLResult], db_connector:
     """
 
     metrics = {
-        "valid_sql": await calculate_valid_sql(dataset, db_connector),
+        "valid_sql": calculate_valid_sql(dataset, engine),
         "no_view_found_error": calculate_no_view_found_error_ratio(dataset),
         "unsupported_query_error": calculate_unsupported_query_error_ratio(dataset),
         "undefined_error": calculate_undefined_error_ratio(dataset),
         "exact_match": calculate_exact_match(dataset),
-        "execution_accuracy": await calculate_exec_acc(dataset, db_connector),
-        "valid_efficiency_score": await calculate_ves(dataset, db_connector),
+        "execution_accuracy": calculate_exec_acc(dataset, engine),
+        "valid_efficiency_score": calculate_ves(dataset, engine),
     }
 
     return metrics
