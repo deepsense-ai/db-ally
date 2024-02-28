@@ -5,14 +5,25 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 import sqlalchemy
 
-from dbally import SqlAlchemyBaseView, decorators
+from dbally import decorators
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.prompts.iql_prompt_template import default_iql_template
+from dbally.iql import IQLActions, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
+from dbally.views.methods_base import MethodsBaseView
 
 
-class MockView(SqlAlchemyBaseView):
+class MockView(MethodsBaseView):
     def get_select(self) -> sqlalchemy.Select:
+        ...
+
+    def apply_filters(self, filters: IQLQuery) -> None:
+        ...
+
+    def apply_actions(self, actions: IQLActions) -> None:
+        ...
+
+    def execute(self, dry_run: bool = False):
         ...
 
     @decorators.view_filter()

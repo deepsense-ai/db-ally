@@ -149,15 +149,7 @@ class Collection:
         view.apply_filters(filters)
         view.apply_actions(actions)
 
-        if dry_run:
-            result = ExecutionResult(
-                results=[],
-                context={
-                    "sql": view.generate_sql(),
-                },
-            )
-        else:
-            result = view.execute()
+        result = view.execute(dry_run=dry_run)
 
         await event_tracker.request_end(RequestEnd(result=result))
 

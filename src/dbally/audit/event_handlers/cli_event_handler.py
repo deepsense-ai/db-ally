@@ -88,4 +88,5 @@ class CLIEventHandler(EventHandler):
 
         pprint("[green bold]REQUEST OUTPUT:")
         pprint(f"Number of rows: {len(output.result.results)}")
-        self._print_syntax(f"{output.result.context['sql']}", "psql")
+        if "sql" in output.result.context:
+            self._print_syntax(f"{output.result.context['sql']}", "psql")
