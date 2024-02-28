@@ -1,6 +1,6 @@
 import abc
 import time
-from typing import Callable, Optional, Tuple
+from typing import Callable, Tuple
 
 import sqlalchemy
 
@@ -15,7 +15,7 @@ class SqlAlchemyBaseView(MethodsBaseView):
     Base class for views that use SQLAlchemy to generate SQL queries.
     """
 
-    def __init__(self, sqlalchemy_engine: Optional[sqlalchemy.engine.Engine] = None) -> None:
+    def __init__(self, sqlalchemy_engine: sqlalchemy.engine.Engine) -> None:
         super().__init__()
         self._select = self.get_select()
         self._sqlalchemy_engine = sqlalchemy_engine

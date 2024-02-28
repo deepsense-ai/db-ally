@@ -3,17 +3,22 @@ from typing import Dict, List
 
 from sqlalchemy import Engine, text
 
-from dbally.data_models.db_query import QueryResult
+from dbally.data_models.execution_result import ExecutionResult
 from dbally_benchmark.text2sql.dataset import Text2SQLResult
 from dbally_benchmark.utils import batch
 
 
-def _run_query(query: str, engine: Engine) -> QueryResult:
+def _run_query(query: str, engine: Engine) -> ExecutionResult:
     with engine.connect() as connection:
         start_time = time.time()
-        rows = connection.execute(text(query)).mappings().all()
+        rows = connection.execute(text(query)).fetchall()
         execution_time = time.time() - start_time
-    return QueryResult(sql_query=query, execution_time=execution_time, rows=rows)
+
+    return ExecutionResult(
+        results=[dict(row._mapping) for row in rows],  # pylint: disable=protected-access
+        execution_time=execution_time,
+        context={"sql": query},
+    )
 
 
 def calculate_exact_match(dataset: List[Text2SQLResult]) -> float:
@@ -46,7 +51,7 @@ def _check_exec_acc(example: Text2SQLResult, engine: Engine) -> bool:
         return False
 
     # TODO: Add some postprocessing like sorting columns and rows.
-    return gt_query_result.rows == pred_query_result.rows
+    return gt_query_result.results == pred_query_result.results
 
 
 def calculate_exec_acc(dataset: List[Text2SQLResult], engine: Engine) -> float:
@@ -119,7 +124,7 @@ def _calculate_ves_for_single_example(example: Text2SQLResult, engine: Engine, r
         pred_results = [_run_query(example.predicted_sql, engine) for example in group]
 
         for gt_result, pred_result in zip(gt_results, pred_results):
-            ves += (gt_result.execution_time / pred_result.execution_time) ** (1 / 2)
+            ves += (gt_result.execution_time / pred_result.execution_time) ** (1 / 2)  # type: ignore
 
     return ves / reps
 
