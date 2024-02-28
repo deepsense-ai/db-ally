@@ -2,26 +2,12 @@
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-import sqlalchemy
 
 import dbally
-from dbally import SqlAlchemyBaseView
 from dbally.audit.event_tracker import EventTracker
 from dbally.view_selection.llm_view_selector import LLMViewSelector
 
-
-class MockView1(SqlAlchemyBaseView):
-    """Mock View 1 Description"""
-
-    def get_select(self) -> sqlalchemy.Select:
-        ...
-
-
-class MockView2(SqlAlchemyBaseView):
-    """Mock View 2 Description"""
-
-    def get_select(self) -> sqlalchemy.Select:
-        ...
+from .test_collection import MockView1, MockView2
 
 
 @pytest.fixture
