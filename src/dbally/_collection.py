@@ -140,8 +140,6 @@ class Collection:
         else:
             selected_view = await self._view_selector.select_view(question, views, event_tracker)
 
-        print(selected_view)
-
         view = self.get(selected_view)
 
         filter_list, action_list = view.list_filters(), view.list_actions()
