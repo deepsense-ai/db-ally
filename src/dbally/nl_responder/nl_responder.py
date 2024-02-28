@@ -46,7 +46,7 @@ class NLResponder:
 
         llm_response = await self._llm_client.text_generation(
             template=self._prompt_template,
-            fmt={"rows": _promptify_rows(result.results), "sql": result.context["sql"], "question": question},
+            fmt={"rows": _promptify_rows(result.results), "question": question},
             event_tracker=event_tracker,
         )
         return llm_response
