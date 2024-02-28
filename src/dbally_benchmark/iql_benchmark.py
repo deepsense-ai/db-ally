@@ -10,7 +10,7 @@ from hydra.utils import instantiate
 from loguru import logger
 from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import create_engine
 
 import dbally
 from dbally._collection import Collection
@@ -25,12 +25,10 @@ from dbally_benchmark.text2sql.views import SuperheroCountByPowerView, Superhero
 from dbally_benchmark.utils import batch, get_datetime_str
 
 
-async def _run_dbally_for_single_example(
-    example: Text2SQLExample, engine: Engine, collection: Collection
-) -> Text2SQLResult:
+async def _run_dbally_for_single_example(example: Text2SQLExample, collection: Collection) -> Text2SQLResult:
     try:
         result = await collection.ask(example.question, dry_run=True)
-        response = result.context["sql"]
+        sql = result.context["sql"]
     except UnsupportedQueryError:
         sql = "UnsupportedQueryError"
     except NoViewFoundError:
@@ -43,16 +41,13 @@ async def _run_dbally_for_single_example(
     )
 
 
-async def run_dbally_for_dataset(
-    dataset: Text2SQLDataset, collection: Collection, engine: Engine
-) -> List[Text2SQLResult]:
+async def run_dbally_for_dataset(dataset: Text2SQLDataset, collection: Collection) -> List[Text2SQLResult]:
     """
     Transforms questions into SQL queries using a IQL approach.
 
     Args:
         dataset: The dataset containing questions to be transformed into SQL queries.
         collection: Container for a set of views used by db-ally.
-        engine: Engine.
 
     Returns:
         A list of Text2SQLResult objects representing the predictions.
@@ -62,7 +57,7 @@ async def run_dbally_for_dataset(
 
     for group in batch(dataset, 5):
         current_results = await asyncio.gather(
-            *[_run_dbally_for_single_example(example, engine, collection) for example in group]
+            *[_run_dbally_for_single_example(example, collection) for example in group]
         )
         results = [*current_results, *results]
 
@@ -82,7 +77,7 @@ async def evaluate(cfg: DictConfig) -> Any:
     cfg = instantiate(cfg)
     benchmark_cfg = BenchmarkConfig()
 
-    engine = create_engine(benchmark_cfg.pg_conn_string)
+    engine = create_engine(benchmark_cfg.pg_connection_string + "/superhero")
 
     if "gpt" in benchmark_cfg.model_name:
         dbally.use_openai_llm(
@@ -91,8 +86,8 @@ async def evaluate(cfg: DictConfig) -> Any:
         )
 
     superheros_db = dbally.create_collection("superheros_db")
-    superheros_db.add(SuperheroView)
-    superheros_db.add(SuperheroCountByPowerView)
+    superheros_db.add(SuperheroView, lambda: SuperheroView(engine))
+    superheros_db.add(SuperheroCountByPowerView, lambda: SuperheroCountByPowerView(engine))
 
     run = None
     if cfg.neptune.log:
@@ -117,7 +112,7 @@ async def evaluate(cfg: DictConfig) -> Any:
     evaluation_dataset = Text2SQLDataset.from_json_file(
         Path(cfg.dataset_path), db_ids=cfg.db_ids, difficulty_levels=cfg.difficulty_levels
     )
-    dbally_results = await run_dbally_for_dataset(dataset=evaluation_dataset, collection=superheros_db, engine=engine)
+    dbally_results = await run_dbally_for_dataset(dataset=evaluation_dataset, collection=superheros_db)
 
     with open(output_dir / results_file_name, "w", encoding="utf-8") as outfile:
         json.dump([result.model_dump() for result in dbally_results], outfile, indent=4)

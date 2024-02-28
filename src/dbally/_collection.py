@@ -1,17 +1,16 @@
 import textwrap
 from typing import Callable, Dict, List, Optional, Tuple, Type, TypeVar
-from typing import Dict, List, Optional, Tuple, Type
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import RequestEnd, RequestStart
-from dbally.data_models.execution_result import ExecutionResult, ExecutionMetadata
+from dbally.data_models.execution_result import ExecutionResult
 from dbally.iql import IQLActions, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.utils.errors import NoViewFoundError
 from dbally.nl_responder.nl_responder import NLResponder
+from dbally.utils.errors import NoViewFoundError
 from dbally.view_selection.base import ViewSelector
-from dbally.views.base import AbstractBaseView, ExecutionResult, ExposedFunction
+from dbally.views.base import AbstractBaseView, ExposedFunction
 
 
 class IQLGeneratorMock:
@@ -117,12 +116,12 @@ class Collection:
             - Query Execution
 
         Args:
-             question: question in text form
-             dry_run: if True, only generate the query without executing it
-             return_natural_response: if True, the natural response will be included in the answer
+            question: question in text form
+            dry_run: if True, only generate the query without executing it
+            return_natural_response: if True, the natural response will be included in the answer
 
         Returns:
-            SQL query - TODO: it should execute query and return results
+            ExecutionResult object representing the result of the query execution.
 
         Raises:
             ValueError: if collection is empty
@@ -141,6 +140,8 @@ class Collection:
         else:
             selected_view = await self._view_selector.select_view(question, views, event_tracker)
 
+        print(selected_view)
+
         view = self.get(selected_view)
 
         filter_list, action_list = view.list_filters(), view.list_actions()
@@ -156,8 +157,10 @@ class Collection:
         view.apply_actions(actions)
 
         result = view.execute(dry_run=dry_run)
-        
+
         if not dry_run and return_natural_response:
-            result.answer = await self._nl_responder.generate_response(result, question, event_tracker)
+            result.textual_response = await self._nl_responder.generate_response(result, question, event_tracker)
 
         await event_tracker.request_end(RequestEnd(result=result))
+
+        return result

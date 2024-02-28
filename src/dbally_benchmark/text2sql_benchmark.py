@@ -83,10 +83,13 @@ async def evaluate(cfg: DictConfig) -> Any:
     cfg = instantiate(cfg)
     benchmark_cfg = BenchmarkConfig()
 
-    engine = create_engine(benchmark_cfg.pg_conn_string)
+    engine = create_engine(benchmark_cfg.pg_connection_string)
 
     if "gpt" in benchmark_cfg.model_name:
-        llm_client = OpenAIClient(benchmark_cfg.model_name)
+        llm_client = OpenAIClient(
+            model_name=benchmark_cfg.model_name,
+            api_key=benchmark_cfg.openai_api_key,
+        )
 
     run = None
     if cfg.neptune.log:

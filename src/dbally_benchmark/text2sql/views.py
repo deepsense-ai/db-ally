@@ -1,6 +1,5 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, duplicate-code
 
-
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
@@ -8,7 +7,7 @@ from sqlalchemy.ext.automap import automap_base
 from dbally import SqlAlchemyBaseView, decorators
 from dbally_benchmark.config import config
 
-engine = create_engine(config.pg_conn_string)
+engine = create_engine(config.pg_connection_string + "/superhero")
 SuperheroModel = automap_base()
 SuperheroModel.prepare(autoload_with=engine, reflect=True)
 

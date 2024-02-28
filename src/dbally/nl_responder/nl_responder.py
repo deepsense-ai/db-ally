@@ -1,11 +1,10 @@
 import copy
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Optional
 
 import pandas as pd
-from sqlalchemy.engine import RowMapping
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.execution_result import ExecutionMetadata, ExecutionResult
+from dbally.data_models.execution_result import ExecutionResult
 from dbally.data_models.prompts.nl_responder_prompt_template import (
     NLResponderPromptTemplate,
     default_nl_responder_template,
@@ -37,8 +36,8 @@ class NLResponder:
         Uses LLM to generate a response in natural language form.
 
         Args:
-            answer: object representing answer to the user question
             result: object representing the result of the query execution
+            question: user question
             event_tracker: event store used to audit the generation process
 
         Returns:
@@ -47,7 +46,7 @@ class NLResponder:
 
         llm_response = await self._llm_client.text_generation(
             template=self._prompt_template,
-            fmt={"rows": _promptify_rows(result.results), "query": result.metadata.query, "question": question},
+            fmt={"rows": _promptify_rows(result.results), "sql": result.context["sql"], "question": question},
             event_tracker=event_tracker,
         )
         return llm_response

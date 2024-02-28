@@ -1,15 +1,5 @@
-from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
-
-
-@dataclass
-class ExecutionMetadata:
-    """
-    Represents the metadata of the query execution.
-    """
-
-    query: str
-    execution_time: float
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -19,5 +9,6 @@ class ExecutionResult:
     """
 
     results: List[Dict[str, Any]]
-    metadata: ExecutionMetadata
-    answer: Optional[str] = None
+    context: Dict[str, Any]
+    textual_response: Optional[str] = None
+    execution_time: Optional[float] = None

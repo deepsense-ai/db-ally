@@ -1,9 +1,9 @@
 import abc
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import List
 
+from dbally.data_models.execution_result import ExecutionResult
 from dbally.iql import IQLActions, IQLQuery
-from dbally.data_models.execution_result import ExecutionResult, ExecutionMetadata
 
 
 @dataclass
