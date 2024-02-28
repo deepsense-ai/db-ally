@@ -5,7 +5,7 @@ import pandas as pd
 from sqlalchemy.engine import RowMapping
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.answer import Answer
+from dbally.data_models.execution_result import ExecutionMetadata, ExecutionResult
 from dbally.data_models.prompts.nl_responder_prompt_template import (
     NLResponderPromptTemplate,
     default_nl_responder_template,
@@ -32,13 +32,13 @@ class NLResponder:
         self._llm_client = llm_client
         self._prompt_template = prompt_template or copy.deepcopy(default_nl_responder_template)
 
-    async def generate_response(self, answer: Answer, question: str, event_tracker: EventTracker) -> str:
+    async def generate_response(self, result: ExecutionResult, question: str, event_tracker: EventTracker) -> str:
         """
         Uses LLM to generate a response in natural language form.
 
         Args:
             answer: object representing answer to the user question
-            question: user question
+            result: object representing the result of the query execution
             event_tracker: event store used to audit the generation process
 
         Returns:
@@ -47,13 +47,13 @@ class NLResponder:
 
         llm_response = await self._llm_client.text_generation(
             template=self._prompt_template,
-            fmt={"rows": _promptify_rows(answer.rows), "sql": answer.sql, "question": question},
+            fmt={"rows": _promptify_rows(result.results), "query": result.metadata.query, "question": question},
             event_tracker=event_tracker,
         )
         return llm_response
 
 
-def _promptify_rows(rows: Union[Sequence[RowMapping], List[Dict]]) -> str:
+def _promptify_rows(rows: List[Dict]) -> str:
     """
     Formats rows into a markdown table.
 

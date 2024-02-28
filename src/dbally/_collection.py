@@ -2,12 +2,10 @@ import textwrap
 from typing import Callable, Dict, List, Optional, Tuple, Type, TypeVar
 from typing import Dict, List, Optional, Tuple, Type
 
-from sqlalchemy import Engine, text
-
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.answer import Answer, AnswerMetadata
 from dbally.data_models.audit import RequestEnd, RequestStart
+from dbally.data_models.execution_result import ExecutionResult, ExecutionMetadata
 from dbally.iql import IQLActions, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.utils.errors import NoViewFoundError
@@ -158,5 +156,8 @@ class Collection:
         view.apply_actions(actions)
 
         result = view.execute(dry_run=dry_run)
+        
+        if not dry_run and return_natural_response:
+            result.answer = await self._nl_responder.generate_response(result, question, event_tracker)
 
         await event_tracker.request_end(RequestEnd(result=result))

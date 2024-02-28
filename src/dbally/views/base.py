@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from dbally.iql import IQLActions, IQLQuery
+from dbally.data_models.execution_result import ExecutionResult, ExecutionMetadata
 
 
 @dataclass
@@ -24,17 +25,6 @@ class ExposedFunction:
     name: str
     description: str
     parameters: List[MethodParamWithTyping]
-
-
-@dataclass
-class ExecutionResult:
-    """
-    Represents the result of the query execution.
-    """
-
-    results: List[Dict[str, Any]]
-    context: Dict[str, Any]
-    execution_time: Optional[float] = None
 
 
 class AbstractBaseView(metaclass=abc.ABCMeta):

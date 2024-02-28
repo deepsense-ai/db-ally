@@ -142,10 +142,10 @@ async def main():
     superheros_db.add(SuperheroCountByPowerView, lambda: SuperheroCountByPowerView(engine))
 
     await superheros_db.ask(
-        "What heroes have Blue eyes and are taller than 180.5cm?", engine=engine, return_natural_response=True
+        "What heroes have Blue eyes and are taller than 180.5cm?", return_natural_response=True
     )
 
-    await superheros_db.ask("Count power of Female heros", engine=engine, return_natural_response=True)
+    await superheros_db.ask("Count power of Female heros", return_natural_response=True)
 
 
 if __name__ == "__main__":

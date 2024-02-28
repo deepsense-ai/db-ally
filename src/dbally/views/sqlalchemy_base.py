@@ -1,12 +1,12 @@
 import abc
+from typing import Callable, Optional, Tuple
 import time
-from typing import Callable, Tuple
 
 import sqlalchemy
 
 from dbally.iql import IQLActions, IQLQuery, syntax
 from dbally.views import decorators
-from dbally.views.base import ExecutionResult
+from dbally.data_models.execution_result import ExecutionResult, ExecutionMetadata
 from dbally.views.methods_base import MethodsBaseView
 
 
@@ -15,7 +15,7 @@ class SqlAlchemyBaseView(MethodsBaseView):
     Base class for views that use SQLAlchemy to generate SQL queries.
     """
 
-    def __init__(self, sqlalchemy_engine: sqlalchemy.engine.Engine) -> None:
+    def __init__(self, sqlalchemy_engine: Optional[sqlalchemy.engine.Engine] = None) -> None:
         super().__init__()
         self._select = self.get_select()
         self._sqlalchemy_engine = sqlalchemy_engine
@@ -42,6 +42,14 @@ class SqlAlchemyBaseView(MethodsBaseView):
         """
         for action in actions:
             self._select = self._build_action_call(action)
+
+    def generate_sql(self) -> str:
+        """
+        Generates the SQL query, based on the applied filters and actions.
+
+        :return: Generated SQL
+        """
+        return str(self._select.compile(compile_kwargs={"literal_binds": True}))
 
     def _build_filter_node(self, node: syntax.Node) -> sqlalchemy.ColumnElement:
         """
@@ -113,11 +121,9 @@ class SqlAlchemyBaseView(MethodsBaseView):
         method, args = self._method_with_args_from_call(action, decorators.view_action)
         return method(self._select, *args)
 
-    def execute(self, dry_run: bool = False) -> ExecutionResult:
+    def execute(self) -> ExecutionResult:
         """
         Executes the generated SQL query and returns the results.
-
-        :param dry_run: If True, only generate the query without executing it
 
         :return: Query results
 
@@ -125,22 +131,16 @@ class SqlAlchemyBaseView(MethodsBaseView):
         """
         if self._sqlalchemy_engine is None:
             raise ValueError("No SQLAlchemy engine provided")
-
-        results = []
-        execution_time = None
-        sql = str(self._select.compile(bind=self._sqlalchemy_engine, compile_kwargs={"literal_binds": True}))
-
-        if not dry_run:
+        with self._sqlalchemy_engine.connect() as connection:
             time_start = time.time()
-            with self._sqlalchemy_engine.connect() as connection:
+            results = connection.execute(self._select)
+            delta = time.time() - time_start
+            return ExecutionResult(
                 # The underscore is used by sqlalchemy to avoid conflicts with column names
                 # pylint: disable=protected-access
-                rows = connection.execute(self._select).fetchall()
-                results = [dict(row._mapping) for row in rows]
-            execution_time = time.time() - time_start
-
-        return ExecutionResult(
-            results=results,
-            execution_time=execution_time,
-            context={"sql": sql},
-        )
+                results=[dict(row._mapping) for row in results.fetchall()],
+                metadata=ExecutionMetadata(
+                    query=str(self._select.compile(compile_kwargs={"literal_binds": True})),
+                    execution_time=delta,
+                    ),
+            )
