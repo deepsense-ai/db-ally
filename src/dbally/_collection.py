@@ -118,7 +118,8 @@ class Collection:
         Args:
             question: question in text form
             dry_run: if True, only generate the query without executing it
-            return_natural_response: if True, the natural response will be included in the answer
+            return_natural_response: if True (and dry_run is False as natural response requires query results),
+            the natural response will be included in the answer
 
         Returns:
             ExecutionResult object representing the result of the query execution.
