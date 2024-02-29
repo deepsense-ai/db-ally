@@ -1,4 +1,4 @@
-# pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name
+# pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name, missing-return-type-doc
 
 from typing import List
 from unittest.mock import Mock
@@ -46,8 +46,22 @@ class MockView2(MockViewBase):
 
 class MockView3(MockViewBase):
     """
-    Mock view 3
+    Mock view 3, a view with default arguments only
     """
+
+    def __init__(self, foo: str = "bar") -> None:
+        self.foo = foo
+        super().__init__()
+
+
+class MockViewWithAttributes(MockViewBase):
+    """
+    Example of a view with non-default arguments
+    """
+
+    def __init__(self, foo: str) -> None:
+        self.foo = foo
+        super().__init__()
 
 
 @pytest.fixture(name="collection")
@@ -106,3 +120,43 @@ def test_add_custom_name(collection: Collection) -> None:
     collection.add(MockView3, name="Foo")
     assert len(collection.list()) == 3
     assert isinstance(collection.get("Foo"), MockView3)
+
+
+def test_add_with_builder(collection: Collection) -> None:
+    """
+    Tests that the add method works correctly when a builder is provided
+    """
+
+    def builder():
+        return MockViewWithAttributes("bar")
+
+    mocked_builder = Mock(wraps=builder)
+    collection.add(MockViewWithAttributes, builder=mocked_builder)
+    assert len(collection.list()) == 3
+
+    view = collection.get("MockViewWithAttributes")
+    mocked_builder.assert_called_once()
+    assert isinstance(view, MockViewWithAttributes)
+    assert view.foo == "bar"
+
+
+def test_error_when_view_already_registered(collection: Collection) -> None:
+    """
+    Tests that the add method raises an exception when the view is already registered
+    """
+    try:
+        collection.add(MockView1)
+        assert False
+    except ValueError:
+        assert True
+
+
+def test_error_when_view_with_non_default_args(collection: Collection) -> None:
+    """
+    Tests that the add method raises an exception when the view has non-default arguments and no builder is provided
+    """
+    try:
+        collection.add(MockViewWithAttributes)
+        assert False
+    except ValueError:
+        assert True

@@ -1,3 +1,4 @@
+import inspect
 import textwrap
 from typing import Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
@@ -75,6 +76,12 @@ class Collection:
 
         if name in self._views or name in self._builders:
             raise ValueError(f"View with name {name} is already registered")
+
+        non_default_args = any(
+            p.default == inspect.Parameter.empty for p in inspect.signature(view).parameters.values()
+        )
+        if non_default_args and builder is None:
+            raise ValueError("Builder function is required for views with non-default arguments")
 
         self._views[name] = view
         self._builders[name] = builder or view
