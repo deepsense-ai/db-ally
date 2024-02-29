@@ -1,9 +1,29 @@
 import abc
+import re
 from dataclasses import dataclass
-from typing import List
+from typing import _GenericAlias  # type: ignore
+from typing import List, Union
 
 from dbally.data_models.execution_result import ExecutionResult
 from dbally.iql import IQLActions, IQLQuery
+
+
+def parse_param_type(param_type: Union[type, _GenericAlias]) -> str:
+    """
+    Parses the type of a method parameter and returns a string representation of it.
+
+    Args:
+        param_type: type of the parameter
+
+    Returns:
+        str: string representation of the type
+    """
+    if param_type in {int, float, str, bool, list, dict, set, tuple}:
+        return param_type.__name__
+    if param_type.__module__ == "typing":
+        return re.sub(r"\btyping\.", "", str(param_type))
+
+    return str(param_type)
 
 
 @dataclass
@@ -13,7 +33,10 @@ class MethodParamWithTyping:
     """
 
     name: str
-    type: type
+    type: Union[type, _GenericAlias]
+
+    def __str__(self) -> str:
+        return f"{self.name}: {parse_param_type(self.type)}"
 
 
 @dataclass
@@ -25,6 +48,14 @@ class ExposedFunction:
     name: str
     description: str
     parameters: List[MethodParamWithTyping]
+
+    def __str__(self) -> str:
+        base_str = f"{self.name}({', '.join(str(param) for param in self.parameters)})"
+
+        if self.description != "":
+            return f"{base_str} - {self.description}"
+
+        return base_str
 
 
 class AbstractBaseView(metaclass=abc.ABCMeta):
