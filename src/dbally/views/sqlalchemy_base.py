@@ -83,19 +83,7 @@ class SqlAlchemyBaseView(MethodsBaseView):
         ):
             raise ValueError(f"The method {func.name} is not decorated with {decorator_name}")
 
-        method_arguments = {n: a for n, a in method.__annotations__.items() if n not in self.HIDDEN_ARGUMENTS}
-
-        if len(func.arguments) != len(method_arguments):
-            print(func.arguments, method_arguments)
-            raise ValueError(f"The {decorator_name} method {func.name} has incorrect number of arguments")
-
-        args = []
-        for arg, (_, arg_type) in zip(func.arguments, method_arguments.items()):
-            if not isinstance(arg, arg_type):
-                raise ValueError(f"The {decorator_name} method {func.name} has incorrect argument type")
-            args.append(arg)
-
-        return method, args
+        return method, func.arguments
 
     def _build_filter_call(self, func: syntax.FunctionCall) -> sqlalchemy.ColumnElement:
         """

@@ -1,7 +1,10 @@
-from typing import Iterator, List
+from typing import TYPE_CHECKING, Iterator, List
 
 from . import syntax
 from ._parser import IQLParser
+
+if TYPE_CHECKING:
+    from dbally.views.base import ExposedFunction
 
 
 class IQLQuery:
@@ -15,14 +18,18 @@ class IQLQuery:
         self.root = root
 
     @classmethod
-    def parse(cls, source: str) -> "IQLQuery":
+    def parse(cls, source: str, allowed_functions: List["ExposedFunction"]) -> "IQLQuery":
         """
         Parse IQL string to IQLQuery object.
 
-        :param source: IQL string that needs to be parsed
-        :return: IQLQuery object
+        Args:
+            source: IQL string that needs to be parsed
+            allowed_functions: list of IQL functions that are allowed for this query
+
+        Returns:
+             IQLQuery object
         """
-        return cls(IQLParser(source).parse())
+        return cls(IQLParser(source, allowed_functions).parse())
 
 
 class IQLActions:
@@ -36,14 +43,18 @@ class IQLActions:
         self.actions = actions
 
     @classmethod
-    def parse(cls, source: str) -> "IQLActions":
+    def parse(cls, source: str, allowed_functions: List["ExposedFunction"]) -> "IQLActions":
         """
         Parse IQL action string to IQLActions object.
 
-        :param source: IQL string that needs to be parsed
-        :return: IQLActions object
+        Args:
+            source: IQL string that needs to be parsed
+            allowed_functions: list of IQL functions that are allowed for this query
+
+        Returns:
+            IQLActions object
         """
-        return cls(IQLParser(source).parse_actions())
+        return cls(IQLParser(source, allowed_functions).parse_actions())
 
     def __iter__(self) -> Iterator[syntax.FunctionCall]:
         yield from self.actions

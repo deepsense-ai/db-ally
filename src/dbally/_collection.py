@@ -156,8 +156,8 @@ class Collection:
             question=question, filters=filter_list, actions=action_list, event_tracker=event_tracker
         )
 
-        filters = IQLQuery.parse(iql_filters)
-        actions = IQLActions.parse(iql_actions)
+        filters = IQLQuery.parse(iql_filters, filter_list)
+        actions = IQLActions.parse(iql_actions, action_list)
 
         view.apply_filters(filters)
         view.apply_actions(actions)
