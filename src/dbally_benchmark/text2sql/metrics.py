@@ -1,6 +1,7 @@
 import time
 from typing import Dict, List
 
+import pandas as pd
 from sqlalchemy import Engine, text
 
 from dbally.data_models.execution_result import ExecutionResult
@@ -50,8 +51,22 @@ def _check_exec_acc(example: Text2SQLResult, engine: Engine) -> bool:
     except:  # noqa: E722, pylint: disable=bare-except
         return False
 
-    # TODO: Add some postprocessing like sorting columns and rows.
-    return gt_query_result.results == pred_query_result.results
+    df_gt = pd.DataFrame(gt_query_result.results)
+    df = pd.DataFrame(pred_query_result.results)
+    # If filtering works correctly, the number of rows will be the same
+    # TODO: Sometimes a different number of rows is okay, e.g. if df has aggregated values that are expanded in gt
+    if df_gt.shape[0] != df.shape[0]:
+        return False
+    # Returned view may have the same columns, or more columns than the ground truth
+    if not df_gt.columns.isin(df.columns).all():
+        return False
+    # Check if dataframe equality, disregarding indexing and order
+    # commented out way is also ok but slower. Leaving it here just in case
+    # return df_gt.merge(df[df_gt.columns], how='outer', on=df_gt.columns.tolist(),
+    #                    indicator='indicator').indicator.drop_duplicates().values.tolist() == ['both']
+    df = df[df_gt.columns].sort_values(by=df_gt.columns.tolist()).reset_index(drop=True)
+    df_gt = df_gt.sort_values(by=df_gt.columns.tolist()).reset_index(drop=True)
+    return df.equals(df_gt)
 
 
 def calculate_exec_acc(dataset: List[Text2SQLResult], engine: Engine) -> float:
