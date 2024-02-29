@@ -25,7 +25,7 @@ def _check_float(required_type: Type[float], value: Any) -> _ValidationResult:
     if isinstance(value, int):
         return _ValidationResult(True, casted_value=float(value))
 
-    return _ValidationResult(False, reason=f"{repr(value)} is not a correct {required_type.__name__}")
+    return _ValidationResult(False, reason=f"{repr(value)} is not of type {required_type.__name__}")
 
 
 def _check_int(required_type: Type[int], value: Any) -> _ValidationResult:
@@ -34,7 +34,7 @@ def _check_int(required_type: Type[int], value: Any) -> _ValidationResult:
     if isinstance(value, float) and value.is_integer():
         return _ValidationResult(True, casted_value=int(value))
 
-    return _ValidationResult(False, reason=f"{repr(value)} is not a correct {required_type.__name__}")
+    return _ValidationResult(False, reason=f"{repr(value)} is not of type {required_type.__name__}")
 
 
 def _check_bool(required_type: Type[bool], value: Any) -> _ValidationResult:
@@ -43,7 +43,7 @@ def _check_bool(required_type: Type[bool], value: Any) -> _ValidationResult:
     if isinstance(value, int) and (value in (0, 1)):
         return _ValidationResult(True, casted_value=bool(value))
 
-    return _ValidationResult(False, reason=f"{repr(value)} is not a correct {required_type.__name__}")
+    return _ValidationResult(False, reason=f"{repr(value)} is not of type {required_type.__name__}")
 
 
 TYPE_VALIDATOR: Dict[Any, Callable[[Any, Any], _ValidationResult]] = {
