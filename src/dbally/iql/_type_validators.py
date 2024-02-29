@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Literal, Optional, Type, Union, _GenericAlias
+from typing import _GenericAlias  # type: ignore
+from typing import Any, Callable, Dict, Literal, Optional, Type, Union
 
 
 @dataclass

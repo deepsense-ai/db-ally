@@ -5,6 +5,7 @@ import re
 import sqlalchemy
 
 from dbally.iql import IQLActions, IQLQuery
+from dbally.views.base import ExposedFunction, MethodParamWithTyping
 from dbally.views.decorators import view_action, view_filter
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
@@ -54,7 +55,23 @@ def test_filter_sql_generation() -> None:
 
     mock_connection = sqlalchemy.create_mock_engine("postgresql://", executor=None)
     mock_view = MockSqlAlchemyView(mock_connection.engine)
-    query = IQLQuery.parse('method_foo(1) and method_bar("London", 2020)')
+    query = IQLQuery.parse(
+        'method_foo(1) and method_bar("London", 2020)',
+        allowed_functions=[
+            ExposedFunction(
+                name="method_foo",
+                description="",
+                parameters=[
+                    MethodParamWithTyping(name="foo", type=int),
+                ],
+            ),
+            ExposedFunction(
+                name="method_bar",
+                description="",
+                parameters=[MethodParamWithTyping(name="city", type=str), MethodParamWithTyping(name="year", type=int)],
+            ),
+        ],
+    )
     mock_view.apply_filters(query)
     sql = normalize_whitespace(mock_view.execute(dry_run=True).context["sql"])
     assert sql == "SELECT 'test' AS foo WHERE 1 AND 'hello London in 2020'"
@@ -66,7 +83,15 @@ def test_action_sql_generation() -> None:
     """
     mock_connection = sqlalchemy.create_mock_engine("postgresql://", executor=None)
     mock_view = MockSqlAlchemyView(mock_connection.engine)
-    actions = IQLActions.parse("action_baz()\naction_qux(5)")
+    actions = IQLActions.parse(
+        "action_baz()\naction_qux(5)",
+        allowed_functions=[
+            ExposedFunction(name="action_baz", description="", parameters=[]),
+            ExposedFunction(
+                name="action_qux", description="", parameters=[MethodParamWithTyping(name="foo", type=int)]
+            ),
+        ],
+    )
     mock_view.apply_actions(actions)
     sql = normalize_whitespace(mock_view.execute(dry_run=True).context["sql"].replace("\n", ""))
     assert sql == "SELECT 'test' AS foo ORDER BY foo LIMIT 5"
