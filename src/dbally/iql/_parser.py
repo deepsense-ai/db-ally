@@ -111,7 +111,7 @@ class IQLParser:
             if not check_result.valid:
                 raise IQLArgumentValidationError(message=check_result.reason or "", node=arg, source=self.source)
 
-            args.append(arg_value)
+            args.append(check_result.casted_value if check_result.casted_value is not ... else arg_value)
 
         return syntax.FunctionCall(func.id, args)
 
