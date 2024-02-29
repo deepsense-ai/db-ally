@@ -33,3 +33,15 @@ class IQLUnsupportedSyntaxError(IQLError):
             message += " " + context
 
         super().__init__(message, node, source)
+
+
+class IQLFunctionNotExists(IQLError):
+    """Raised when IQL contains function call to a function that not exists."""
+
+    def __init__(self, node: ast.Name, source: str) -> None:
+        message = f"Function {node.id} not exists"
+        super().__init__(message, node, source)
+
+
+class IQLArgumentValidationError(IQLError):
+    """Raised when argument is not valid for a given method."""

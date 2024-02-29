@@ -1,8 +1,18 @@
 import ast
-from typing import Any, List, Union
+from typing import TYPE_CHECKING, Any, List, Union
 
 from dbally.iql import syntax
-from dbally.iql._exceptions import IQLArgumentParsingError, IQLError, IQLUnsupportedSyntaxError
+from dbally.iql._exceptions import (
+    IQLArgumentParsingError,
+    IQLArgumentValidationError,
+    IQLError,
+    IQLFunctionNotExists,
+    IQLUnsupportedSyntaxError,
+)
+from dbally.iql._type_validators import validate_arg_type
+
+if TYPE_CHECKING:
+    from dbally.views.base import ExposedFunction
 
 
 class IQLParser:
@@ -10,15 +20,19 @@ class IQLParser:
     Parses IQL string to tree structure.
     """
 
-    def __init__(self, source: str):
+    def __init__(self, source: str, allowed_functions: List["ExposedFunction"]):
         self.source = source
+        self.allowed_functions = {func.name: func for func in allowed_functions}
 
     def parse(self) -> syntax.Node:
         """
         Parse IQL string to root IQL.Node.
 
-        :return: IQL.Node which is root of the tree representing IQL query.
-        :raises IQLError: if parsing fails.
+        Returns:
+            IQL.Node which is root of the tree representing IQL query.
+
+        Raises:
+             IQLError: if parsing fails.
         """
         self.source = self.source.replace(" OR ", " or ")
         self.source = self.source.replace(" AND ", " and ")
@@ -37,9 +51,11 @@ class IQLParser:
         """
         Parse IQL string to list of IQL actions.
 
-        :return: list of IQL syntax.FunctionCall objects
+        Returns:
+            list of IQL syntax.FunctionCall objects
 
-        :raises IQLError: if parsing fails.
+        Raises:
+             IQLError: if parsing fails.
         """
         ast_tree = ast.parse(self.source)
         calls = []
@@ -78,10 +94,24 @@ class IQLParser:
         if not isinstance(func, ast.Name):
             raise IQLUnsupportedSyntaxError(node, self.source, context="FunctionCall")
 
+        if func.id not in self.allowed_functions:
+            raise IQLFunctionNotExists(func, self.source)
+
+        func_def = self.allowed_functions[func.id]
         args = []
 
-        for arg in node.args:
-            args.append(self._parse_arg(arg))
+        if len(func_def.parameters) != len(node.args):
+            raise ValueError(f"The method {func.id} has incorrect number of arguments")
+
+        for arg, arg_def in zip(node.args, func_def.parameters):
+            arg_value = self._parse_arg(arg)
+
+            check_result = validate_arg_type(arg_def.type, arg_value)
+
+            if not check_result.valid:
+                raise IQLArgumentValidationError(message=check_result.reason or "", node=arg, source=self.source)
+
+            args.append(arg_value)
 
         return syntax.FunctionCall(func.id, args)
 
