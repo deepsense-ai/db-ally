@@ -13,7 +13,7 @@ class _ValidationResult:
 def _check_literal(required_type: _GenericAlias, value: Any) -> _ValidationResult:
     if value not in required_type.__args__:
         return _ValidationResult(
-            False, f"{value} must be one of [{', '.join(repr(x) for x in required_type.__args__)}]"
+            False, reason=f"{value} must be one of [{', '.join(repr(x) for x in required_type.__args__)}]"
         )
 
     return _ValidationResult(True)
