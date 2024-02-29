@@ -64,7 +64,6 @@ class IQLGenerator:
         return iql_filters, iql_actions
 
 
-# todo: after default __repr__ for filters/actions is implemented, replace this body with str()
 def _promptify_filters_and_actions(filters: List[ExposedFunction], actions: List[ExposedFunction]) -> Tuple[str, str]:
     """
     Formats filters/actions for prompt
@@ -77,12 +76,6 @@ def _promptify_filters_and_actions(filters: List[ExposedFunction], actions: List
         filters_for_prompt: filters formatted for prompt
         actions_for_prompt: actions formatted for prompt
     """
-    filters_for_prompt = "\n".join(
-        [
-            filter.name + "(" + param.name + ": " + str(param.type.__name__) + ")"
-            for filter in filters
-            for param in filter.parameters
-        ]
-    )
-    actions_for_prompt = "\n".join([action.name + "()" for action in actions])
+    filters_for_prompt = "\n".join([str(filter) for filter in filters])
+    actions_for_prompt = "\n".join([str(action) for action in actions])
     return filters_for_prompt, actions_for_prompt

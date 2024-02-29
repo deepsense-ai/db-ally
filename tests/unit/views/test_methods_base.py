@@ -1,6 +1,8 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name
 
 
+from typing import List, Literal, Tuple
+
 from dbally.iql import IQLActions, IQLQuery
 from dbally.views.base import ExecutionResult, MethodParamWithTyping
 from dbally.views.decorators import view_action, view_filter
@@ -19,8 +21,8 @@ class MockMethodsBase(MethodsBaseView):
         """
 
     @view_filter()
-    def method_bar(self, city: str, year: int) -> str:
-        return f"hello {city} in {year}"
+    def method_bar(self, cities: List[str], year: Literal["2023", "2024"], pairs: List[Tuple[str, int]]) -> str:
+        return f"hello {cities} in {year} of {pairs}"
 
     @view_action()
     def action_baz(self) -> None:
@@ -52,9 +54,17 @@ def test_list_filters() -> None:
     method_foo = [f for f in filters if f.name == "method_foo"][0]
     assert method_foo.description == "Some documentation string"
     assert method_foo.parameters == [MethodParamWithTyping("idx", int)]
+    assert str(method_foo) == "method_foo(idx: int) - Some documentation string"
     method_bar = [f for f in filters if f.name == "method_bar"][0]
     assert method_bar.description == ""
-    assert method_bar.parameters == [MethodParamWithTyping("city", str), MethodParamWithTyping("year", int)]
+    assert method_bar.parameters == [
+        MethodParamWithTyping("cities", List[str]),
+        MethodParamWithTyping("year", Literal["2023", "2024"]),
+        MethodParamWithTyping("pairs", List[Tuple[str, int]]),
+    ]
+    assert (
+        str(method_bar) == "method_bar(cities: List[str], year: Literal['2023', '2024'], pairs: List[Tuple[str, int]])"
+    )
 
 
 def test_list_actions() -> None:
@@ -67,6 +77,8 @@ def test_list_actions() -> None:
     action_baz = [a for a in actions if a.name == "action_baz"][0]
     assert action_baz.description == "This is baz"
     assert action_baz.parameters == []
+    assert str(action_baz) == "action_baz() - This is baz"
     action_qux = [a for a in actions if a.name == "action_qux"][0]
     assert action_qux.description == ""
     assert action_qux.parameters == [MethodParamWithTyping("idx", int)]
+    assert str(action_qux) == "action_qux(idx: int)"
