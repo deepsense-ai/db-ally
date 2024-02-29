@@ -5,11 +5,13 @@ from typing import Callable, Dict, List, Optional, Tuple, Type, TypeVar
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import RequestEnd, RequestStart
+from dbally.data_models.execution_result import ExecutionResult
 from dbally.iql import IQLActions, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
+from dbally.nl_responder.nl_responder import NLResponder
 from dbally.utils.errors import NoViewFoundError
 from dbally.view_selection.base import ViewSelector
-from dbally.views.base import AbstractBaseView, ExecutionResult, ExposedFunction
+from dbally.views.base import AbstractBaseView, ExposedFunction
 
 
 class IQLGeneratorMock:
@@ -45,12 +47,14 @@ class Collection:
         view_selector: ViewSelector,
         iql_generator: IQLGenerator,
         event_handlers: List[EventHandler],
+        nl_responder: NLResponder,
     ) -> None:
         self.name = name
         self._views: Dict[str, Callable[[], AbstractBaseView]] = {}
         self._builders: Dict[str, Callable[[], AbstractBaseView]] = {}
         self._view_selector = view_selector
         self._iql_generator = iql_generator
+        self._nl_responder = nl_responder
         self._event_handlers = event_handlers
 
     T = TypeVar("T", bound=AbstractBaseView)
@@ -107,7 +111,7 @@ class Collection:
             name: (textwrap.dedent(view.__doc__).strip() if view.__doc__ else "") for name, view in self._views.items()
         }
 
-    async def ask(self, question: str, dry_run: bool = False) -> ExecutionResult:
+    async def ask(self, question: str, dry_run: bool = False, return_natural_response: bool = False) -> ExecutionResult:
         """
         Ask question in a text form and retrieve the answer based on the available views.
 
@@ -119,11 +123,13 @@ class Collection:
             - Query Execution
 
         Args:
-             question: question in text form
-             dry_run: if True, only generate the query without executing it
+            question: question in text form
+            dry_run: if True, only generate the query without executing it
+            return_natural_response: if True (and dry_run is False as natural response requires query results),
+            the natural response will be included in the answer
 
         Returns:
-            SQL query - TODO: it should execute query and return results
+            ExecutionResult object representing the result of the query execution.
 
         Raises:
             ValueError: if collection is empty
@@ -157,6 +163,9 @@ class Collection:
         view.apply_actions(actions)
 
         result = view.execute(dry_run=dry_run)
+
+        if not dry_run and return_natural_response:
+            result.textual_response = await self._nl_responder.generate_response(result, question, event_tracker)
 
         await event_tracker.request_end(RequestEnd(result=result))
 

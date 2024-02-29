@@ -4,9 +4,9 @@ from typing import Callable, Tuple
 
 import sqlalchemy
 
+from dbally.data_models.execution_result import ExecutionResult
 from dbally.iql import IQLActions, IQLQuery, syntax
 from dbally.views import decorators
-from dbally.views.base import ExecutionResult
 from dbally.views.methods_base import MethodsBaseView
 
 

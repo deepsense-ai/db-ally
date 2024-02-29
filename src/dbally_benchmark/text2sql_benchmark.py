@@ -4,16 +4,15 @@ import os
 from pathlib import Path
 from typing import Any, List, Optional
 
-import asyncpg
 import hydra
 import neptune
 from hydra.utils import instantiate
 from loguru import logger
 from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
+from sqlalchemy import create_engine
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.db_connectors.pgsql_db import PGSqlConnector
 from dbally.llm_client.base import LLMClient
 from dbally.llm_client.openai_client import OpenAIClient
 from dbally_benchmark.config import BenchmarkConfig
@@ -84,11 +83,13 @@ async def evaluate(cfg: DictConfig) -> Any:
     cfg = instantiate(cfg)
     benchmark_cfg = BenchmarkConfig()
 
-    connection_pool = await asyncpg.create_pool(dsn=benchmark_cfg.pg_conn_string)
-    db_connector = PGSqlConnector(connection_pool=connection_pool)
+    engine = create_engine(benchmark_cfg.pg_connection_string)
 
     if "gpt" in benchmark_cfg.model_name:
-        llm_client = OpenAIClient(benchmark_cfg.model_name)
+        llm_client = OpenAIClient(
+            model_name=benchmark_cfg.model_name,
+            api_key=benchmark_cfg.openai_api_key,
+        )
 
     run = None
     if cfg.neptune.log:
@@ -119,7 +120,7 @@ async def evaluate(cfg: DictConfig) -> Any:
         json.dump([result.model_dump() for result in text2sql_results], outfile, indent=4)
 
     logger.info("Calculating metrics")
-    metrics = await calculate_dataset_metrics(text2sql_results, db_connector)
+    metrics = calculate_dataset_metrics(text2sql_results, engine)
 
     with open(output_dir / metrics_file_name, "w", encoding="utf-8") as outfile:
         json.dump(metrics, outfile, indent=4)
@@ -131,9 +132,7 @@ async def evaluate(cfg: DictConfig) -> Any:
         run[f"evaluation/{metrics_file_name}"].upload((output_dir / metrics_file_name).as_posix())
         run[f"evaluation/{results_file_name}"].upload((output_dir / results_file_name).as_posix())
         run["evaluation/metrics"] = stringify_unsupported(metrics)
-        logger.info("Evaluation results logged to neptune")
-
-    await connection_pool.close()
+        logger.info(f"Evaluation results logged to neptune at {run.get_url()}")
 
 
 @hydra.main(version_base=None, config_path="experiment_config", config_name="evaluate_text2sql_config")

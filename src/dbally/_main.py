@@ -5,6 +5,7 @@ from .audit.event_handlers.base import EventHandler
 from .iql_generator.iql_generator import IQLGenerator
 from .llm_client.base import LLMClient
 from .llm_client.openai_client import OpenAIClient
+from .nl_responder.nl_responder import NLResponder
 from .view_selection.llm_view_selector import LLMViewSelector
 
 default_llm_client: Optional[LLMClient] = None
@@ -55,6 +56,13 @@ def create_collection(name: str, event_handlers: Optional[List[EventHandler]] = 
     llm_client = default_llm_client
     view_selector = LLMViewSelector(llm_client=llm_client)
     iql_generator = IQLGenerator(llm_client=llm_client)
+    nl_responder = NLResponder(llm_client=llm_client)
     event_handlers = event_handlers or default_event_handlers
 
-    return Collection(name, view_selector=view_selector, iql_generator=iql_generator, event_handlers=event_handlers)
+    return Collection(
+        name,
+        nl_responder=nl_responder,
+        view_selector=view_selector,
+        iql_generator=iql_generator,
+        event_handlers=event_handlers,
+    )
