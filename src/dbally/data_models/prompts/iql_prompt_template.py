@@ -55,7 +55,8 @@ default_iql_template = IQLPromptTemplate(
             "You can also pick actions from the list above, to be performed on the query result. "
             "Place them into the `actions` value in the returned JSON dictionary.\n"
             "Return result as a JSON dictionary with keys `filters` and `actions'. It will look like this:\n"
-            """\\{{"filters": "filter1(arg1) AND filter2(arg2)"\n "actions": "sort_by_id()"}}\n"""
+            '\\{{"filters": "filter1(arg1) AND (NOT filter2(arg2) OR filter3(arg3, arg4))"\n'
+            'actions": "sort_by_id()"}}\n'
             "Remember! Don't give any comments, just the function calls.\n"
             "You can only use the functions that were listed. "
             "If you don't know how to answer, or available functions do not allow to fulfill query, "
