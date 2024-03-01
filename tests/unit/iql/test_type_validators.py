@@ -29,3 +29,13 @@ def test_simple_types():
 
     assert validate_arg_type(bool, True).valid is True
     assert validate_arg_type(bool, [1, 2, 3]).valid is False
+
+
+def test_type_casts():
+    assert validate_arg_type(int, 6.0).valid is True
+    assert validate_arg_type(int, 6.7).valid is False
+    assert validate_arg_type(float, 5).valid is True
+    assert validate_arg_type(bool, 0).valid is True
+    assert validate_arg_type(bool, 0).casted_value is False
+    assert validate_arg_type(bool, 1).valid is True
+    assert validate_arg_type(bool, 1).casted_value is True
