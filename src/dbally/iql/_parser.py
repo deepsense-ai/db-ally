@@ -34,9 +34,7 @@ class IQLParser:
         Raises:
              IQLError: if parsing fails.
         """
-        self.source = self.source.replace(" OR ", " or ")
-        self.source = self.source.replace(" AND ", " and ")
-        self.source = self.source.replace(" NOT ", " not ")
+        self.source = self._to_lower_except_in_quotes(self.source, ["AND", "OR", "NOT"])
 
         ast_tree = ast.parse(self.source)
         first_element = ast_tree.body[0]
@@ -122,3 +120,39 @@ class IQLParser:
         if not isinstance(arg, ast.Constant):
             raise IQLArgumentParsingError(arg, self.source)
         return arg.value
+
+    @staticmethod
+    def _to_lower_except_in_quotes(text: str, keywords: List[str]) -> str:
+        """
+        Scans input text for keywords and converts it to lowercase.
+        Omits keyword that are contained in quotes.
+
+        Args:
+            text: input text
+            keywords: list of keywords to be lowered
+
+        Returns:
+            output text with selected keywords in lowercase
+        """
+        inside_quotes: Union[bool, str] = False
+        quote_chars = ('"', "'")
+        converted_text = ""
+
+        for c in text:
+            if c in quote_chars and not inside_quotes:
+                inside_quotes = c
+            elif c in quote_chars and inside_quotes == c:
+                inside_quotes = False
+
+            converted_text = converted_text + c
+
+            if inside_quotes:
+                continue
+
+            for keyword in keywords:
+                last_token = converted_text[-len(keyword) :]
+
+                if last_token == keyword:
+                    converted_text = converted_text[: len(converted_text) - len(keyword)] + keyword.lower()
+
+        return converted_text
