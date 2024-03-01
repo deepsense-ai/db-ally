@@ -7,6 +7,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import RequestEnd, RequestStart
 from dbally.data_models.execution_result import ExecutionResult
 from dbally.iql import IQLActions, IQLQuery
+from dbally.iql._exceptions import IQLError
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.nl_responder.nl_responder import NLResponder
 from dbally.utils.errors import NoViewFoundError
@@ -48,8 +49,10 @@ class Collection:
         iql_generator: IQLGenerator,
         event_handlers: List[EventHandler],
         nl_responder: NLResponder,
+        n_retries: int = 3,
     ) -> None:
         self.name = name
+        self.n_retries = n_retries
         self._views: Dict[str, Callable[[], AbstractBaseView]] = {}
         self._builders: Dict[str, Callable[[], AbstractBaseView]] = {}
         self._view_selector = view_selector
@@ -152,15 +155,27 @@ class Collection:
 
         filter_list, action_list = view.list_filters(), view.list_actions()
 
-        iql_filters, iql_actions = await self._iql_generator.generate_iql(
+        iql_filters, iql_actions, conversation = await self._iql_generator.generate_iql(
             question=question, filters=filter_list, actions=action_list, event_tracker=event_tracker
         )
 
-        filters = IQLQuery.parse(iql_filters, filter_list)
-        actions = IQLActions.parse(iql_actions, action_list)
-
-        view.apply_filters(filters)
-        view.apply_actions(actions)
+        for _ in range(self.n_retries):
+            try:
+                filters = IQLQuery.parse(iql_filters, filter_list)
+                actions = IQLActions.parse(iql_actions, action_list)
+                view.apply_filters(filters)
+                view.apply_actions(actions)
+                break
+            except (IQLError, ValueError) as e:
+                conversation = self._iql_generator.add_error_msg(conversation, [e])
+                iql_filters, iql_actions, conversation = await self._iql_generator.generate_iql(
+                    question=question,
+                    filters=filter_list,
+                    actions=action_list,
+                    event_tracker=event_tracker,
+                    conversation=conversation,
+                )
+                continue
 
         result = view.execute(dry_run=dry_run)
 

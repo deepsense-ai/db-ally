@@ -55,6 +55,9 @@ class PromptTemplate:
         self.response_format = response_format
         self.llm_response_parser = llm_response_parser
 
+    def __eq__(self, __value: object) -> bool:
+        return isinstance(__value, PromptTemplate) and self.chat == __value.chat
+
     def add_user_message(self, content: str) -> Self:
         """
         Add a user message to the template prompt.

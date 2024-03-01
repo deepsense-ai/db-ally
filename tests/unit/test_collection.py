@@ -1,12 +1,13 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name, missing-return-type-doc
 
 from typing import List
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 
 from dbally._collection import Collection
 from dbally.iql import IQLActions, IQLQuery
+from dbally.iql._exceptions import IQLError
 from dbally.utils.errors import NoViewFoundError
 from dbally.views.base import AbstractBaseView, ExecutionResult, ExposedFunction
 
@@ -160,3 +161,60 @@ def test_error_when_view_with_non_default_args(collection: Collection) -> None:
         assert False
     except ValueError:
         assert True
+
+
+@pytest.fixture(name="collection_feedback")
+def mock_collection_feedback_loop() -> Collection:
+    """
+    Returns a collection with two mock views
+    """
+    iql_generator = AsyncMock()
+    iql_generator.add_error_msg = Mock(side_effect=["err1", "err2", "err3", "err4"])
+    iql_generator.generate_iql = AsyncMock(
+        side_effect=[
+            ("iql1_f", "iql1_a", "iql1_c"),
+            ("iql2_f", "iql2_a", "iql2_c"),
+            ("iql3_f", "iql3_a", "iql3_c"),
+            ("iql4_f", "iql4_a", "iql4_c"),
+        ]
+    )
+
+    collection = Collection(
+        "foo", view_selector=Mock(), iql_generator=iql_generator, nl_responder=Mock(), event_handlers=[]
+    )
+    collection.add(MockView1)
+    return collection
+
+
+@pytest.mark.asyncio
+async def test_ask_feedback_loop(collection_feedback: Collection) -> None:
+    """
+    Tests that the ask_feedback_loop method works correctly
+    """
+
+    mock_node = Mock(col_offset=0, end_col_offset=-1)
+    errors = [
+        IQLError("err1", mock_node, "src1"),
+        IQLError("err2", mock_node, "src2"),
+        ValueError("err3"),
+        ValueError("err4"),
+    ]
+    with patch("dbally._collection.IQLQuery.parse") as mock_iql_query:
+        mock_iql_query.side_effect = errors
+
+        await collection_feedback.ask("Mock question")
+
+        iql_gen_error: Mock = collection_feedback._iql_generator.add_error_msg  # type: ignore
+
+        iql_gen_error.assert_has_calls(
+            [call("iql1_c", [errors[0]]), call("iql2_c", [errors[1]]), call("iql3_c", [errors[2]])]
+        )
+        assert iql_gen_error.call_count == 3
+
+        iql_gen_gen_iql: Mock = collection_feedback._iql_generator.generate_iql  # type: ignore
+
+        for i, c in enumerate(iql_gen_gen_iql.call_args_list):
+            if i > 0:
+                assert c[1]["conversation"] == f"err{i}"
+
+        assert iql_gen_gen_iql.call_count == 4

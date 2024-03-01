@@ -75,4 +75,27 @@ async def test_iql_generation(llm_client, event_tracker, view):
     response = await iql_generator.generate_iql(
         view.list_filters(), view.list_actions(), "Mock_question", event_tracker
     )
-    assert response == ("LLM IQL mock answer", "")
+
+    template_after_response = default_iql_template.add_assistant_message(content='{"filters": "LLM IQL mock answer"}')
+    assert response == ("LLM IQL mock answer", "", template_after_response)
+
+    template_after_response = template_after_response.add_user_message(content="Mock_error")
+    response2 = await iql_generator.generate_iql(
+        view.list_filters(), view.list_actions(), "Mock_question", event_tracker, template_after_response
+    )
+    template_after_2nd_response = template_after_response.add_assistant_message(
+        content='{"filters": "LLM IQL mock answer"}'
+    )
+    assert response2 == ("LLM IQL mock answer", "", template_after_2nd_response)
+
+
+def test_add_error_msg(llm_client):
+    iql_generator = IQLGenerator(llm_client, default_iql_template)
+    errors = [ValueError("Mock_error")]
+
+    conversation = default_iql_template.add_assistant_message(content="Assistant")
+
+    conversation_with_error = iql_generator.add_error_msg(conversation, errors)
+
+    error_msg = iql_generator._ERROR_MSG_PREFIX + "Mock_error\n"
+    assert conversation_with_error == conversation.add_user_message(content=error_msg)
