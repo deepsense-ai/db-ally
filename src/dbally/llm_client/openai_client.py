@@ -37,6 +37,8 @@ class OpenAIClient(LLMClient):
             Response string from LLM.
         """
 
+        # only "turbo" models support response_format argument
+        # https://platform.openai.com/docs/api-reference/chat/create#chat-create-response_format
         if "turbo" not in self._model_name:
             response_format = None
 
