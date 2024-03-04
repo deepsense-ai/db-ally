@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
 from dbally.data_models.audit import LLMEvent
 from dbally.data_models.llm_options import LLMOptions
@@ -18,20 +18,30 @@ class OpenAIClient(LLMClient):
         super().__init__(model_name)
         self._client = AsyncOpenAI(api_key=api_key)
 
-    async def _call(self, prompt: Union[str, ChatFormat], options: LLMOptions, event: LLMEvent) -> str:
+    async def _call(
+        self,
+        prompt: Union[str, ChatFormat],
+        response_format: Optional[Dict[str, str]],
+        options: LLMOptions,
+        event: LLMEvent,
+    ) -> str:
         """
         Calls OpenAI API endpoint.
 
         Args:
             prompt: Prompt as an OpenAI client style list.
+            response_format: Optional argument used in the OpenAI API - used to force json output
             options: Additional settings used by LLM.
 
         Returns:
             Response string from LLM.
         """
 
+        if "turbo" not in self._model_name:
+            response_format = None
+
         response = await self._client.chat.completions.create(
-            messages=prompt, model=self._model_name, **options.dict()  # type: ignore
+            messages=prompt, model=self._model_name, response_format=response_format, **options.dict()  # type: ignore
         )
 
         event.completion_tokens = response.usage.completion_tokens
