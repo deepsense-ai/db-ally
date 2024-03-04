@@ -2,7 +2,7 @@
 # pylint: disable=W9015,R0914
 
 import abc
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import LLMEvent
@@ -56,18 +56,25 @@ class LLMClient(abc.ABC):
         event = LLMEvent(prompt=prompt, type=type(template).__name__)
 
         async with event_tracker.track_event(event) as span:
-            event.response = await self._call(prompt, options, event)
+            event.response = await self._call(prompt, template.response_format, options, event)
             span(event)
 
         return event.response
 
     @abc.abstractmethod
-    async def _call(self, prompt: Union[str, ChatFormat], options: LLMOptions, event: LLMEvent) -> str:
+    async def _call(
+        self,
+        prompt: Union[str, ChatFormat],
+        response_format: Optional[Dict[str, str]],
+        options: LLMOptions,
+        event: LLMEvent,
+    ) -> str:
         """
         Calls LLM API endpoint.
 
         Args:
             prompt: Text to be asked.
+            response_format: Optional argument used in the OpenAI API - used to force json output
             options: Additional settings used by LLM.
 
         Returns:
