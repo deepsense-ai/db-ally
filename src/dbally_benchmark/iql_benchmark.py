@@ -12,52 +12,59 @@ from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
 from sqlalchemy import create_engine
 
-import dbally
-from dbally._collection import Collection
+from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.prompts.iql_prompt_template import default_iql_template
-from dbally.data_models.prompts.view_selector_prompt_template import default_view_selector_template
-from dbally.utils.errors import NoViewFoundError, UnsupportedQueryError
+from dbally.iql_generator.iql_generator import IQLGenerator
+from dbally.llm_client.openai_client import OpenAIClient
+from dbally.utils.errors import UnsupportedQueryError
+from dbally.views.base import AbstractBaseView
 from dbally_benchmark.config import BenchmarkConfig
+from dbally_benchmark.constants import VIEW_REGISTRY, ViewName
+from dbally_benchmark.dataset.bird_dataset import BIRDDataset, BIRDExample
+from dbally_benchmark.iql.iql_result import IQLResult
+from dbally_benchmark.iql.metrics import calculate_dataset_metrics
 from dbally_benchmark.paths import PATH_EXPERIMENTS
-from dbally_benchmark.text2sql.dataset import Text2SQLDataset, Text2SQLExample, Text2SQLResult
-from dbally_benchmark.text2sql.metrics import calculate_dataset_metrics
-from dbally_benchmark.text2sql.views import SuperheroCountByPowerView, SuperheroView
-from dbally_benchmark.utils import batch, get_datetime_str
+from dbally_benchmark.utils import batch, get_datetime_str, set_up_gitlab_metadata
 
 
-async def _run_dbally_for_single_example(example: Text2SQLExample, collection: Collection) -> Text2SQLResult:
+async def _run_iql_for_single_example(
+    example: BIRDExample, view: AbstractBaseView, iql_generator: IQLGenerator
+) -> IQLResult:
+    filter_list, action_list = view.list_filters(), view.list_actions()
+    event_tracker = EventTracker()
+
     try:
-        result = await collection.ask(example.question, dry_run=True)
-        sql = result.context["sql"]
+        iql_filters, iql_actions, _ = await iql_generator.generate_iql(
+            question=example.question, filters=filter_list, actions=action_list, event_tracker=event_tracker
+        )
     except UnsupportedQueryError:
-        sql = "UnsupportedQueryError"
-    except NoViewFoundError:
-        sql = "NoViewFoundError"
-    except Exception:  # pylint: disable=broad-exception-caught
-        sql = "Error"
+        return IQLResult(question=example.question, iql_filters="", iql_actions="", exception_raised=True)
 
-    return Text2SQLResult(
-        db_id=example.db_id, question=example.question, ground_truth_sql=example.SQL, predicted_sql=sql
+    return IQLResult(
+        question=example.question, iql_filters=iql_filters, iql_actions=iql_actions, exception_raised=False
     )
 
 
-async def run_dbally_for_dataset(dataset: Text2SQLDataset, collection: Collection) -> List[Text2SQLResult]:
+async def run_iql_for_dataset(
+    dataset: BIRDDataset, view: AbstractBaseView, iql_generator: IQLGenerator
+) -> List[IQLResult]:
     """
-    Transforms questions into SQL queries using a IQL approach.
+    Runs IQL predictions for a dataset.
 
     Args:
-        dataset: The dataset containing questions to be transformed into SQL queries.
-        collection: Container for a set of views used by db-ally.
+        dataset: The dataset containing questions to be transformed into IQL queries.
+        view: The view used to generate IQL.
+        iql_generator: IQL generator.
 
     Returns:
-        A list of Text2SQLResult objects representing the predictions.
+        A list of IQLResult objects representing the predictions.
     """
 
-    results: List[Text2SQLResult] = []
+    results: List[IQLResult] = []
 
     for group in batch(dataset, 5):
         current_results = await asyncio.gather(
-            *[_run_dbally_for_single_example(example, collection) for example in group]
+            *[_run_iql_for_single_example(example, view, iql_generator) for example in group]
         )
         results = [*current_results, *results]
 
@@ -66,10 +73,15 @@ async def run_dbally_for_dataset(dataset: Text2SQLDataset, collection: Collectio
 
 async def evaluate(cfg: DictConfig) -> Any:
     """
-    Runs db-ally evaluation for a single dataset defined in hydra config.
+    Runs IQL evaluation for a single dataset defined in hydra config.
 
     Args:
         cfg: hydra config, loads automatically from path passed on to the decorator
+
+    Raises:
+        ValueError: If view_name defined in hydra config is not supported.
+        ValueError: If model_name is not supported (at the
+        moment only OpenAI's model are supported).
     """
 
     output_dir = PATH_EXPERIMENTS / cfg.output_path / get_datetime_str()
@@ -77,17 +89,22 @@ async def evaluate(cfg: DictConfig) -> Any:
     cfg = instantiate(cfg)
     benchmark_cfg = BenchmarkConfig()
 
-    engine = create_engine(benchmark_cfg.pg_connection_string + "/superhero")
+    view_name = cfg.view_name
+    allowed_views = [view.value for view in ViewName]
+    if view_name not in allowed_views:
+        raise ValueError(f"View {view_name} not supported. Available views: {allowed_views}")
 
-    if "gpt" in benchmark_cfg.model_name:
-        dbally.use_openai_llm(
-            model_name="gpt-4",
-            openai_api_key=benchmark_cfg.openai_api_key,
+    engine = create_engine(benchmark_cfg.pg_connection_string + f"/{cfg.db_name}")
+    view = VIEW_REGISTRY[ViewName(view_name)](engine)
+
+    if "gpt" in cfg.model_name:
+        llm_client = OpenAIClient(
+            model_name=cfg.model_name,
+            api_key=benchmark_cfg.openai_api_key,
         )
-
-    superheros_db = dbally.create_collection("superheros_db")
-    superheros_db.add(SuperheroView, lambda: SuperheroView(engine))
-    superheros_db.add(SuperheroCountByPowerView, lambda: SuperheroCountByPowerView(engine))
+    else:
+        raise ValueError("Only OpenAI's GPT models are supported for now.")
+    iql_generator = IQLGenerator(llm_client=llm_client)
 
     run = None
     if cfg.neptune.log:
@@ -95,52 +112,49 @@ async def evaluate(cfg: DictConfig) -> Any:
             project=benchmark_cfg.neptune_project,
             api_token=benchmark_cfg.neptune_api_token,
         )
-        run["sys/tags"].add(list(cfg.neptune.tags))
         run["config"] = stringify_unsupported(cfg)
+        tags = list(cfg.neptune.tags) + [view_name, cfg.model_name, cfg.db_name]
+        run["sys/tags"].add(tags)
 
         if "CI_MERGE_REQUEST_IID" in os.environ:
-            merge_request_project_url = os.getenv("CI_MERGE_REQUEST_PROJECT_URL")
-            merge_request_iid = os.getenv("CI_MERGE_REQUEST_IID")
-            merge_request_sha = os.getenv("CI_COMMIT_SHA")
-
-            run["merge_request_url"] = f"{merge_request_project_url}/-/merge_requests/{merge_request_iid}"
-            run["merge_request_sha"] = merge_request_sha
+            run = set_up_gitlab_metadata(run)
 
     metrics_file_name, results_file_name = "metrics.json", "eval_results.json"
 
-    logger.info(f"Running db-ally predictions for dataset {cfg.dataset_path}")
-    evaluation_dataset = Text2SQLDataset.from_json_file(
-        Path(cfg.dataset_path), db_ids=cfg.db_ids, difficulty_levels=cfg.difficulty_levels
+    logger.info(f"Running IQL predictions for dataset: {cfg.dataset_path} and view: {view_name}")
+    evaluation_dataset = BIRDDataset.from_json_file(
+        Path(cfg.dataset_path), difficulty_levels=cfg.get("difficulty_levels")
     )
-    dbally_results = await run_dbally_for_dataset(dataset=evaluation_dataset, collection=superheros_db)
+    dbally_results = await run_iql_for_dataset(dataset=evaluation_dataset, view=view, iql_generator=iql_generator)
+    valid_dbally_results = [result for result in dbally_results if not result.exception_raised]
+    unsupported_query_error = (len(dbally_results) - len(valid_dbally_results)) / len(dbally_results)
 
     with open(output_dir / results_file_name, "w", encoding="utf-8") as outfile:
         json.dump([result.model_dump() for result in dbally_results], outfile, indent=4)
 
     logger.info("Calculating metrics")
-    metrics = calculate_dataset_metrics(dbally_results, engine)
+    metrics = calculate_dataset_metrics(dbally_results, view.list_filters(), view.list_actions())
+    metrics = {**metrics, "unsupported_query_error": unsupported_query_error}
 
     with open(output_dir / metrics_file_name, "w", encoding="utf-8") as outfile:
         json.dump(metrics, outfile, indent=4)
 
-    logger.info(f"db-ally predictions saved under directory: {output_dir}")
+    logger.info(f"IQL predictions saved under directory: {output_dir}")
 
     if run:
         run["config/iql_prompt_template"] = stringify_unsupported(default_iql_template.chat)
-        run["config/view_selection_prompt_template"] = stringify_unsupported(default_view_selector_template.chat)
-        run["config/iql_prompt_template"] = stringify_unsupported(default_iql_template)
         run[f"evaluation/{metrics_file_name}"].upload((output_dir / metrics_file_name).as_posix())
         run[f"evaluation/{results_file_name}"].upload((output_dir / results_file_name).as_posix())
         run["evaluation/metrics"] = stringify_unsupported(metrics)
         logger.info(f"Evaluation results logged to neptune at {run.get_url()}")
 
 
-@hydra.main(version_base=None, config_path="experiment_config", config_name="evaluate_dbally_config")
+@hydra.main(version_base=None, config_path="experiment_config", config_name="evaluate_iql_config")
 def main(cfg: DictConfig):
     """
-    Runs db-ally evaluation for a single dataset defined in hydra config.
-    The following metrics are calculated during evaluation: exact match, valid SQL,
-    execution accuracy and valid efficiency score.
+    Runs IQL evaluation for a single dataset defined in hydra config.
+    The following metrics are calculated during evaluation: valid IQL,
+    ratio of hallucinated filters and actions and ratio of IQLs contained syntax error.
 
     Args:
         cfg: hydra config, loads automatically from path passed on to the decorator.

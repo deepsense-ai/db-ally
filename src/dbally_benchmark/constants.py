@@ -1,0 +1,18 @@
+from enum import Enum
+from typing import Dict, Type
+
+from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
+from dbally_benchmark.views.superhero import SuperheroCountByPowerView, SuperheroView
+
+
+class ViewName(Enum):
+    """Enum representing the name of the view."""
+
+    SUPERHERO_VIEW = "SuperheroView"
+    SUPERHERO_COUNT_BY_POWER_VIEW = "SuperheroCountByPowerView"
+
+
+VIEW_REGISTRY: Dict[ViewName, Type[SqlAlchemyBaseView]] = {
+    ViewName.SUPERHERO_VIEW: SuperheroView,
+    ViewName.SUPERHERO_COUNT_BY_POWER_VIEW: SuperheroCountByPowerView,
+}
