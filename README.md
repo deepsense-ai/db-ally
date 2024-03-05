@@ -49,6 +49,19 @@ Read more about different modes in [documentation](https://ipython.org/ipython-d
 All code should be in `src/` to make reusability and review straightforward, keep notebooks simple for exploratory data analysis.
 See also [Cookiecutter Data Science opinion](https://drivendata.github.io/cookiecutter-data-science/#notebooks-are-for-exploration-and-communication).
 
+# Command line interface
+The library provides a command line interface (CLI) to interact with the database. To use it, you need to install the package in editable mode:
+
+```bash
+$ pip install -e .
+```
+
+After that, you can use the `dbally` command to interact with the database. To see the available commands, run:
+
+```bash
+$ dbally --help
+```
+
 # Project documentation
 
 In `docs/` directory are Sphinx RST/Markdown files.
