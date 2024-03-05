@@ -87,3 +87,6 @@ cmake-build-*/
 # Terraform
 **/.terraform.lock.hcl
 **/.terraform
+
+# experiments results
+experiments/
