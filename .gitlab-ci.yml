@@ -8,12 +8,11 @@ variables:
   PRECOMMIT_IMAGE: $DOCKER_REGISTRY/precommit
   TESTS_IMAGE: $DOCKER_REGISTRY/tests
 
-
 # run CI on default branch or MR only
 workflow:
   rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-    - if: '$CI_MERGE_REQUEST_IID'
+    - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+    - if: "$CI_MERGE_REQUEST_IID"
 
 stages:
   - preparation
@@ -60,7 +59,7 @@ stages:
   stage: preparation
   image: docker:23
   rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
       changes:
         - docker/precommit/Dockerfile
         - .pre-commit-config.yaml
@@ -115,7 +114,6 @@ stages:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-
 #########################################
 
 # Jobs to enforce code quality and style consistency.
@@ -125,7 +123,6 @@ stages:
 # for automation and bootstrapping a new project.
 # Consider to use stable commit SHA from main branch instead
 # and manual changes to reduce surprises.
-
 
 # To overcome issue that latest might not be present
 # and assume that this either new project / done in
@@ -159,7 +156,7 @@ lint-precommit-changed:
         - docker/precommit/Dockerfile
         - .pre-commit-config.yaml
       when: always
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
       when: never
 
 #############################################
@@ -218,7 +215,7 @@ benchmark:
   stage: benchmark
   interruptible: true
   script:
-    - python src/dbally_benchmark/iql_benchmark.py neptune.log=True
+    - python src/dbally_benchmark/evaluate.py neptune.log=True
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       when: manual
@@ -294,6 +291,6 @@ pages:
     - ./build_docs.sh
   artifacts:
     paths:
-    - public
+      - public
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
