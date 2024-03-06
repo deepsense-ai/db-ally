@@ -17,10 +17,10 @@ class MockView(MethodsBaseView):
     def get_select(self) -> sqlalchemy.Select:
         ...
 
-    def apply_filters(self, filters: IQLQuery) -> None:
+    async def apply_filters(self, filters: IQLQuery) -> None:
         ...
 
-    def apply_actions(self, actions: IQLActions) -> None:
+    async def apply_actions(self, actions: IQLActions) -> None:
         ...
 
     def execute(self, dry_run: bool = False):

@@ -78,8 +78,10 @@ addopts = [
     '--doctest-glob=\*.rst',
     '--tb=short',
 ]
-
 testpaths = ['tests']
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
 
 [tool.mypy]
 warn_unused_configs = true

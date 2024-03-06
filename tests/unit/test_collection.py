@@ -23,10 +23,10 @@ class MockViewBase(AbstractBaseView):
     def list_actions(self) -> List[ExposedFunction]:
         return []
 
-    def apply_filters(self, filters: IQLQuery) -> None:
+    async def apply_filters(self, filters: IQLQuery) -> None:
         ...
 
-    def apply_actions(self, actions: IQLActions) -> None:
+    async def apply_actions(self, actions: IQLActions) -> None:
         ...
 
     def execute(self, dry_run=False) -> ExecutionResult:

@@ -26,11 +26,11 @@ class MockSqlAlchemyView(SqlAlchemyBaseView):
         return sqlalchemy.literal(idx)
 
     @view_filter()
-    def method_bar(self, city: str, year: int) -> sqlalchemy.ColumnElement:
+    async def method_bar(self, city: str, year: int) -> sqlalchemy.ColumnElement:
         return sqlalchemy.literal(f"hello {city} in {year}")
 
     @view_action()
-    def action_baz(self, select: sqlalchemy.Select) -> sqlalchemy.Select:
+    async def action_baz(self, select: sqlalchemy.Select) -> sqlalchemy.Select:
         """
         This is baz
         """
@@ -48,7 +48,7 @@ def normalize_whitespace(s: str) -> str:
     return re.sub(r"[\s\n]+", " ", s).strip()
 
 
-def test_filter_sql_generation() -> None:
+async def test_filter_sql_generation() -> None:
     """
     Tests that the SQL generation based on filters works correctly
     """
@@ -72,12 +72,12 @@ def test_filter_sql_generation() -> None:
             ),
         ],
     )
-    mock_view.apply_filters(query)
+    await mock_view.apply_filters(query)
     sql = normalize_whitespace(mock_view.execute(dry_run=True).context["sql"])
     assert sql == "SELECT 'test' AS foo WHERE 1 AND 'hello London in 2020'"
 
 
-def test_action_sql_generation() -> None:
+async def test_action_sql_generation() -> None:
     """
     Tests that the SQL generation based on actions works correctly
     """
@@ -92,6 +92,6 @@ def test_action_sql_generation() -> None:
             ),
         ],
     )
-    mock_view.apply_actions(actions)
+    await mock_view.apply_actions(actions)
     sql = normalize_whitespace(mock_view.execute(dry_run=True).context["sql"].replace("\n", ""))
     assert sql == "SELECT 'test' AS foo ORDER BY foo LIMIT 5"

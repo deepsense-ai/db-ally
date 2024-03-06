@@ -77,7 +77,7 @@ class AbstractBaseView(metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def apply_filters(self, filters: IQLQuery) -> None:
+    async def apply_filters(self, filters: IQLQuery) -> None:
         """
         Applies the chosen filters to the view.
 
@@ -85,7 +85,7 @@ class AbstractBaseView(metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def apply_actions(self, actions: IQLActions) -> None:
+    async def apply_actions(self, actions: IQLActions) -> None:
         """
         Applies the chosen actions to the view.
 

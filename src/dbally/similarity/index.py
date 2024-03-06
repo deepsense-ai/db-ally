@@ -14,13 +14,13 @@ class AbstractSimilarityIndex(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def update(self) -> None:
+    async def update(self) -> None:
         """
         Updates the store with the latest data.
         """
 
     @abc.abstractmethod
-    def similar(self, text: str) -> str:
+    async def similar(self, text: str) -> str:
         """
         Finds the most similar text or returns the original text if no similar text is found.
 
@@ -42,14 +42,14 @@ class SimilarityIndex(AbstractSimilarityIndex):
         self.store = store
         self.fetcher = fetcher
 
-    def update(self) -> None:
+    async def update(self) -> None:
         """
         Updates the store with the latest data from the fetcher.
         """
-        data = self.fetcher.fetch()
-        self.store.store(data)
+        data = await self.fetcher.fetch()
+        await self.store.store(data)
 
-    def similar(self, text: str) -> str:
+    async def similar(self, text: str) -> str:
         """
         Finds the most similar text in the store or returns the original text if no similar text is found.
 
@@ -59,5 +59,5 @@ class SimilarityIndex(AbstractSimilarityIndex):
         Returns:
             str: The most similar text or the original text if no similar text is found.
         """
-        found = self.store.find_similar(text)
+        found = await self.store.find_similar(text)
         return found if found else text

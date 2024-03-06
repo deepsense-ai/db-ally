@@ -163,8 +163,8 @@ class Collection:
             try:
                 filters = IQLQuery.parse(iql_filters, filter_list)
                 actions = IQLActions.parse(iql_actions, action_list)
-                view.apply_filters(filters)
-                view.apply_actions(actions)
+                await view.apply_filters(filters)
+                await view.apply_actions(actions)
                 break
             except (IQLError, ValueError) as e:
                 conversation = self._iql_generator.add_error_msg(conversation, [e])
