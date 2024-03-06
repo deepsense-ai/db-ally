@@ -14,7 +14,7 @@ from dbally.data_models.prompts.nl_responder_prompt_template import (
     default_nl_responder_template,
 )
 from dbally.llm_client.base import LLMClient
-from dbally.nl_responder.token_counters import count_tokens_for_openai
+from dbally.nl_responder.token_counters import count_tokens_for_anyscale, count_tokens_for_openai
 
 
 class NLResponder:
@@ -72,14 +72,21 @@ class NLResponder:
                 model=self._llm_client.model_name,
             )
 
-            if tokens_count > self._max_tokens_count:
-                llm_response = await self._llm_client.text_generation(
-                    template=self._iql_explainer_prompt_template,
-                    fmt={"question": question, "filters": filters, "actions": actions},
-                    event_tracker=event_tracker,
-                )
+        else:
+            tokens_count = count_tokens_for_anyscale(
+                messages=self._nl_responder_prompt_template.chat,
+                fmt={"rows": rows, "question": question},
+                model=self._llm_client.model_name,
+            )
 
-                return llm_response
+        if tokens_count > self._max_tokens_count:
+            llm_response = await self._llm_client.text_generation(
+                template=self._iql_explainer_prompt_template,
+                fmt={"question": question, "filters": filters, "actions": actions},
+                event_tracker=event_tracker,
+            )
+
+            return llm_response
 
         llm_response = await self._llm_client.text_generation(
             template=self._nl_responder_prompt_template,

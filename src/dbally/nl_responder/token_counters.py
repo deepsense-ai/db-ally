@@ -5,7 +5,7 @@ from dbally.data_models.prompts.common_validation_utils import ChatFormat
 
 def count_tokens_for_openai(messages: ChatFormat, fmt: Dict[str, str], model: str) -> int:
     """
-    Counts the number of tokens in the messages.
+    Counts the number of tokens in the messages for OpenAIs' models.
 
     Args:
         messages: Messages to count tokens for.
@@ -28,8 +28,36 @@ def count_tokens_for_openai(messages: ChatFormat, fmt: Dict[str, str], model: st
     num_tokens = 0
     for message in messages:
         num_tokens += 4  # every message follows "<im_start>{role/name}\n{content}<im_end>\n"
-        for content in message.values():
-            num_tokens += len(encoding.encode(content.format(**fmt)))
+        num_tokens += len(encoding.encode(message["content"].format(**fmt)))
 
     num_tokens += 2  # every reply starts with "<im_start>assistant"
     return num_tokens
+
+
+def count_tokens_for_anyscale(messages: ChatFormat, fmt: Dict[str, str], model: str) -> int:
+    """
+    Counts the number of tokens in the messages for Anyscales' models.
+
+    Args:
+        messages: Messages to count tokens for.
+        fmt: Arguments to be used with prompt.
+        model: Model name.
+
+    Returns:
+        Number of tokens in the messages.
+
+    Raises:
+        ImportError: If transformers package is not installed.
+    """
+
+    try:
+        from transformers import AutoTokenizer  # pylint: disable=import-outside-toplevel
+    except ImportError as exc:
+        raise ImportError("You need to install transformers package to use Anyscale models' tokenizers.") from exc
+
+    tokenizer = AutoTokenizer.from_pretrained(model)
+
+    for message in messages:
+        message["content"] = message["content"].format(**fmt)
+
+    return len(tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True))

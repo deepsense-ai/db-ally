@@ -11,6 +11,7 @@ from dbally.nl_responder.nl_responder import NLResponder
 def llm_client():
     mock_client = Mock()
     mock_client.text_generation = AsyncMock(return_value="db-ally is the best")
+    mock_client.model_name = "gpt-4"
     return mock_client
 
 
@@ -28,5 +29,5 @@ def answer():
 async def test_nl_responder(llm_client, answer, event_tracker):
     nl_responder = NLResponder(llm_client)
 
-    response = await nl_responder.generate_response(answer, "Mock question", event_tracker)
+    response = await nl_responder.generate_response(answer, "Mock question", "", "", event_tracker)
     assert response == "db-ally is the best"
