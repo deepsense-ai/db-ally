@@ -1,5 +1,4 @@
 """Version information."""
-
 from pathlib import Path
 
 version_file = Path(__file__).absolute().parents[0] / "VERSION"
