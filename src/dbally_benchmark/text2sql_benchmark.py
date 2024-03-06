@@ -16,6 +16,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.llm_client.base import LLMClient
 from dbally.llm_client.openai_client import OpenAIClient
 from dbally_benchmark.config import BenchmarkConfig
+from dbally_benchmark.constants import EvaluationType
 from dbally_benchmark.dataset.bird_dataset import BIRDDataset, BIRDExample
 from dbally_benchmark.paths import PATH_EXPERIMENTS, PATH_SCHEMAS
 from dbally_benchmark.text2sql.metrics import calculate_dataset_metrics
@@ -99,7 +100,7 @@ async def evaluate(cfg: DictConfig) -> Any:
             api_token=benchmark_cfg.neptune_api_token,
         )
         run["config"] = stringify_unsupported(cfg)
-        tags = list(cfg.neptune.tags) + [cfg.db_name, cfg.model_name]
+        tags = list(cfg.neptune.get("tags", [])) + [EvaluationType.TEXT2SQL.value, cfg.db_name, cfg.model_name]
         run["sys/tags"].add(tags)
 
         if "CI_MERGE_REQUEST_IID" in os.environ:

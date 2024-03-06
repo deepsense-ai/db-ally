@@ -1,9 +1,0 @@
-output_path: "iql_evaluation"
-dataset_path: "data/superhero.json"
-db_name: "superhero"
-view_name: "SuperheroView"
-model_name: "gpt-4"
-difficulty_levels: ["simple"]
-neptune:
-  log: False
-  tags: ["iql"]

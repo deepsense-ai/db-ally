@@ -1,0 +1,5 @@
+superhero:
+  output_path: "text2sql_evaluation"
+  dataset_path: "data/superhero.json"
+  difficulty_levels: ["simple"]
+  db_name: "superhero"

@@ -19,7 +19,7 @@ from dbally.data_models.prompts.iql_prompt_template import default_iql_template
 from dbally.data_models.prompts.view_selector_prompt_template import default_view_selector_template
 from dbally.utils.errors import NoViewFoundError, UnsupportedQueryError
 from dbally_benchmark.config import BenchmarkConfig
-from dbally_benchmark.constants import VIEW_REGISTRY, ViewName
+from dbally_benchmark.constants import VIEW_REGISTRY, EvaluationType, ViewName
 from dbally_benchmark.dataset.bird_dataset import BIRDDataset, BIRDExample
 from dbally_benchmark.paths import PATH_EXPERIMENTS
 from dbally_benchmark.text2sql.metrics import calculate_dataset_metrics
@@ -87,11 +87,11 @@ async def evaluate(cfg: DictConfig) -> Any:
             openai_api_key=benchmark_cfg.openai_api_key,
         )
 
-    superheros_db = dbally.create_collection("superheros_db")
+    db = dbally.create_collection(cfg.db_name)
 
     for view_name in cfg.view_names:
         view = VIEW_REGISTRY[ViewName(view_name)]
-        superheros_db.add(view, partial(view, engine))
+        db.add(view, partial(view, engine))
 
     run = None
     if cfg.neptune.log:
@@ -100,7 +100,7 @@ async def evaluate(cfg: DictConfig) -> Any:
             api_token=benchmark_cfg.neptune_api_token,
         )
         run["config"] = stringify_unsupported(cfg)
-        tags = list(cfg.neptune.tags) + [cfg.model_name, cfg.db_name]
+        tags = list(cfg.neptune.get("tags", [])) + [EvaluationType.END2END.value, cfg.model_name, cfg.db_name]
         run["sys/tags"].add(tags)
 
         if "CI_MERGE_REQUEST_IID" in os.environ:
@@ -112,7 +112,7 @@ async def evaluate(cfg: DictConfig) -> Any:
     evaluation_dataset = BIRDDataset.from_json_file(
         Path(cfg.dataset_path), difficulty_levels=cfg.get("difficulty_levels")
     )
-    dbally_results = await run_dbally_for_dataset(dataset=evaluation_dataset, collection=superheros_db)
+    dbally_results = await run_dbally_for_dataset(dataset=evaluation_dataset, collection=db)
 
     with open(output_dir / results_file_name, "w", encoding="utf-8") as outfile:
         json.dump([result.model_dump() for result in dbally_results], outfile, indent=4)
