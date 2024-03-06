@@ -11,6 +11,8 @@ from sqlalchemy.orm import aliased
 import dbally
 from dbally import SqlAlchemyBaseView, decorators
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
+from dbally.similarity.index import SimilarityIndex
+from dbally.similarity.sqlalchemy_base import CaseInsensitiveSqlAlchemyStore, SimpleSqlAlchemyFetcher
 
 engine = create_engine(config.pg_connection_string + "/superhero")
 SuperheroModel = automap_base()
@@ -43,6 +45,19 @@ class SuperheroDBSchema:
     attributes = sqlalchemy.func.jsonb_object_agg(
         SuperheroModel.classes.attribute.attribute_name, hero_attr.c.attribute_value
     ).label("attributes")
+
+
+gender_similarity = SimilarityIndex(
+    store=CaseInsensitiveSqlAlchemyStore(engine, "gender_similarity"),
+    fetcher=SimpleSqlAlchemyFetcher(
+        engine,
+        table=SuperheroModel.classes.gender,
+        column=SuperheroModel.classes.gender.gender,
+    ),
+)
+
+# TODO: should be done periodically, not each time the file is initialized
+gender_similarity.update()
 
 
 class SuperheroFilterMixin:
@@ -92,6 +107,7 @@ class SuperheroFilterMixin:
 
     @decorators.view_filter()
     def filter_by_gender(self, gender: str) -> sqlalchemy.ColumnElement:
+        gender = gender_similarity.similar(gender)
         return SuperheroModel.classes.superhero.gender_id.in_(
             sqlalchemy.select(SuperheroModel.classes.gender.id).where(SuperheroModel.classes.gender.gender == gender)
         )
@@ -253,7 +269,7 @@ async def main():
 
     await superheros_db.ask("What heroes have Blue eyes and are taller than 180.5cm?", return_natural_response=True)
 
-    await superheros_db.ask("Count power of Female heros", return_natural_response=True)
+    await superheros_db.ask("Count power of female heros", return_natural_response=True)
 
 
 if __name__ == "__main__":
