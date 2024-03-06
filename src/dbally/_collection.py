@@ -158,6 +158,8 @@ class Collection:
         iql_filters, iql_actions, conversation = await self._iql_generator.generate_iql(
             question=question, filters=filter_list, actions=action_list, event_tracker=event_tracker
         )
+        print(iql_filters)
+        print(iql_actions)
 
         for _ in range(self.n_retries):
             try:

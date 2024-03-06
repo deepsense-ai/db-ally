@@ -39,11 +39,11 @@ class OpenAIClient(LLMClient):
 
         # only "turbo" models support response_format argument
         # https://platform.openai.com/docs/api-reference/chat/create#chat-create-response_format
-        if "turbo" not in self._model_name:
+        if "turbo" not in self.model_name:
             response_format = None
 
         response = await self._client.chat.completions.create(
-            messages=prompt, model=self._model_name, response_format=response_format, **options.dict()  # type: ignore
+            messages=prompt, model=self.model_name, response_format=response_format, **options.dict()  # type: ignore
         )
 
         event.completion_tokens = response.usage.completion_tokens

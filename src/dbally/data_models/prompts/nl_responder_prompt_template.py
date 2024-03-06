@@ -37,7 +37,7 @@ default_nl_responder_template = NLResponderPromptTemplate(
             "You are very intelligent and obedient.\n"
             "The table ALWAYS contains full answer to a question.\n"
             "Answer the question in a way that is easy to understand and informative.\n"
-            "DON'T MENTION using a table in your answer.",
+            "DON'T MENTION using a table in your answer.\n",
         },
         {
             "role": "user",
