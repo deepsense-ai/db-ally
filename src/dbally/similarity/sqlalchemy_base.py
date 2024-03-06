@@ -25,7 +25,7 @@ class SqlAlchemyFetcher(AbstractFetcher):
             sqlalchemy.Select: The query to fetch the data.
         """
 
-    def fetch(self) -> List[str]:
+    async def fetch(self) -> List[str]:
         """
         Fetches the data from the source and returns it as a list of strings.
 
@@ -70,7 +70,7 @@ class AbstractSqlAlchemyStore(AbstractStore, metaclass=abc.ABCMeta):
         self.table = sqlalchemy.Table(table_name, sqlalchemy.MetaData(), sqlalchemy.Column("text", sqlalchemy.String))
         self.treshold = treshold
 
-    def store(self, data: List[str]) -> None:
+    async def store(self, data: List[str]) -> None:
         """
         Stores the data. Should replace the previously stored data.
 
@@ -92,7 +92,7 @@ class CaseInsensitiveSqlAlchemyStore(AbstractSqlAlchemyStore):
     Stores the data in the database using SQLAlchemy and defines "similarity" as case-insensitive equality.
     """
 
-    def find_similar(self, text: str) -> Optional[str]:
+    async def find_similar(self, text: str) -> Optional[str]:
         """
         Finds the text from the store that differs from the given text only in case.
 

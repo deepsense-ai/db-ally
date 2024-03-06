@@ -8,7 +8,7 @@ class AbstractStore(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def store(self, data: List[str]) -> None:
+    async def store(self, data: List[str]) -> None:
         """
         Stores the data. Should replace the previously stored data.
 
@@ -17,7 +17,7 @@ class AbstractStore(metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def find_similar(self, text: str) -> Optional[str]:
+    async def find_similar(self, text: str) -> Optional[str]:
         """
         Finds the most similar text in the store or returns None if no similar text is found.
 

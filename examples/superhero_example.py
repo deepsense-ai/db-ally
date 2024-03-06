@@ -56,9 +56,6 @@ gender_similarity = SimilarityIndex(
     ),
 )
 
-# TODO: should be done periodically, not each time the file is initialized
-gender_similarity.update()
-
 
 class SuperheroFilterMixin:
     @decorators.view_filter()
@@ -106,8 +103,8 @@ class SuperheroFilterMixin:
         )
 
     @decorators.view_filter()
-    def filter_by_gender(self, gender: str) -> sqlalchemy.ColumnElement:
-        gender = gender_similarity.similar(gender)
+    async def filter_by_gender(self, gender: str) -> sqlalchemy.ColumnElement:
+        gender = await gender_similarity.similar(gender)
         return SuperheroModel.classes.superhero.gender_id.in_(
             sqlalchemy.select(SuperheroModel.classes.gender.id).where(SuperheroModel.classes.gender.gender == gender)
         )
@@ -257,6 +254,9 @@ class SuperheroCountByPowerView(SqlAlchemyBaseView, SuperheroFilterMixin):
 
 
 async def main():
+    # TODO: should be done periodically, not each time the file is run
+    await gender_similarity.update()
+
     dbally.use_openai_llm(
         model_name="gpt-4",
         openai_api_key=config.openai_api_key,  # You can pass key directly or just have OPENAI_API_KEY env var defined.

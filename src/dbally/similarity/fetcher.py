@@ -8,7 +8,7 @@ class AbstractFetcher(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def fetch(self) -> List[str]:
+    async def fetch(self) -> List[str]:
         """
         Fetches the data from the source and returns it as a list of strings.
         """

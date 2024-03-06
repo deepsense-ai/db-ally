@@ -31,13 +31,13 @@ class MockMethodsBase(MethodsBaseView):
         """
 
     @view_action()
-    def action_qux(self, idx: int) -> str:
+    async def action_qux(self, idx: int) -> str:
         return f"hello {idx}"
 
-    def apply_filters(self, filters: IQLQuery) -> None:
+    async def apply_filters(self, filters: IQLQuery) -> None:
         ...
 
-    def apply_actions(self, actions: IQLActions) -> None:
+    async def apply_actions(self, actions: IQLActions) -> None:
         ...
 
     def execute(self, dry_run: bool = False) -> ExecutionResult:
