@@ -19,7 +19,7 @@ from dbally.llm_client.openai_client import OpenAIClient
 from dbally.utils.errors import UnsupportedQueryError
 from dbally.views.base import AbstractBaseView
 from dbally_benchmark.config import BenchmarkConfig
-from dbally_benchmark.constants import VIEW_REGISTRY, ViewName
+from dbally_benchmark.constants import VIEW_REGISTRY, EvaluationType, ViewName
 from dbally_benchmark.dataset.bird_dataset import BIRDDataset, BIRDExample
 from dbally_benchmark.iql.iql_result import IQLResult
 from dbally_benchmark.iql.metrics import calculate_dataset_metrics
@@ -113,7 +113,7 @@ async def evaluate(cfg: DictConfig) -> Any:
             api_token=benchmark_cfg.neptune_api_token,
         )
         run["config"] = stringify_unsupported(cfg)
-        tags = list(cfg.neptune.tags) + [view_name, cfg.model_name, cfg.db_name]
+        tags = list(cfg.neptune.get("tags", [])) + [EvaluationType.IQL.value, view_name, cfg.model_name, cfg.db_name]
         run["sys/tags"].add(tags)
 
         if "CI_MERGE_REQUEST_IID" in os.environ:

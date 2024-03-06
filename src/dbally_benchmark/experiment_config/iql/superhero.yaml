@@ -1,0 +1,6 @@
+superhero:
+  output_path: "iql_evaluation"
+  dataset_path: "data/superhero.json"
+  db_name: "superhero"
+  view_name: "SuperheroView"
+  difficulty_levels: ["simple"]

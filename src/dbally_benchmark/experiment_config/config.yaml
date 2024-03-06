@@ -1,0 +1,10 @@
+# Provide list of test configurations you want to execute
+defaults:
+  - e2e: []
+  - iql: [superhero]
+  - text2sql: [superhero]
+
+# Attributes common to all tests
+model_name: "gpt-4"
+neptune:
+  log: False
