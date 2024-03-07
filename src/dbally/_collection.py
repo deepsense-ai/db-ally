@@ -180,7 +180,9 @@ class Collection:
         result = view.execute(dry_run=dry_run)
 
         if not dry_run and return_natural_response:
-            result.textual_response = await self._nl_responder.generate_response(result, question, event_tracker)
+            result.textual_response = await self._nl_responder.generate_response(
+                result, question, iql_filters, iql_actions, event_tracker
+            )
 
         await event_tracker.request_end(RequestEnd(result=result))
 

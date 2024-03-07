@@ -14,8 +14,8 @@ class LLMClient(abc.ABC):
     """Abstract client for interaction with LLM."""
 
     def __init__(self, model_name: str):
-        self._model_name = model_name
-        self._prompt_builder = PromptBuilder(self._model_name)
+        self.model_name = model_name
+        self._prompt_builder = PromptBuilder(self.model_name)
 
     async def text_generation(  # pylint: disable=R0913
         self,
