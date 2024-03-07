@@ -34,9 +34,9 @@ def count_tokens_for_openai(messages: ChatFormat, fmt: Dict[str, str], model: st
     return num_tokens
 
 
-def count_tokens_for_anyscale(messages: ChatFormat, fmt: Dict[str, str], model: str) -> int:
+def count_tokens_for_huggingface(messages: ChatFormat, fmt: Dict[str, str], model: str) -> int:
     """
-    Counts the number of tokens in the messages for Anyscales' models.
+    Counts the number of tokens in the messages for models available on HuggingFace.
 
     Args:
         messages: Messages to count tokens for.

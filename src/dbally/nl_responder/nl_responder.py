@@ -14,7 +14,7 @@ from dbally.data_models.prompts.nl_responder_prompt_template import (
     default_nl_responder_template,
 )
 from dbally.llm_client.base import LLMClient
-from dbally.nl_responder.token_counters import count_tokens_for_anyscale, count_tokens_for_openai
+from dbally.nl_responder.token_counters import count_tokens_for_huggingface, count_tokens_for_openai
 
 
 class NLResponder:
@@ -73,7 +73,7 @@ class NLResponder:
             )
 
         else:
-            tokens_count = count_tokens_for_anyscale(
+            tokens_count = count_tokens_for_huggingface(
                 messages=self._nl_responder_prompt_template.chat,
                 fmt={"rows": rows, "question": question},
                 model=self._llm_client.model_name,
