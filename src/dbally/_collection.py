@@ -161,8 +161,8 @@ class Collection:
 
         for _ in range(self.n_retries):
             try:
-                filters = IQLQuery.parse(iql_filters, filter_list)
-                actions = IQLActions.parse(iql_actions, action_list)
+                filters = await IQLQuery.parse(iql_filters, filter_list)
+                actions = await IQLActions.parse(iql_actions, action_list)
                 await view.apply_filters(filters)
                 await view.apply_actions(actions)
                 break

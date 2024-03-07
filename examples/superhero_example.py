@@ -56,6 +56,8 @@ gender_similarity = SimilarityIndex(
     ),
 )
 
+Gender = gender_similarity.annotated(str)
+
 
 class SuperheroFilterMixin:
     @decorators.view_filter()
@@ -103,8 +105,7 @@ class SuperheroFilterMixin:
         )
 
     @decorators.view_filter()
-    async def filter_by_gender(self, gender: str) -> sqlalchemy.ColumnElement:
-        gender = await gender_similarity.similar(gender)
+    def filter_by_gender(self, gender: Gender) -> sqlalchemy.ColumnElement:
         return SuperheroModel.classes.superhero.gender_id.in_(
             sqlalchemy.select(SuperheroModel.classes.gender.id).where(SuperheroModel.classes.gender.gender == gender)
         )

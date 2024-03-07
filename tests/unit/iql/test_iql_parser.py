@@ -9,8 +9,8 @@ from dbally.iql._parser import IQLParser
 from dbally.views.base import ExposedFunction, MethodParamWithTyping
 
 
-def test_iql_parser():
-    parsed = IQLQuery.parse(
+async def test_iql_parser():
+    parsed = await IQLQuery.parse(
         "not (filter_by_name(['John', 'Anne']) and filter_by_city('cracow') and filter_by_company('deepsense.ai'))",
         allowed_functions=[
             ExposedFunction(
@@ -43,9 +43,9 @@ def test_iql_parser():
     assert company_filter.arguments[0] == "deepsense.ai"
 
 
-def test_iql_parser_arg_error():
+async def test_iql_parser_arg_error():
     with pytest.raises(IQLArgumentParsingError) as exc_info:
-        IQLQuery.parse(
+        await IQLQuery.parse(
             "filter_by_city('Cracow') and filter_by_name(lambda x: x + 1)",
             allowed_functions=[
                 ExposedFunction(
@@ -68,9 +68,9 @@ def test_iql_parser_arg_error():
     assert exc_info.match(re.escape("Not a valid IQL argument: lambda x: x + 1"))
 
 
-def test_iql_parser_unsupported_syntax_error():
+async def test_iql_parser_unsupported_syntax_error():
     with pytest.raises(IQLUnsupportedSyntaxError) as exc_info:
-        IQLQuery.parse(
+        await IQLQuery.parse(
             "filter_by_age() >= 30",
             allowed_functions=[
                 ExposedFunction(
@@ -86,9 +86,9 @@ def test_iql_parser_unsupported_syntax_error():
     assert exc_info.match(re.escape("Compare syntax is not supported in IQL: filter_by_age() >= 30"))
 
 
-def test_iql_parser_method_not_exists():
+async def test_iql_parser_method_not_exists():
     with pytest.raises(IQLFunctionNotExists) as exc_info:
-        IQLQuery.parse(
+        await IQLQuery.parse(
             "filter_by_how_old_somebody_is(40)",
             allowed_functions=[
                 ExposedFunction(
@@ -104,9 +104,9 @@ def test_iql_parser_method_not_exists():
     assert exc_info.match(re.escape("Function filter_by_how_old_somebody_is not exists: filter_by_how_old_somebody_is"))
 
 
-def test_iql_parser_argument_validation_fail():
+async def test_iql_parser_argument_validation_fail():
     with pytest.raises(IQLArgumentValidationError) as exc_info:
-        IQLQuery.parse(
+        await IQLQuery.parse(
             "filter_by_age('too old')",
             allowed_functions=[
                 ExposedFunction(

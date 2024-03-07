@@ -18,7 +18,7 @@ class IQLQuery:
         self.root = root
 
     @classmethod
-    def parse(cls, source: str, allowed_functions: List["ExposedFunction"]) -> "IQLQuery":
+    async def parse(cls, source: str, allowed_functions: List["ExposedFunction"]) -> "IQLQuery":
         """
         Parse IQL string to IQLQuery object.
 
@@ -29,7 +29,7 @@ class IQLQuery:
         Returns:
              IQLQuery object
         """
-        return cls(IQLParser(source, allowed_functions).parse())
+        return cls(await IQLParser(source, allowed_functions).parse())
 
 
 class IQLActions:
@@ -43,7 +43,7 @@ class IQLActions:
         self.actions = actions
 
     @classmethod
-    def parse(cls, source: str, allowed_functions: List["ExposedFunction"]) -> "IQLActions":
+    async def parse(cls, source: str, allowed_functions: List["ExposedFunction"]) -> "IQLActions":
         """
         Parse IQL action string to IQLActions object.
 
@@ -54,7 +54,7 @@ class IQLActions:
         Returns:
             IQLActions object
         """
-        return cls(IQLParser(source, allowed_functions).parse_actions())
+        return cls(await IQLParser(source, allowed_functions).parse_actions())
 
     def __iter__(self) -> Iterator[syntax.FunctionCall]:
         yield from self.actions

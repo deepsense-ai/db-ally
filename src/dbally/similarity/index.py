@@ -1,7 +1,15 @@
 import abc
+from typing import Type
 
 from dbally.similarity.fetcher import AbstractFetcher
 from dbally.similarity.store import AbstractStore
+
+
+class AnnotatedSimilarityIndex:
+    """Stores information about the similarity index attached to a type."""
+
+    __similarity_index__: "SimilarityIndex"
+    __annotated_type__: type
 
 
 class AbstractSimilarityIndex(metaclass=abc.ABCMeta):
@@ -30,6 +38,22 @@ class AbstractSimilarityIndex(metaclass=abc.ABCMeta):
         Returns:
             str: The most similar text or the original text if no similar text is found.
         """
+
+    def annotated(self, base_type: type) -> Type:
+        """
+        Returns a new annotated type with similarity index attached.
+
+        Args:
+            base_type: type to be annotated.
+
+        Returns:
+            new annotated type
+        """
+        return type(
+            f"Annotated_{self.__class__.__name__}_{base_type.__name__}",
+            (base_type, AnnotatedSimilarityIndex),
+            {"__similarity_index__": self, "__annotated_type__": base_type},
+        )
 
 
 class SimilarityIndex(AbstractSimilarityIndex):

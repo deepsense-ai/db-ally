@@ -87,7 +87,7 @@ def calculate_hallucinated_actions_for_dataset(dataset: List[IQLResult], action_
     return hallucinated_actions_count / total_actions_count
 
 
-def calculate_valid_iql(
+async def calculate_valid_iql(
     dataset: List[IQLResult], filter_list: List[ExposedFunction], action_list: List[ExposedFunction]
 ) -> float:
     """
@@ -107,8 +107,8 @@ def calculate_valid_iql(
 
     for example in dataset:
         try:
-            IQLQuery.parse(example.iql_filters, filter_list)
-            IQLActions.parse(example.iql_actions, action_list)
+            await IQLQuery.parse(example.iql_filters, filter_list)
+            await IQLActions.parse(example.iql_actions, action_list)
             valid_iql += 1
         except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.warning(exc)
@@ -116,7 +116,7 @@ def calculate_valid_iql(
     return valid_iql / len(dataset)
 
 
-def calculate_syntax_errors(
+async def calculate_syntax_errors(
     dataset: List[IQLResult], filter_list: List[ExposedFunction], action_list: List[ExposedFunction]
 ) -> float:
     """
@@ -136,8 +136,8 @@ def calculate_syntax_errors(
 
     for example in dataset:
         try:
-            IQLQuery.parse(example.iql_filters, filter_list)
-            IQLActions.parse(example.iql_actions, action_list)
+            await IQLQuery.parse(example.iql_filters, filter_list)
+            await IQLActions.parse(example.iql_actions, action_list)
         except (IQLError, IQLUnsupportedSyntaxError, SyntaxError):
             syntax_errors += 1
         except Exception as exc:  # pylint: disable=broad-exception-caught
@@ -147,7 +147,7 @@ def calculate_syntax_errors(
     return syntax_errors / len(dataset)
 
 
-def calculate_dataset_metrics(
+async def calculate_dataset_metrics(
     dataset: List[IQLResult], filter_list: List[ExposedFunction], action_list: List[ExposedFunction]
 ) -> Dict[str, float]:
     """
@@ -165,10 +165,10 @@ def calculate_dataset_metrics(
     """
 
     metrics = {
-        "valid_iql": calculate_valid_iql(dataset, filter_list, action_list),
+        "valid_iql": await calculate_valid_iql(dataset, filter_list, action_list),
         "hallucinated_filters": calculate_hallucinated_filters_for_dataset(dataset, filter_list),
         "hallucinated_actions": calculate_hallucinated_actions_for_dataset(dataset, action_list),
-        "syntax_errors": calculate_syntax_errors(dataset, filter_list, action_list),
+        "syntax_errors": await calculate_syntax_errors(dataset, filter_list, action_list),
     }
 
     return metrics

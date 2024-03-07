@@ -55,7 +55,7 @@ async def test_filter_sql_generation() -> None:
 
     mock_connection = sqlalchemy.create_mock_engine("postgresql://", executor=None)
     mock_view = MockSqlAlchemyView(mock_connection.engine)
-    query = IQLQuery.parse(
+    query = await IQLQuery.parse(
         'method_foo(1) and method_bar("London", 2020)',
         allowed_functions=[
             ExposedFunction(
@@ -83,7 +83,7 @@ async def test_action_sql_generation() -> None:
     """
     mock_connection = sqlalchemy.create_mock_engine("postgresql://", executor=None)
     mock_view = MockSqlAlchemyView(mock_connection.engine)
-    actions = IQLActions.parse(
+    actions = await IQLActions.parse(
         "action_baz()\naction_qux(5)",
         allowed_functions=[
             ExposedFunction(name="action_baz", description="", parameters=[]),
