@@ -1,5 +1,6 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, duplicate-code
 import asyncio
+import tempfile
 
 import sqlalchemy
 from config import config
@@ -11,6 +12,8 @@ from sqlalchemy.orm import aliased
 import dbally
 from dbally import SqlAlchemyBaseView, decorators
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
+from dbally.embedding_client.openai import OpenAiEmbeddingClient
+from dbally.similarity.faiss_store import FaissStore
 from dbally.similarity.index import SimilarityIndex
 from dbally.similarity.sqlalchemy_base import CaseInsensitiveSqlAlchemyStore, SimpleSqlAlchemyFetcher
 
@@ -55,6 +58,21 @@ gender_similarity = SimilarityIndex(
         column=SuperheroModel.classes.gender.gender,
     ),
 )
+color_similarity = SimilarityIndex(
+    store=FaissStore(
+        index_dir=f"{tempfile.gettempdir()}/dbally_hero_indexes",
+        index_name="color_similarity",
+        max_distance=0.8,
+        embedding_client=OpenAiEmbeddingClient(
+            api_key=config.openai_api_key,
+        ),
+    ),
+    fetcher=SimpleSqlAlchemyFetcher(
+        engine,
+        table=SuperheroModel.classes.colour,
+        column=SuperheroModel.classes.colour.colour,
+    ),
+)
 
 
 class SuperheroFilterMixin:
@@ -63,19 +81,22 @@ class SuperheroFilterMixin:
         return SuperheroModel.classes.superhero.superhero_name == name
 
     @decorators.view_filter()
-    def filter_by_eye_color(self, color: str) -> sqlalchemy.ColumnElement:
+    async def filter_by_eye_color(self, color: str) -> sqlalchemy.ColumnElement:
+        color = await color_similarity.similar(color)
         return SuperheroModel.classes.superhero.eye_colour_id.in_(
             sqlalchemy.select(SuperheroModel.classes.colour.id).where(SuperheroModel.classes.colour.colour == color)
         )
 
     @decorators.view_filter()
-    def filter_by_hair_color(self, color: str) -> sqlalchemy.ColumnElement:
+    async def filter_by_hair_color(self, color: str) -> sqlalchemy.ColumnElement:
+        color = await color_similarity.similar(color)
         return SuperheroModel.classes.superhero.hair_colour_id.in_(
             sqlalchemy.select(SuperheroModel.classes.colour.id).where(SuperheroModel.classes.colour.colour == color)
         )
 
     @decorators.view_filter()
-    def filter_by_skin_color(self, color: str) -> sqlalchemy.ColumnElement:
+    async def filter_by_skin_color(self, color: str) -> sqlalchemy.ColumnElement:
+        color = await color_similarity.similar(color)
         return SuperheroModel.classes.superhero.skin_colour_id.in_(
             sqlalchemy.select(SuperheroModel.classes.colour.id).where(SuperheroModel.classes.colour.colour == color)
         )
@@ -256,6 +277,7 @@ class SuperheroCountByPowerView(SqlAlchemyBaseView, SuperheroFilterMixin):
 async def main():
     # TODO: should be done periodically, not each time the file is run
     await gender_similarity.update()
+    await color_similarity.update()
 
     dbally.use_openai_llm(
         model_name="gpt-4",
@@ -267,7 +289,9 @@ async def main():
     superheros_db.add(SuperheroView, lambda: SuperheroView(engine))
     superheros_db.add(SuperheroCountByPowerView, lambda: SuperheroCountByPowerView(engine))
 
-    await superheros_db.ask("What heroes have Blue eyes and are taller than 180.5cm?", return_natural_response=True)
+    await superheros_db.ask(
+        'What heroes have "blueish" eyes and are taller than 180.5cm?', return_natural_response=True
+    )
 
     await superheros_db.ask("Count power of female heros", return_natural_response=True)
 
