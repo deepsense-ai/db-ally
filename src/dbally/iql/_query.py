@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Iterator, List
 
 from . import syntax
-from ._parser import IQLParser
+from ._processor import IQLProcessor
 
 if TYPE_CHECKING:
     from dbally.views.base import ExposedFunction
@@ -29,7 +29,7 @@ class IQLQuery:
         Returns:
              IQLQuery object
         """
-        return cls(await IQLParser(source, allowed_functions).parse())
+        return cls(await IQLProcessor(source, allowed_functions).process())
 
 
 class IQLActions:
@@ -54,7 +54,7 @@ class IQLActions:
         Returns:
             IQLActions object
         """
-        return cls(await IQLParser(source, allowed_functions).parse_actions())
+        return cls(await IQLProcessor(source, allowed_functions).process_actions())
 
     def __iter__(self) -> Iterator[syntax.FunctionCall]:
         yield from self.actions

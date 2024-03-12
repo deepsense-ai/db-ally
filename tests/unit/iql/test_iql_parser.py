@@ -5,7 +5,7 @@ import pytest
 
 from dbally.iql import IQLArgumentParsingError, IQLQuery, IQLUnsupportedSyntaxError, syntax
 from dbally.iql._exceptions import IQLArgumentValidationError, IQLFunctionNotExists
-from dbally.iql._parser import IQLParser
+from dbally.iql._processor import IQLProcessor
 from dbally.views.base import ExposedFunction, MethodParamWithTyping
 
 
@@ -123,13 +123,13 @@ async def test_iql_parser_argument_validation_fail():
 
 
 def test_keywords_lowercase():
-    rv = IQLParser._to_lower_except_in_quotes(
+    rv = IQLProcessor._to_lower_except_in_quotes(
         """NOT filter1(230) AND (NOT filter_2("NOT ADMIN") AND filter_('IS NOT ADMIN')) OR NOT filter_4()""",
         keywords=["NOT", "OR", "AND"],
     )
     assert rv == """not filter1(230) and (not filter_2("NOT ADMIN") and filter_('IS NOT ADMIN')) or not filter_4()"""
 
-    rv = IQLParser._to_lower_except_in_quotes(
+    rv = IQLProcessor._to_lower_except_in_quotes(
         """NOT NOT NOT 'NOT' "NOT" AND AND "ORNOTAND" """, keywords=["NOT", "OR", "AND"]
     )
     assert rv == """not not not 'NOT' "NOT" and and "ORNOTAND" """

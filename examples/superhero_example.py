@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import aliased
+from typing_extensions import Annotated
 
 import dbally
 from dbally import SqlAlchemyBaseView, decorators
@@ -56,7 +57,7 @@ gender_similarity = SimilarityIndex(
     ),
 )
 
-Gender = gender_similarity.annotated(str)
+Gender = Annotated[str, gender_similarity]
 
 
 class SuperheroFilterMixin:

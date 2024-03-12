@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from typing import _GenericAlias  # type: ignore
 from typing import Any, Callable, Dict, Literal, Optional, Type, Union
 
-from dbally.similarity.index import AnnotatedSimilarityIndex
-
 
 @dataclass
 class _ValidationResult:
@@ -67,10 +65,7 @@ def validate_arg_type(required_type: Union[Type, _GenericAlias], value: Any) -> 
     Returns:
         _ValidationResult instance
     """
-    if issubclass(required_type, AnnotatedSimilarityIndex):
-        actual_type = required_type.__annotated_type__
-    else:
-        actual_type = required_type.__origin__ if isinstance(required_type, _GenericAlias) else required_type
+    actual_type = required_type.__origin__ if isinstance(required_type, _GenericAlias) else required_type
 
     custom_type_checker = TYPE_VALIDATOR.get(actual_type)
 

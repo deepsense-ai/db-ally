@@ -10,13 +10,13 @@ from dbally.iql._exceptions import (
     IQLUnsupportedSyntaxError,
 )
 from dbally.iql._type_validators import validate_arg_type
-from dbally.similarity.index import AnnotatedSimilarityIndex
+from dbally.similarity.index import SimilarityIndex
 
 if TYPE_CHECKING:
     from dbally.views.base import ExposedFunction
 
 
-class IQLParser:
+class IQLProcessor:
     """
     Parses IQL string to tree structure.
     """
@@ -25,9 +25,9 @@ class IQLParser:
         self.source = source
         self.allowed_functions = {func.name: func for func in allowed_functions}
 
-    async def parse(self) -> syntax.Node:
+    async def process(self) -> syntax.Node:
         """
-        Parse IQL string to root IQL.Node.
+        Process IQL string to root IQL.Node.
 
         Returns:
             IQL.Node which is root of the tree representing IQL query.
@@ -46,9 +46,9 @@ class IQLParser:
         root = await self._parse_node(first_element.value)
         return root
 
-    async def parse_actions(self) -> List[syntax.FunctionCall]:
+    async def process_actions(self) -> List[syntax.FunctionCall]:
         """
-        Parse IQL string to list of IQL actions.
+        Process IQL string to list of IQL actions.
 
         Returns:
             list of IQL syntax.FunctionCall objects
@@ -105,8 +105,11 @@ class IQLParser:
         for arg, arg_def in zip(node.args, func_def.parameters):
             arg_value = self._parse_arg(arg)
 
-            if isinstance(arg_def.type, type) and issubclass(arg_def.type, AnnotatedSimilarityIndex):
-                arg_value = await arg_def.type.__similarity_index__.similar(arg_value)
+            if hasattr(arg_def.type, "__metadata__"):
+                similarity_indexes = [meta for meta in arg_def.type.__metadata__ if isinstance(meta, SimilarityIndex)]
+
+                if similarity_indexes:
+                    arg_value = await similarity_indexes[0].similar(arg_value)
 
             check_result = validate_arg_type(arg_def.type, arg_value)
 
