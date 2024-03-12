@@ -10,12 +10,13 @@ from dbally.iql._exceptions import (
     IQLUnsupportedSyntaxError,
 )
 from dbally.iql._type_validators import validate_arg_type
+from dbally.similarity.index import SimilarityIndex
 
 if TYPE_CHECKING:
     from dbally.views.base import ExposedFunction
 
 
-class IQLParser:
+class IQLProcessor:
     """
     Parses IQL string to tree structure.
     """
@@ -24,9 +25,9 @@ class IQLParser:
         self.source = source
         self.allowed_functions = {func.name: func for func in allowed_functions}
 
-    def parse(self) -> syntax.Node:
+    async def process(self) -> syntax.Node:
         """
-        Parse IQL string to root IQL.Node.
+        Process IQL string to root IQL.Node.
 
         Returns:
             IQL.Node which is root of the tree representing IQL query.
@@ -42,12 +43,12 @@ class IQLParser:
         if not isinstance(first_element, ast.Expr):
             raise IQLError("Not a valid IQL expression", first_element, self.source)
 
-        root = self._parse_node(first_element.value)
+        root = await self._parse_node(first_element.value)
         return root
 
-    def parse_actions(self) -> List[syntax.FunctionCall]:
+    async def process_actions(self) -> List[syntax.FunctionCall]:
         """
-        Parse IQL string to list of IQL actions.
+        Process IQL string to list of IQL actions.
 
         Returns:
             list of IQL syntax.FunctionCall objects
@@ -60,33 +61,33 @@ class IQLParser:
 
         for element in ast_tree.body:
             if isinstance(element, ast.Expr) and isinstance(element.value, ast.Call):
-                calls.append(self._parse_call(element.value))
+                calls.append(await self._parse_call(element.value))
             else:
                 raise IQLError("Not a valid action", element, self.source)
 
         return calls
 
-    def _parse_node(self, node: Union[ast.expr, ast.Expr]) -> syntax.Node:
+    async def _parse_node(self, node: Union[ast.expr, ast.Expr]) -> syntax.Node:
         if isinstance(node, ast.BoolOp):
-            return self._parse_bool_op(node)
+            return await self._parse_bool_op(node)
         if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
-            return syntax.Not(self._parse_node(node.operand))
+            return syntax.Not(await self._parse_node(node.operand))
         if isinstance(node, ast.Call):
-            return self._parse_call(node)
+            return await self._parse_call(node)
 
         raise IQLUnsupportedSyntaxError(node, self.source)
 
-    def _parse_bool_op(self, node: ast.BoolOp) -> syntax.BoolOp:
+    async def _parse_bool_op(self, node: ast.BoolOp) -> syntax.BoolOp:
         if isinstance(node.op, ast.Not):
-            return syntax.Not(self._parse_node(node.values[0]))
+            return syntax.Not(await self._parse_node(node.values[0]))
         if isinstance(node.op, ast.And):
-            return syntax.And([self._parse_node(x) for x in node.values])
+            return syntax.And([await self._parse_node(x) for x in node.values])
         if isinstance(node.op, ast.Or):
-            return syntax.Or([self._parse_node(x) for x in node.values])
+            return syntax.Or([await self._parse_node(x) for x in node.values])
 
         raise IQLUnsupportedSyntaxError(node, self.source, context="BoolOp")
 
-    def _parse_call(self, node: ast.Call) -> syntax.FunctionCall:
+    async def _parse_call(self, node: ast.Call) -> syntax.FunctionCall:
         func = node.func
 
         if not isinstance(func, ast.Name):
@@ -103,6 +104,12 @@ class IQLParser:
 
         for arg, arg_def in zip(node.args, func_def.parameters):
             arg_value = self._parse_arg(arg)
+
+            if hasattr(arg_def.type, "__metadata__"):
+                similarity_indexes = [meta for meta in arg_def.type.__metadata__ if isinstance(meta, SimilarityIndex)]
+
+                if similarity_indexes:
+                    arg_value = await similarity_indexes[0].similar(arg_value)
 
             check_result = validate_arg_type(arg_def.type, arg_value)
 

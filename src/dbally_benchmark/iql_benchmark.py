@@ -133,7 +133,7 @@ async def evaluate(cfg: DictConfig) -> Any:
         json.dump([result.model_dump() for result in dbally_results], outfile, indent=4)
 
     logger.info("Calculating metrics")
-    metrics = calculate_dataset_metrics(dbally_results, view.list_filters(), view.list_actions())
+    metrics = await calculate_dataset_metrics(dbally_results, view.list_filters(), view.list_actions())
     metrics = {**metrics, "unsupported_query_error": unsupported_query_error}
 
     with open(output_dir / metrics_file_name, "w", encoding="utf-8") as outfile:

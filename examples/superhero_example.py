@@ -8,6 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import aliased
+from typing_extensions import Annotated
 
 import dbally
 from dbally import SqlAlchemyBaseView, decorators
@@ -74,6 +75,8 @@ color_similarity = SimilarityIndex(
     ),
 )
 
+Gender = Annotated[str, gender_similarity]
+
 
 class SuperheroFilterMixin:
     @decorators.view_filter()
@@ -124,8 +127,7 @@ class SuperheroFilterMixin:
         )
 
     @decorators.view_filter()
-    async def filter_by_gender(self, gender: str) -> sqlalchemy.ColumnElement:
-        gender = await gender_similarity.similar(gender)
+    def filter_by_gender(self, gender: Gender) -> sqlalchemy.ColumnElement:
         return SuperheroModel.classes.superhero.gender_id.in_(
             sqlalchemy.select(SuperheroModel.classes.gender.id).where(SuperheroModel.classes.gender.gender == gender)
         )
