@@ -18,7 +18,7 @@ class FaissStore(AbstractStore):
         index_dir: str,
         index_name: str,
         embedding_client: EmbeddingClient,
-        max_distance: float = 0.5,
+        max_distance: Optional[float] = None,
         index_type: faiss.IndexFlat = faiss.IndexFlatL2,
     ) -> None:
         """
@@ -87,7 +87,7 @@ class FaissStore(AbstractStore):
         scores, similar = index.search(embedding, 1)
         best_distance, best_idx = scores[0][0], similar[0][0]
 
-        if best_idx != -1 and best_distance < self.max_distance:
+        if best_idx != -1 and (self.max_distance is None or best_distance <= self.max_distance):
             with open(self.get_index_path().with_suffix(".npy"), "rb") as file:
                 data = np.load(file)
                 return data[best_idx]

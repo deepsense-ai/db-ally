@@ -7,6 +7,8 @@ nav:
   - Concepts:
       - concepts/concept_1.md
   - How-to:
+      - how-to/quickstart.md
+      - how-to/quickstart2.md
       - how-to/log_runs_to_langsmith.md
   - API Reference:
       - reference/collection.md
@@ -16,6 +18,10 @@ theme:
     - navigation.tabs
 extra_css:
   - stylesheets/extra.css
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
 plugins:
   mkdocstrings:
     handlers:
