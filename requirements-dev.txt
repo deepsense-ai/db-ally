@@ -17,3 +17,9 @@ sphinxcontrib-mermaid # adds option to have diagrams in sphinx
 # for bumping version strings
 bump2version>=1.0.1,<2.0.0
 mypy==1.8.0
+mkdocs==1.5.3
+mkdocs-autorefs==1.0.1
+mkdocs-material==9.5.13
+mkdocs-material-extensions==1.3.1
+mkdocstrings==0.24.1
+mkdocstrings-python==1.8.0

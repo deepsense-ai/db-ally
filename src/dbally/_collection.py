@@ -1,6 +1,6 @@
 import inspect
 import textwrap
-from typing import Callable, Dict, List, Optional, Tuple, Type, TypeVar
+from typing import Callable, Dict, List, Optional, Type, TypeVar
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
@@ -12,28 +12,7 @@ from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.nl_responder.nl_responder import NLResponder
 from dbally.utils.errors import NoViewFoundError
 from dbally.view_selection.base import ViewSelector
-from dbally.views.base import AbstractBaseView, ExposedFunction
-
-
-class IQLGeneratorMock:
-    """Waiting for other PRs to be merged"""
-
-    async def generate_iql(
-        self, question: str, filters: List[ExposedFunction], actions: List[ExposedFunction]
-    ) -> Tuple[str, str]:
-        """
-        Temp
-
-        Args:
-            question: user question
-            filters: available filters
-            actions: available actions
-
-        Returns:
-            IQL string
-        """
-        print(f"{question=} / {filters=} / {actions=}")
-        return "filter_by_eye_color('Blue') and taller_than(180.0)", "sort_by_gender()"
+from dbally.views.base import AbstractBaseView
 
 
 class Collection:
@@ -93,10 +72,14 @@ class Collection:
         """
         Returns an instance of the view with the given name
 
-        :param name: Name of the view to return
-        :return: View instance
+        Args:
+            name: Name of the view to return
 
-        :raises NoViewFoundError: If there is no view with the given name
+        Returns:
+            View instance
+
+        Raises:
+             NoViewFoundError: If there is no view with the given name
         """
 
         if name not in self._views:
@@ -129,7 +112,7 @@ class Collection:
             question: question in text form
             dry_run: if True, only generate the query without executing it
             return_natural_response: if True (and dry_run is False as natural response requires query results),
-            the natural response will be included in the answer
+                                     the natural response will be included in the answer
 
         Returns:
             ExecutionResult object representing the result of the query execution.
