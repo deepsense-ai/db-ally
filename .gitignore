@@ -90,3 +90,6 @@ cmake-build-*/
 
 # experiments results
 experiments/
+
+# mkdocs generated files
+site/

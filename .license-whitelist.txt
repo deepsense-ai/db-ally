@@ -22,3 +22,4 @@ Python Software Foundation License, MIT License
 Unlicense
 Proprietary License
 Historical Permission Notice and Disclaimer (HPND)
+ISC
