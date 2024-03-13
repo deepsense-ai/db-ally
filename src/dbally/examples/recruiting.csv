@@ -1,0 +1,51 @@
+name,country,years_of_experience,position,university,skills,tags
+John Smith,USA,5,Software Engineer,Stanford University,Java;Python;SQL,Programming;Team Player
+Emily Chen,Canada,3,Data Scientist,University of Toronto,R;Python;Machine Learning,Data Analysis;Research
+Mohammed Ali,India,7,System Administrator,Indian Institute of Technology Bombay,Linux;Networking;Shell Scripting,IT Support;Troubleshooting
+Maria Garcia,Spain,4,Web Developer,Universidad Politécnica de Madrid,HTML;CSS;JavaScript,Frontend Development;UI/UX
+Wei Zhang,China,6,Software Engineer,Tsinghua University,C++;Java;Python,Algorithms;Problem Solving
+Leila Ahmed,Egypt,2,IT Support Specialist,Cairo University,Windows;Hardware Troubleshooting;Customer Service,Technical Support
+Yuri Kowalski,Poland,8,Database Administrator,University of Warsaw,SQL;Database Management;Data Modeling,Database Administration
+Priya Patel,India,4,DevOps Engineer,Indian Institute of Technology Delhi,Linux;Docker;Kubernetes,Continuous Integration;Infrastructure as Code
+Carlos Lopez,Mexico,5,Network Engineer,Universidad Nacional Autónoma de México,Cisco;Networking Protocols;Firewalls,Network Security
+Anna Novak,Russia,3,Frontend Developer,Moscow State University,HTML;CSS;JavaScript,Web Design;Responsive Design
+Daniel Kim,South Korea,6,Machine Learning Engineer,Korea Advanced Institute of Science and Technology,Python;Machine Learning;Deep Learning,Artificial Intelligence;Data Science
+Jasmine Li,China,4,UX Designer,Beijing University of Technology,User Research;Wireframing;Prototyping,User Experience;Design Thinking
+Ali Khan,Pakistan,7,Software Architect,National University of Sciences and Technology,Software Design;System Architecture;Design Patterns,Leadership;Project Management
+Marie Leclerc,France,5,Data Analyst,Sorbonne University,SQL;R;Tableau,Data Visualization;Statistical Analysis
+Lucas Silva,Brazil,6,Full Stack Developer,University of São Paulo,JavaScript;Node.js;React,Full Stack Development;Agile Methodologies
+Ahmed Hassan,Egypt,4,Cybersecurity Analyst,Ain Shams University,Ethical Hacking;Security Assessment;Incident Response,Cybersecurity;Risk Management
+Elena Ivanova,Russia,3,Mobile App Developer,Saint Petersburg State University,Java;Kotlin;Swift,Mobile Development;iOS;Android
+Juan Martinez,Spain,8,IT Manager,Complutense University of Madrid,Project Management;Leadership;Budgeting,IT Strategy;Team Management
+Mia Chen,Taiwan,5,UI Designer,National Taiwan University of Science and Technology,Adobe XD;Sketch;Illustrator,User Interface;Graphic Design
+Tomo Yamada,Japan,4,QA Engineer,University of Tokyo,Test Automation;Manual Testing;Bug Tracking,Quality Assurance;Test Planning
+Fatima Khan,Pakistan,6,Business Intelligence Analyst,Lahore University of Management Sciences,SQL;Tableau;Power BI,Business Analysis;Data Warehousing
+Andrei Popov,Romania,7,Cloud Solutions Architect,Politehnica University of Bucharest,AWS;Azure;Google Cloud,Cloud Computing;Architecture
+Sofia Santos,Portugal,3,Blockchain Developer,University of Lisbon,Solidity;Ethereum;Smart Contracts,Blockchain Development;Cryptocurrency
+David Kim,South Korea,5,Data Engineer,Yonsei University,SQL;Python;Big Data,ETL;Data Warehousing
+Fatima Ali,Saudi Arabia,4,System Analyst,King Saud University,Requirements Analysis;UML;Documentation,Systems Analysis;Software Development Lifecycle
+Diego Hernandez,Mexico,6,DevOps Engineer,Tecnológico de Monterrey,Jenkins;Ansible;Terraform,Continuous Deployment;Infrastructure Automation
+Maria Rossi,Italy,5,Software Developer,University of Milan,Python;Java;C++,Software Engineering;Object-Oriented Programming
+Amir Khan,Pakistan,3,Network Administrator,National University of Computer and Emerging Sciences,Cisco;Routers;Switches,Network Configuration;Troubleshooting
+Elena Petrova,Bulgaria,4,UX Researcher,Sofia University,User Interviews;Usability Testing;Persona Creation,User Research;Human-Computer Interaction
+Carlos Fernandez,Spain,8,IT Director,Technical University of Madrid,Strategic Planning;Budget Management;Vendor Relations,IT Leadership;Decision Making
+Anushka Sharma,India,5,Data Scientist,Indian Institute of Technology Bombay,Python;R;Machine Learning,Data Analysis;Predictive Modeling
+Luca Bianchi,Italy,6,Backend Developer,University of Bologna,Python;Django;Flask,API Development;Database Management
+Muhammad Rahman,Bangladesh,4,Software Tester,Bangladesh University of Engineering and Technology,Test Planning;Test Cases;Defect Tracking,Quality Assurance;Regression Testing
+Chen Wei,China,7,Cloud Engineer,Tsinghua University,AWS;Azure;Google Cloud,Cloud Computing;Virtualization
+Julia Nowak,Poland,3,UI/UX Designer,Jagiellonian University,Adobe XD;Sketch;Figma,User-Centered Design;Wireframing
+Lucas Santos,Brazil,5,Mobile App Developer,University of São Paulo,Kotlin;Swift;React Native,Cross-Platform Development;Mobile Design
+Maria Papadopoulos,Greece,4,IT Security Specialist,Aristotle University of Thessaloniki,Penetration Testing;Security Auditing;Firewalls,Information Security;Risk Assessment
+Ivan Petrov,Russia,6,Database Administrator,Moscow State University,SQL Server;Oracle;MySQL,Database Management;Performance Tuning
+Fatima Abdel-Hamid,Egypt,3,Software Engineer,American University in Cairo,Java;C#;.NET,Software Development;Agile Methodologies
+Amir Hussein,Iran,5,Network Engineer,University of Tehran,Cisco;Routing Protocols;Firewalls,Network Configuration;Troubleshooting
+Maria Gonçalves,Portugal,7,Full Stack Developer,University of Porto,JavaScript;Node.js;React,Full Stack Development;Agile Methodologies
+Giorgio Rossi,Italy,4,DevOps Engineer,Polytechnic University of Milan,Docker;Kubernetes;Jenkins,Continuous Integration;Infrastructure Automation
+Jing Liu,China,6,Data Analyst,Peking University,SQL;Python;Data Visualization,Statistical Analysis;Data Mining
+Ana Garcia,Spain,5,Cybersecurity Consultant,Autonomous University of Madrid,Ethical Hacking;Risk Assessment;Compliance,Cybersecurity Strategy;Security Awareness
+Dmitry Ivanov,Russia,4,Frontend Developer,Moscow Institute of Physics and Technology,JavaScript;React;Vue.js,Frontend Development;Responsive Design
+Sophie Dubois,France,4,Data Engineer,École Polytechnique,SQL;Python;ETL,Data Warehousing;Big Data
+Alexei Petrov,Russia,7,Software Architect,Saint Petersburg State University,Java;C#;Spring Boot,System Design;Microservices
+Priyanka Gupta,India,3,UI/UX Designer,National Institute of Design,Adobe XD;Sketch;User Research,User Interface;Wireframing
+Eduardo Sanchez,Mexico,6,Network Administrator,Instituto Tecnológico Autónomo de México,Cisco;Firewalls;Network Security,Network Monitoring;Troubleshooting
+Anna Kowalska,Poland,5,Cloud Engineer,Warsaw University of Technology,AWS;Azure;Google Cloud,Cloud Infrastructure;DevOps
