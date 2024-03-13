@@ -1,6 +1,6 @@
 # Db-Ally Quickstart Guide
 
-This guide will help you get started with Db-Ally. We will use a simple example to demonstrate how to use Db-Ally to query a database using an AI model. We will use OpenAI's GPT-3 to generate SQL queries based on natural language questions and SqlAlchemy to interact with the database.
+This guide will help you get started with Db-Ally. We will use a simple example to demonstrate how to use Db-Ally to query a database using an AI model. We will use OpenAI's GPT to generate SQL queries based on natural language questions and SqlAlchemy to interact with the database.
 
 !!! note
     For examples of using Db-Ally with other data sources and AI models, please refer to our other how-to guides.
@@ -57,7 +57,10 @@ To use OpenAI's GPT, configure Db-Ally and provide your OpenAI API key:
 ```python
 import dbally
 
-dbally.use_openai_llm(openai_api_key='...')
+dbally.use_openai_llm(
+    openai_api_key="...",
+    model_name="gpt-3.5-turbo",
+)
 ```
 
 ## View Definition
@@ -107,7 +110,7 @@ class CandidateView(SqlAlchemyBaseView):
 By setting up these filters, you enable the LLM to fetch candidates while optionally applying filters based on experience, country, and eligibility for a senior data scientist position.
 
 !!! note
-    The `from_country` filter currently supports only exact matches. Db-Ally provides support for selecting from a list of values using similarity metrics, including semantic similarity. Refer to [Quickstart Part 2: Semantic Similarity](./quickstart2.md) for an example of using semantic similarity when filtering candidates by country.
+    The `from_country` filter defined above supports only exact matches, which is not always ideal. Thankfully, Db-Ally comes with a solution for this problem - Similarity Indexes, which can be used to find the most similar value from the ones available. Refer to [Quickstart Part 2: Semantic Similarity](./quickstart2.md) for an example of using semantic similarity when filtering candidates by country.
 
 ## Collection Definition
 

@@ -15,7 +15,10 @@ Base.prepare(autoload_with=engine)
 
 Candidate = Base.classes.candidates
 
-dbally.use_openai_llm(openai_api_key=os.environ["OPENAI_API_KEY"])
+dbally.use_openai_llm(
+    openai_api_key=os.environ["OPENAI_API_KEY"],
+    model_name="gpt-3.5-turbo",
+)
 
 class CandidateView(SqlAlchemyBaseView):
     """

@@ -102,7 +102,7 @@ Now that we have the similarity index, we can use it to annotate the filter to u
 To do this, replace the previous definition of the `from_country` filter with the following (note the type annotation for the `country` parameter):
 
 ```python
-from typing_extensions import Annotated
+from typing import Annotated
 
 @decorators.view_filter()
 def from_country(self, country: Annotated[str, country_similarity]) -> sqlalchemy.ColumnElement:
@@ -111,6 +111,13 @@ def from_country(self, country: Annotated[str, country_similarity]) -> sqlalchem
     """
     return Candidate.country == country
 ```
+
+!!! warning
+    The `Annotated` type is not available in Python 3.8 and earlier. If you are using an older version of Python, you can install the `typing-extensions` package and use the `Annotated` type from there:
+
+    ```python
+    from typing_extensions import Annotated
+    ```
 
 Now, when you run a query with the `from_country` filter, the similarity index will be used to automatically find the most similar country name to the one given in the query.
 
