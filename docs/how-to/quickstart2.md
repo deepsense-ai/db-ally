@@ -131,6 +131,18 @@ Now, when you run a query with the `from_country` filter, the similarity index w
 ## Running the Code
 Now, when you run the code again, you will see that the query returns candidates from the "USA", even though the question asked for candidates from the "United States".
 
+<details>
+  <summary>The expected output</summary>
+```
+The generated SQL query is: SELECT candidates.name, candidates.country, candidates.years_of_experience, candidates.position, candidates.university, candidates.skills, candidates.tags, candidates.id
+FROM candidates
+WHERE candidates.country = 'USA' AND candidates.years_of_experience >= 2
+
+Retrieved 1 candidates:
+{'name': 'John Smith', 'country': 'USA', 'years_of_experience': 5, 'position': 'Software Engineer', 'university': 'Stanford University', 'skills': 'Java;Python;SQL', 'tags': 'Programming;Team Player', 'id': 1}
+```
+</details>
+
 That's it! You can apply similar techniques to any other filter that takes a string value.
 
 To see the full example, you can find the code here: [quickstart2_code.py](quickstart2_code.py).

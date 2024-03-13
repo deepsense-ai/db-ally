@@ -154,6 +154,18 @@ if __name__ == "__main__":
 
 Now you can run the script and view the results. The database has a single candidate from France who is eligible for a senior data scientist position.
 
+<details>
+  <summary>The expected output</summary>
+```
+The generated SQL query is: SELECT candidates.name, candidates.country, candidates.years_of_experience, candidates.position, candidates.university, candidates.skills, candidates.tags, candidates.id
+FROM candidates
+WHERE candidates.country = 'France' AND candidates.position IN ('Data Scientist', 'Machine Learning Engineer', 'Data Engineer') AND candidates.years_of_experience >= 3
+
+Retrieved 1 candidates:
+{'name': 'Sophie Dubois', 'country': 'France', 'years_of_experience': 4, 'position': 'Data Engineer', 'university': 'École Polytechnique', 'skills': 'SQL;Python;ETL', 'tags': 'Data Warehousing;Big Data', 'id': 46}
+```
+</details>
+
 ## Full Example
 
 Access the full example here: [quickstart_code.py](quickstart_code.py)
