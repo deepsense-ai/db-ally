@@ -5,6 +5,7 @@ import asyncio
 from typing_extensions import Annotated
 
 from dbally import decorators, SqlAlchemyBaseView
+from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
 from dbally.embedding_client.openai import OpenAiEmbeddingClient
 
@@ -12,7 +13,7 @@ import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 
-engine = create_engine('sqlite:///data/candidates.db')
+engine = create_engine('sqlite:///candidates.db')
 
 Base = automap_base()
 Base.prepare(autoload_with=engine)
@@ -77,6 +78,7 @@ async def main():
     await country_similarity.update()
 
     collection = dbally.create_collection("recruitment")
+    dbally.use_event_handler(CLIEventHandler())
     collection.add(CandidateView, lambda: CandidateView(engine))
 
     result = await collection.ask("Find someone from the United States with more than 2 years of experience.")

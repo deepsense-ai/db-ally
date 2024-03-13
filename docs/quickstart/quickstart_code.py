@@ -8,7 +8,9 @@ import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 
-engine = create_engine('sqlite:///data/candidates.db')
+from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
+
+engine = create_engine('sqlite:///candidates.db')
 
 Base = automap_base()
 Base.prepare(autoload_with=engine)
@@ -56,6 +58,7 @@ class CandidateView(SqlAlchemyBaseView):
 
 async def main():
     collection = dbally.create_collection("recruitment")
+    dbally.use_event_handler(CLIEventHandler())
     collection.add(CandidateView, lambda: CandidateView(engine))
 
     result = await collection.ask("Find me French candidates suitable for a senior data scientist position.")

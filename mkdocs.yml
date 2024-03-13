@@ -1,14 +1,15 @@
 site_name: db-ally
 nav:
   - Home: index.md
+  - Quickstart:
+      - quickstart/quickstart.md
+      - quickstart/quickstart2.md
   - Tutorials:
       - tutorials/index.md
       - tutorials/tutorial_1.md
   - Concepts:
       - concepts/concept_1.md
   - How-to:
-      - how-to/quickstart.md
-      - how-to/quickstart2.md
       - how-to/log_runs_to_langsmith.md
   - API Reference:
       - reference/collection.md
