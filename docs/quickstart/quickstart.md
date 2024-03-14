@@ -1,9 +1,9 @@
-# Db-Ally Quickstart Guide
+# db-ally Quickstart Guide
 
-This guide will help you get started with Db-Ally. We will use a simple example to demonstrate how to use Db-Ally to query a database using an AI model. We will use OpenAI's GPT to generate SQL queries based on natural language questions and SqlAlchemy to interact with the database.
+This guide will help you get started with db-ally. We will use a simple example to demonstrate how to use db-ally to query a database using an AI model. We will use OpenAI's GPT to generate SQL queries based on natural language questions and SqlAlchemy to interact with the database.
 
 !!! note
-    For examples of using Db-Ally with other data sources and AI models, please refer to our other how-to guides.
+    For examples of using db-ally with other data sources and AI models, please refer to our other how-to guides.
 
 We will cover the following topics:
 
@@ -16,7 +16,7 @@ We will cover the following topics:
 
 ## Installation
 
-To install Db-Ally, execute the following command:
+To install db-ally, execute the following command:
 
 ```bash
 pip install dbally
@@ -52,7 +52,7 @@ Candidate = Base.classes.candidates
 
 ## OpenAI Access Configuration
 
-To use OpenAI's GPT, configure Db-Ally and provide your OpenAI API key:
+To use OpenAI's GPT, configure db-ally and provide your OpenAI API key:
 
 ```python
 import dbally
@@ -65,7 +65,7 @@ dbally.use_openai_llm(
 
 ## View Definition
 
-To use Db-Ally, define the views you want to use. A view is a class that specifies what to select from the database and includes methods that the AI model can use to filter rows. These methods are known as "filters".
+To use db-ally, define the views you want to use. A view is a class that specifies what to select from the database and includes methods that the AI model can use to filter rows. These methods are known as "filters".
 
 ```python
 from dbally import decorators, SqlAlchemyBaseView
@@ -110,11 +110,11 @@ class CandidateView(SqlAlchemyBaseView):
 By setting up these filters, you enable the LLM to fetch candidates while optionally applying filters based on experience, country, and eligibility for a senior data scientist position.
 
 !!! note
-    The `from_country` filter defined above supports only exact matches, which is not always ideal. Thankfully, Db-Ally comes with a solution for this problem - Similarity Indexes, which can be used to find the most similar value from the ones available. Refer to [Quickstart Part 2: Semantic Similarity](./quickstart2.md) for an example of using semantic similarity when filtering candidates by country.
+    The `from_country` filter defined above supports only exact matches, which is not always ideal. Thankfully, db-ally comes with a solution for this problem - Similarity Indexes, which can be used to find the most similar value from the ones available. Refer to [Quickstart Part 2: Semantic Similarity](./quickstart2.md) for an example of using semantic similarity when filtering candidates by country.
 
 ## Collection Definition
 
-Next, create a Db-Ally collection. A collection is an object where you register views and execute queries.
+Next, create a db-ally collection. A collection is an object where you register views and execute queries.
 
 ```python
 import dbally
