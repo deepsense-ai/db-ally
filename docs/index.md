@@ -1,17 +1,57 @@
-# Welcome to MkDocs
+---
+hide:
+  - navigation
+---
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+---
 
-## Commands
+<h1 align="center">db-ally</h1>
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+<p align="center">
+    <em>db-ally is ...</em>
+</p>
 
-## Project layout
+---
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+1-3 sentences describing library
+
+
+## Features / Characteristics
+* **Feature 1**: ...
+* **Feature 2**: ...
+
+## Example
+
+```python
+print("Hello, World!")
+```
+
+## Installation
+
+To install db-ally, execute the following command:
+
+```bash
+pip install dbally
+```
+
+Additionally, you can install one of our extensions to use specific features.
+
+* `dbally[openai]`: Use OpenAI's models
+* `dbally[faiss]`: Use FAISS indexes for similarity search
+* `dbally[langsmith]`: Use langsmith for query tracking
+
+```bash
+pip install dbally[openai,faiss,langsmith]
+```
+
+## How db-ally documentation is organized
+
+
+## Planned features
+
+* **Feature 1**: ...
+* **Feature 2**: ...
+* **Feature 3**: ...
+
+
+
