@@ -2,7 +2,7 @@
 
 This guide is a continuation of the [Quickstart](./quickstart.md) guide. It assumes that you have already set up the views and the collection. If not, please refer to the complete Part 1 code here: [quickstart_example.py](quickstart_example.py).
 
-This guide will demonstrate how to use semantic similarity to to handle queries in which the filter values are similar to those in the database, without requiring an exact match. We will use filtering by country as an example.
+This guide will demonstrate how to use semantic similarity to handle queries in which the filter values are similar to those in the database, without requiring an exact match. We will use filtering by country as an example.
 
 We will cover the following topics:
 
