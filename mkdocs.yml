@@ -1,13 +1,24 @@
 site_name: db-ally
 nav:
-  - Home: index.md
-  - Tutorials:
-      - tutorials/index.md
-      - tutorials/tutorial_1.md
+  - db-ally: index.md
+  - Quickstart:
+      - quickstart/quickstart.md
+      - quickstart/quickstart2.md
+  - Tutorial:
+      - tutorial/index.md
+      - tutorial/baseline.md
+      - tutorial/first_view.md
   - Concepts:
-      - concepts/concept_1.md
+      - concepts/iql.md
+      - concepts/collections.md
+      - concepts/views.md
+      - concepts/similarity_indexes.md
+      - concepts/nl_responder.md
   - How-to:
       - how-to/log_runs_to_langsmith.md
+      - how-to/implementing_similarity_index.md
+      - how-to/connect_with_postgresql.md
+      - how-to/use_custom_llm.md
   - API Reference:
       - reference/collection.md
 theme:
