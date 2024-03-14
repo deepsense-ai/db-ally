@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple
 from loguru import logger
 
 from dbally.iql._exceptions import IQLError, IQLUnsupportedSyntaxError
-from dbally.iql._query import IQLActions, IQLQuery
+from dbally.iql._query import IQLQuery
 from dbally.views.base import ExposedFunction
 from dbally_benchmark.iql.iql_result import IQLResult
 from dbally_benchmark.iql.method_call_visitor import MethodCallVisitor
@@ -31,7 +31,7 @@ def calculate_hallucinated_filters_for_dataset(dataset: List[IQLResult], filter_
 
     Args:
         dataset: List containing IQLResult objects that
-        represents (predicted filters, predicted actions).
+        represents predicted filters.
         filter_list: List of allowed filters.
 
     Returns:
@@ -56,48 +56,14 @@ def calculate_hallucinated_filters_for_dataset(dataset: List[IQLResult], filter_
     return hallucinated_filters_count / total_filters_count
 
 
-def calculate_hallucinated_actions_for_dataset(dataset: List[IQLResult], action_list: List[ExposedFunction]) -> float:
-    """
-    Calculates the ratio of hallucinated actions for a given dataset.
-
-    Args:
-        dataset: List containing IQLResult objects that
-        represents (predicted filters, predicted actions).
-        action_list: List of allowed actions.
-
-    Returns:
-        Hallucinated actions ratio.
-    """
-
-    hallucinated_actions_count = 0
-    total_actions_count = 0
-
-    allowed_actions = [action.name for action in action_list]
-
-    for example in dataset:
-        hallucinated_actions, total_actions = _count_hallucinated_methods_for_single_example(
-            example.iql_actions, allowed_actions
-        )
-        hallucinated_actions_count += hallucinated_actions
-        total_actions_count += total_actions
-
-    if total_actions_count == 0:
-        return 0
-
-    return hallucinated_actions_count / total_actions_count
-
-
-async def calculate_valid_iql(
-    dataset: List[IQLResult], filter_list: List[ExposedFunction], action_list: List[ExposedFunction]
-) -> float:
+async def calculate_valid_iql(dataset: List[IQLResult], filter_list: List[ExposedFunction]) -> float:
     """
     Calculates the ratio of valid IQL queries for a given dataset.
 
     Args:
         dataset: List containing IQLResult objects that
-        represents (predicted filters, predicted actions).
+        represents predicted filters.
         filter_list: List of allowed filters.
-        action_list: List of allowed actions.
 
     Returns:
         Valid IQL ratio.
@@ -108,25 +74,21 @@ async def calculate_valid_iql(
     for example in dataset:
         try:
             await IQLQuery.parse(example.iql_filters, filter_list)
-            await IQLActions.parse(example.iql_actions, action_list)
             valid_iql += 1
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            logger.warning(exc)
+            logger.warning(f"Error while parsing IQL: {example.iql_filters}\n{exc}")
 
     return valid_iql / len(dataset)
 
 
-async def calculate_syntax_errors(
-    dataset: List[IQLResult], filter_list: List[ExposedFunction], action_list: List[ExposedFunction]
-) -> float:
+async def calculate_syntax_errors(dataset: List[IQLResult], filter_list: List[ExposedFunction]) -> float:
     """
     Calculates the ratio of syntax errors for a given dataset.
 
     Args:
         dataset: List containing IQLResult objects that
-        represents (predicted filters, predicted actions).
+        represents predicted filters.
         filter_list: List of allowed filters.
-        action_list: List of allowed actions.
 
     Returns:
         Syntax errors ratio.
@@ -134,41 +96,38 @@ async def calculate_syntax_errors(
 
     syntax_errors = 0
 
-    for example in dataset:
+    filtered_dataset = [example for example in dataset if example.iql_filters != "UNSUPPORTED_QUERY"]
+
+    for example in filtered_dataset:
         try:
             await IQLQuery.parse(example.iql_filters, filter_list)
-            await IQLActions.parse(example.iql_actions, action_list)
         except (IQLError, IQLUnsupportedSyntaxError, SyntaxError):
             syntax_errors += 1
         except Exception as exc:  # pylint: disable=broad-exception-caught
             # I haven't figured out yet how to handle it better :(
-            logger.warning(exc)
+            logger.warning(f"Error while parsing IQL: {example.iql_filters}\n{exc}")
 
-    return syntax_errors / len(dataset)
+    return syntax_errors / len(filtered_dataset)
 
 
-async def calculate_dataset_metrics(
-    dataset: List[IQLResult], filter_list: List[ExposedFunction], action_list: List[ExposedFunction]
-) -> Dict[str, float]:
+async def calculate_dataset_metrics(dataset: List[IQLResult], filter_list: List[ExposedFunction]) -> Dict[str, float]:
     """
     Calculates metrics for a given dataset. The following metrics are being calculated: valid IQL,
-    ratio of hallucinated filters and actions and ratio of IQLs contained syntax error.
+    ratio of hallucinated filters and ratio of IQLs contained syntax error.
 
     Args:
         dataset: List containing IQLResult objects that
-        represents (predicted filters, predicted actions).
+        represents predicted filters.
         filter_list: List of allowed filters.
-        action_list: List of allowed actions.
 
     Returns:
         Dictionary containing metrics.
     """
 
     metrics = {
-        "valid_iql": await calculate_valid_iql(dataset, filter_list, action_list),
+        "valid_iql": await calculate_valid_iql(dataset, filter_list),
         "hallucinated_filters": calculate_hallucinated_filters_for_dataset(dataset, filter_list),
-        "hallucinated_actions": calculate_hallucinated_actions_for_dataset(dataset, action_list),
-        "syntax_errors": await calculate_syntax_errors(dataset, filter_list, action_list),
+        "syntax_errors": await calculate_syntax_errors(dataset, filter_list),
     }
 
     return metrics

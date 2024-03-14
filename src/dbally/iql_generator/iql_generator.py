@@ -16,7 +16,7 @@ class IQLGenerator:
         llm_client: LLM client used to generate IQL
         prompt_template: template for the prompt
         prompt_builder: PromptBuilder used to insert arguments into the prompt and adjust style per model
-        promptify_view: Function formatting filters and actions for prompt
+        promptify_view: Function formatting filters for prompt
     """
 
     _ERROR_MSG_PREFIX = "Unfortunately, generated IQL is not valid. Please try again, \
@@ -34,47 +34,45 @@ class IQLGenerator:
         self._llm_client = llm_client
         self._prompt_template = prompt_template or copy.deepcopy(default_iql_template)
         self._prompt_builder = prompt_builder or PromptBuilder()
-        self._promptify_view = promptify_view or _promptify_filters_and_actions
+        self._promptify_view = promptify_view or _promptify_filters
 
     async def generate_iql(
         self,
         filters: List[ExposedFunction],
-        actions: List[ExposedFunction],
         question: str,
         event_tracker: EventTracker,
         conversation: Optional[IQLPromptTemplate] = None,
-    ) -> Tuple[str, str, IQLPromptTemplate]:
+    ) -> Tuple[str, IQLPromptTemplate]:
         # todo: add more generation-related arguments here once BaseLLM interface is established
         """Uses LLM to generate IQL in text form
 
         Args:
             question: user question
             filters: list of filters exposed by the view
-            actions: list of actions exposed by the view
             event_tracker: event store used to audit the generation process
             conversation: conversation to be continued
 
         Returns:
             IQL - iql generated based on the user question
         """
-        filters_for_prompt, actions_for_prompt = self._promptify_view(filters, actions)
+        filters_for_prompt = self._promptify_view(filters)
 
         template = conversation or self._prompt_template
 
         llm_response = await self._llm_client.text_generation(
             template=template,
-            fmt={"filters": filters_for_prompt, "actions": actions_for_prompt, "question": question},
+            fmt={"filters": filters_for_prompt, "question": question},
             event_tracker=event_tracker,
         )
 
-        iql_filters, iql_actions = self._prompt_template.llm_response_parser(llm_response)
+        iql_filters = self._prompt_template.llm_response_parser(llm_response)
 
         if conversation is None:
             conversation = self._prompt_template
 
         conversation = conversation.add_assistant_message(content=llm_response)
 
-        return iql_filters, iql_actions, conversation
+        return iql_filters, conversation
 
     def add_error_msg(self, conversation: IQLPromptTemplate, errors: List[TException]) -> IQLPromptTemplate:
         """_summary_
@@ -94,18 +92,17 @@ class IQLGenerator:
         return conversation.add_user_message(content=msg)
 
 
-def _promptify_filters_and_actions(filters: List[ExposedFunction], actions: List[ExposedFunction]) -> Tuple[str, str]:
+def _promptify_filters(
+    filters: List[ExposedFunction],
+) -> str:
     """
-    Formats filters/actions for prompt
+    Formats filters for prompt
 
     Args:
         filters: list of filters exposed by the view
-        actions: list of actions exposed by the view
 
     Returns:
         filters_for_prompt: filters formatted for prompt
-        actions_for_prompt: actions formatted for prompt
     """
     filters_for_prompt = "\n".join([str(filter) for filter in filters])
-    actions_for_prompt = "\n".join([str(action) for action in actions])
-    return filters_for_prompt, actions_for_prompt
+    return filters_for_prompt

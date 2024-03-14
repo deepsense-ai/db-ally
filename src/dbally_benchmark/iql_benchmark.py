@@ -30,19 +30,17 @@ from dbally_benchmark.utils import batch, get_datetime_str, set_up_gitlab_metada
 async def _run_iql_for_single_example(
     example: BIRDExample, view: AbstractBaseView, iql_generator: IQLGenerator
 ) -> IQLResult:
-    filter_list, action_list = view.list_filters(), view.list_actions()
+    filter_list = view.list_filters()
     event_tracker = EventTracker()
 
     try:
-        iql_filters, iql_actions, _ = await iql_generator.generate_iql(
-            question=example.question, filters=filter_list, actions=action_list, event_tracker=event_tracker
+        iql_filters, _ = await iql_generator.generate_iql(
+            question=example.question, filters=filter_list, event_tracker=event_tracker
         )
     except UnsupportedQueryError:
-        return IQLResult(question=example.question, iql_filters="", iql_actions="", exception_raised=True)
+        return IQLResult(question=example.question, iql_filters="UNSUPPORTED_QUERY", exception_raised=True)
 
-    return IQLResult(
-        question=example.question, iql_filters=iql_filters, iql_actions=iql_actions, exception_raised=False
-    )
+    return IQLResult(question=example.question, iql_filters=iql_filters, exception_raised=False)
 
 
 async def run_iql_for_dataset(
@@ -133,7 +131,7 @@ async def evaluate(cfg: DictConfig) -> Any:
         json.dump([result.model_dump() for result in dbally_results], outfile, indent=4)
 
     logger.info("Calculating metrics")
-    metrics = await calculate_dataset_metrics(dbally_results, view.list_filters(), view.list_actions())
+    metrics = await calculate_dataset_metrics(dbally_results, view.list_filters())
     metrics = {**metrics, "unsupported_query_error": unsupported_query_error}
 
     with open(output_dir / metrics_file_name, "w", encoding="utf-8") as outfile:
@@ -154,7 +152,7 @@ def main(cfg: DictConfig):
     """
     Runs IQL evaluation for a single dataset defined in hydra config.
     The following metrics are calculated during evaluation: valid IQL,
-    ratio of hallucinated filters and actions and ratio of IQLs contained syntax error.
+    ratio of hallucinated filters and ratio of IQLs contained syntax error.
 
     Args:
         cfg: hydra config, loads automatically from path passed on to the decorator.

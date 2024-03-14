@@ -47,7 +47,7 @@ class NLResponder:
         self._max_tokens_count = max_tokens_count
 
     async def generate_response(
-        self, result: ExecutionResult, question: str, filters: str, actions: str, event_tracker: EventTracker
+        self, result: ExecutionResult, question: str, filters: str, event_tracker: EventTracker
     ) -> str:
         """
         Uses LLM to generate a response in natural language form.
@@ -56,7 +56,6 @@ class NLResponder:
             result: object representing the result of the query execution
             question: user question
             filters: filters used in the query
-            actions: actions used in the query
             event_tracker: event store used to audit the generation process
 
         Returns:
@@ -82,7 +81,7 @@ class NLResponder:
         if tokens_count > self._max_tokens_count:
             llm_response = await self._llm_client.text_generation(
                 template=self._iql_explainer_prompt_template,
-                fmt={"question": question, "filters": filters, "actions": actions},
+                fmt={"question": question, "filters": filters},
                 event_tracker=event_tracker,
             )
 

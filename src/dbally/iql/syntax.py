@@ -94,7 +94,7 @@ class Not(BoolOp):
 @dataclass
 class FunctionCall(Node):
     """
-    Represents a call to a function (filter, action).
+    Represents a call to a function.
     Is composed of a function name and a list of arguments.
     """
 

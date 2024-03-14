@@ -228,10 +228,6 @@ class SuperheroView(SqlAlchemyBaseView, SuperheroFilterMixin):
     # def combat_higher_than(self, combat_level: int) -> sqlalchemy.ColumnElement:
     #     return self._inner.c.attributes["Combat"] < combat_level  # TODO: this does not work for some reason
 
-    @decorators.view_action()
-    def sort_by_gender(self, select: sqlalchemy.Select) -> sqlalchemy.Select:
-        return select.order_by(SuperheroModel.classes.superhero.gender_id)
-
 
 # todo: sometimes I use classes, sometimes metadata.tables, because some classes aren't automapped correctly.
 # at some point we should either fix the automap or use metadata.tables everywhere
@@ -266,14 +262,6 @@ class SuperheroCountByPowerView(SqlAlchemyBaseView, SuperheroFilterMixin):
     @decorators.view_filter()
     def filter_by_power(self, power: str) -> sqlalchemy.ColumnElement:
         return SuperheroModel.classes.superpower.power_name == power
-
-    @decorators.view_action()
-    def sort_by_superhero_count_ascending(self, select: sqlalchemy.Select) -> sqlalchemy.Select:
-        return select.order_by(self._superhero_count.asc())
-
-    @decorators.view_action()
-    def sort_by_superhero_count_descending(self, select: sqlalchemy.Select) -> sqlalchemy.Select:
-        return select.order_by(self._superhero_count.desc())
 
 
 async def main():

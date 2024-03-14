@@ -16,7 +16,7 @@ class LLMViewSelector(ViewSelector):
         llm_client: LLM client used to generate IQL
         prompt_template: template for the prompt
         prompt_builder: PromptBuilder used to insert arguments into the prompt and adjust style per model
-        promptify_view: Function formatting filters and actions for prompt
+        promptify_view: Function formatting filters for prompt
     """
 
     def __init__(
