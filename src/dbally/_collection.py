@@ -6,7 +6,7 @@ from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import RequestEnd, RequestStart
 from dbally.data_models.execution_result import ExecutionResult
-from dbally.iql import IQLActions, IQLQuery
+from dbally.iql import IQLQuery
 from dbally.iql._exceptions import IQLError
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.nl_responder.nl_responder import NLResponder
@@ -136,25 +136,22 @@ class Collection:
 
         view = self.get(selected_view)
 
-        filter_list, action_list = view.list_filters(), view.list_actions()
+        filter_list = view.list_filters()
 
-        iql_filters, iql_actions, conversation = await self._iql_generator.generate_iql(
-            question=question, filters=filter_list, actions=action_list, event_tracker=event_tracker
+        iql_filters, conversation = await self._iql_generator.generate_iql(
+            question=question, filters=filter_list, event_tracker=event_tracker
         )
 
         for _ in range(self.n_retries):
             try:
                 filters = await IQLQuery.parse(iql_filters, filter_list)
-                actions = await IQLActions.parse(iql_actions, action_list)
                 await view.apply_filters(filters)
-                await view.apply_actions(actions)
                 break
             except (IQLError, ValueError) as e:
                 conversation = self._iql_generator.add_error_msg(conversation, [e])
-                iql_filters, iql_actions, conversation = await self._iql_generator.generate_iql(
+                iql_filters, conversation = await self._iql_generator.generate_iql(
                     question=question,
                     filters=filter_list,
-                    actions=action_list,
                     event_tracker=event_tracker,
                     conversation=conversation,
                 )
@@ -164,7 +161,7 @@ class Collection:
 
         if not dry_run and return_natural_response:
             result.textual_response = await self._nl_responder.generate_response(
-                result, question, iql_filters, iql_actions, event_tracker
+                result, question, iql_filters, event_tracker
             )
 
         await event_tracker.request_end(RequestEnd(result=result))

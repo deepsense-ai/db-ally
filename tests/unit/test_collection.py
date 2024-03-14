@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, call, patch
 import pytest
 
 from dbally._collection import Collection
-from dbally.iql import IQLActions, IQLQuery
+from dbally.iql import IQLQuery
 from dbally.iql._exceptions import IQLError
 from dbally.utils.errors import NoViewFoundError
 from dbally.views.base import AbstractBaseView, ExecutionResult, ExposedFunction
@@ -20,13 +20,7 @@ class MockViewBase(AbstractBaseView):
     def list_filters(self) -> List[ExposedFunction]:
         return []
 
-    def list_actions(self) -> List[ExposedFunction]:
-        return []
-
     async def apply_filters(self, filters: IQLQuery) -> None:
-        ...
-
-    async def apply_actions(self, actions: IQLActions) -> None:
         ...
 
     def execute(self, dry_run=False) -> ExecutionResult:
@@ -172,10 +166,10 @@ def mock_collection_feedback_loop() -> Collection:
     iql_generator.add_error_msg = Mock(side_effect=["err1", "err2", "err3", "err4"])
     iql_generator.generate_iql = AsyncMock(
         side_effect=[
-            ("iql1_f", "iql1_a", "iql1_c"),
-            ("iql2_f", "iql2_a", "iql2_c"),
-            ("iql3_f", "iql3_a", "iql3_c"),
-            ("iql4_f", "iql4_a", "iql4_c"),
+            ("iql1_f", "iql1_c"),
+            ("iql2_f", "iql2_c"),
+            ("iql3_f", "iql3_c"),
+            ("iql4_f", "iql4_c"),
         ]
     )
 

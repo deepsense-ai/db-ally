@@ -4,9 +4,9 @@ import re
 
 import sqlalchemy
 
-from dbally.iql import IQLActions, IQLQuery
+from dbally.iql import IQLQuery
 from dbally.views.base import ExposedFunction, MethodParamWithTyping
-from dbally.views.decorators import view_action, view_filter
+from dbally.views.decorators import view_filter
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
 
@@ -28,17 +28,6 @@ class MockSqlAlchemyView(SqlAlchemyBaseView):
     @view_filter()
     async def method_bar(self, city: str, year: int) -> sqlalchemy.ColumnElement:
         return sqlalchemy.literal(f"hello {city} in {year}")
-
-    @view_action()
-    async def action_baz(self, select: sqlalchemy.Select) -> sqlalchemy.Select:
-        """
-        This is baz
-        """
-        return select.order_by("foo")
-
-    @view_action()
-    def action_qux(self, select: sqlalchemy.Select, limit: int) -> sqlalchemy.Select:
-        return select.limit(limit)
 
 
 def normalize_whitespace(s: str) -> str:
@@ -75,23 +64,3 @@ async def test_filter_sql_generation() -> None:
     await mock_view.apply_filters(query)
     sql = normalize_whitespace(mock_view.execute(dry_run=True).context["sql"])
     assert sql == "SELECT 'test' AS foo WHERE 1 AND 'hello London in 2020'"
-
-
-async def test_action_sql_generation() -> None:
-    """
-    Tests that the SQL generation based on actions works correctly
-    """
-    mock_connection = sqlalchemy.create_mock_engine("postgresql://", executor=None)
-    mock_view = MockSqlAlchemyView(mock_connection.engine)
-    actions = await IQLActions.parse(
-        "action_baz()\naction_qux(5)",
-        allowed_functions=[
-            ExposedFunction(name="action_baz", description="", parameters=[]),
-            ExposedFunction(
-                name="action_qux", description="", parameters=[MethodParamWithTyping(name="foo", type=int)]
-            ),
-        ],
-    )
-    await mock_view.apply_actions(actions)
-    sql = normalize_whitespace(mock_view.execute(dry_run=True).context["sql"].replace("\n", ""))
-    assert sql == "SELECT 'test' AS foo ORDER BY foo LIMIT 5"

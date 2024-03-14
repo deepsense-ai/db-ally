@@ -8,7 +8,7 @@ from dbally.views.base import AbstractBaseView, ExposedFunction, MethodParamWith
 
 class MethodsBaseView(AbstractBaseView, metaclass=abc.ABCMeta):
     """
-    Base class for views that use view methods to expose filters and actions.
+    Base class for views that use view methods to expose filters.
     """
 
     # Method arguments that should be skipped when listing methods
@@ -44,11 +44,3 @@ class MethodsBaseView(AbstractBaseView, metaclass=abc.ABCMeta):
         :return: List of exposed filters
         """
         return self._list_methods_by_decorator(decorators.view_filter)
-
-    def list_actions(self) -> List[ExposedFunction]:
-        """
-        Lists all available actions from the view based on the @action decorator.
-
-        :return: List of exposed actions
-        """
-        return self._list_methods_by_decorator(decorators.view_action)

@@ -98,11 +98,11 @@ def test_dynamic_few_shot(default_prompt_builder, simple_template):
             {"role": "user", "content": "Hello"},
         ),
         (
-            {"role": "system", "content": "You are a helpful assistant. {filters} {actions}}"},
+            {"role": "system", "content": "You are a helpful assistant. {filters}}"},
             {"role": "user", "content": "Hello"},
         ),
     ],
-    ids=["Missing filters and actions", "Missing filters, actions, question", "Missing question"],
+    ids=["Missing filters", "Missing filters, question", "Missing question"],
 )
 def test_bad_iql_prompt_template(invalid_chat: ChatFormat):
     with pytest.raises(PromptTemplateError):
@@ -113,11 +113,11 @@ def test_bad_iql_prompt_template(invalid_chat: ChatFormat):
     "chat",
     [
         (
-            {"role": "system", "content": "You are a helpful assistant.{filters}{actions}"},
+            {"role": "system", "content": "You are a helpful assistant.{filters}"},
             {"role": "user", "content": "{question}"},
         ),
         (
-            {"role": "system", "content": "{filters}{filters}{filters}{actions}}}"},
+            {"role": "system", "content": "{filters}{filters}{filters}}}"},
             {"role": "user", "content": "{question}"},
         ),
     ],

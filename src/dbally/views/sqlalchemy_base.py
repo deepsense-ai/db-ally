@@ -7,7 +7,7 @@ from typing import Callable, Tuple
 import sqlalchemy
 
 from dbally.data_models.execution_result import ExecutionResult
-from dbally.iql import IQLActions, IQLQuery, syntax
+from dbally.iql import IQLQuery, syntax
 from dbally.views import decorators
 from dbally.views.methods_base import MethodsBaseView
 
@@ -35,15 +35,6 @@ class SqlAlchemyBaseView(MethodsBaseView):
         :param filters: IQLQuery object representing the filters to apply
         """
         self._select = self._select.where(await self._build_filter_node(filters.root))
-
-    async def apply_actions(self, actions: IQLActions) -> None:
-        """
-        Applies the chosen actions to the view.
-
-        :param actions: IQLActions object representing the actions to apply
-        """
-        for action in actions:
-            self._select = await self._build_action_call(action)
 
     async def _build_filter_node(self, node: syntax.Node) -> sqlalchemy.ColumnElement:
         """
@@ -104,16 +95,6 @@ class SqlAlchemyBaseView(MethodsBaseView):
         if inspect.iscoroutinefunction(method):
             return await method(*args)
         return method(*args)
-
-    async def _build_action_call(self, action: syntax.FunctionCall) -> sqlalchemy.Select:
-        """
-        Converts an IQL FunctionCall action to a modified SQLAlchemy select object, based on calling
-        the corresponding action method.
-        """
-        method, args = self._method_with_args_from_call(action, decorators.view_action)
-        if inspect.iscoroutinefunction(method):
-            return await method(self._select, *args)
-        return method(self._select, *args)
 
     def execute(self, dry_run: bool = False) -> ExecutionResult:
         """

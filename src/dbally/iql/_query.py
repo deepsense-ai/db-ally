@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterator, List
+from typing import TYPE_CHECKING, List
 
 from . import syntax
 from ._processor import IQLProcessor
@@ -30,31 +30,3 @@ class IQLQuery:
              IQLQuery object
         """
         return cls(await IQLProcessor(source, allowed_functions).process())
-
-
-class IQLActions:
-    """
-    IQLActions container. It stores list of function calls to apply in order.
-    """
-
-    actions: List[syntax.FunctionCall]
-
-    def __init__(self, actions: List[syntax.FunctionCall]):
-        self.actions = actions
-
-    @classmethod
-    async def parse(cls, source: str, allowed_functions: List["ExposedFunction"]) -> "IQLActions":
-        """
-        Parse IQL action string to IQLActions object.
-
-        Args:
-            source: IQL string that needs to be parsed
-            allowed_functions: list of IQL functions that are allowed for this query
-
-        Returns:
-            IQLActions object
-        """
-        return cls(await IQLProcessor(source, allowed_functions).process_actions())
-
-    def __iter__(self) -> Iterator[syntax.FunctionCall]:
-        yield from self.actions
