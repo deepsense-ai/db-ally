@@ -146,3 +146,6 @@ Retrieved 1 candidates:
 That's it! You can apply similar techniques to any other filter that takes a string value.
 
 To see the full example, you can find the code here: [quickstart2_code.py](quickstart2_code.py).
+
+## Next Steps
+See the [Tutorial](../tutorial/index.md) for a more in-depth guide on how to use db-ally.
