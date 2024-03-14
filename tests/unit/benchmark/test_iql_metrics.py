@@ -36,8 +36,8 @@ def test_count_hallucinated_methods_for_single_example():
 
 def test_calculate_hallucinated_filters_for_dataset():
     dataset = [
-        IQLResult(question="", iql_filters=IQL_WITH_HALLUCINATED_FILTERS, iql_actions=""),
-        IQLResult(question="", iql_filters=VALID_IQL, iql_actions=""),
+        IQLResult(question="", iql_filters=IQL_WITH_HALLUCINATED_FILTERS),
+        IQLResult(question="", iql_filters=VALID_IQL),
     ]
 
     hallucinated_filters_ratio = calculate_hallucinated_filters_for_dataset(dataset, ALLOWED_METHODS)
@@ -46,20 +46,20 @@ def test_calculate_hallucinated_filters_for_dataset():
 
 async def test_calculate_syntax_errors():
     dataset = [
-        IQLResult(question="", iql_filters=IQL_WITH_SYNTAX_ERROR, iql_actions=""),
-        IQLResult(question="", iql_filters=VALID_IQL, iql_actions=""),
+        IQLResult(question="", iql_filters=IQL_WITH_SYNTAX_ERROR),
+        IQLResult(question="", iql_filters=VALID_IQL),
     ]
 
-    syntax_errors_ratio = await calculate_syntax_errors(dataset, ALLOWED_METHODS, [])
+    syntax_errors_ratio = await calculate_syntax_errors(dataset, ALLOWED_METHODS)
     assert syntax_errors_ratio == 0.5
 
 
 async def test_calculate_valid_iql():
     dataset = [
-        IQLResult(question="", iql_filters=IQL_WITH_SYNTAX_ERROR, iql_actions=""),
-        IQLResult(question="", iql_filters=VALID_IQL, iql_actions=""),
-        IQLResult(question="", iql_filters=IQL_WITH_HALLUCINATED_FILTERS, iql_actions=""),
+        IQLResult(question="", iql_filters=IQL_WITH_SYNTAX_ERROR),
+        IQLResult(question="", iql_filters=VALID_IQL),
+        IQLResult(question="", iql_filters=IQL_WITH_HALLUCINATED_FILTERS),
     ]
 
-    valid_iql_ratio = await calculate_valid_iql(dataset, ALLOWED_METHODS, [])
+    valid_iql_ratio = await calculate_valid_iql(dataset, ALLOWED_METHODS)
     assert valid_iql_ratio >= 0.333 and valid_iql_ratio <= 0.334

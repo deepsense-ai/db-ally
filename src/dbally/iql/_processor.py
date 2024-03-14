@@ -46,27 +46,6 @@ class IQLProcessor:
         root = await self._parse_node(first_element.value)
         return root
 
-    async def process_actions(self) -> List[syntax.FunctionCall]:
-        """
-        Process IQL string to list of IQL actions.
-
-        Returns:
-            list of IQL syntax.FunctionCall objects
-
-        Raises:
-             IQLError: if parsing fails.
-        """
-        ast_tree = ast.parse(self.source)
-        calls = []
-
-        for element in ast_tree.body:
-            if isinstance(element, ast.Expr) and isinstance(element.value, ast.Call):
-                calls.append(await self._parse_call(element.value))
-            else:
-                raise IQLError("Not a valid action", element, self.source)
-
-        return calls
-
     async def _parse_node(self, node: Union[ast.expr, ast.Expr]) -> syntax.Node:
         if isinstance(node, ast.BoolOp):
             return await self._parse_bool_op(node)

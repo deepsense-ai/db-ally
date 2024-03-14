@@ -10,5 +10,4 @@ class IQLResult(BaseModel):
 
     question: str
     iql_filters: str
-    iql_actions: str
     exception_raised: Optional[bool] = None

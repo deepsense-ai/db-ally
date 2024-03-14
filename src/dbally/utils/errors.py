@@ -5,5 +5,5 @@ class NoViewFoundError(Exception):
 class UnsupportedQueryError(Exception):
     """
     Error raised when IQL generator is unable to construct a query
-    with given filters and actions.
+    with given filters.
     """

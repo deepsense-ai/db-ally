@@ -5,7 +5,7 @@ from typing import _GenericAlias  # type: ignore
 from typing import List, Union
 
 from dbally.data_models.execution_result import ExecutionResult
-from dbally.iql import IQLActions, IQLQuery
+from dbally.iql import IQLQuery
 
 
 def parse_param_type(param_type: Union[type, _GenericAlias]) -> str:
@@ -60,7 +60,7 @@ class ExposedFunction:
 
 class AbstractBaseView(metaclass=abc.ABCMeta):
     """
-    Base class for all views. Has to be able to list all available filters and actions, apply them and generate SQL,
+    Base class for all views. Has to be able to list all available filters, apply them and generate SQL,
     but ottherwise is implementation agnostic.
     """
 
@@ -71,25 +71,11 @@ class AbstractBaseView(metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def list_actions(self) -> List[ExposedFunction]:
-        """
-        Lists all available actions.
-        """
-
-    @abc.abstractmethod
     async def apply_filters(self, filters: IQLQuery) -> None:
         """
         Applies the chosen filters to the view.
 
         :param filters: IQLQuery object representing the filters to apply
-        """
-
-    @abc.abstractmethod
-    async def apply_actions(self, actions: IQLActions) -> None:
-        """
-        Applies the chosen actions to the view.
-
-        :param actions: IQLActions object representing the actions to apply
         """
 
     @abc.abstractmethod
