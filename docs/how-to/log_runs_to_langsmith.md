@@ -2,7 +2,9 @@
 # How-To: Log db-ally run's to LangSmith
 
 [LangSmith](https://www.langchain.com/langsmith) can be utilized to log the runs of db-ally.
+
 It serves as a useful tool to keep an overall track of the queries executed and to monitor the performance of the system.
+
 This guide aims to demonstrate the process of logging the runs of db-ally to LangSmith.
 
 
