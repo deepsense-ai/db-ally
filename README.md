@@ -1,13 +1,9 @@
-
----
-
-<h1 align="center">db-ally</h1>
+# <h1 align="center">db-ally</h1>
 
 <p align="center">
     <em>Efficient, consistent and secure library for querying structured data with natural language</em>
 </p>
 
----
 
 **db-ally** is an LLM-powered library for creating natural language interfaces to databases. While it occupies a similar space to the text-to-SQL solutions, its goals and methods are different. db-ally allows developers to outline specific use cases for the LLM to handle, detailing the desired data format and the possible operations to fetch this data.
 
@@ -55,6 +51,13 @@ my_collection.ask("Find candidates from United States")
 ```
 For a concrete step-by-step example on how to use db-ally, go to [Quickstart](docs/quickstart/quickstart.md) guide. For a more learning-oriented experience, check our db-ally [Tutorial](docs/tutorials/tutorial_1.md).
 
+## Motivation
+
+db-ally was originally developed at [deepsense.ai](https://deepsense.ai)
+
+#TODO: Write here about the context of text2sql projects and comparison of db-ally to standard approaches.
+
+
 ## Requirements
 
 TBD
@@ -81,10 +84,6 @@ pip install dbally[openai,faiss,langsmith]
 
 db-ally is released under MIT license.
 
-## Sponsors
-
-db-ally was originally developed at deepsense.ai
-
 ## How db-ally documentation is organized
 
 Do we want this?
@@ -94,8 +93,8 @@ Do we want this?
 - [x] Integration with OpenAI models
 - [x] Similarity search
 - [x] Integration with LangSmith
-- [] Integration with Anyscale Endpoints
-- [] Support for analytical queries
+- [ ] Integration with Anyscale Endpoints
+- [ ] Support for analytical queries
 
-
+TBD
 
