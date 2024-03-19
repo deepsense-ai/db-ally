@@ -5,7 +5,7 @@
 
 It serves as a useful tool to keep an overall track of the queries executed and to monitor the performance of the system.
 
-This guide aims to demonstrate the process of logging the runs of db-ally to LangSmith.
+This guide aims to demonstrate the process of logging the executions of db-ally to LangSmith.
 
 
 ## Prerequisites
