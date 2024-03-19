@@ -10,8 +10,8 @@ nav:
       - tutorial/first_view.md
   - Concepts:
       - concepts/iql.md
-      - concepts/collections.md
       - concepts/views.md
+      - concepts/collections.md
       - concepts/similarity_indexes.md
       - concepts/nl_responder.md
   - How-to:
