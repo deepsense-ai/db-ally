@@ -1,7 +1,6 @@
 import ast
 
 import pytest
-
 from dbally_benchmark.iql.method_call_visitor import MethodCallVisitor
 
 
