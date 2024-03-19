@@ -1,8 +1,9 @@
 from enum import Enum
 from typing import Dict, Type
 
-from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 from dbally_benchmark.views.superhero import SuperheroCountByPowerView, SuperheroView
+
+from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
 
 class ViewName(Enum):

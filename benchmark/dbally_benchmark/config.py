@@ -1,6 +1,5 @@
-from pydantic.v1 import BaseSettings
-
 from dbally_benchmark.paths import PATH_PACKAGE
+from pydantic.v1 import BaseSettings
 
 
 class BenchmarkConfig(BaseSettings):

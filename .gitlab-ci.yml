@@ -19,7 +19,7 @@ stages:
   - lint
   - tests
   - benchmark
-  - pages
+  - docs
   - package
   - deploy
 
@@ -215,7 +215,7 @@ benchmark:
   stage: benchmark
   interruptible: true
   script:
-    - python src/dbally_benchmark/evaluate.py neptune.log=True
+    - PYTHONPATH=benchmark/ python benchmark/dbally_benchmark/evaluate.py neptune.log=True
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" || '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       when: manual
@@ -280,17 +280,12 @@ benchmark:
 
 ##############################################
 
-# Job to build Sphinx docs and host it on GitLab Pages
-pages:
-  image: $PYTHON_DOCKER_IMAGE
-  stage: pages
+# Job to build mkdocs docs
+docs:
+  image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
+  stage: docs
   interruptible: true
-  before_script:
-    - . setup_dev_env.sh
   script:
-    - ./build_docs.sh
-  artifacts:
-    paths:
-      - public
+    - ./.gitlab/ci/build_docs.sh
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'

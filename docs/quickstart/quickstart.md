@@ -65,7 +65,7 @@ dbally.use_openai_llm(
 
 ## View Definition
 
-To use db-ally, define the views you want to use. A view is a class that specifies what to select from the database and includes methods that the AI model can use to filter rows. These methods are known as "filters".
+To use db-ally, define the views you want to use. A [view](../concepts/views.md) is a class that specifies what to select from the database and includes methods that the AI model can use to filter rows. These methods are known as "filters".
 
 ```python
 from dbally import decorators, SqlAlchemyBaseView
@@ -114,7 +114,7 @@ By setting up these filters, you enable the LLM to fetch candidates while option
 
 ## Collection Definition
 
-Next, create a db-ally collection. A collection is an object where you register views and execute queries.
+Next, create a db-ally collection. A [collection](../concepts/collections.md) is an object where you register views and execute queries.
 
 ```python
 import dbally
