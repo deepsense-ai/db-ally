@@ -9,14 +9,11 @@ pytest-asyncio>=0.23.4
 pytest-cov
 # for getting dependency licenses and docs:
 pip-licenses>=4.0.0,<5.0.0
-# for building docs
-sphinx>=5.3.0,<6.0.0
-sphinx-rtd-theme>=1.1.1,<2.0.0
-myst-parser # adds markdown to sphinx
-sphinxcontrib-mermaid # adds option to have diagrams in sphinx
 # for bumping version strings
 bump2version>=1.0.1,<2.0.0
 mypy==1.8.0
+# for building docs
+griffe-typingdoc==0.2.5
 mkdocs==1.5.3
 mkdocs-autorefs==1.0.1
 mkdocs-material==9.5.13
