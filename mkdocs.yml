@@ -16,6 +16,7 @@ nav:
       - concepts/nl_responder.md
   - How-to:
       - how-to/log_runs_to_langsmith.md
+      - how-to/create_custom_event_handler.md
       - how-to/implementing_similarity_index.md
       - how-to/connect_with_postgresql.md
       - how-to/use_custom_llm.md

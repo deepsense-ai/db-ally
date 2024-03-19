@@ -6,7 +6,7 @@ db-ally provides an `EventHandler` abstract class that can be used to log the ru
 ## Lifecycle
 
 
-Every run of db-ally will initialize any instance of EventHandler that was registered using `dbally.use_event_handler` method.
+Every run of db-ally will trigger any instance of EventHandler that was registered using `dbally.use_event_handler` method in following manner:
 
 1. `EventHandler.request_start` is called with [RequestStart](#dbally.data_models.audit.RequestStart), it can return a context object that will be passed to next calls.
 2. For each event that occurs during the run, `EventHandler.event_start` is called with an Event and the context object returned by `EventHandler.request_start`. It can return context for the event_end method.
