@@ -2,11 +2,11 @@ import time
 from typing import Dict, List
 
 import pandas as pd
+from dbally_benchmark.text2sql.text2sql_result import Text2SQLResult
+from dbally_benchmark.utils import batch
 from sqlalchemy import Engine, text
 
 from dbally.data_models.execution_result import ExecutionResult
-from dbally_benchmark.text2sql.text2sql_result import Text2SQLResult
-from dbally_benchmark.utils import batch
 
 
 def _run_query(query: str, engine: Engine) -> ExecutionResult:

@@ -1,4 +1,3 @@
-from dbally.views.base import ExposedFunction, MethodParamWithTyping
 from dbally_benchmark.iql.iql_result import IQLResult
 from dbally_benchmark.iql.metrics import (
     _count_hallucinated_methods_for_single_example,
@@ -6,6 +5,8 @@ from dbally_benchmark.iql.metrics import (
     calculate_syntax_errors,
     calculate_valid_iql,
 )
+
+from dbally.views.base import ExposedFunction, MethodParamWithTyping
 
 ALLOWED_METHODS = [
     ExposedFunction(

@@ -1,13 +1,13 @@
 import ast
 from typing import Dict, List, Tuple
 
+from dbally_benchmark.iql.iql_result import IQLResult
+from dbally_benchmark.iql.method_call_visitor import MethodCallVisitor
 from loguru import logger
 
 from dbally.iql._exceptions import IQLError, IQLUnsupportedSyntaxError
 from dbally.iql._query import IQLQuery
 from dbally.views.base import ExposedFunction
-from dbally_benchmark.iql.iql_result import IQLResult
-from dbally_benchmark.iql.method_call_visitor import MethodCallVisitor
 
 
 def _count_hallucinated_methods_for_single_example(iql: str, allowed_methods: List[str]) -> Tuple[int, int]:

@@ -6,6 +6,13 @@ from typing import Any, List
 
 import hydra
 import neptune
+from dbally_benchmark.config import BenchmarkConfig
+from dbally_benchmark.constants import VIEW_REGISTRY, EvaluationType, ViewName
+from dbally_benchmark.dataset.bird_dataset import BIRDDataset, BIRDExample
+from dbally_benchmark.iql.iql_result import IQLResult
+from dbally_benchmark.iql.metrics import calculate_dataset_metrics
+from dbally_benchmark.paths import PATH_EXPERIMENTS
+from dbally_benchmark.utils import batch, get_datetime_str, set_up_gitlab_metadata
 from hydra.utils import instantiate
 from loguru import logger
 from neptune.utils import stringify_unsupported
@@ -18,13 +25,6 @@ from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llm_client.openai_client import OpenAIClient
 from dbally.utils.errors import UnsupportedQueryError
 from dbally.views.base import AbstractBaseView
-from dbally_benchmark.config import BenchmarkConfig
-from dbally_benchmark.constants import VIEW_REGISTRY, EvaluationType, ViewName
-from dbally_benchmark.dataset.bird_dataset import BIRDDataset, BIRDExample
-from dbally_benchmark.iql.iql_result import IQLResult
-from dbally_benchmark.iql.metrics import calculate_dataset_metrics
-from dbally_benchmark.paths import PATH_EXPERIMENTS
-from dbally_benchmark.utils import batch, get_datetime_str, set_up_gitlab_metadata
 
 
 async def _run_iql_for_single_example(
