@@ -4,22 +4,30 @@
     <em>Efficient, consistent and secure library for querying structured data with natural language</em>
 </p>
 
+---
 
-**db-ally** is an LLM-powered library for creating natural language interfaces to databases. While it occupies a similar space to the text-to-SQL solutions, its goals and methods are different. db-ally allows developers to outline specific use cases for the LLM to handle, detailing the desired data format and the possible operations to fetch this data.
+* **Documentation:** [db-ally.deepsense.ai](https://db-ally.deepsense.ai/)
+* **Source code:** [github.com/deepsense-ai/db-ally](https://github.com/deepsense-ai/db-ally)
 
-db-ally effectively shields the complexity of the underlying database from the model, presenting only the essential information needed for solving the specific use cases. Instead of generating arbitrary SQL, the model is asked to generate responses in a simplified query language.
+---
+
+
+**db-ally** is an LLM-powered library for creating natural language interfaces to data sources. While it occupies a similar space to the text-to-SQL solutions, its goals and methods are different. db-ally allows developers to outline specific use cases for the LLM to handle, detailing the desired data format and the possible operations to fetch this data.
+
+db-ally effectively shields the complexity of the underlying data source from the model, presenting only the essential information needed for solving the specific use cases. Instead of generating arbitrary SQL, the model is asked to generate responses in a simplified query language.
 
 The benefits of db-ally can be described in terms of its four main characteristics:
+
 * **Consistency**: db-ally ensures predictable output formats and confines operations to those predefined by developers, making it particularly well-suited for applications with precise requirements on their behavior or data format
 * **Security**: db-ally prevents direct database access and arbitrary SQL execution, bolstering system safety
 * **Efficiency**: db-ally hides most of the underlying database complexity, enabling the LLM to concentrate on essential aspects and improving performance
-* **Portability**: db-ally introduces an abstraction layer between the model and the database, ensuring easy integration with various database technologies and data sources.
+* **Portability**: db-ally introduces an abstraction layer between the model and the data, ensuring easy integration with various database technologies and other data sources.
 
 ## Quickstart
 
-In db-ally, developers define their use cases by implementing [**views**](docs/concepts/views.md) and **filters**. A list of possible filters is presented to the LLM in terms of [**IQL**](docs/concepts/iql.md) (Intermediate Query Language). Views are grouped and registered within a [**collection**](docs/concepts/views.md), which then serves as an entry point for asking questions in natural language.
+In db-ally, developers define their use cases by implementing [**views**](https://db-ally.deepsense.ai/concepts/views) and **filters**. A list of possible filters is presented to the LLM in terms of [**IQL**](https://db-ally.deepsense.ai/concepts/iql) (Intermediate Query Language). Views are grouped and registered within a [**collection**](https://db-ally.deepsense.ai/concepts/views), which then serves as an entry point for asking questions in natural language.
 
-Basic implementation of a db-ally view for an example HR application can be found below:
+This is a basic implementation of a db-ally view for an example HR application, which retrieves candidates from an SQL database:
 
 ```python
 from dbally import decorators
@@ -43,24 +51,18 @@ class CandidateView(SqlAlchemyBaseView):
         """
         return Candidate.country == country
 
-
-my_collection = dbally.create_collection("my_collection")
-my_collection.add(MyView)
+engine = create_engine('sqlite:///candidates.db')
+my_collection = dbally.create_collection("collection_name")
+my_collection.add(CandidateView, lambda: CandidateView(engine))
 
 my_collection.ask("Find candidates from United States")
 ```
-For a concrete step-by-step example on how to use db-ally, go to [Quickstart](docs/quickstart/quickstart.md) guide. For a more learning-oriented experience, check our db-ally [Tutorial](docs/tutorials/tutorial_1.md).
+
+For a concrete step-by-step example on how to use db-ally, go to [Quickstart](https://db-ally.deepsense.ai/quickstart/) guide. For a more learning-oriented experience, check our db-ally [Tutorial](https://db-ally.deepsense.ai/tutorials/tutorial_1).
 
 ## Motivation
 
-db-ally was originally developed at [deepsense.ai](https://deepsense.ai)
-
-#TODO: Write here about the context of text2sql projects and comparison of db-ally to standard approaches.
-
-
-## Requirements
-
-TBD
+db-ally was originally developed at [deepsense.ai](https://deepsense.ai). In our work on various projects, we frequently encountered the need to retrieve data from data sources, typically databases, in response to natural language queries. The standard approach to this issue involves using the text-to-SQL technique. While this method is powerful, it is also complex and challenging to control. Often, the results were unsatisfactory because the Language Model lacked the necessary context to understand the specific requirements of the application and the business logic behind the data. This led us to experiment with a more structured approach. In this method, the developer defines the specific use cases for the Language Model to handle, detailing the desired data format and the possible operations to retrieve this data. This approach proved to be more efficient, predictable, and easier to manage, making it simpler to integrate with the rest of the system. Eventually, we decided to create a library that would allow us to use this approach in a more systematic way, and we made it open-source for the community.
 
 ## Installation
 
@@ -86,15 +88,8 @@ db-ally is released under MIT license.
 
 ## How db-ally documentation is organized
 
-Do we want this?
-
-## Supported features
-
-- [x] Integration with OpenAI models
-- [x] Similarity search
-- [x] Integration with LangSmith
-- [ ] Integration with Anyscale Endpoints
-- [ ] Support for analytical queries
-
-TBD
-
+- [Quickstart](https://db-ally.deepsense.ai/quickstart/) - Get started with db-ally in a few minutes
+- [Concepts](https://db-ally.deepsense.ai/concepts/iql) - Understand the main concepts behind db-ally
+- [How-to guides](https://db-ally.deepsense.ai/how-to/log_runs_to_langsmith) - Learn how to use db-ally in your projects
+- [Tutorials](https://db-ally.deepsense.ai/tutorials/tutorial_1) - Follow step-by-step tutorials to learn db-ally
+- [API reference](https://db-ally.deepsense.ai/api-reference) - Explore the underlying API of db-ally

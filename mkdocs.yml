@@ -2,12 +2,10 @@ site_name: db-ally
 nav:
   - db-ally: index.md
   - Quickstart:
-      - quickstart/quickstart.md
+      - quickstart/index.md
       - quickstart/quickstart2.md
   - Tutorial:
-      - tutorial/index.md
-      - tutorial/baseline.md
-      - tutorial/first_view.md
+      - tutorials/index.md
   - Concepts:
       - concepts/iql.md
       - concepts/views.md
@@ -33,25 +31,25 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.superfences
+  - pymdownx.snippets
 plugins:
-  autorefs:
-    enable: true
-  mkdocstrings:
-    handlers:
-      python:
-        options:
-          extensions:
-            - griffe_typingdoc
-          show_root_heading: true
-          show_if_no_docstring: true
-          inherited_members: true
-          members_order: source
-          separate_signature: true
-          unwrap_annotated: true
-          filters:
-            - '!^_'
-          merge_init_into_class: true
-          docstring_section_style: spacy
-          signature_crossrefs: true
-          show_symbol_type_heading: true
-          show_symbol_type_toc: true
+  - autorefs
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            extensions:
+              - griffe_typingdoc
+            show_root_heading: true
+            show_if_no_docstring: true
+            inherited_members: true
+            members_order: source
+            separate_signature: true
+            unwrap_annotated: true
+            filters:
+              - '!^_'
+            merge_init_into_class: true
+            docstring_section_style: spacy
+            signature_crossrefs: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true

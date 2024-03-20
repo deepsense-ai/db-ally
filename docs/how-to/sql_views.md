@@ -41,7 +41,7 @@ For example, to only select the `name` and `country` columns, you might return a
         years_of_experience = Column(Integer)
     ```
 
-    Alternatively, you can use [SQLAlchemy's automap feature](https://docs.sqlalchemy.org/en/20/orm/extensions/automap.html) to automatically generate the model from the database schema. See the [Quickstart](../quickstart/quickstart.md) for an example of how this is done.
+    Alternatively, you can use [SQLAlchemy's automap feature](https://docs.sqlalchemy.org/en/20/orm/extensions/automap.html) to automatically generate the model from the database schema. See the [Quickstart](../quickstart/index.md) for an example of how this is done.
 
 ## Filters
 In addition to the `get_select` method, you can define filter methods in your view. A filter method is a method that takes some parameters and returns a [SQLAlchemy `ColumnElement` object](https://docs.sqlalchemy.org/en/20/core/sqlelement.html#sqlalchemy.sql.expression.ColumnElement). This object represents a condition that can be used to filter the data in the database. See the [SQLAlchemy documentation on `where` clauses](https://docs.sqlalchemy.org/en/20/tutorial/data_select.html#the-where-clause) for more details - any condition that can be used in a `where` clause can be returned from a filter method.

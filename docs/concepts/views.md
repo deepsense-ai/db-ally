@@ -34,4 +34,4 @@ Each view can contain one or more “filters”, which the LLM may decide to cho
 
 A project might implement multiple views, each tailored to different output formats and filters for various use cases. The LLM selects the appropriate view which best corresponds to the specific natural language query. For further details, consider reading our article on [Collections](collections.md).
 
-See the [Quickstart](../quickstart/quickstart.md) guide for a complete example of how to define and use views.
+See the [Quickstart](../quickstart/index.md) guide for a complete example of how to define and use views.
