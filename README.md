@@ -62,11 +62,11 @@ For a concrete step-by-step example on how to use db-ally, go to [Quickstart](ht
 
 ## Motivation
 
-db-ally was originally developed at [deepsense.ai](https://deepsense.ai). In our work on various projects, we frequently encountered the need to retrieve data from data sources, typically databases, in response to natural language queries. 
+db-ally was originally developed at [deepsense.ai](https://deepsense.ai). In our work on various projects, we frequently encountered the need to retrieve data from data sources, typically databases, in response to natural language queries.
 
-The standard approach to this issue involves using the text-to-SQL technique. While this method is powerful, it is also complex and challenging to control. Often, the results were unsatisfactory because the Language Model lacked the necessary context to understand the specific requirements of the application and the business logic behind the data. 
+The standard approach to this issue involves using the text-to-SQL technique. While this method is powerful, it is also complex and challenging to control. Often, the results were unsatisfactory because the Language Model lacked the necessary context to understand the specific requirements of the application and the business logic behind the data.
 
-This led us to experiment with a more structured approach. In this method, the developer defines the specific use cases for the Language Model to handle, detailing the desired data format and the possible operations to retrieve this data. This approach proved to be more efficient, predictable, and easier to manage, making it simpler to integrate with the rest of the system. 
+This led us to experiment with a more structured approach. In this method, the developer defines the specific use cases for the Language Model to handle, detailing the desired data format and the possible operations to retrieve this data. This approach proved to be more efficient, predictable, and easier to manage, making it simpler to integrate with the rest of the system.
 
 Eventually, we decided to create a library that would allow us to use this approach in a more systematic way, and we made it open-source for the community.
 
