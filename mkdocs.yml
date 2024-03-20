@@ -35,14 +35,10 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - admonition
-  - pymdownx.details
   - pymdownx.superfences
   - pymdownx.snippets
   - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - pymdownx.superfences
   - attr_list
-  - admonition
   - pymdownx.details
   - def_list
   - pymdownx.tasklist:
