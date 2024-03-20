@@ -1,5 +1,5 @@
 
-# How-To: Log db-ally run's to LangSmith
+# How-To: Log db-ally runs to LangSmith
 
 [LangSmith](https://www.langchain.com/langsmith) can be utilized to log the runs of db-ally.
 
