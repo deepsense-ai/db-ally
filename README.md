@@ -1,117 +1,101 @@
-# db-ally
+# <h1 align="center">db-ally</h1>
 
-Repository is created with deepsense.ai project template boilerplate. Adapt to your needs.
-Documentation is available at [https://deepsense-ai.github.io/ds-template/](https://deepsense-ai.github.io/ds-template/).
+<p align="center">
+    <em>Efficient, consistent and secure library for querying structured data with natural language</em>
+</p>
+
+---
+
+* **Documentation:** [db-ally.deepsense.ai](https://db-ally.deepsense.ai/)
+* **Source code:** [github.com/deepsense-ai/db-ally](https://github.com/deepsense-ai/db-ally)
+
+---
 
 
-# Setup developer environment
+**db-ally** is an LLM-powered library for creating natural language interfaces to data sources. While it occupies a similar space to the text-to-SQL solutions, its goals and methods are different. db-ally allows developers to outline specific use cases for the LLM to handle, detailing the desired data format and the possible operations to fetch this data.
 
-To start, you need to setup your local machine.
+db-ally effectively shields the complexity of the underlying data source from the model, presenting only the essential information needed for solving the specific use cases. Instead of generating arbitrary SQL, the model is asked to generate responses in a simplified query language.
 
-## Setup venv
+The benefits of db-ally can be described in terms of its four main characteristics:
 
-You need to setup virtual environment, simplest way is to run from project root directory:
+* **Consistency**: db-ally ensures predictable output formats and confines operations to those predefined by developers, making it particularly well-suited for applications with precise requirements on their behavior or data format
+* **Security**: db-ally prevents direct database access and arbitrary SQL execution, bolstering system safety
+* **Efficiency**: db-ally hides most of the underlying database complexity, enabling the LLM to concentrate on essential aspects and improving performance
+* **Portability**: db-ally introduces an abstraction layer between the model and the data, ensuring easy integration with various database technologies and other data sources.
+
+## Quickstart
+
+In db-ally, developers define their use cases by implementing [**views**](https://db-ally.deepsense.ai/concepts/views) and **filters**. A list of possible filters is presented to the LLM in terms of [**IQL**](https://db-ally.deepsense.ai/concepts/iql) (Intermediate Query Language). Views are grouped and registered within a [**collection**](https://db-ally.deepsense.ai/concepts/views), which then serves as an entry point for asking questions in natural language.
+
+This is a basic implementation of a db-ally view for an example HR application, which retrieves candidates from an SQL database:
+
+```python
+from dbally import decorators
+import dbally
+
+class CandidateView(SqlAlchemyBaseView):
+    """
+    A view for retrieving candidates from the database.
+    """
+
+    def get_select(self):
+        """
+        Defines which columns to select.
+        """
+        return sqlalchemy.select(Candidate.id, Candidate.name, Candidate.country)
+
+    @decorators.view_filter()
+    def from_country(self, country: str):
+        """
+        Filter candidates from a specific country.
+        """
+        return Candidate.country == country
+
+engine = create_engine('sqlite:///candidates.db')
+my_collection = dbally.create_collection("collection_name")
+my_collection.add(CandidateView, lambda: CandidateView(engine))
+
+my_collection.ask("Find candidates from United States")
+```
+
+For a concrete step-by-step example on how to use db-ally, go to [Quickstart](https://db-ally.deepsense.ai/quickstart/) guide. For a more learning-oriented experience, check our db-ally [Tutorial](https://db-ally.deepsense.ai/tutorials/tutorial_1).
+
+## Motivation
+
+db-ally was originally developed at [deepsense.ai](https://deepsense.ai). In our work on various projects, we frequently encountered the need to retrieve data from data sources, typically databases, in response to natural language queries.
+
+The standard approach to this issue involves using the text-to-SQL technique. While this method is powerful, it is also complex and challenging to control. Often, the results were unsatisfactory because the Language Model lacked the necessary context to understand the specific requirements of the application and the business logic behind the data.
+
+This led us to experiment with a more structured approach. In this method, the developer defines the specific use cases for the Language Model to handle, detailing the desired data format and the possible operations to retrieve this data. This approach proved to be more efficient, predictable, and easier to manage, making it simpler to integrate with the rest of the system.
+
+Eventually, we decided to create a library that would allow us to use this approach in a more systematic way, and we made it open-source for the community.
+
+## Installation
+
+To install db-ally, execute the following command:
 
 ```bash
-$ . ./setup_dev_env.sh
-$ source venv/bin/activate
-```
-This will create a new venv and run `pip install -r requirements-dev.txt`.
-Last line shows how to activate the environment.
-
-## Install pre-commit
-
-To ensure code quality we use pre-commit hook with several checks. Setup it by:
-
-```
-pre-commit install
+pip install dbally
 ```
 
-All updated files will be reformatted and linted before the commit.
+Additionally, you can install one of our extensions to use specific features.
 
-To reformat and lint all files in the project, use:
-
-`pre-commit run --all-files`
-
-The used linters are configured in `.pre-commit-config.yaml`. You can use `pre-commit autoupdate` to bump tools to the latest versions.
-
-## Autoreload within notebooks
-
-When you install project's package add below code (before imports) in your notebook:
-```
-# Load the "autoreload" extension
-%load_ext autoreload
-# Change mode to always reload modules: you change code in src, it gets loaded
-%autoreload 2
-```
-Read more about different modes in [documentation](https://ipython.org/ipython-doc/3/config/extensions/autoreload.html).
-
-All code should be in `src/` to make reusability and review straightforward, keep notebooks simple for exploratory data analysis.
-See also [Cookiecutter Data Science opinion](https://drivendata.github.io/cookiecutter-data-science/#notebooks-are-for-exploration-and-communication).
-
-# Command line interface
-The library provides a command line interface (CLI) to interact with the database. To use it, you need to install the package in editable mode:
+* `dbally[openai]`: Use [OpenAI's models](https://platform.openai.com/docs/models)
+* `dbally[faiss]`: Use [Faiss](https://github.com/facebookresearch/faiss) indexes for similarity search
+* `dbally[langsmith]`: Use [LangSmith](https://www.langchain.com/langsmith) for query tracking
 
 ```bash
-$ pip install -e .
+pip install dbally[openai,faiss,langsmith]
 ```
 
-After that, you can use the `dbally` command to interact with the database. To see the available commands, run:
+## License
 
-```bash
-$ dbally --help
-```
+db-ally is released under MIT license.
 
-# Project documentation
+## How db-ally documentation is organized
 
-In `docs/` directory are Sphinx RST/Markdown files.
-
-To build documentation locally, in your configured environment, you can use `build_docs.sh` script:
-
-```bash
-$ ./build_docs.sh
-```
-
-Then open `public/index.html` file.
-
-Please read the official [Sphinx documentation](https://www.sphinx-doc.org/en/master/) for more details.
-
-
-
-### GitLab Pages Documentation
-
-By default **Gitlab** pipelines have `pages` step which will build sphinx documentation automatically on main branch - and it will push it to **GitLab Pages** to be statically hosted.
-
-To access it, you need to have a link, which can be found on **GitLab -> Settings -> Pages** page.
-
-Only people with repository access can view it.
-
-Please read more about it [here](https://docs.gitlab.com/ee/user/project/pages/index.html).# Semantic version bump
-
-To bump version of the library please use `bump2version` which will update all version strings.
-
-NOTE: Configuration is in `.bumpversion.cfg` and **this is a main file defining version which should be updated only with bump2version**.
-
-For convenience there is bash script which will create commit, to use it call:
-
-```bash
-# to create a new commit by increasing one semvar:
-$ ./bump_version.sh minor
-$ ./bump_version.sh major
-$ ./bump_version.sh patch
-# to see what is going to change run:
-$ ./bump_version.sh --dry-run major
-```
-Script updates **VERSION** file and setup.cfg automatically uses that version.
-
-You can configure it to update version string in other files as well - please check out the bump2version configuration file.
-
-
-
-On GitLab CI, you can build development, test package and upload it manually as minor.major.patch-dev{BUILD_NUMBER} to PIP registry.
-
-Every MR keeps package for 7 days each (check `package` artifact).
-
-On the main branch you can trigger _release_ which uploads minor.major.patch version to PIP registry.
-
-
+- [Quickstart](https://db-ally.deepsense.ai/quickstart/) - Get started with db-ally in a few minutes
+- [Concepts](https://db-ally.deepsense.ai/concepts/iql) - Understand the main concepts behind db-ally
+- [How-to guides](https://db-ally.deepsense.ai/how-to/log_runs_to_langsmith) - Learn how to use db-ally in your projects
+- [Tutorials](https://db-ally.deepsense.ai/tutorials/tutorial_1) - Follow step-by-step tutorials to learn db-ally
+- [API reference](https://db-ally.deepsense.ai/api-reference) - Explore the underlying API of db-ally

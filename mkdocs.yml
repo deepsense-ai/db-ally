@@ -2,7 +2,7 @@ site_name: db-ally
 nav:
   - db-ally: index.md
   - Quickstart:
-      - quickstart/quickstart.md
+      - quickstart/index.md
       - quickstart/quickstart2.md
   - Tutorials:
       - tutorials.md
@@ -29,40 +29,39 @@ theme:
     - content.code.copy
 extra_css:
   - stylesheets/extra.css
-plugins:
-  autorefs:
-    enable: true
-  mkdocstrings:
-    handlers:
-      python:
-        options:
-          extensions:
-            - griffe_typingdoc
-          show_root_heading: true
-          show_if_no_docstring: true
-          inherited_members: true
-          members_order: source
-          separate_signature: true
-          unwrap_annotated: true
-          filters:
-            - "!^_"
-          merge_init_into_class: true
-          docstring_section_style: spacy
-          signature_crossrefs: true
-          show_symbol_type_heading: true
-          show_symbol_type_toc: true
-
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - pymdownx.superfences
-  - attr_list
   - admonition
+  - pymdownx.superfences
+  - pymdownx.snippets
+  - pymdownx.inlinehilite
+  - attr_list
   - pymdownx.details
   - def_list
   - pymdownx.tasklist:
       custom_checkbox: true
+plugins:
+  - autorefs:
+      enable: true
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            extensions:
+              - griffe_typingdoc
+            show_root_heading: true
+            show_if_no_docstring: true
+            inherited_members: true
+            members_order: source
+            separate_signature: true
+            unwrap_annotated: true
+            filters:
+              - '!^_'
+            merge_init_into_class: true
+            docstring_section_style: spacy
+            signature_crossrefs: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
