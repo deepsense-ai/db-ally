@@ -4,10 +4,8 @@ nav:
   - Quickstart:
       - quickstart/quickstart.md
       - quickstart/quickstart2.md
-  - Tutorial:
-      - tutorial/index.md
-      - tutorial/baseline.md
-      - tutorial/first_view.md
+  - Tutorials:
+      - tutorials.md
   - Concepts:
       - concepts/iql.md
       - concepts/collections.md
@@ -25,12 +23,10 @@ theme:
   name: material
   features:
     - navigation.tabs
+    - content.code.annotate
+    - content.code.copy
 extra_css:
   - stylesheets/extra.css
-markdown_extensions:
-  - admonition
-  - pymdownx.details
-  - pymdownx.superfences
 plugins:
   mkdocstrings:
     handlers:
@@ -45,9 +41,24 @@ plugins:
           separate_signature: true
           unwrap_annotated: true
           filters:
-            - '!^_'
+            - "!^_"
           merge_init_into_class: true
           docstring_section_style: spacy
           signature_crossrefs: true
           show_symbol_type_heading: true
           show_symbol_type_toc: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - attr_list
+  - admonition
+  - pymdownx.details
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true

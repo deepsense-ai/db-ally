@@ -7,8 +7,8 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 import dbally
 
-ENGINE = create_engine("sqlite://")
-PATH_PACKAGE = Path(dbally.__file__).parent
+ENGINE = create_engine("sqlite:///recruitment.db")
+CSV_PATH = Path(dbally.__file__).parent / "examples" / "data"
 
 
 class Base(DeclarativeBase):
@@ -38,6 +38,40 @@ class Candidate(Base):
             university={self.university!r}), skills={self.skills!r}, tags={self.tags!r})"
 
 
+class JobOffer(Base):
+    """
+    This class represents the offer table in the recruitment database.
+    """
+
+    __tablename__ = "offer"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    company: Mapped[str]
+    title: Mapped[str]
+    excpected_years_of_experience: Mapped[int]
+    salary: Mapped[str]
+
+    def __repr__(self) -> str:
+        return f"Offer(id={self.id!r}, company={self.company!r},\
+            title={self.title!r}, excpected_years_of_experience={self.excpected_years_of_experience!r},\
+            salary={self.salary!r})"
+
+
+class Application(Base):
+    """
+    This class represents the application table in the recruitment database.
+    """
+
+    __tablename__ = "application"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    candidate_id: Mapped[int]
+    job_offer_id: Mapped[str]
+    status: Mapped[str]
+
+    def __repr__(self) -> str:
+        return f"Application(id={self.id!r}, candidate_id={self.candidate_id!r}, job_offer_id={self.job_offer_id!r},\
+            status={self.status!r})"
+
+
 Base.metadata.create_all(ENGINE)
 
 
@@ -47,7 +81,7 @@ def fill_candidate_table() -> None:
     """
     with Session(ENGINE) as session:
         candidates = []
-        with open(PATH_PACKAGE / "examples" / "recruiting.csv", newline="", encoding="UTF-8") as csvfile:
+        with open(CSV_PATH / "recruiting.csv", newline="", encoding="UTF-8") as csvfile:
             reader = csv.DictReader(csvfile)
             for i, row in enumerate(reader):
                 candidate = Candidate(
@@ -63,6 +97,35 @@ def fill_candidate_table() -> None:
                 candidates.append(candidate)
 
         session.add_all(candidates)
+        session.commit()
+
+        offers = []
+        with open(CSV_PATH / "offers.csv", newline="", encoding="UTF-8") as csvfile:
+            reader = csv.DictReader(csvfile)
+            for i, row in enumerate(reader):
+                offer = JobOffer(
+                    company=row["company"],
+                    title=row["title"],
+                    excpected_years_of_experience=row["expected_years_of_experience"],
+                    salary=row["salary"],
+                )
+                offers.append(offer)
+
+        session.add_all(offers)
+        session.commit()
+
+        applications = []
+        with open(CSV_PATH / "application.csv", newline="", encoding="UTF-8") as csvfile:
+            reader = csv.DictReader(csvfile)
+            for i, row in enumerate(reader):
+                application = Application(
+                    candidate_id=row["candidate_id"],
+                    job_offer_id=row["job_offer_id"],
+                    status=row["status"],
+                )
+                applications.append(application)
+
+        session.add_all(applications)
         session.commit()
 
 
