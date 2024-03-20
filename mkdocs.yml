@@ -4,8 +4,8 @@ nav:
   - Quickstart:
       - quickstart/index.md
       - quickstart/quickstart2.md
-  - Tutorial:
-      - tutorials/index.md
+  - Tutorials:
+      - tutorials.md
   - Concepts:
       - concepts/iql.md
       - concepts/views.md
@@ -25,15 +25,31 @@ theme:
   name: material
   features:
     - navigation.tabs
+    - content.code.annotate
+    - content.code.copy
 extra_css:
   - stylesheets/extra.css
 markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
   - admonition
   - pymdownx.details
   - pymdownx.superfences
   - pymdownx.snippets
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - attr_list
+  - admonition
+  - pymdownx.details
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
 plugins:
-  - autorefs
+  - autorefs:
+      enable: true
   - mkdocstrings:
       handlers:
         python:
