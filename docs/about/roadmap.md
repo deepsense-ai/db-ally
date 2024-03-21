@@ -9,7 +9,7 @@ Below you can find a list of planned features and integrations.
 
 ## Planned Features
 
-- [ ] **Support analytical queries**: support for aggregations, groupings and other analytical queries.
+- [ ] **Support analytical queries**: support for exposing operations beyond filtering.
 - [ ] **Few-shot prompting configuration**: allow users to configure the few-shot prompting in View definition to
     improve IQL generation accuracy.
 - [ ] **Request contextualization**: allow to provide extra context for db-ally runs, such as user asking the question.
@@ -34,7 +34,7 @@ Below you can find a list of planned integrations.
 
 - [x] OpenAI models
 - [ ] LLama-2
-- [ ] Mistral
+- [ ] Mistral / Mixtral
 - [ ] VertexAI Gemini
 
 ### Vector stores
