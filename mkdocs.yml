@@ -15,9 +15,7 @@ nav:
   - How-to:
       - how-to/log_runs_to_langsmith.md
       - how-to/create_custom_event_handler.md
-      - how-to/implementing_similarity_index.md
       - how-to/sql_views.md
-      - how-to/use_custom_llm.md
   - API Reference:
       - reference/collection.md
       - reference/event_handler.md
