@@ -99,3 +99,9 @@ db-ally is released under MIT license.
 - [How-to guides](https://db-ally.deepsense.ai/how-to/log_runs_to_langsmith) - Learn how to use db-ally in your projects
 - [Tutorials](https://db-ally.deepsense.ai/tutorials/tutorial_1) - Follow step-by-step tutorials to learn db-ally
 - [API reference](https://db-ally.deepsense.ai/api-reference) - Explore the underlying API of db-ally
+
+## Roadmap
+
+db-ally is actively developed and maintained by a core team at [deepsense.ai](deepsense.ai) and a community of contributors.
+
+You can find a list of planned features and integrations in the [Roadmap](https://db-ally.deepsense.ai/about/roadmap).
