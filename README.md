@@ -97,8 +97,8 @@ db-ally is released under MIT license.
 - [Quickstart](https://db-ally.deepsense.ai/quickstart/) - Get started with db-ally in a few minutes
 - [Concepts](https://db-ally.deepsense.ai/concepts/iql) - Understand the main concepts behind db-ally
 - [How-to guides](https://db-ally.deepsense.ai/how-to/log_runs_to_langsmith) - Learn how to use db-ally in your projects
-- [Tutorials](https://db-ally.deepsense.ai/tutorials/tutorial_1) - Follow step-by-step tutorials to learn db-ally
-- [API reference](https://db-ally.deepsense.ai/api-reference) - Explore the underlying API of db-ally
+- [Tutorials](https://db-ally.deepsense.ai/tutorials) - Follow step-by-step tutorials to learn db-ally
+- [API reference](https://db-ally.deepsense.ai/reference/collection) - Explore the underlying API of db-ally
 
 ## Roadmap
 
