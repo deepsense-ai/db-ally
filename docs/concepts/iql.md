@@ -1,6 +1,6 @@
 # Concept: IQL
 
-IQL is a simple language that serves as an abstraction layer between natural language and data source-specific query syntax, such as SQL. In db-ally, LLM utilizes IQL to express complex queries in a simplified way.
+Intermediate Query Language (IQL) is a simple language that serves as an abstraction layer between natural language and data source-specific query syntax, such as SQL. In db-ally, LLM utilizes IQL to express complex queries in a simplified way.
 
 For instance, an LLM might generate an IQL query like this when asked "Find me French candidates suitable for a senior data scientist position":
 
