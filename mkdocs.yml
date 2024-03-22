@@ -23,6 +23,19 @@ nav:
       - about/roadmap.md
 theme:
   name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: primary
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: primary
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   features:
     - navigation.tabs
     - content.code.annotate
