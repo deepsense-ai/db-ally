@@ -19,14 +19,14 @@ nav:
   - API Reference:
       - reference/collection.md
       - reference/event_handler.md
-  - About:
-      - about/roadmap.md
       - reference/iql_generator.md
       - reference/llm_client.md
       - reference/nl_responder.md
       - reference/openai_embedding_client.md
       - reference/openai_llm_client.md
       - reference/prompt_builder.md
+  - About:
+      - about/roadmap.md
 
 theme:
   name: material
