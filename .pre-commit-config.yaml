@@ -61,7 +61,7 @@ repos:
       rev: v3.0.1
       hooks:
           - id: pylint
-            exclude: (/test_|tests/|docs/|src/dbally_cli/)
+            exclude: (/test_|tests/|docs/)
             # # You can add additional plugins for pylint here,
             # here is an example for pydantic, remember to enable it in pyproject.toml
             # additional_dependencies:
