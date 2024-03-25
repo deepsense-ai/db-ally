@@ -19,6 +19,7 @@ nav:
   - API Reference:
       - reference/collection.md
       - reference/event_handler.md
+      - reference/faiss_store.md
       - reference/iql_generator.md
       - reference/llm_client.md
       - reference/nl_responder.md
