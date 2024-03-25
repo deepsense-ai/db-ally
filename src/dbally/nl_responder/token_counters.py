@@ -53,7 +53,7 @@ def count_tokens_for_huggingface(messages: ChatFormat, fmt: Dict[str, str], mode
     try:
         from transformers import AutoTokenizer  # pylint: disable=import-outside-toplevel
     except ImportError as exc:
-        raise ImportError("You need to install transformers package to use Anyscale models' tokenizers.") from exc
+        raise ImportError("You need to install transformers package to use huggingface models' tokenizers.") from exc
 
     tokenizer = AutoTokenizer.from_pretrained(model)
 
