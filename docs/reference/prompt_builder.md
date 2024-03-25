@@ -1,6 +1,6 @@
 # Prompt Builder
 
-`PromptBuilder` is an abstract class designed to facilitate the construction of prompts for interaction with LLMs. 
+`PromptBuilder` is an abstract class designed to facilitate the construction of prompts for interaction with LLMs.
 
 ## Lifecycle
 
