@@ -1,4 +1,4 @@
-# OpenAI Embedding Client
+# OpenAiEmbeddingClient
 
 db-ally provides an `OpenAIEmbeddingClient` abstract class that can be used to create text embeddings using the OpenAI API.
 

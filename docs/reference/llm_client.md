@@ -1,4 +1,4 @@
-# LLM Client
+# LLMClient
 
 `LLMClient` is an abstract class designed to interact with LLMs.
 

@@ -1,4 +1,4 @@
-# IQL Generator
+# IQLGenerator
 
 In db-ally, LLM uses IQL (Intermediate Query Language) to express complex queries in a simplified way. The class used to generate IQL from nautral language query is `IQLGenerator`.
 

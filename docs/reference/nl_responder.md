@@ -1,4 +1,4 @@
-# NL Responder
+# NLResponder
 
 `NLResponder` abstract class can be utilized to transform a database output into a natural language response to user queries.
 
