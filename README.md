@@ -30,7 +30,7 @@ In db-ally, developers define their use cases by implementing [**views**](https:
 This is a basic implementation of a db-ally view for an example HR application, which retrieves candidates from an SQL database:
 
 ```python
-from dbally import decorators
+from dbally import decorators, SqlAlchemyBaseView
 import dbally
 
 class CandidateView(SqlAlchemyBaseView):
