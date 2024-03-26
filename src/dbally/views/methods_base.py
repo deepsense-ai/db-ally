@@ -2,7 +2,7 @@ import abc
 import textwrap
 from typing import Callable, List
 
-from dbally import decorators
+from dbally.views import decorators
 from dbally.views.base import AbstractBaseView, ExposedFunction, MethodParamWithTyping
 
 

@@ -1,7 +1,7 @@
 # Requirements as needed for development for this project.
 # ---------------------------------------------------------
 # Install current project
--e.[openai]
+-e.[openai,transformers]
 # developer tools:
 pre-commit
 pytest>=6.2.5

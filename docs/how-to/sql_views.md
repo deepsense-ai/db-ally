@@ -1,4 +1,4 @@
-# How to: Use SQL databases with db-ally
+# How-To: Use SQL databases with db-ally
 
 db-ally is a Python library that allows you to use natural language to query various data sources, including SQL databases. This guide will show you how to set up a db-ally view to query a SQL database using SQLAlchemy. The guide will work with [any database that SQLAlchemy supports](https://docs.sqlalchemy.org/en/20/dialects/), including SQLite, PostgreSQL, MySQL, Oracle, MS-SQL, Firebird, Sybase, and others.
 
