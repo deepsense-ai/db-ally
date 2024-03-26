@@ -1,9 +1,9 @@
-from typing import Dict, Optional, Union
-
-from transformers import AutoTokenizer
-from transformers.tokenization_utils import PreTrainedTokenizer
+from typing import TYPE_CHECKING, Dict, Optional, Union
 
 from dbally.data_models.prompts.prompt_template import ChatFormat, PromptTemplate
+
+if TYPE_CHECKING:
+    from transformers.tokenization_utils import PreTrainedTokenizer
 
 
 class PromptBuilder:
@@ -19,11 +19,15 @@ class PromptBuilder:
         Raises:
             OSError: If model_name is not found in huggingface.co/models
         """
-        self._tokenizer: Optional[PreTrainedTokenizer] = None
-        if model_name is not None:
-            # openAI client handles special tokens for gpt.
-            if not model_name.startswith("gpt"):
-                self._tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self._tokenizer: Optional["PreTrainedTokenizer"] = None
+
+        if model_name is not None and not model_name.startswith("gpt"):
+            try:
+                from transformers import AutoTokenizer  # pylint: disable=import-outside-toplevel
+            except ImportError as exc:
+                raise ImportError("You need to install transformers package to use huggingface models.") from exc
+
+            self._tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     def _format_prompt(self, prompt_template: PromptTemplate, fmt: Dict[str, str]) -> ChatFormat:
         """
