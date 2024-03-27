@@ -1,6 +1,7 @@
+from .fetcher import SimilarityFetcher
 from .index import AbstractSimilarityIndex, SimilarityIndex
-from .sqlalchemy_base import SimpleSqlAlchemyFetcher
-from .store import AbstractStore
+from .sqlalchemy_base import SimpleSqlAlchemyFetcher, SqlAlchemyFetcher
+from .store import SimilarityStore
 
 # depends on the faiss package
 try:
@@ -11,7 +12,9 @@ except ImportError:
 __all__ = [
     "AbstractSimilarityIndex",
     "SimilarityIndex",
+    "SqlAlchemyFetcher",
     "SimpleSqlAlchemyFetcher",
-    "AbstractStore",
+    "SimilarityStore",
+    "SimilarityFetcher",
     "FaissStore",
 ]

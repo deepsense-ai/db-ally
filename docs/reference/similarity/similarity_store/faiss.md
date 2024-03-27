@@ -1,0 +1,3 @@
+# FaissStore
+
+::: dbally.similarity.FaissStore

@@ -2,7 +2,7 @@ import abc
 from typing import List
 
 
-class AbstractFetcher(metaclass=abc.ABCMeta):
+class SimilarityFetcher(metaclass=abc.ABCMeta):
     """
     Base class for all fetchers. Has to be able to fetch the data from a source and return it as a list of strings.
     """

@@ -7,7 +7,12 @@ from dbally.prompts.prompt_builder import ChatFormat
 
 
 class OpenAIClient(LLMClient):
-    """LLM Client for OpenAI endpoints."""
+    """
+    `OpenAIClient` is a class designed to interact with OpenAI's language model (LLM) endpoints,
+    particularly for the GPT models.
+
+    It inherits from [`LLMClient`] class.
+    """
 
     def __init__(self, model_name: str, api_key: Optional[str] = None) -> None:
         try:

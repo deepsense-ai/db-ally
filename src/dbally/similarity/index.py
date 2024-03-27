@@ -1,7 +1,7 @@
 import abc
 
-from dbally.similarity.fetcher import AbstractFetcher
-from dbally.similarity.store import AbstractStore
+from dbally.similarity.fetcher import SimilarityFetcher
+from dbally.similarity.store import SimilarityStore
 
 
 class AbstractSimilarityIndex(metaclass=abc.ABCMeta):
@@ -35,10 +35,10 @@ class AbstractSimilarityIndex(metaclass=abc.ABCMeta):
 class SimilarityIndex(AbstractSimilarityIndex):
     """
     Merges the store and the fetcher to provide a simple interface for keeping
-    the data store and the similairty store in sync and finding similar texts.
+    the data store and the similarity store in sync and finding similar texts.
     """
 
-    def __init__(self, store: AbstractStore, fetcher: AbstractFetcher):
+    def __init__(self, store: SimilarityStore, fetcher: SimilarityFetcher):
         self.store = store
         self.fetcher = fetcher
 

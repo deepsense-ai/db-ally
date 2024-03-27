@@ -21,13 +21,13 @@ This guide aims to demonstrate the process of logging the executions of db-ally 
 
 ## Logging runs to LangSmith
 
-Enabling LangSmith integration can be done by registering a prepared [EventHandler](../reference/event_handler.md) using the `dbally.use_event_handler` method.
+Enabling LangSmith integration can be done by registering a prepared [EventHandler](../reference/event_handlers/index.md) using the `dbally.use_event_handler` method.
 
 ```python
 import dbally
-from dbally.audit.event_handlers.langsmith_event_handler import LangsmithEventHandler
+from dbally.audit.event_handlers.langsmith_event_handler import LangSmithEventHandler
 
-dbally.use_event_handler(LangsmithEventHandler(api_key="your_api_key"))
+dbally.use_event_handler(LangSmithEventHandler(api_key="your_api_key"))
 ```
 
 After this, all the runs of db-ally will be logged to LangSmith.

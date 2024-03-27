@@ -10,13 +10,14 @@ from dbally.view_selection.base import ViewSelector
 
 class LLMViewSelector(ViewSelector):
     """
-    ViewSelector utilises the LLM model to select the best view to answer the user question.
+    The `LLMViewSelector` class is a component designed to leverage the power of LLMs to select
+    the most suitable view for addressing user queries.
 
-    Attributes:
-        llm_client: LLM client used to generate IQL
-        prompt_template: template for the prompt
-        prompt_builder: PromptBuilder used to insert arguments into the prompt and adjust style per model
-        promptify_view: Function formatting filters for prompt
+    Its primary function is to determine the optimal view that can effectively be used to answer a user's question.
+
+    The method used to select the most relevant view is `self.select_view`.
+    It formats views using `_promptify_views` and then calls LLM Client,
+    ultimately returning the name of the most suitable view.
     """
 
     def __init__(
@@ -26,6 +27,13 @@ class LLMViewSelector(ViewSelector):
         prompt_builder: Optional[PromptBuilder] = None,
         promptify_views: Optional[Callable] = None,
     ) -> None:
+        """
+        Args:
+            llm_client: LLM client used to generate IQL
+            prompt_template: template for the prompt
+            prompt_builder: PromptBuilder used to insert arguments into the prompt and adjust style per model
+            promptify_views: Function formatting filters for prompt
+        """
         self._llm_client = llm_client
         self._prompt_template = prompt_template or copy.deepcopy(default_view_selector_template)
         self._prompt_builder = prompt_builder or PromptBuilder()

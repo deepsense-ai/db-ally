@@ -11,7 +11,14 @@ from dbally.prompts.prompt_builder import ChatFormat, PromptBuilder, PromptTempl
 
 
 class LLMClient(abc.ABC):
-    """Abstract client for interaction with LLM."""
+    """
+    Abstract client for interaction with LLM.
+
+    It accepts parameters including the template, format, event tracker,
+    and optional generation parameters like frequency_penalty, max_tokens, and temperature
+    (the full list of options is provided by `LLMOptions` class).
+    It constructs a prompt using the `PromptBuilder` instance and generates text using the `self._call` method.
+    """
 
     def __init__(self, model_name: str):
         self.model_name = model_name

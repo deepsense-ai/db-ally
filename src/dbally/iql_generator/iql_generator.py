@@ -12,11 +12,11 @@ class IQLGenerator:
     """
     Class used to generate IQL from natural language question.
 
-    Attributes:
-        llm_client: LLM client used to generate IQL
-        prompt_template: template for the prompt
-        prompt_builder: PromptBuilder used to insert arguments into the prompt and adjust style per model
-        promptify_view: Function formatting filters for prompt
+    In db-ally, LLM uses IQL (Intermediate Query Language) to express complex queries in a simplified way.
+    The class used to generate IQL from natural language query is `IQLGenerator`.
+
+    IQL generation is done using the method `self.generate_iql`.
+    It uses LLM to generate text-based responses, passing in the prompt template, formatted filters, and user question.
     """
 
     _ERROR_MSG_PREFIX = "Unfortunately, generated IQL is not valid. Please try again, \
@@ -31,6 +31,13 @@ class IQLGenerator:
         prompt_builder: Optional[PromptBuilder] = None,
         promptify_view: Optional[Callable] = None,
     ) -> None:
+        """
+        Args:
+            llm_client: LLM client used to generate IQL
+            prompt_template: template for the prompt
+            prompt_builder: PromptBuilder used to insert arguments into the prompt and adjust style per model
+            promptify_view: Function formatting filters for prompt
+        """
         self._llm_client = llm_client
         self._prompt_template = prompt_template or copy.deepcopy(default_iql_template)
         self._prompt_builder = prompt_builder or PromptBuilder()
@@ -43,8 +50,8 @@ class IQLGenerator:
         event_tracker: EventTracker,
         conversation: Optional[IQLPromptTemplate] = None,
     ) -> Tuple[str, IQLPromptTemplate]:
-        # todo: add more generation-related arguments here once BaseLLM interface is established
-        """Uses LLM to generate IQL in text form
+        """
+        Uses LLM to generate IQL in text form
 
         Args:
             question: user question

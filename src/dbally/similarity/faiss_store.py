@@ -5,12 +5,17 @@ import faiss
 import numpy as np
 
 from dbally.embedding_client.base import EmbeddingClient
-from dbally.similarity.store import AbstractStore
+from dbally.similarity.store import SimilarityStore
 
 
-class FaissStore(AbstractStore):
+class FaissStore(SimilarityStore):
     """
-    Store for text embeddings using Meta Faiss.
+    The FaissStore class facilitates interaction with Meta Faiss.
+
+    This component is used while mapping a user input to the closest matching value in the data source.
+
+    In particular, it indexes values obtained via fetcher, allowing the system to
+    find the closest match to the user's input.
     """
 
     def __init__(

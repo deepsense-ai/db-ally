@@ -2,7 +2,7 @@
 
 db-ally offers an expandable event handler system. You can create your own event handler to log db-ally executions to any system you want.
 
-In this guide we will implement a simple [Event Handler](../reference/event_handler.md) that logs every execution to a separate file.
+In this guide we will implement a simple [Event Handler](../reference/event_handlers/index.md) that logs every execution to a separate file.
 
 
 ## Implementing FileEventHandler

@@ -1,0 +1,3 @@
+# SimilarityFetcher
+
+::: dbally.similarity.SimilarityFetcher

@@ -17,16 +17,40 @@ nav:
       - how-to/create_custom_event_handler.md
       - how-to/sql_views.md
   - API Reference:
+      - reference/index.md
       - reference/collection.md
-      - reference/event_handler.md
-      - reference/faiss_store.md
-      - reference/iql_generator.md
-      - reference/llm_client.md
-      - reference/llm_view_selector.md
+      - Views:
+          - reference/views/index.md
+          - reference/views/methods.md
+          - reference/views/sqlalchemy.md
+      - IQL:
+          - reference/iql/index.md
+          - reference/iql/iql_generator.md
+      - LLMs:
+          - reference/llm/index.md
+          - reference/llm/llm_options.md
+          - reference/llm/openai.md
+          - reference/llm/prompt_builder.md
+      - Similarity:
+        - reference/similarity/index.md
+        - Store:
+            - reference/similarity/similarity_store/index.md
+            - reference/similarity/similarity_store/faiss.md
+        - Fetcher:
+            - reference/similarity/similarity_fetcher/index.md
+            - reference/similarity/similarity_fetcher/sqlalchemy.md
+            - reference/similarity/similarity_fetcher/sqlalchemy_simple.md
+      - Embeddings:
+          - reference/embeddings/index.md
+          - reference/embeddings/openai.md
+      - Event handlers:
+          - reference/event_handlers/index.md
+          - reference/event_handlers/cli.md
+          - reference/event_handlers/langsmith.md
+      - View Selection:
+          - reference/view_selection/index.md
+          - reference/view_selection/llm_view_selector.md
       - reference/nl_responder.md
-      - reference/openai_embedding_client.md
-      - reference/openai_llm_client.md
-      - reference/prompt_builder.md
   - About:
       - about/roadmap.md
 

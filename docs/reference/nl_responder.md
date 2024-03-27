@@ -1,6 +1,6 @@
 # NLResponder
 
-`NLResponder` abstract class can be utilized to transform a database output into a natural language response to user queries.
+`NLResponder` class can be utilized to transform a database output into a natural language response to user queries.
 
 The method used to generate the response is `self.generate_response`. It essentially generates a natural language response to the user's question using a LLM. Here's a breakdown of the steps:
 
