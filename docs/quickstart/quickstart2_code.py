@@ -4,14 +4,14 @@ import os
 import asyncio
 from typing_extensions import Annotated
 
+import sqlalchemy
+from sqlalchemy import create_engine
+from sqlalchemy.ext.automap import automap_base
+
 from dbally import decorators, SqlAlchemyBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
 from dbally.embedding_client.openai import OpenAiEmbeddingClient
-
-import sqlalchemy
-from sqlalchemy import create_engine
-from sqlalchemy.ext.automap import automap_base
 
 engine = create_engine('sqlite:///candidates.db')
 
