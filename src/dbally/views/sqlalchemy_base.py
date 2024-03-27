@@ -1,14 +1,11 @@
 import abc
 import asyncio
-import inspect
 import time
-from typing import Callable, Tuple
 
 import sqlalchemy
 
 from dbally.data_models.execution_result import ExecutionResult
 from dbally.iql import IQLQuery, syntax
-from dbally.views import decorators
 from dbally.views.methods_base import MethodsBaseView
 
 
@@ -43,7 +40,7 @@ class SqlAlchemyBaseView(MethodsBaseView):
         if isinstance(node, syntax.BoolOp):
             return await self._build_filter_bool_op(node)
         if isinstance(node, syntax.FunctionCall):
-            return await self._build_filter_call(node)
+            return await self.call_filter_method(node)
 
         raise ValueError(f"Unsupported grammar: {node}")
 
@@ -63,38 +60,6 @@ class SqlAlchemyBaseView(MethodsBaseView):
         if hasattr(bool_op, "child"):
             return alchemy_op(await self._build_filter_node(bool_op.child))
         raise ValueError(f"BoolOp {bool_op} has no children")
-
-    def _method_with_args_from_call(
-        self, func: syntax.FunctionCall, method_decorator: Callable
-    ) -> Tuple[Callable, list]:
-        """
-        Converts a IQL FunctionCall node to a method object and its arguments.
-        """
-        decorator_name = method_decorator.__name__
-
-        if not hasattr(self, func.name):
-            raise ValueError(f"The {decorator_name} method {func.name} doesn't exists")
-
-        method = getattr(self, func.name)
-
-        if (
-            not hasattr(method, "_methodDecorator")
-            or method._methodDecorator != method_decorator  # pylint: disable=protected-access
-        ):
-            raise ValueError(f"The method {func.name} is not decorated with {decorator_name}")
-
-        return method, func.arguments
-
-    async def _build_filter_call(self, func: syntax.FunctionCall) -> sqlalchemy.ColumnElement:
-        """
-        Converts a IQL FunctonCall filter to a SQLAlchemy expression, based on calling
-        the corresponding filter method.
-        """
-        method, args = self._method_with_args_from_call(func, decorators.view_filter)
-
-        if inspect.iscoroutinefunction(method):
-            return await method(*args)
-        return method(*args)
 
     def execute(self, dry_run: bool = False) -> ExecutionResult:
         """

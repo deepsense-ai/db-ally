@@ -1,6 +1,6 @@
 # Roadmap
 
-db-ally is actively developed and maintained by a core team at [deepsense.ai](deepsense.ai) and a community of contributors.
+db-ally is actively developed and maintained by a core team at [deepsense.ai](https://deepsense.ai) and a community of contributors.
 
 We are constantly working on new features and improvements.
 If you have any ideas or suggestions, feel free to [open an issue](https://github.com/deepsense-ai/db-ally/issues) or [a pull request](https://github.com/deepsense-ai/db-ally/pulls).
