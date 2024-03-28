@@ -3,6 +3,7 @@
 from dbally.views import decorators
 from dbally.views.base import AbstractBaseView
 from dbally.views.methods_base import MethodsBaseView
+from dbally.views.pandas_base import DataFrameBaseView
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
 from .__version__ import __version__
@@ -17,4 +18,5 @@ __all__ = [
     "MethodsBaseView",
     "SqlAlchemyBaseView",
     "AbstractBaseView",
+    "DataFrameBaseView",
 ]

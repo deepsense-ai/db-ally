@@ -13,11 +13,13 @@ nav:
       - concepts/similarity_indexes.md
       - concepts/nl_responder.md
   - How-to:
+      - Using data sources:
+        - how-to/sql_views.md
+        - how-to/pandas_views.md
+        - how-to/custom_views.md
       - how-to/log_runs_to_langsmith.md
       - how-to/create_custom_event_handler.md
-      - how-to/sql_views.md
       - how-to/openai_assistants_integration.md
-      - how-to/custom_views.md
   - API Reference:
       - reference/collection.md
       - reference/event_handler.md

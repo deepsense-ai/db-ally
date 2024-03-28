@@ -5,7 +5,6 @@ import re
 import sqlalchemy
 
 from dbally.iql import IQLQuery
-from dbally.views.base import ExposedFunction, MethodParamWithTyping
 from dbally.views.decorators import view_filter
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
@@ -46,20 +45,7 @@ async def test_filter_sql_generation() -> None:
     mock_view = MockSqlAlchemyView(mock_connection.engine)
     query = await IQLQuery.parse(
         'method_foo(1) and method_bar("London", 2020)',
-        allowed_functions=[
-            ExposedFunction(
-                name="method_foo",
-                description="",
-                parameters=[
-                    MethodParamWithTyping(name="foo", type=int),
-                ],
-            ),
-            ExposedFunction(
-                name="method_bar",
-                description="",
-                parameters=[MethodParamWithTyping(name="city", type=str), MethodParamWithTyping(name="year", type=int)],
-            ),
-        ],
+        allowed_functions=mock_view.list_filters(),
     )
     await mock_view.apply_filters(query)
     sql = normalize_whitespace(mock_view.execute(dry_run=True).context["sql"])

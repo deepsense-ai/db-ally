@@ -26,7 +26,7 @@ Below you can find a list of planned integrations.
 ### Data sources
 
 - [x] Sqlalchemy
-- [ ] Pandas DataFrame
+- [x] Pandas DataFrame
 - [ ] HTTP REST Endpoints
 - [ ] GraphQL Endpoints
 

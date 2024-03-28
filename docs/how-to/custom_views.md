@@ -1,4 +1,4 @@
-# How-To: Write Custom Views
+# How-To: Use custom data sources with db-ally
 
 !!! note
     This is an advanced topic. If you're looking to create a view that retrieves data from an SQL database, please refer to the [SQL Views](sql_views.md) guide instead.
