@@ -13,7 +13,7 @@ To use a similarity index with a custom store, you need to create a custom store
 
 ## Implementing a Custom Store
 
-To implement a custom store, you need to create a class which extends the `AbstractStore` class provided by db-ally. The `AbstractStore` class has two methods that you are required to implement:
+To implement a custom store, you need to create a class which extends the `AbstractStore` class provided by db-ally. The `AbstractStore` class has two asynchronous methods that you need to implement:
 
 * `store`: This method should store the values in the custom store.
 * `find_similar`: This method should find the value most similar to a given input.
@@ -29,11 +29,11 @@ class PickleStore(AbstractStore):
     def __init__(self, file_path):
         self.file_path = file_path
 
-    def store(self, values):
+    async def store(self, values):
         with open(self.file_path, 'wb') as f:
             pickle.dump(values, f)
 
-    def find_similar(self, value):
+    async def find_similar(self, value):
         with open(self.file_path, 'rb') as f:
             values = pickle.load(f)
             return min(values, key=lambda x: Levenshtein.distance(x, value))
@@ -69,7 +69,7 @@ country_similarity.update()
 Then, you can utilize the similarity index to find the closest matching value to a user input and generate a response based on that value.
 
 ```python
-print(country_similarity.similar("bagle"))
+print(async country_similarity.similar("bagle"))
 ```
 
 This will return the closest matching dog breed to "bagle" - in this case, "beagle".

@@ -13,7 +13,7 @@ To use a similarity index with data from a custom source, you need to create a c
 
 ## Creating a Custom Fetcher
 
-To craft a custom fetcher, you need to create a class extending the `AbstractFetcher` class provided by db-ally. The `AbstractFetcher` class possesses a single method, `fetch`, which you need to implement. This method should give back a list of strings representing all possible values from your data source.
+To craft a custom fetcher, you need to create a class extending the `AbstractFetcher` class provided by db-ally. The `AbstractFetcher` class possesses a single asynchronous method, `fetch`, which you need to implement. This method should give back a list of strings representing all possible values from your data source.
 
 For example, if you wish to index the list of dog breeds from the web API provided by [dog.ceo](https://dog.ceo/), you can create a fetcher like this:
 
@@ -22,7 +22,7 @@ from dbally.similarity.fetcher import AbstractFetcher
 import requests
 
 class DogBreedsFetcher(AbstractFetcher):
-    def fetch(self):
+    async def fetch(self):
         response = requests.get('https://dog.ceo/api/breeds/list/all').json()
         breeds = response['message'].keys()
         return list(breeds)
@@ -62,7 +62,7 @@ breeds_similarity.update()
 Then, you can use the similarity index to find the most similar value to a user input and deliver a response based on that value.
 
 ```python
-print(breeds_similarity.similar("bagle"))
+print(async breeds_similarity.similar("bagle"))
 ```
 
 This will return the most similar dog breed to "bagle" based on the data retrieved from the dog.ceo API - in this case, "beagle".
