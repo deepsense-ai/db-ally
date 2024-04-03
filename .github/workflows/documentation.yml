@@ -23,6 +23,4 @@ jobs:
             ${{ runner.os }}-pip-
 
       - name: Build docs
-        run: |
-          source venv/bin/activate
-          ./.github/scripts/build_docs.sh
+        run: ./.github/scripts/build_docs.sh
