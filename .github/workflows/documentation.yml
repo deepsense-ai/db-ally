@@ -8,6 +8,7 @@ jobs:
   pages:
     runs-on: ubuntu-latest
     container: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
+    environment: prod
     permissions:
       contents: write
     steps:
