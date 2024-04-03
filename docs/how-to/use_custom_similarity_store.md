@@ -63,13 +63,13 @@ In this example, we used the sample `DogBreedsFetcher` fetcher detailed in the [
 You can use an index with a custom store [the same way](../quickstart/quickstart2.md) you would use one with a built-in store. The similarity index will map user input to the closest matching value from your data source, enabling you to deliver more accurate responses. It's important to regularly update the similarity index with new values from your data source to keep it current. Do this by invoking the `update` method on the similarity index.
 
 ```python
-country_similarity.update()
+await country_similarity.update()
 ```
 
 Then, you can utilize the similarity index to find the closest matching value to a user input and generate a response based on that value.
 
 ```python
-print(async country_similarity.similar("bagle"))
+print(await country_similarity.similar("bagle"))
 ```
 
 This will return the closest matching dog breed to "bagle" - in this case, "beagle".
