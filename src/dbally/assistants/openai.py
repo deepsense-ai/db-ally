@@ -13,6 +13,7 @@ _DBALLY_INFO = "Dbally has access to the following database views: "
 _DBALLY_INSTRUCTION = (
     "Please ask questions in natural language e.g 'How many candidates have applied for the position of xyz'. "
     "If query can be divided into multiple parts, please use multiple function calls."
+    "If necessary paraphrase queries and fill them with context information"
 )
 
 
@@ -108,6 +109,9 @@ class OpenAIAdapter(AssistantAdapter):
                     else:
                         try:
                             state = FunctionCallState.SUCCESS
+                            # TODO: Think about placing it inside gather. Use case with more than
+                            # 1 call to dbally is probably rather rare though
+                            # In case of  raise_exception use TaskGroup, otherwise asyncio.gather.
                             response_dbally = await self.collection.ask(question=function_args.get("query"))
                             response = json.dumps(response_dbally.results)
                         except UnsupportedQueryError:

@@ -32,7 +32,7 @@ if run.status == "requires_action":
 
     # Implement your custom logic operating on the response: List[OpenAIDballyResponse]
 
-    response_parsed_for_gpt = adapter.process_functions_executions(response)
+    response_parsed_for_gpt = adapter.process_functions_execution(response)
     run = client.beta.threads.runs.submit_tool_outputs(
                 thread_id=thread.id,
                 run_id=run.id,

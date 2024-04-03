@@ -31,11 +31,13 @@ class Candidate(Base):
     university: Mapped[str]
     skills: Mapped[str]
     tags: Mapped[str]
+    available_from: Mapped[str]
 
     def __repr__(self) -> str:
         return f"Candidate(id={self.id!r}, name={self.name!r}, country={self.country!r},\
             years_of_experience={self.years_of_experience!r}, position={self.position!r},\
-            university={self.university!r}), skills={self.skills!r}, tags={self.tags!r})"
+            university={self.university!r}), skills={self.skills!r}, tags={self.tags!r}),\
+            available_from={self.available_from!r})"
 
 
 class JobOffer(Base):
@@ -46,13 +48,13 @@ class JobOffer(Base):
     __tablename__ = "offer"
     id: Mapped[int] = mapped_column(primary_key=True)
     company: Mapped[str]
-    title: Mapped[str]
+    position: Mapped[str]
     excpected_years_of_experience: Mapped[int]
     salary: Mapped[str]
 
     def __repr__(self) -> str:
         return f"Offer(id={self.id!r}, company={self.company!r},\
-            title={self.title!r}, excpected_years_of_experience={self.excpected_years_of_experience!r},\
+            position={self.position!r}, excpected_years_of_experience={self.excpected_years_of_experience!r},\
             salary={self.salary!r})"
 
 
@@ -93,6 +95,7 @@ def fill_candidate_table() -> None:
                     university=row["university"],
                     skills=row["skills"],
                     tags=row["tags"],
+                    available_from=row["available_from"],
                 )
                 candidates.append(candidate)
 
@@ -105,7 +108,7 @@ def fill_candidate_table() -> None:
             for i, row in enumerate(reader):
                 offer = JobOffer(
                     company=row["company"],
-                    title=row["title"],
+                    position=row["position"],
                     excpected_years_of_experience=row["expected_years_of_experience"],
                     salary=row["salary"],
                 )

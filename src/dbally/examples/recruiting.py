@@ -2,14 +2,31 @@ import asyncio
 from dataclasses import dataclass
 from typing import List
 
-from dbally_benchmark.text2sql.prompt_template import TEXT2SQL_PROMPT_TEMPLATE
-
 import dbally
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.examples.db import ENGINE, fill_candidate_table, get_recruitment_db_description
 from dbally.examples.views import RecruitmentView
 from dbally.llm_client.openai_client import OpenAIClient
+from dbally.prompts.prompt_builder import PromptTemplate
+
+TEXT2SQL_PROMPT_TEMPLATE = PromptTemplate(
+    (
+        {
+            "role": "system",
+            "content": (
+                "You are given the following SQL tables:"
+                "\n\n{schema}\n\n"
+                "Your job is to write queries given a user’s request."
+                "Please return only the query, do not provide any extra text or explanation."
+            ),
+        },
+        {
+            "role": "user",
+            "content": ("{question}"),
+        },
+    )
+)
 
 
 @dataclass
