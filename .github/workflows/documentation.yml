@@ -6,8 +6,7 @@ on:
 
 jobs:
   pages:
-    runs-on: ubuntu-latest
-    container: python:3.11
+    runs-on: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
     permissions:
       contents: write
     steps:
@@ -27,10 +26,6 @@ jobs:
         run: . ./setup_dev_env.sh
 
       - name: Build docs
-        run: ./build_docs.sh
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
+        run: |
+          source venv/bin/activate
+          ./.github/scripts/build_docs.sh
