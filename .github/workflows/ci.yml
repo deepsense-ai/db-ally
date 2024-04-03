@@ -61,7 +61,9 @@ jobs:
         run: . ./setup_dev_env.sh
 
       - name: Check licenses
-        run: ./check_licenses.sh
+        run: |
+          source venv/bin/activate
+          ./check_licenses.sh
 
       - name: Generate pip freeze
         run: |
