@@ -24,3 +24,5 @@ jobs:
 
       - name: Build docs
         run: ./.github/scripts/build_docs.sh
+        env:
+          GCP_KEY: ${{ secrets.GCP_KEY }}
