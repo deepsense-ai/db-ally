@@ -16,13 +16,18 @@ class MethodsBaseView(AbstractBaseView, metaclass=abc.ABCMeta):
     # Method arguments that should be skipped when listing methods
     HIDDEN_ARGUMENTS = ["self", "select", "return"]
 
-    def _list_methods_by_decorator(self, decorator: Callable) -> List[ExposedFunction]:
+    @classmethod
+    def list_methods_by_decorator(cls, decorator: Callable) -> List[ExposedFunction]:
         """
         Lists all methods decorated with the given decorator.
+
+        :param decorator: The decorator to filter the methods
+
+        :return: List of exposed methods
         """
         methods = []
-        for method_name in dir(self):
-            method = getattr(self, method_name)
+        for method_name in dir(cls):
+            method = getattr(cls, method_name)
             if (
                 hasattr(method, "_methodDecorator")
                 and method._methodDecorator == decorator  # pylint: disable=protected-access
@@ -33,7 +38,7 @@ class MethodsBaseView(AbstractBaseView, metaclass=abc.ABCMeta):
                         name=method_name,
                         description=textwrap.dedent(method.__doc__).strip() if method.__doc__ else "",
                         parameters=[
-                            MethodParamWithTyping(n, t) for n, t in annotations if n not in self.HIDDEN_ARGUMENTS
+                            MethodParamWithTyping(n, t) for n, t in annotations if n not in cls.HIDDEN_ARGUMENTS
                         ],
                     )
                 )
@@ -44,7 +49,7 @@ class MethodsBaseView(AbstractBaseView, metaclass=abc.ABCMeta):
         Returns:
             Filters defined inside the View and decorated with `decorators.view_filter`.
         """
-        return self._list_methods_by_decorator(decorators.view_filter)
+        return self.list_methods_by_decorator(decorators.view_filter)
 
     def _method_with_args_from_call(
         self, func: syntax.FunctionCall, method_decorator: Callable
