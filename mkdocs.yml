@@ -1,4 +1,5 @@
 site_name: db-ally
+repo_url: https://github.com/deepsense-ai/db-ally
 nav:
   - db-ally: index.md
   - Quickstart:
@@ -84,3 +85,7 @@ plugins:
             signature_crossrefs: true
             show_symbol_type_heading: true
             show_symbol_type_toc: true
+extra:
+  analytics:
+    provider: google
+    property: G-FBBJRN0H0G
