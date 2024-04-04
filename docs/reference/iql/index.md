@@ -1,5 +1,7 @@
 # Syntax
 
+This reference page describes all building blocks of the [Intermediate Query Language (IQL)](../../concepts/iql.md).
+
 ::: dbally.iql.syntax.FunctionCall
 
 ::: dbally.iql.syntax.BoolOp

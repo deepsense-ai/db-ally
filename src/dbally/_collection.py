@@ -18,7 +18,9 @@ from dbally.views.base import AbstractBaseView
 class Collection:
     """
     Collection is a container for a set of views that can be used by db-ally to answer user questions.
-    It also stores configuration such as LLM model choice, vector db or available data sources.
+
+    Tip:
+        It is recommended to create new collections using [`dbally.create_colletion`](index.md) function
     """
 
     def __init__(
@@ -30,6 +32,23 @@ class Collection:
         nl_responder: NLResponder,
         n_retries: int = 3,
     ) -> None:
+        """
+        Args:
+            name: Name of the collection is available for [Event handlers](event_handlers/index.md) and is\
+            used to distinguish different db-ally runs.
+            view_selector: As you register more then one [View](views/index.md) within single collection,\
+            before generating the IQL query, a View that fits query the most is selected by the\
+            [ViewSelector](view_selection/index.md).
+            iql_generator: Objects that translates natural language to the\
+            [Intermediate Query Language (IQL)](../concepts/iql.md)
+            event_handlers: Event handlers used by the collection during query executions. Can be used\
+            to log events as [CLIEventHandler](event_handlers/cli.md) or to validate system performance\
+            as [LangSmithEventHandler](event_handlers/langsmith.md).
+            nl_responder: Object that translates RAW response from db-ally into natural language.
+            n_retries: IQL generator may produce invalid IQL. If this is the case this argument specifies\
+            how many times db-ally will try to regenerate it. Previous try with the error message is\
+            appended to the chat history to guide next generations.
+        """
         self.name = name
         self.n_retries = n_retries
         self._views: Dict[str, Callable[[], AbstractBaseView]] = {}
@@ -43,15 +62,29 @@ class Collection:
 
     def add(self, view: Type[T], builder: Optional[Callable[[], T]] = None, name: Optional[str] = None) -> None:
         """
-        Register new view that will be available to query via the collection.
+        Register new [View](views/index.md) that will be available to query via the collection.
 
         Args:
-            view: a view type to be added to the collection
-            builder: optional factory function that will be used to create the view instance
-            name: optional name of the view (defaults to the name of the class)
+            view: A class inherithing from AbstractBaseView. Object of this type will be initialized during\
+            query execution. We expect Class instead of object, as otherwise Views must have been implemented\
+            stateless, which would be cumbersome.
+            builder: Optional factory function that will be used to create the View instance. Use it when you\
+            need to pass outcome of API call or database connection to the view and it can change over time.
+            name: Custom name of the view (defaults to the name of the class).
 
         Raises:
-            ValueError: if view with the given name is already registered
+            ValueError: if view with the given name is already registered or views class possess some non-default\
+            arguments.
+
+        **Example** of custom `builder` usage
+
+        ```python
+            def build_dogs_df_view():
+                dogs_df = request.get("https://dog.ceo/api/breeds/list")
+                return DogsDFView(dogs_df)
+
+            collection.add(DogsDFView, build_dogs_df_view)
+        ```
         """
         if name is None:
             name = view.__name__
@@ -102,14 +135,15 @@ class Collection:
         Ask question in a text form and retrieve the answer based on the available views.
 
         Question answering is composed of following steps:
-            - View Selection
-            - IQL Generation
-            - IQL Parsing
-            - Query Building
-            - Query Execution
+            1. View Selection
+            2. IQL Generation
+            3. IQL Parsing
+            4. Query Building
+            5. Query Execution
 
         Args:
-            question: question in text form
+            question: question posed using natural language representation e.g\
+            "What job offers for Data Scientists do we have?"
             dry_run: if True, only generate the query without executing it
             return_natural_response: if True (and dry_run is False as natural response requires query results),
                                      the natural response will be included in the answer
@@ -119,6 +153,8 @@ class Collection:
 
         Raises:
             ValueError: if collection is empty
+            IQLError: if incorrect IQL was generated `n_retries` amount of times.
+            ValueError: if incorrect IQL was generated `n_retries` amount of times.
         """
         event_tracker = EventTracker.initialize_with_handlers(self._event_handlers)
 

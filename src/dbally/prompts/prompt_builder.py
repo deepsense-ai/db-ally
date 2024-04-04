@@ -29,7 +29,7 @@ class PromptBuilder:
 
             self._tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    def _format_prompt(self, prompt_template: PromptTemplate, fmt: Dict[str, str]) -> ChatFormat:
+    def format_prompt(self, prompt_template: PromptTemplate, fmt: Dict[str, str]) -> ChatFormat:
         """
         Format prompt using provided arguments
 
@@ -57,7 +57,7 @@ class PromptBuilder:
             KeyError: If fmt does not fill all template arguments.
         """
 
-        prompt = self._format_prompt(prompt_template, fmt)
+        prompt = self.format_prompt(prompt_template, fmt)
         if self._tokenizer is not None:
             prompt = self._tokenizer.apply_chat_template(prompt, tokenize=False, add_generation_prompt=True)
         return prompt

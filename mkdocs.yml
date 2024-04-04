@@ -21,28 +21,10 @@ nav:
       - reference/collection.md
       - Views:
           - reference/views/index.md
-          - reference/views/methods.md
-          - reference/views/sqlalchemy.md
+          - reference/views/databases.md
       - IQL:
           - reference/iql/index.md
           - reference/iql/iql_generator.md
-      - LLMs:
-          - reference/llm/index.md
-          - reference/llm/llm_options.md
-          - reference/llm/openai.md
-          - reference/llm/prompt_builder.md
-      - Similarity:
-        - reference/similarity/index.md
-        - Store:
-            - reference/similarity/similarity_store/index.md
-            - reference/similarity/similarity_store/faiss.md
-        - Fetcher:
-            - reference/similarity/similarity_fetcher/index.md
-            - reference/similarity/similarity_fetcher/sqlalchemy.md
-            - reference/similarity/similarity_fetcher/sqlalchemy_simple.md
-      - Embeddings:
-          - reference/embeddings/index.md
-          - reference/embeddings/openai.md
       - Event handlers:
           - reference/event_handlers/index.md
           - reference/event_handlers/cli.md
@@ -51,6 +33,23 @@ nav:
           - reference/view_selection/index.md
           - reference/view_selection/llm_view_selector.md
       - reference/nl_responder.md
+      - LLMs:
+          - reference/llm/index.md
+          - reference/llm/llm_options.md
+          - reference/llm/openai.md
+          - reference/llm/prompt_builder.md
+      - Similarity:
+          - reference/similarity/index.md
+          - Store:
+              - reference/similarity/similarity_store/index.md
+              - reference/similarity/similarity_store/faiss.md
+          - Fetcher:
+              - reference/similarity/similarity_fetcher/index.md
+              - reference/similarity/similarity_fetcher/sqlalchemy.md
+              - reference/similarity/similarity_fetcher/sqlalchemy_simple.md
+      - Embeddings:
+          - reference/embeddings/index.md
+          - reference/embeddings/openai.md
   - About:
       - about/roadmap.md
 
@@ -96,8 +95,8 @@ plugins:
       handlers:
         python:
           options:
-            extensions:
-              - griffe_typingdoc
+            # extensions:
+            #   - griffe_typingdoc
             show_root_heading: true
             show_if_no_docstring: true
             inherited_members: true
@@ -105,9 +104,10 @@ plugins:
             separate_signature: true
             unwrap_annotated: true
             filters:
-              - '!^_'
+              - "!^_"
             merge_init_into_class: true
             docstring_section_style: spacy
             signature_crossrefs: true
             show_symbol_type_heading: true
             show_symbol_type_toc: true
+            show_signature_annotations: true

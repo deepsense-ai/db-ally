@@ -17,7 +17,7 @@ class LLMClient(abc.ABC):
     It accepts parameters including the template, format, event tracker,
     and optional generation parameters like frequency_penalty, max_tokens, and temperature
     (the full list of options is provided by `LLMOptions` class).
-    It constructs a prompt using the `PromptBuilder` instance and generates text using the `self._call` method.
+    It constructs a prompt using the `PromptBuilder` instance and generates text using the `self.call` method.
     """
 
     def __init__(self, model_name: str):
@@ -63,13 +63,13 @@ class LLMClient(abc.ABC):
         event = LLMEvent(prompt=prompt, type=type(template).__name__)
 
         async with event_tracker.track_event(event) as span:
-            event.response = await self._call(prompt, template.response_format, options, event)
+            event.response = await self.call(prompt, template.response_format, options, event)
             span(event)
 
         return event.response
 
     @abc.abstractmethod
-    async def _call(
+    async def call(
         self,
         prompt: Union[str, ChatFormat],
         response_format: Optional[Dict[str, str]],

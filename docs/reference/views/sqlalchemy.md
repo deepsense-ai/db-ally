@@ -1,3 +1,0 @@
-# SqlAlchemyBaseView
-
-::: dbally.SqlAlchemyBaseView
