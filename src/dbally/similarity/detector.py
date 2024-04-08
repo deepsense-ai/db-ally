@@ -27,10 +27,11 @@ class SimilarityIndexDetector:
     from MethodsBaseView (including all built-in dbally views). Automatically detects similarity
     indexes on arguments of view's filter methods.
 
-    :param module: The module to search for similarity indexes
-    :param chosen_view_name: The name of the view to search in (optional, all views if None)
-    :param chosen_method_name: The name of the method to search in (optional, all methods if None)
-    :param chosen_argument_name: The name of the argument to search in (optional, all arguments if None)
+    Args:
+        module: The module to search for similarity indexes
+        chosen_view_name: The name of the view to search in (optional, all views if None)
+        chosen_method_name: The name of the method to search in (optional, all methods if None)
+        chosen_argument_name: The name of the argument to search in (optional, all arguments if None)
     """
 
     def __init__(
@@ -52,11 +53,14 @@ class SimilarityIndexDetector:
         "path.to.module:ViewName.method_name.argument_name" where each part after the
         colon is optional.
 
-        :param path: The path to the object
+        Args:
+            path: The path to the object
 
-        :return: The SimilarityIndexDetector object
+        Returns:
+            The SimilarityIndexDetector object
 
-        :raises SimilarityIndexDetectorException: If the module is not found
+        Raises:
+            SimilarityIndexDetectorException: If the module is not found
         """
         module_path, *object_path = path.split(":")
         object_parts = object_path[0].split(".") if object_path else []
@@ -72,11 +76,14 @@ class SimilarityIndexDetector:
         """
         Get the module from the given path
 
-        :param module_path: The path to the module
+        Args:
+            module_path: The path to the module
 
-        :return: The module
+        Returns:
+            The module
 
-        :raises SimilarityIndexDetectorException: If the module is not found
+        Raises:
+            SimilarityIndexDetectorException: If the module is not found
         """
         try:
             module = importlib.import_module(module_path)
@@ -94,9 +101,11 @@ class SimilarityIndexDetector:
         """
         List method-based views in the module, filtering by the chosen view name if given during initialization.
 
-        :return: List of views
+        Returns:
+            List of views
 
-        :raises SimilarityIndexDetectorException: If the chosen view is not found
+        Raises:
+            SimilarityIndexDetectorException: If the chosen view is not found
         """
         views = [
             getattr(self.module, name)
@@ -115,11 +124,14 @@ class SimilarityIndexDetector:
         """
         List filters in the given view, filtering by the chosen method name if given during initialization.
 
-        :param view: The view
+        Args:
+            view: The view
 
-        :return: List of filter names
+        Returns:
+            List of filter names
 
-        :raises SimilarityIndexDetectorException: If the chosen method is not found
+        Raises:
+            SimilarityIndexDetectorException: If the chosen method is not found
         """
         methods = view.list_methods_by_decorator(decorators.view_filter)
         if self.chosen_method_name:
@@ -134,11 +146,14 @@ class SimilarityIndexDetector:
         """
         List arguments in the given method, filtering by the chosen argument name if given during initialization.
 
-        :param method: The method
+        Args:
+            method: The method
 
-        :return: List of argument names
+        Returns:
+            List of argument names
 
-        :raises SimilarityIndexDetectorException: If the chosen argument is not found
+        Raises:
+            SimilarityIndexDetectorException: If the chosen argument is not found
         """
         parameters = method.parameters
         if self.chosen_argument_name:
@@ -154,11 +169,14 @@ class SimilarityIndexDetector:
         List similarity indexes in the module, filtering by the chosen view, method and argument names if given
         during initialization.
 
-        :param view: The view to search in (optional, all views if None)
+        Args:
+            view: The view to search in (optional, all views if None)
 
-        :return: Dictionary mapping indexes to method arguments that use them
+        Returns:
+            Dictionary mapping indexes to method arguments that use them
 
-        :raises SimilarityIndexDetectorException: If any of the chosen path parts is not found
+        Raises:
+            SimilarityIndexDetectorException: If any of the chosen path parts is not found
         """
         indexes: Dict[AbstractSimilarityIndex, List[str]] = {}
         views = self.list_views() if view is None else [view]
@@ -170,3 +188,17 @@ class SimilarityIndexDetector:
                             f"{view_class.__name__}.{method.name}.{parameter.name}"
                         )
         return indexes
+
+    async def update_indexes(self) -> None:
+        """
+        Update similarity indexes in the module, filtering by the chosen view, method and argument names if given
+        during initialization.
+
+        Raises:
+            SimilarityIndexDetectorException: If any of the chosen path parts is not found
+        """
+        indexes = self.list_indexes()
+        if not indexes:
+            raise SimilarityIndexDetectorException("No similarity indexes found.")
+        for index in indexes:
+            await index.update()
