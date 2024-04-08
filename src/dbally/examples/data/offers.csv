@@ -1,51 +1,51 @@
-title,expected_years_of_experience,company,salary
-Software Engineer,3,TechBlast Inc.,$80000
-Data Scientist,5,DataTech Solutions,$90000
-Systems Administrator,4,CloudCom Innovations,$75000
-Web Developer,2,WebWorks Ltd.,$65000
-Network Engineer,6,NetConnect Solutions,$85000
-DevOps Engineer,4,DevOpsX Technologies,$85000
-Cybersecurity Analyst,3,SecureNet Systems,$80000
-Database Administrator,5,DataWorks Corp.,$80000
-Machine Learning Engineer,4,AI Solutions Ltd.,$90000
-UI/UX Designer,3,DesignTech Studios,$70000
-Software Architect,7,ArchiTech Innovations,$110000
-Full Stack Developer,4,FullStack Solutions Inc.,$85000
-IT Support Specialist,2,ITSupport Pro,$60000
-Cloud Solutions Architect,6,CloudGenius Technologies,$105000
-Blockchain Developer,3,BlockChain Co.,$90000
-Mobile App Developer,4,MobileTech Solutions,$80000
-Business Intelligence Analyst,4,BI Insights Ltd.,$85000
-IT Manager,8,IT Management Solutions,$120000
-QA Engineer,3,QA Technologies,$75000
-System Analyst,5,SystemAnalysis Inc.,$85000
-Software Tester,2,TestTech Corp.,$65000
-Cloud Engineer,4,CloudWorks Systems,$85000
-UI/UX Researcher,3,UXResearch Labs,$70000
-IT Security Specialist,5,SecurityTech Solutions,$90000
-Backend Developer,4,BackEnd Solutions,$80000
-Network Administrator,5,NetworkAdmin Pro,$85000
-UX Designer,3,UXDesign Studio,$70000
-IT Director,8,IT Director Inc.,$130000
-Data Scientist Intern,1,DataTech Solutions,$40000
-Cybersecurity Consultant,6,CyberGuard Ltd.,$100000
-Frontend Developer,3,FrontEnd Solutions,$75000
-Software Developer,4,DevTech Innovations,$80000
-Network Security Engineer,5,SecureNetwork Solutions,$90000
-Systems Engineer,4,SystemEngineer Pro,$80000
-IT Consultant,5,ITConsulting Services,$95000
-Data Analyst,3,DataAnalytics Inc.,$70000
-Cloud Consultant,4,CloudConsult Ltd.,$95000
-IT Auditor,5,AuditTech Solutions,$90000
-Mobile App Tester,2,AppTesting Pro,$60000
-IT Trainer,5,ITTraining Solutions,$85000
-Embedded Systems Engineer,4,EmbeddedTech Inc.,$90000
-IT Coordinator,3,ITCoordination Ltd.,$70000
-IT Recruiter,4,ITRecruit Pro,$80000
-Software Engineer Intern,1,TechBlast Inc.,$35000
-IT Risk Analyst,4,RiskTech Solutions,$85000
-IT Procurement Specialist,3,ITProcurement Co.,$75000
-IT Sales Executive,3,ITSales Solutions,$80000
-IT Business Analyst,4,ITAnalysis Ltd.,$85000
-IT Project Manager,6,ProjectTech Solutions,$110000
-IT Legal Counsel,5,ITLegal Pro,$120000
+position,expected_years_of_experience,company,salary
+Data Scientist,5,Apple,$90000
+Machine Learning Engineer,4,Microsoft,$85000
+Back-end Developer,4,Google,$80000
+Front-End Developer,3,OpenAI,$75000
+Software Engineer,3,HuggingFace,$80000
+Data Scientist,5,Microsoft,$95000
+Machine Learning Engineer,4,Google,$90000
+Back-end Developer,4,Apple,$85000
+Front-End Developer,3,HuggingFace,$80000
+Software Engineer,3,OpenAI,$85000
+Data Scientist,5,Google,$100000
+Machine Learning Engineer,4,HuggingFace,$95000
+Back-end Developer,4,Microsoft,$90000
+Front-End Developer,3,Apple,$85000
+Software Engineer,3,Google,$90000
+Data Scientist,5,OpenAI,$110000
+Machine Learning Engineer,4,Apple,$105000
+Back-end Developer,4,HuggingFace,$100000
+Front-End Developer,3,Microsoft,$95000
+Software Engineer,3,Apple,$100000
+Data Scientist,5,HuggingFace,$120000
+Machine Learning Engineer,4,OpenAI,$115000
+Back-end Developer,4,Microsoft,$110000
+Front-End Developer,3,Google,$105000
+Software Engineer,3,Microsoft,$110000
+Data Scientist,5,Google,$125000
+Machine Learning Engineer,4,Apple,$120000
+Back-end Developer,4,OpenAI,$115000
+Front-End Developer,3,HuggingFace,$110000
+Software Engineer,3,Google,$115000
+Data Scientist,5,Microsoft,$130000
+Machine Learning Engineer,4,HuggingFace,$125000
+Back-end Developer,4,Google,$120000
+Front-End Developer,3,Apple,$115000
+Software Engineer,3,OpenAI,$120000
+Data Scientist,5,HuggingFace,$135000
+Machine Learning Engineer,4,Google,$130000
+Back-end Developer,4,Apple,$125000
+Front-End Developer,3,Microsoft,$120000
+Software Engineer,3,HuggingFace,$125000
+Data Scientist,5,OpenAI,$140000
+Machine Learning Engineer,4,Microsoft,$135000
+Back-end Developer,4,HuggingFace,$130000
+Front-End Developer,3,Google,$125000
+Software Engineer,3,Apple,$130000
+Data Scientist,5,Google,$145000
+Machine Learning Engineer,4,Apple,$140000
+Back-end Developer,4,OpenAI,$135000
+Front-End Developer,3,HuggingFace,$130000
+Software Engineer,3,Microsoft,$135000

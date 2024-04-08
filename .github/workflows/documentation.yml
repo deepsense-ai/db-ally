@@ -1,0 +1,28 @@
+name: Build documentation
+
+on:
+  push:
+    branches: [main, master]
+
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+    container: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
+    environment: documentation
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-dev.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Build docs
+        run: ./.github/scripts/build_docs.sh
+        env:
+          GCP_KEY: ${{ secrets.GCP_KEY }}

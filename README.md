@@ -102,6 +102,6 @@ db-ally is released under MIT license.
 
 ## Roadmap
 
-db-ally is actively developed and maintained by a core team at [deepsense.ai](deepsense.ai) and a community of contributors.
+db-ally is actively developed and maintained by a core team at [deepsense.ai](https://deepsense.ai) and a community of contributors.
 
 You can find a list of planned features and integrations in the [Roadmap](https://db-ally.deepsense.ai/about/roadmap).

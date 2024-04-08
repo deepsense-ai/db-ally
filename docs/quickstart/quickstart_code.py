@@ -2,13 +2,14 @@
 import dbally
 import os
 import asyncio
-from dbally import decorators, SqlAlchemyBaseView
 
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 
+from dbally import decorators, SqlAlchemyBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
+
 
 engine = create_engine('sqlite:///candidates.db')
 

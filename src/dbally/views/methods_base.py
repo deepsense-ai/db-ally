@@ -1,7 +1,9 @@
 import abc
+import inspect
 import textwrap
-from typing import Callable, List
+from typing import Any, Callable, List, Tuple
 
+from dbally.iql import syntax
 from dbally.views import decorators
 from dbally.views.base import AbstractBaseView, ExposedFunction, MethodParamWithTyping
 
@@ -43,3 +45,43 @@ class MethodsBaseView(AbstractBaseView, metaclass=abc.ABCMeta):
             Filters defined inside the View and decorated with `decorators.view_filter`.
         """
         return self._list_methods_by_decorator(decorators.view_filter)
+
+    def _method_with_args_from_call(
+        self, func: syntax.FunctionCall, method_decorator: Callable
+    ) -> Tuple[Callable, list]:
+        """
+        Converts a IQL FunctionCall node to a method object and its arguments.
+
+        :param func: IQL FunctionCall node
+        :param method_decorator: The decorator that thhe method should have
+
+        :return: Tuple with the method object and its arguments
+        """
+        decorator_name = method_decorator.__name__
+
+        if not hasattr(self, func.name):
+            raise ValueError(f"The {decorator_name} method {func.name} doesn't exists")
+
+        method = getattr(self, func.name)
+
+        if (
+            not hasattr(method, "_methodDecorator")
+            or method._methodDecorator != method_decorator  # pylint: disable=protected-access
+        ):
+            raise ValueError(f"The method {func.name} is not decorated with {decorator_name}")
+
+        return method, func.arguments
+
+    async def call_filter_method(self, func: syntax.FunctionCall) -> Any:
+        """
+        Converts a IQL FunctonCall filter to a method call. If the method is a coroutine, it will be awaited.
+
+        :param func: IQL FunctionCall node
+
+        :return: The result of the method call
+        """
+        method, args = self._method_with_args_from_call(func, decorators.view_filter)
+
+        if inspect.iscoroutinefunction(method):
+            return await method(*args)
+        return method(*args)

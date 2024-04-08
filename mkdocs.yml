@@ -1,4 +1,5 @@
 site_name: db-ally
+repo_url: https://github.com/deepsense-ai/db-ally
 nav:
   - db-ally: index.md
   - Quickstart:
@@ -13,9 +14,15 @@ nav:
       - concepts/similarity_indexes.md
       - concepts/nl_responder.md
   - How-to:
+      - Using data sources:
+          - how-to/sql_views.md
+          - how-to/pandas_views.md
+          - how-to/custom_views.md
+      - how-to/use_custom_similarity_fetcher.md
+      - how-to/use_custom_similarity_store.md
       - how-to/log_runs_to_langsmith.md
       - how-to/create_custom_event_handler.md
-      - how-to/sql_views.md
+      - how-to/openai_assistants_integration.md
   - API Reference:
       - reference/index.md
       - reference/collection.md
@@ -111,3 +118,7 @@ plugins:
             show_symbol_type_heading: true
             show_symbol_type_toc: true
             show_signature_annotations: true
+extra:
+  analytics:
+    provider: google
+    property: G-FBBJRN0H0G
