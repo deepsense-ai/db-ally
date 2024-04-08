@@ -7,6 +7,7 @@ from dbally.views.pandas_base import DataFrameBaseView
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
 from .__version__ import __version__
+from ._collection import Collection
 from ._main import create_collection, use_event_handler, use_openai_llm
 
 __all__ = [
@@ -17,6 +18,7 @@ __all__ = [
     "decorators",
     "MethodsBaseView",
     "SqlAlchemyBaseView",
+    "Collection",
     "AbstractBaseView",
     "DataFrameBaseView",
 ]

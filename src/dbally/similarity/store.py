@@ -2,7 +2,7 @@ import abc
 from typing import List, Optional
 
 
-class AbstractStore(metaclass=abc.ABCMeta):
+class SimilarityStore(metaclass=abc.ABCMeta):
     """
     Base class for all stores. Has to be able to store the data and retrieve it.
     """

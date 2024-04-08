@@ -1,0 +1,3 @@
+# SqlAlchemyFetcher
+
+::: dbally.similarity.SqlAlchemyFetcher

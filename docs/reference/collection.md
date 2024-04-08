@@ -1,6 +1,11 @@
+# Collection
 
-Any extra examples, context etc. may go here...
+!!! tip
+    To understand the general idea better, visit the [Collection concept page](../concepts/collections.md).
 
-Auto generated content is embedded like this:
-
-::: dbally._collection.Collection
+::: dbally.Collection
+    options:
+        members:
+        - Collection
+        - add
+        - ask

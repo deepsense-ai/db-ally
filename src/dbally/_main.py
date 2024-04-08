@@ -12,13 +12,16 @@ default_llm_client: Optional[LLMClient] = None
 default_event_handlers: List[EventHandler] = []
 
 
-def use_openai_llm(model_name: str = "gpt-3.5-turbo", openai_api_key: Optional[str] = None) -> None:
+def use_openai_llm(
+    model_name: str = "gpt-3.5-turbo",
+    openai_api_key: Optional[str] = None,
+) -> None:
     """
-    Set default LLM client to use OpenAI.
+    Set the default LLM client to the [OpenAIClient](llm/openai.md).
 
     Args:
-        model_name: which OpenAI's model should be used
-        openai_api_key: OpenAI's API key - if None OPENAI_API_KEY environment variable will be used
+        model_name: Name of the [OpenAI's model](https://platform.openai.com/docs/models) to be used.
+        openai_api_key: OpenAI's API key. If None OPENAI_API_KEY environment variable will be used"
     """
     global default_llm_client  # pylint: disable=W0603
     default_llm_client = OpenAIClient(model_name=model_name, api_key=openai_api_key)
@@ -26,26 +29,42 @@ def use_openai_llm(model_name: str = "gpt-3.5-turbo", openai_api_key: Optional[s
 
 def use_event_handler(event_handler: EventHandler) -> None:
     """
-    Set default event handler to be used by all collections.
+    Add the given [event handler](event_handlers/index.md) to the list of default event handlers that \
+    are used by all collections.
 
     Args:
-        event_handler: The event handler to be used.
+        event_handler: [event handler](event_handlers/index.md)
     """
     global default_event_handlers  # pylint: disable=W0602
     default_event_handlers.append(event_handler)
 
 
-def create_collection(name: str, event_handlers: Optional[List[EventHandler]] = None) -> Collection:
+def create_collection(
+    name: str,
+    event_handlers: Optional[List[EventHandler]] = None,
+) -> Collection:
     """
-    Create a new collection that is a container for registering views, configuration and main entrypoint to db-ally
-    features.
+    Create a new [Collection](collection.md) that is a container for registering views and the\
+    main entrypoint to db-ally features.
+
+    ##Example
+
+    ```python
+        from dbally import create_collection
+        from dbally.audit.event_handlers.cli import CLIEventHandler
+
+        collection = create_collection("my_collection", event_handlers=[CLIEventHandler()])
+    ```
 
     Args:
-         name: The name of the collection
-         event_handlers: The event handlers to be used by the collection
+        name: Name of the collection is available for [Event handlers](event_handlers/index.md) and is\
+        used to distinguish different db-ally runs.
+        event_handlers: Event handlers used by the collection during query executions. Can be used to\
+        log events as [CLIEventHandler](event_handlers/cli.md) or to validate system performance as\
+        [LangSmithEventHandler](event_handlers/langsmith.md).
 
     Returns:
-        a new instance of DBAllyCollection
+        a new instance of db-ally Collection
 
     Raises:
         ValueError: if default LLM client is not configured

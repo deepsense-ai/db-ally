@@ -9,9 +9,9 @@ from dbally.audit.event_handlers.base import EventHandler
 from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart
 
 
-class LangsmithEventHandler(EventHandler[RunTree, RunTree]):
+class LangSmithEventHandler(EventHandler[RunTree, RunTree]):
     """
-    Logs events to a Langsmith instance.
+    Logs events to a LangSmith instance.
     """
 
     def __init__(self, api_key: str):

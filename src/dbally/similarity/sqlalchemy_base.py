@@ -4,11 +4,11 @@ from typing import List, Optional
 import sqlalchemy
 from sqlalchemy.sql.elements import ColumnClause
 
-from dbally.similarity.fetcher import AbstractFetcher
-from dbally.similarity.store import AbstractStore
+from dbally.similarity.fetcher import SimilarityFetcher
+from dbally.similarity.store import SimilarityStore
 
 
-class SqlAlchemyFetcher(AbstractFetcher):
+class SqlAlchemyFetcher(SimilarityFetcher):
     """
     Fetches the data from the database using SQLAlchemy.
     """
@@ -59,16 +59,16 @@ class SimpleSqlAlchemyFetcher(SqlAlchemyFetcher):
         return sqlalchemy.select(self.column).select_from(self.table).distinct()
 
 
-class AbstractSqlAlchemyStore(AbstractStore, metaclass=abc.ABCMeta):
+class AbstractSqlAlchemyStore(SimilarityStore, metaclass=abc.ABCMeta):
     """
     Stores the data in the database using SQLAlchemy.
     """
 
-    def __init__(self, sqlalchemy_engine: sqlalchemy.engine.Engine, table_name: str, treshold: float = 0.8) -> None:
+    def __init__(self, sqlalchemy_engine: sqlalchemy.engine.Engine, table_name: str, threshold: float = 0.8) -> None:
         self.sqlalchemy_engine = sqlalchemy_engine
         self.table_name = table_name
         self.table = sqlalchemy.Table(table_name, sqlalchemy.MetaData(), sqlalchemy.Column("text", sqlalchemy.String))
-        self.treshold = treshold
+        self.threshold = threshold
 
     async def store(self, data: List[str]) -> None:
         """

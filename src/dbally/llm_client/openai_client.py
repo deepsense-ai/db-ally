@@ -7,7 +7,11 @@ from dbally.prompts.prompt_builder import ChatFormat
 
 
 class OpenAIClient(LLMClient):
-    """LLM Client for OpenAI endpoints."""
+    """
+    `OpenAIClient` is a class designed to interact with OpenAI's language model (LLM) endpoints,
+    particularly for the GPT models.
+
+    """
 
     def __init__(self, model_name: str, api_key: Optional[str] = None) -> None:
         try:
@@ -18,7 +22,7 @@ class OpenAIClient(LLMClient):
         super().__init__(model_name)
         self._client = AsyncOpenAI(api_key=api_key)
 
-    async def _call(
+    async def call(
         self,
         prompt: Union[str, ChatFormat],
         response_format: Optional[Dict[str, str]],
@@ -32,6 +36,7 @@ class OpenAIClient(LLMClient):
             prompt: Prompt as an OpenAI client style list.
             response_format: Optional argument used in the OpenAI API - used to force json output
             options: Additional settings used by LLM.
+            event: container with prompt and LLM response.
 
         Returns:
             Response string from LLM.

@@ -60,14 +60,16 @@ class ExposedFunction:
 
 class AbstractBaseView(metaclass=abc.ABCMeta):
     """
-    Base class for all views. Has to be able to list all available filters, apply them and generate SQL,
-    but ottherwise is implementation agnostic.
+    Base class for all [Views](../../concepts/views.md). All classes implementing this interface has\
+    to be able to list all available filters, apply them and execute queries.
     """
 
     @abc.abstractmethod
     def list_filters(self) -> List[ExposedFunction]:
         """
-        Lists all available filters.
+
+        Returns:
+            Filters defined inside the View.
         """
 
     @abc.abstractmethod
@@ -75,7 +77,8 @@ class AbstractBaseView(metaclass=abc.ABCMeta):
         """
         Applies the chosen filters to the view.
 
-        :param filters: IQLQuery object representing the filters to apply
+        Args:
+            filters: [IQLQuery](../../concepts/iql.md) object representing the filters to apply
         """
 
     @abc.abstractmethod
@@ -83,5 +86,6 @@ class AbstractBaseView(metaclass=abc.ABCMeta):
         """
         Executes the query and returns the result.
 
-        :param dry_run: if True, only generate the query without executing it
+        Args:
+            dry_run: if True, should only generate the query without executing it
         """

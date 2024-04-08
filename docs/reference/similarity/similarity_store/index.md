@@ -1,0 +1,3 @@
+# SimilarityStore
+
+::: dbally.similarity.SimilarityStore

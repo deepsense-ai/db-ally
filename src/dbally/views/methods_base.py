@@ -41,9 +41,8 @@ class MethodsBaseView(AbstractBaseView, metaclass=abc.ABCMeta):
 
     def list_filters(self) -> List[ExposedFunction]:
         """
-        Lists all available filters from the view based on the @filter decorator.
-
-        :return: List of exposed filters
+        Returns:
+            Filters defined inside the View and decorated with `decorators.view_filter`.
         """
         return self._list_methods_by_decorator(decorators.view_filter)
 

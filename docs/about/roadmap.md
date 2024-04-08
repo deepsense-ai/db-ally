@@ -13,7 +13,7 @@ Below you can find a list of planned features and integrations.
 - [ ] **Few-shot prompting configuration**: allow users to configure the few-shot prompting in View definition to
     improve IQL generation accuracy.
 - [ ] **Request contextualization**: allow to provide extra context for db-ally runs, such as user asking the question.
-- [ ] **OpenAI Assistants API adapter**: allow to embed db-ally into OpenAI's Assistants API to easily extend the
+- [X] **OpenAI Assistants API adapter**: allow to embed db-ally into OpenAI's Assistants API to easily extend the
     capabilities of the assistant.
 - [ ] **Langchain adapter**: allow to embed db-ally into Langchain applications.
 
