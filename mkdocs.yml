@@ -29,13 +29,13 @@ nav:
       - Views:
           - reference/views/index.md
           - reference/views/databases.md
+          - reference/views/dataframe.md
       - IQL:
           - reference/iql/index.md
           - reference/iql/iql_generator.md
       - Event handlers:
           - reference/event_handlers/index.md
-          - reference/event_handlers/cli.md
-          - reference/event_handlers/langsmith.md
+          - reference/event_handlers/available.md
       - View Selection:
           - reference/view_selection/index.md
           - reference/view_selection/llm_view_selector.md
@@ -57,6 +57,7 @@ nav:
       - Embeddings:
           - reference/embeddings/index.md
           - reference/embeddings/openai.md
+      - reference/data_models.md
   - About:
       - about/roadmap.md
 
@@ -86,6 +87,11 @@ markdown_extensions:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+
   - admonition
   - pymdownx.superfences
   - pymdownx.snippets
@@ -96,6 +102,7 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
 plugins:
+  - search
   - autorefs:
       enable: true
   - mkdocstrings:

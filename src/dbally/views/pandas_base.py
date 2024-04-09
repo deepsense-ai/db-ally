@@ -19,9 +19,8 @@ class DataFrameBaseView(MethodsBaseView):
 
     def __init__(self, df: pd.DataFrame) -> None:
         """
-        Initializes the view with the input DataFrame.
-
-        :param df: Pandas DataFrame with the data to be filtered
+        Args:
+            df: Pandas DataFrame with the data to be filtered
         """
         super().__init__()
         self.df = df
@@ -33,20 +32,24 @@ class DataFrameBaseView(MethodsBaseView):
         """
         Applies the chosen filters to the view.
 
-        :param filters: IQLQuery object representing the filters to apply
+        Args:
+            filters: IQLQuery object representing the filters to apply
         """
         self._filter_mask = await self.build_filter_node(filters.root)
 
     async def build_filter_node(self, node: syntax.Node) -> pd.Series:
         """
-        Converts a filter node from the IQLQuery to a Pandas Series representing
-        boolean mask to be applied to the dataframe.
+        Converts a filter node from the IQLQuery to a Pandas Series being
+        a boolean mask to be applied to the dataframe.
 
-        :param node: IQLQuery node representing the filter or logical operator
+        Args:
+            node: IQLQuery node representing the filter or logical operator
 
-        :return: Pandas Series representing the boolean mask
+        Returns:
+            A boolean mask that can be used to filter the original DataFrame
 
-        :raises ValueError: If the node type is not supported
+        Raises:
+            ValueError: If the node type is not supported
         """
         if isinstance(node, syntax.FunctionCall):
             return await self.call_filter_method(node)
@@ -63,11 +66,16 @@ class DataFrameBaseView(MethodsBaseView):
 
     def execute(self, dry_run: bool = False) -> ExecutionResult:
         """
-        Executes the view and returns the results. The results are filtered based on the applied filters.
+        Executes the view and returns the results. The results are filtered based on the applied filters.\
+        Be aware that before running this method you need to execute `apply_filters`
 
-        :param dry_run: If True, the method will only return the mask that would be applied to the dataframe
+        Args:
+            dry_run: If True, the method will only add `context` field to the `ExecutionResult` with the\
+            mask that would be applied to the dataframe
 
-        :return: ExecutionResult object with the results and context information
+        Returns:
+            ExecutionResult object with the results, being a result of DataFrame.to_dict(orient="record")\
+            and the context information with the binary mask
         """
         start_time = time.time()
         filtered_data = pd.DataFrame.empty

@@ -17,7 +17,21 @@ from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart
 
 class CLIEventHandler(EventHandler):
     """
-    CLI event handler interface.
+    This handler displays all interactions between LLM and user happending during `Collection.ask`\
+    execution inside the terminal.
+
+    ### Usage
+
+    ```python
+        import dbally
+        from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
+
+        dbally.use_event_handler(CLIEventHandler())
+    ```
+
+    from now, during every `Collection.ask` execution you will see output similar to the one below:
+
+    ![Example output from CLIEventHandler](../../assets/event_handler_example.png)
     """
 
     def __init__(self) -> None:

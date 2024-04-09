@@ -21,15 +21,19 @@ class SqlAlchemyBaseView(MethodsBaseView):
 
     @abc.abstractmethod
     def get_select(self) -> sqlalchemy.Select:
-        """
-        Creates the initial SqlAlchemy select object, which will be used to build the query.
+        r"""
+        Creates the initial
+        [SqlAlchemy select object
+        ](https://docs.sqlalchemy.org/en/20/core/selectable.html#sqlalchemy.sql.expression.Select)
+        which will be used to build the query.
         """
 
     async def apply_filters(self, filters: IQLQuery) -> None:
         """
-        Applies the chosen filters to the view.
+        Applies the chosen filters to the view, using the SQL `where` statement.
 
-        :param filters: IQLQuery object representing the filters to apply
+        Args:
+            filters: IQLQuery object representing the filters to apply
         """
         self._select = self._select.where(await self._build_filter_node(filters.root))
 
@@ -63,16 +67,16 @@ class SqlAlchemyBaseView(MethodsBaseView):
 
     def execute(self, dry_run: bool = False) -> ExecutionResult:
         """
-        Executes the generated SQL query and returns the results.
+        Executes the generated SQL query and returns the results. Be aware that before running\
+        this method you need to execute `apply_filters`
 
-        :param dry_run: If True, only generate the query without executing it
+        Args:
+            dry_run: If True, only fills the context field of the `ExecutionResult` with the query without executing it
 
-        :return: Query results
-
-        :raises ValueError: If no SQLAlchemy engine was provided during initialization
+        Returns:
+            Results of the query where `results` will be a list of dictionaries representing retrieved rows or an empty\
+            list if `dry_run` is set to `True`. Inside the `context` field the generated sql will be stored.
         """
-        if self._sqlalchemy_engine is None:
-            raise ValueError("No SQLAlchemy engine provided")
 
         results = []
         execution_time = None
