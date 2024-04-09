@@ -9,7 +9,7 @@ from dbally._collection import Collection
 from dbally.iql import IQLQuery
 from dbally.iql._exceptions import IQLError
 from dbally.utils.errors import NoViewFoundError
-from dbally.views.base import AbstractBaseView, ExecutionResult, ExposedFunction
+from dbally.views.base import AbstractBaseView, ExposedFunction, ViewExecutionResult
 
 
 class MockViewBase(AbstractBaseView):
@@ -23,8 +23,8 @@ class MockViewBase(AbstractBaseView):
     async def apply_filters(self, filters: IQLQuery) -> None:
         ...
 
-    def execute(self, dry_run=False) -> ExecutionResult:
-        return ExecutionResult(results=[], context={})
+    def execute(self, dry_run=False) -> ViewExecutionResult:
+        return ViewExecutionResult(results=[], context={})
 
 
 class MockView1(MockViewBase):

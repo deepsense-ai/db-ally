@@ -1,21 +1,31 @@
 import time
-from typing import Dict, List
+from dataclasses import dataclass
+from typing import Any, Dict, List
 
 import pandas as pd
 from dbally_benchmark.text2sql.text2sql_result import Text2SQLResult
 from dbally_benchmark.utils import batch
 from sqlalchemy import Engine, text
 
-from dbally.data_models.execution_result import ExecutionResult
+
+@dataclass
+class _ExecutionResult:
+    """
+    Represents the result of a single query execution
+    """
+
+    results: List[Dict[str, Any]]
+    context: Dict[str, Any]
+    execution_time: float
 
 
-def _run_query(query: str, engine: Engine) -> ExecutionResult:
+def _run_query(query: str, engine: Engine) -> _ExecutionResult:
     with engine.connect() as connection:
         start_time = time.time()
         rows = connection.execute(text(query)).fetchall()
         execution_time = time.time() - start_time
 
-    return ExecutionResult(
+    return _ExecutionResult(
         results=[dict(row._mapping) for row in rows],  # pylint: disable=protected-access
         execution_time=execution_time,
         context={"sql": query},

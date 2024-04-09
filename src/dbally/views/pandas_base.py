@@ -1,10 +1,9 @@
 import asyncio
-import time
 from functools import reduce
 
 import pandas as pd
 
-from dbally.data_models.execution_result import ExecutionResult
+from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.iql import IQLQuery, syntax
 from dbally.views.methods_base import MethodsBaseView
 
@@ -61,7 +60,7 @@ class DataFrameBaseView(MethodsBaseView):
             return ~child
         raise ValueError(f"Unsupported grammar: {node}")
 
-    def execute(self, dry_run: bool = False) -> ExecutionResult:
+    def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         """
         Executes the view and returns the results. The results are filtered based on the applied filters.
 
@@ -69,7 +68,6 @@ class DataFrameBaseView(MethodsBaseView):
 
         :return: ExecutionResult object with the results and context information
         """
-        start_time = time.time()
         filtered_data = pd.DataFrame.empty
 
         if not dry_run:
@@ -77,9 +75,8 @@ class DataFrameBaseView(MethodsBaseView):
             if self._filter_mask is not None:
                 filtered_data = filtered_data.loc[self._filter_mask]
 
-        return ExecutionResult(
+        return ViewExecutionResult(
             results=filtered_data.to_dict(orient="records"),
-            execution_time=time.time() - start_time,
             context={
                 "filter_mask": self._filter_mask,
             },
