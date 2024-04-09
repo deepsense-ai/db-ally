@@ -1,14 +1,18 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name, missing-return-type-doc
 
-from typing import List
-from unittest.mock import AsyncMock, Mock, call, patch
+from typing import List, Tuple
+from unittest.mock import AsyncMock, Mock, call, create_autospec, patch
 
 import pytest
 
 from dbally._collection import Collection
+from dbally.data_models.prompts.iql_prompt_template import IQLPromptTemplate, default_iql_template
 from dbally.iql import IQLQuery
 from dbally.iql._exceptions import IQLError
+from dbally.iql_generator.iql_generator import IQLGenerator
+from dbally.llm_client.base import LLMClient
 from dbally.utils.errors import NoViewFoundError
+from dbally.view_selection.base import ViewSelector
 from dbally.views.base import AbstractBaseView, ExposedFunction, ViewExecutionResult
 
 
@@ -18,7 +22,7 @@ class MockViewBase(AbstractBaseView):
     """
 
     def list_filters(self) -> List[ExposedFunction]:
-        return []
+        return [ExposedFunction("test_filter", "", [])]
 
     async def apply_filters(self, filters: IQLQuery) -> None:
         ...
@@ -59,12 +63,43 @@ class MockViewWithAttributes(MockViewBase):
         super().__init__()
 
 
+class MockViewWithResults(MockViewBase):
+    """
+    Mock view with results
+    """
+
+    def execute(self, dry_run=False) -> ViewExecutionResult:
+        return ViewExecutionResult(results=[{"foo": "bar"}], context={"baz": "qux"})
+
+
+class MockViewSelector(ViewSelector):
+    def __init__(self, name: str = "MockView1") -> None:
+        self.name = name
+
+    async def select_view(self, *_, **__) -> str:
+        return self.name
+
+
+class MockIQLGenerator(IQLGenerator):
+    def __init__(self) -> None:
+        super().__init__(llm_client=create_autospec(LLMClient))
+
+    async def generate_iql(self, *_, **__) -> Tuple[str, IQLPromptTemplate]:
+        return "test_filter()", default_iql_template
+
+
 @pytest.fixture(name="collection")
 def mock_collection() -> Collection:
     """
     Returns a collection with two mock views
     """
-    collection = Collection("foo", view_selector=Mock(), iql_generator=Mock(), nl_responder=Mock(), event_handlers=[])
+    collection = Collection(
+        "foo",
+        view_selector=MockViewSelector(),
+        iql_generator=MockIQLGenerator(),
+        nl_responder=AsyncMock(),
+        event_handlers=[],
+    )
     collection.add(MockView1)
     collection.add(MockView2)
     return collection
@@ -180,7 +215,6 @@ def mock_collection_feedback_loop() -> Collection:
     return collection
 
 
-@pytest.mark.asyncio
 async def test_ask_feedback_loop(collection_feedback: Collection) -> None:
     """
     Tests that the ask_feedback_loop method works correctly
@@ -212,3 +246,61 @@ async def test_ask_feedback_loop(collection_feedback: Collection) -> None:
                 assert c[1]["conversation"] == f"err{i}"
 
         assert iql_gen_gen_iql.call_count == 4
+
+
+async def test_ask_view_selection_single_view() -> None:
+    """
+    Tests that the ask method select view correctly when there is only one view
+    """
+    collection = Collection(
+        "foo",
+        view_selector=MockViewSelector(),
+        iql_generator=MockIQLGenerator(),
+        nl_responder=AsyncMock(),
+        event_handlers=[],
+    )
+    collection.add(MockViewWithResults)
+
+    result = await collection.ask("Mock question")
+    assert result.view_name == "MockViewWithResults"
+    assert result.results == [{"foo": "bar"}]
+    assert result.context == {"baz": "qux"}
+    assert result.iql_query == "test_filter()"
+
+
+async def test_ask_view_selection_multiple_views() -> None:
+    """
+    Tests that the ask method select view correctly when there are multiple views
+    """
+    collection = Collection(
+        "foo",
+        view_selector=MockViewSelector("MockViewWithResults"),
+        iql_generator=MockIQLGenerator(),
+        nl_responder=AsyncMock(),
+        event_handlers=[],
+    )
+    collection.add(MockView1)
+    collection.add(MockViewWithResults)
+    collection.add(MockView2)
+
+    result = await collection.ask("Mock question")
+    assert result.view_name == "MockViewWithResults"
+    assert result.results == [{"foo": "bar"}]
+    assert result.context == {"baz": "qux"}
+    assert result.iql_query == "test_filter()"
+
+
+async def test_ask_view_selection_no_views() -> None:
+    """
+    Tests that the ask method raises an exception when there are no views
+    """
+    collection = Collection(
+        "foo",
+        view_selector=MockViewSelector(),
+        iql_generator=MockIQLGenerator(),
+        nl_responder=AsyncMock(),
+        event_handlers=[],
+    )
+
+    with pytest.raises(ValueError):
+        await collection.ask("Mock question")
