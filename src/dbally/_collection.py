@@ -98,8 +98,15 @@ class Collection:
         if non_default_args and builder is None:
             raise ValueError("Builder function is required for views with non-default arguments")
 
+        builder = builder or view
+
+        # instantiate view to check if the builder is correct
+        view_instance = builder()
+        if not isinstance(view_instance, view):
+            raise ValueError(f"The builder function for view {name} must return an instance of {view.__name__}")
+
         self._views[name] = view
-        self._builders[name] = builder or view
+        self._builders[name] = builder
 
     def get(self, name: str) -> AbstractBaseView:
         """

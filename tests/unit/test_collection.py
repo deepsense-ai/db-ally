@@ -130,7 +130,8 @@ def test_add_with_builder(collection: Collection) -> None:
     assert len(collection.list()) == 3
 
     view = collection.get("MockViewWithAttributes")
-    mocked_builder.assert_called_once()
+    mocked_builder.assert_called()
+    assert mocked_builder.call_count == 2  # one during registration and one during get
     assert isinstance(view, MockViewWithAttributes)
     assert view.foo == "bar"
 
@@ -155,6 +156,30 @@ def test_error_when_view_with_non_default_args(collection: Collection) -> None:
         assert False
     except ValueError:
         assert True
+
+
+def test_error_when_view_builder_with_wrong_return_type(collection: Collection) -> None:
+    """
+    Tests that the add method raises an exception when the view builder returns a wrong type
+    """
+
+    def builder():
+        return MockView1()
+
+    with pytest.raises(ValueError):
+        collection.add(MockViewWithAttributes, builder=builder)
+
+
+def test_error_when_view_incorrect_builder(collection: Collection) -> None:
+    """
+    Tests that the add method raises an exception when the the builder itself raises an exception
+    """
+
+    def builder():
+        raise ValueError("foo")
+
+    with pytest.raises(ValueError):
+        collection.add(MockViewWithAttributes, builder=builder)
 
 
 @pytest.fixture(name="collection_feedback")
