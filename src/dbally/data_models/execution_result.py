@@ -25,6 +25,8 @@ class ExecutionResult:
     Args:
         results: List of dictionaries containing the results of the query execution,
             each dictionary represents a row in the result set with column names as keys.
+            The exact structure of the result set depends on the view that was used to execute the query,
+            which can be obtained from the `view_name` attribute.
         context: Dictionary containing addtional metadata about the query execution.
         execution_time: Time taken to execute the entire query, including view selection
             and all other operations, in seconds.

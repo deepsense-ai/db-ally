@@ -5,6 +5,7 @@ nav:
   - Quickstart:
       - quickstart/index.md
       - quickstart/quickstart2.md
+      - quickstart/quickstart3.md
   - Tutorials:
       - tutorials.md
   - Concepts:

@@ -148,4 +148,5 @@ That's it! You can apply similar techniques to any other filter that takes a str
 To see the full example, you can find the code here: [quickstart2_code.py](quickstart2_code.py).
 
 ## Next Steps
-See the [Tutorial](../tutorials.md) for a more in-depth guide on how to use db-ally.
+
+Explore [Quickstart Part 3: Multiple Views](./quickstart3.md) to learn how to run queries with multiple views and display the results based on the view that was used to fetch the data.
