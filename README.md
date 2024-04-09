@@ -30,8 +30,8 @@ In db-ally, developers define their use cases by implementing [**views**](https:
 This is a basic implementation of a db-ally view for an example HR application, which retrieves candidates from an SQL database:
 
 ```python
-from dbally import decorators, SqlAlchemyBaseView
-import dbally
+from dbally import decorators, SqlAlchemyBaseView, create_collection
+from sqlalchemy import create_engine
 
 class CandidateView(SqlAlchemyBaseView):
     """
@@ -52,7 +52,7 @@ class CandidateView(SqlAlchemyBaseView):
         return Candidate.country == country
 
 engine = create_engine('sqlite:///candidates.db')
-my_collection = dbally.create_collection("collection_name")
+my_collection = create_collection("collection_name")
 my_collection.add(CandidateView, lambda: CandidateView(engine))
 
 my_collection.ask("Find candidates from United States")
