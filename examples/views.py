@@ -5,7 +5,8 @@ import sqlalchemy
 from sqlalchemy import and_, select
 
 from dbally import SqlAlchemyBaseView, decorators
-from dbally.examples.db import Candidate
+
+from .db import Candidate
 
 
 class RecruitmentView(SqlAlchemyBaseView):

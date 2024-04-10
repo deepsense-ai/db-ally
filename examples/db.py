@@ -5,10 +5,8 @@ from typing import Dict, Optional
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
-import dbally
-
 ENGINE = create_engine("sqlite:///recruitment.db")
-CSV_PATH = Path(dbally.__file__).parent / "examples" / "data"
+CSV_PATH = Path(__file__).parent / "data"
 
 
 class Base(DeclarativeBase):
