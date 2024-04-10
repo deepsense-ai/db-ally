@@ -5,10 +5,11 @@ from typing import List
 import dbally
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.audit.event_tracker import EventTracker
-from dbally.examples.db import ENGINE, fill_candidate_table, get_recruitment_db_description
-from dbally.examples.views import RecruitmentView
 from dbally.llm_client.openai_client import OpenAIClient
 from dbally.prompts.prompt_builder import PromptTemplate
+
+from .db import ENGINE, fill_candidate_table, get_recruitment_db_description
+from .views import RecruitmentView
 
 TEXT2SQL_PROMPT_TEMPLATE = PromptTemplate(
     (

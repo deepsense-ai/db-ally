@@ -1,0 +1,51 @@
+name,country,years_of_experience,position,university,skills,tags,available_from
+John Smith,USA,5,Software Engineer,Stanford University,Java;Python;SQL,Programming;Team Player,May 2026
+Emily Chen,Canada,3,Data Scientist,University of Toronto,R;Python;Machine Learning,Data Analysis;Research,June 2026
+Mohammed Ali,India,7,System Administrator,Indian Institute of Technology Bombay,Linux;Networking;Shell Scripting,IT Support;Troubleshooting,June 2026
+Maria Garcia,Spain,4,Web Developer,Universidad Politécnica de Madrid,HTML;CSS;JavaScript,Frontend Development;UI/UX,April 2027
+Wei Zhang,China,6,Software Engineer,Tsinghua University,C++;Java;Python,Algorithms;Problem Solving,November 2026
+Leila Ahmed,Egypt,2,IT Support Specialist,Cairo University,Windows;Hardware Troubleshooting;Customer Service,Technical Support,June 2027
+Yuri Kowalski,Poland,8,Database Administrator,University of Warsaw,SQL;Database Management;Data Modeling,Database Administration,April 2024
+Priya Patel,India,4,DevOps Engineer,Indian Institute of Technology Delhi,Linux;Docker;Kubernetes,Continuous Integration;Infrastructure as Code,January 2027
+Carlos Lopez,Mexico,5,Network Engineer,Universidad Nacional Autónoma de México,Cisco;Networking Protocols;Firewalls,Network Security,March 2026
+Anna Novak,Russia,3,Frontend Developer,Moscow State University,HTML;CSS;JavaScript,Web Design;Responsive Design,May 2026
+Daniel Kim,South Korea,6,Machine Learning Engineer,Korea Advanced Institute of Science and Technology,Python;Machine Learning;Deep Learning,Artificial Intelligence;Data Science,November 2027
+Jasmine Li,China,4,UX Designer,Beijing University of Technology,User Research;Wireframing;Prototyping,User Experience;Design Thinking,September 2024
+Ali Khan,Pakistan,7,Software Architect,National University of Sciences and Technology,Software Design;System Architecture;Design Patterns,Leadership;Project Management,August 2024
+Marie Leclerc,France,5,Data Analyst,Sorbonne University,SQL;R;Tableau,Data Visualization;Statistical Analysis,March 2026
+Lucas Silva,Brazil,6,Full Stack Developer,University of São Paulo,JavaScript;Node.js;React,Full Stack Development;Agile Methodologies,April 2025
+Ahmed Hassan,Egypt,4,Cybersecurity Analyst,Ain Shams University,Ethical Hacking;Security Assessment;Incident Response,Cybersecurity;Risk Management,May 2027
+Elena Ivanova,Russia,3,Mobile App Developer,Saint Petersburg State University,Java;Kotlin;Swift,Mobile Development;iOS;Android,March 2026
+Juan Martinez,Spain,8,IT Manager,Complutense University of Madrid,Project Management;Leadership;Budgeting,IT Strategy;Team Management,November 2025
+Mia Chen,Taiwan,5,UI Designer,National Taiwan University of Science and Technology,Adobe XD;Sketch;Illustrator,User Interface;Graphic Design,November 2026
+Tomo Yamada,Japan,4,QA Engineer,University of Tokyo,Test Automation;Manual Testing;Bug Tracking,Quality Assurance;Test Planning,April 2024
+Fatima Khan,Pakistan,6,Business Intelligence Analyst,Lahore University of Management Sciences,SQL;Tableau;Power BI,Business Analysis;Data Warehousing,January 2024
+Andrei Popov,Romania,7,Cloud Solutions Architect,Politehnica University of Bucharest,AWS;Azure;Google Cloud,Cloud Computing;Architecture,May 2026
+Sofia Santos,Portugal,3,Blockchain Developer,University of Lisbon,Solidity;Ethereum;Smart Contracts,Blockchain Development;Cryptocurrency,December 2025
+David Kim,South Korea,5,Data Engineer,Yonsei University,SQL;Python;Big Data,ETL;Data Warehousing,April 2024
+Fatima Ali,Saudi Arabia,4,System Analyst,King Saud University,Requirements Analysis;UML;Documentation,Systems Analysis;Software Development Lifecycle,December 2025
+Diego Hernandez,Mexico,6,DevOps Engineer,Tecnológico de Monterrey,Jenkins;Ansible;Terraform,Continuous Deployment;Infrastructure Automation,April 2026
+Maria Rossi,Italy,5,Software Developer,University of Milan,Python;Java;C++,Software Engineering;Object-Oriented Programming,October 2024
+Amir Khan,Pakistan,3,Network Administrator,National University of Computer and Emerging Sciences,Cisco;Routers;Switches,Network Configuration;Troubleshooting,August 2024
+Elena Petrova,Bulgaria,4,UX Researcher,Sofia University,User Interviews;Usability Testing;Persona Creation,User Research;Human-Computer Interaction,March 2024
+Carlos Fernandez,Spain,8,IT Director,Technical University of Madrid,Strategic Planning;Budget Management;Vendor Relations,IT Leadership;Decision Making,October 2026
+Anushka Sharma,India,5,Data Scientist,Indian Institute of Technology Bombay,Python;R;Machine Learning,Data Analysis;Predictive Modeling,October 2027
+Luca Bianchi,Italy,6,Backend Developer,University of Bologna,Python;Django;Flask,API Development;Database Management,November 2024
+Muhammad Rahman,Bangladesh,4,Software Tester,Bangladesh University of Engineering and Technology,Test Planning;Test Cases;Defect Tracking,Quality Assurance;Regression Testing,August 2024
+Chen Wei,China,7,Cloud Engineer,Tsinghua University,AWS;Azure;Google Cloud,Cloud Computing;Virtualization,September 2024
+Julia Nowak,Poland,3,UI/UX Designer,Jagiellonian University,Adobe XD;Sketch;Figma,User-Centered Design;Wireframing,February 2025
+Lucas Santos,Brazil,5,Mobile App Developer,University of São Paulo,Kotlin;Swift;React Native,Cross-Platform Development;Mobile Design,October 2025
+Maria Papadopoulos,Greece,4,IT Security Specialist,Aristotle University of Thessaloniki,Penetration Testing;Security Auditing;Firewalls,Information Security;Risk Assessment,May 2026
+Ivan Petrov,Russia,6,Database Administrator,Moscow State University,SQL Server;Oracle;MySQL,Database Management;Performance Tuning,June 2024
+Fatima Abdel-Hamid,Egypt,3,Software Engineer,American University in Cairo,Java;C#;.NET,Software Development;Agile Methodologies,October 2025
+Amir Hussein,Iran,5,Network Engineer,University of Tehran,Cisco;Routing Protocols;Firewalls,Network Configuration;Troubleshooting,January 2027
+Maria Gonçalves,Portugal,7,Full Stack Developer,University of Porto,JavaScript;Node.js;React,Full Stack Development;Agile Methodologies,July 2027
+Giorgio Rossi,Italy,4,DevOps Engineer,Polytechnic University of Milan,Docker;Kubernetes;Jenkins,Continuous Integration;Infrastructure Automation,November 2024
+Jing Liu,China,6,Data Analyst,Peking University,SQL;Python;Data Visualization,Statistical Analysis;Data Mining,August 2025
+Ana Garcia,Spain,5,Cybersecurity Consultant,Autonomous University of Madrid,Ethical Hacking;Risk Assessment;Compliance,Cybersecurity Strategy;Security Awareness,February 2024
+Dmitry Ivanov,Russia,4,Frontend Developer,Moscow Institute of Physics and Technology,JavaScript;React;Vue.js,Frontend Development;Responsive Design,July 2024
+Sophie Dubois,France,4,Data Engineer,École Polytechnique,SQL;Python;ETL,Data Warehousing;Big Data,February 2025
+Alexei Petrov,Russia,7,Software Architect,Saint Petersburg State University,Java;C#;Spring Boot,System Design;Microservices,July 2024
+Priyanka Gupta,India,3,UI/UX Designer,National Institute of Design,Adobe XD;Sketch;User Research,User Interface;Wireframing,October 2024
+Eduardo Sanchez,Mexico,6,Network Administrator,Instituto Tecnológico Autónomo de México,Cisco;Firewalls;Network Security,Network Monitoring;Troubleshooting,June 2025
+Anna Kowalska,Poland,5,Cloud Engineer,Warsaw University of Technology,AWS;Azure;Google Cloud,Cloud Infrastructure;DevOps,March 2027
