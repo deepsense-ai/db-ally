@@ -39,7 +39,7 @@ class DataFrameBaseView(MethodsBaseView):
 
     async def build_filter_node(self, node: syntax.Node) -> pd.Series:
         """
-        Converts a filter node from the IQLQuery to a Pandas Series being
+        Converts a filter node from the IQLQuery to a Pandas Series representing
         a boolean mask to be applied to the dataframe.
 
         Args:
@@ -74,8 +74,7 @@ class DataFrameBaseView(MethodsBaseView):
             mask that would be applied to the dataframe
 
         Returns:
-            ExecutionResult object with the results, being a result of DataFrame.to_dict(orient="record")\
-            and the context information with the binary mask
+            ExecutionResult object with the results and the context information with the binary mask
         """
         start_time = time.time()
         filtered_data = pd.DataFrame.empty

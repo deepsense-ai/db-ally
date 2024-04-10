@@ -22,13 +22,13 @@ class EventHandler(Generic[RequestCtx, EventCtx], ABC):
             user_request: Object containing name of collection and asked query
 
         Returns:
-            Context that can be of `Any` type, which is passed to the future callbacks
+            Implementation-specific request context object, which is passed to the future callbacks
         """
 
     @abc.abstractmethod
     async def event_start(self, event: Union[LLMEvent], request_context: RequestCtx) -> EventCtx:
         """
-        Function that is called during every event execution. For now we treat every LLM call as an event.
+        Function that is called during every event execution.
 
 
         Args:
@@ -36,7 +36,7 @@ class EventHandler(Generic[RequestCtx, EventCtx], ABC):
             request_context: Optional context passed from request_start method
 
         Returns:
-            Context that can be of `Any` type, which is passed to the `event_end` callback
+            Implementation-specific request context object, which is passed to the `event_end` callback
         """
 
     @abc.abstractmethod
@@ -44,7 +44,7 @@ class EventHandler(Generic[RequestCtx, EventCtx], ABC):
         self, event: Union[None, LLMEvent], request_context: RequestCtx, event_context: EventCtx
     ) -> None:
         """
-        Function that is called during every event execution. For now we treat every LLM call as an event.
+        Function that is called during every event execution.
 
         Args:
             event: LLMEvent to be logged with all the details.

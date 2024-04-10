@@ -30,7 +30,7 @@ class SqlAlchemyBaseView(MethodsBaseView):
 
     async def apply_filters(self, filters: IQLQuery) -> None:
         """
-        Applies the chosen filters to the view, using the SQL `where` statement.
+        Applies the chosen filters to the view.
 
         Args:
             filters: IQLQuery object representing the filters to apply
@@ -67,11 +67,10 @@ class SqlAlchemyBaseView(MethodsBaseView):
 
     def execute(self, dry_run: bool = False) -> ExecutionResult:
         """
-        Executes the generated SQL query and returns the results. Be aware that before running\
-        this method you need to execute `apply_filters`
+        Executes the generated SQL query and returns the results.
 
         Args:
-            dry_run: If True, only fills the context field of the `ExecutionResult` with the query without executing it
+            dry_run: If True, only adds the SQL query to the context field without executing the query.
 
         Returns:
             Results of the query where `results` will be a list of dictionaries representing retrieved rows or an empty\

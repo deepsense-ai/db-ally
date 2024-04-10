@@ -29,7 +29,7 @@ class CLIEventHandler(EventHandler):
         dbally.use_event_handler(CLIEventHandler())
     ```
 
-    from now, during every `Collection.ask` execution you will see output similar to the one below:
+    After using `CLIEventHandler`, during every `Collection.ask` execution you will see output similar to the one below:
 
     ![Example output from CLIEventHandler](../../assets/event_handler_example.png)
     """
