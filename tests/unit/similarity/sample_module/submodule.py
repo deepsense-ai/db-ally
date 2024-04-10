@@ -5,7 +5,7 @@ from typing_extensions import Annotated
 from dbally import MethodsBaseView, decorators
 from dbally.iql import IQLQuery
 from dbally.similarity.index import AbstractSimilarityIndex
-from dbally.views.base import ExecutionResult
+from dbally.views.base import ViewExecutionResult
 
 
 class MockSimilarityIndex(AbstractSimilarityIndex):
@@ -35,8 +35,8 @@ class FooView(MethodsBaseView):
     async def apply_filters(self, filters: IQLQuery) -> None:
         ...
 
-    def execute(self, dry_run: bool = False) -> ExecutionResult:
-        return ExecutionResult(results=[], context={})
+    def execute(self, dry_run: bool = False) -> ViewExecutionResult:
+        return ViewExecutionResult(results=[], context={})
 
 
 class BarView(MethodsBaseView):
@@ -54,5 +54,5 @@ class BarView(MethodsBaseView):
     async def apply_filters(self, filters: IQLQuery) -> None:
         ...
 
-    def execute(self, dry_run: bool = False) -> ExecutionResult:
-        return ExecutionResult(results=[], context={})
+    def execute(self, dry_run: bool = False) -> ViewExecutionResult:
+        return ViewExecutionResult(results=[], context={})
