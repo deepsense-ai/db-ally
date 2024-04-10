@@ -94,7 +94,7 @@ country_similarity.update()
 ```
 
 !!! note
-    Typically, you wouldn't want to update the similarity index every time you run a query, but rather on a schedule or when the database changes.
+    The `update` method will re-fetch all possible values from the data source and re-index them. Usually, you wouldn't call this method each time you use the similarity index. Instead, you would update the index periodically or when the data source changes. See the [How-To: Update Similarity Indexes](../how-to/update_similarity_indexes.md) guide for more information.
 
 ## Annotating the Filter to Use the Similarity Index
 Now that we have the similarity index, we can use it to annotate the filter to use the similarity index when filtering candidates by country:
@@ -148,4 +148,5 @@ That's it! You can apply similar techniques to any other filter that takes a str
 To see the full example, you can find the code here: [quickstart2_code.py](quickstart2_code.py).
 
 ## Next Steps
-See the [Tutorial](../tutorials.md) for a more in-depth guide on how to use db-ally.
+
+Explore [Quickstart Part 3: Multiple Views](./quickstart3.md) to learn how to run queries with multiple views and display the results based on the view that was used to fetch the data.

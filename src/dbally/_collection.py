@@ -1,5 +1,6 @@
 import inspect
 import textwrap
+import time
 from typing import Callable, Dict, List, Optional, Type, TypeVar
 
 from dbally.audit.event_handlers.base import EventHandler
@@ -98,8 +99,15 @@ class Collection:
         if non_default_args and builder is None:
             raise ValueError("Builder function is required for views with non-default arguments")
 
+        builder = builder or view
+
+        # instantiate view to check if the builder is correct
+        view_instance = builder()
+        if not isinstance(view_instance, view):
+            raise ValueError(f"The builder function for view {name} must return an instance of {view.__name__}")
+
         self._views[name] = view
-        self._builders[name] = builder or view
+        self._builders[name] = builder
 
     def get(self, name: str) -> AbstractBaseView:
         """
@@ -156,6 +164,8 @@ class Collection:
             IQLError: if incorrect IQL was generated `n_retries` amount of times.
             ValueError: if incorrect IQL was generated `n_retries` amount of times.
         """
+        start_time = time.time()
+
         event_tracker = EventTracker.initialize_with_handlers(self._event_handlers)
 
         await event_tracker.request_start(RequestStart(question=question, collection_name=self.name))
@@ -170,7 +180,9 @@ class Collection:
         else:
             selected_view = await self._view_selector.select_view(question, views, event_tracker)
 
+        start_time_view = time.time()
         view = self.get(selected_view)
+        end_time_view = time.time()
 
         filter_list = view.list_filters()
 
@@ -193,12 +205,23 @@ class Collection:
                 )
                 continue
 
-        result = view.execute(dry_run=dry_run)
+        view_result = view.execute(dry_run=dry_run)
 
+        textual_response = None
         if not dry_run and return_natural_response:
-            result.textual_response = await self._nl_responder.generate_response(
-                result, question, iql_filters, event_tracker
+            textual_response = await self._nl_responder.generate_response(
+                view_result, question, iql_filters, event_tracker
             )
+
+        result = ExecutionResult(
+            results=view_result.results,
+            context=view_result.context,
+            execution_time=time.time() - start_time,
+            execution_time_view=end_time_view - start_time_view,
+            view_name=selected_view,
+            iql_query=iql_filters,
+            textual_response=textual_response,
+        )
 
         await event_tracker.request_end(RequestEnd(result=result))
 

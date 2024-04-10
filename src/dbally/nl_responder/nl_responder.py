@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 import pandas as pd
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.execution_result import ExecutionResult
+from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.data_models.prompts.iql_explainer_prompt_template import (
     IQLExplainerPromptTemplate,
     default_iql_explainer_template,
@@ -47,7 +47,7 @@ class NLResponder:
         self._max_tokens_count = max_tokens_count
 
     async def generate_response(
-        self, result: ExecutionResult, question: str, filters: str, event_tracker: EventTracker
+        self, result: ViewExecutionResult, question: str, filters: str, event_tracker: EventTracker
     ) -> str:
         """
         Uses LLM to generate a response in natural language form.

@@ -66,6 +66,9 @@ You can use an index with a custom store [the same way](../quickstart/quickstart
 await country_similarity.update()
 ```
 
+!!! note
+    The `update` method will re-fetch all possible values from the data source and re-index them. Usually, you wouldn't call this method each time you use the similarity index. Instead, you would update the index periodically or when the data source changes. See the [How-To: Update Similarity Indexes](../how-to/update_similarity_indexes.md) guide for more information.
+
 Then, you can utilize the similarity index to find the closest matching value to a user input and generate a response based on that value.
 
 ```python

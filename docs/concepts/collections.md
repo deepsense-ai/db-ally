@@ -25,4 +25,7 @@ my_collection.ask("Find me Italian recipes for soups")
 
 In this scenario, the LLM first determines the most suitable view to address the query, and then that view is used to pull the relevant data.
 
+!!! info
+    The result of a query is an [`ExecutionResult`][dbally.data_models.execution_result.ExecutionResult] object, which contains the data fetched by the view. It contains a `results` attribute that holds the actual data, structured as a list of dictionaries. The exact structure of these dictionaries depends on the view that was used to fetch the data, which can be obtained by looking at the `view_name` attribute of the `ExecutionResult` object.
+
 It's possible for projects to feature several collections, each potentially housing a different set of views. Moreover, a single view can be associated with multiple collections, offering versatile usage across various contexts.

@@ -20,3 +20,5 @@
     options:
         members:
         - list_filters
+
+::: dbally.data_models.execution_result.ViewExecutionResult

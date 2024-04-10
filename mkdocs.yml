@@ -5,6 +5,7 @@ nav:
   - Quickstart:
       - quickstart/index.md
       - quickstart/quickstart2.md
+      - quickstart/quickstart3.md
   - Tutorials:
       - tutorials.md
   - Concepts:
@@ -18,8 +19,10 @@ nav:
           - how-to/sql_views.md
           - how-to/pandas_views.md
           - how-to/custom_views.md
-      - how-to/use_custom_similarity_fetcher.md
-      - how-to/use_custom_similarity_store.md
+      - Using similarity indexes:
+        - how-to/use_custom_similarity_fetcher.md
+        - how-to/use_custom_similarity_store.md
+        - how-to/update_similarity_indexes.md
       - how-to/log_runs_to_langsmith.md
       - how-to/create_custom_event_handler.md
       - how-to/openai_assistants_integration.md
@@ -54,6 +57,7 @@ nav:
               - reference/similarity/similarity_fetcher/index.md
               - reference/similarity/similarity_fetcher/sqlalchemy.md
               - reference/similarity/similarity_fetcher/sqlalchemy_simple.md
+          - reference/similarity/detector.md
       - Embeddings:
           - reference/embeddings/index.md
           - reference/embeddings/openai.md

@@ -1,10 +1,9 @@
 import abc
 import asyncio
-import time
 
 import sqlalchemy
 
-from dbally.data_models.execution_result import ExecutionResult
+from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.iql import IQLQuery, syntax
 from dbally.views.methods_base import MethodsBaseView
 
@@ -65,7 +64,7 @@ class SqlAlchemyBaseView(MethodsBaseView):
             return alchemy_op(await self._build_filter_node(bool_op.child))
         raise ValueError(f"BoolOp {bool_op} has no children")
 
-    def execute(self, dry_run: bool = False) -> ExecutionResult:
+    def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         """
         Executes the generated SQL query and returns the results.
 
@@ -78,20 +77,16 @@ class SqlAlchemyBaseView(MethodsBaseView):
         """
 
         results = []
-        execution_time = None
         sql = str(self._select.compile(bind=self._sqlalchemy_engine, compile_kwargs={"literal_binds": True}))
 
         if not dry_run:
-            time_start = time.time()
             with self._sqlalchemy_engine.connect() as connection:
                 # The underscore is used by sqlalchemy to avoid conflicts with column names
                 # pylint: disable=protected-access
                 rows = connection.execute(self._select).fetchall()
                 results = [dict(row._mapping) for row in rows]
-            execution_time = time.time() - time_start
 
-        return ExecutionResult(
+        return ViewExecutionResult(
             results=results,
-            execution_time=execution_time,
             context={"sql": sql},
         )

@@ -2,10 +2,11 @@ import abc
 import re
 from dataclasses import dataclass
 from typing import _GenericAlias  # type: ignore
-from typing import List, Union
+from typing import List, Optional, Union
 
-from dbally.data_models.execution_result import ExecutionResult
+from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.iql import IQLQuery
+from dbally.similarity import AbstractSimilarityIndex
 
 
 def parse_param_type(param_type: Union[type, _GenericAlias]) -> str:
@@ -37,6 +38,17 @@ class MethodParamWithTyping:
 
     def __str__(self) -> str:
         return f"{self.name}: {parse_param_type(self.type)}"
+
+    @property
+    def similarity_index(self) -> Optional[AbstractSimilarityIndex]:
+        """
+        Returns the SimilarityIndex object if the type is annotated with it.
+        """
+        if hasattr(self.type, "__metadata__"):
+            similarity_indexes = [meta for meta in self.type.__metadata__ if isinstance(meta, AbstractSimilarityIndex)]
+            return similarity_indexes[0] if similarity_indexes else None
+
+        return None
 
 
 @dataclass
@@ -82,7 +94,7 @@ class AbstractBaseView(metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def execute(self, dry_run: bool = False) -> ExecutionResult:
+    def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         """
         Executes the query and returns the result.
 
