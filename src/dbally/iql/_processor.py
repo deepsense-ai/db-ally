@@ -10,7 +10,6 @@ from dbally.iql._exceptions import (
     IQLUnsupportedSyntaxError,
 )
 from dbally.iql._type_validators import validate_arg_type
-from dbally.similarity.index import SimilarityIndex
 
 if TYPE_CHECKING:
     from dbally.views.base import ExposedFunction
@@ -84,11 +83,8 @@ class IQLProcessor:
         for arg, arg_def in zip(node.args, func_def.parameters):
             arg_value = self._parse_arg(arg)
 
-            if hasattr(arg_def.type, "__metadata__"):
-                similarity_indexes = [meta for meta in arg_def.type.__metadata__ if isinstance(meta, SimilarityIndex)]
-
-                if similarity_indexes:
-                    arg_value = await similarity_indexes[0].similar(arg_value)
+            if arg_def.similarity_index:
+                arg_value = await arg_def.similarity_index.similar(arg_value)
 
             check_result = validate_arg_type(arg_def.type, arg_value)
 

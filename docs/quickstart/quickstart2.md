@@ -94,7 +94,7 @@ country_similarity.update()
 ```
 
 !!! note
-    Typically, you wouldn't want to update the similarity index every time you run a query, but rather on a schedule or when the database changes.
+    The `update` method will re-fetch all possible values from the data source and re-index them. Usually, you wouldn't call this method each time you use the similarity index. Instead, you would update the index periodically or when the data source changes. See the [How-To: Update Similarity Indexes](../how-to/update_similarity_indexes.md) guide for more information.
 
 ## Annotating the Filter to Use the Similarity Index
 Now that we have the similarity index, we can use it to annotate the filter to use the similarity index when filtering candidates by country:
