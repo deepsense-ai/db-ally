@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.execution_result import ExecutionResult
+from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.nl_responder.nl_responder import NLResponder
 
 
@@ -22,7 +22,7 @@ def event_tracker():
 
 @pytest.fixture
 def answer():
-    return ExecutionResult(results=[{"id": 1, "name": "Mock name"}], context={"sql": "Mock SQL"})
+    return ViewExecutionResult(results=[{"id": 1, "name": "Mock name"}], context={"sql": "Mock SQL"})
 
 
 @pytest.mark.asyncio

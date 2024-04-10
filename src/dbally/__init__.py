@@ -1,5 +1,6 @@
 """ dbally """
 
+from dbally.data_models.execution_result import ExecutionResult
 from dbally.views import decorators
 from dbally.views.base import AbstractBaseView
 from dbally.views.methods_base import MethodsBaseView
@@ -21,4 +22,5 @@ __all__ = [
     "Collection",
     "AbstractBaseView",
     "DataFrameBaseView",
+    "ExecutionResult",
 ]

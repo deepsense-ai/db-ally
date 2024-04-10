@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import _GenericAlias  # type: ignore
 from typing import List, Union
 
-from dbally.data_models.execution_result import ExecutionResult
+from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.iql import IQLQuery
 
 
@@ -82,7 +82,7 @@ class AbstractBaseView(metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def execute(self, dry_run: bool = False) -> ExecutionResult:
+    def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         """
         Executes the query and returns the result.
 

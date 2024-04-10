@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Union
 
+from dbally.data_models.execution_result import ExecutionResult
 from dbally.data_models.prompts.prompt_template import ChatFormat
-from dbally.views.base import ExecutionResult
 
 
 class EventType(Enum):
