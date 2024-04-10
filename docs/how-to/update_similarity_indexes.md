@@ -8,8 +8,11 @@ Similarity Indexes are designed to index all possible values (e.g., on disk or i
 
 You can update the Similarity Index through Python code or via the db-ally CLI. The following sections explain how to update these indexes using both methods:
 
-* [Update Similarity Indexes via the CLI](#updating-similarity-indexes-via-the-cli)
-* [Update Similarity Indexes via Python Code](#updating-similarity-indexes-via-python-code)
+* [Update Similarity Indexes via the CLI](#update-similarity-indexes-via-the-cli)
+* [Update Similarity Indexes via Python Code](#update-similarity-indexes-via-python-code)
+    * [Update on a Single Similarity Index](#update-on-a-single-similarity-index)
+    * [Update Similarity Indexes from all Views in a Collection](#update-similarity-indexes-from-all-views-in-a-collection)
+    * [Detect Similarity Indexes in Views](#detect-similarity-indexes-in-views)
 
 ## Update Similarity Indexes via the CLI
 
@@ -39,8 +42,6 @@ Lastly, to update all Similarity Indexes in a particular argument of a method, a
 dbally update-index my_module.views:MyView.method_name.argument_name
 ```
 
-For example, given the following view:
-
 ## Update Similarity Indexes via Python Code
 ### Update on a Single Similarity Index
 To manually update a Similarity Index, call the `update` method on the Similarity Index object. The `update` method will re-fetch all possible values from the data source and re-index them. Below is an example of how to manually update a Similarity Index:
@@ -54,6 +55,22 @@ similarity_index = SimilarityIndex(fetcher=fetcher, store=store)
 # Update the similarity index
 await similarity_index.update()
 ```
+
+### Update Similarity Indexes from all Views in a Collection
+If you have a [collection](../concepts/collections.md) and want to update Similarity Indexes in all views, you can use the `update_similarity_indexes` method. This method will update all Similarity Indexes in all views registered with the collection:
+
+```python
+from db_ally import create_collection
+
+my_collection = create_collection("collection_name")
+
+# ... add views to the collection
+
+await my_collection.update_similarity_indexes()
+```
+
+!!! info
+    Alternatively, for more advanced use cases, you can use Collection's [`get_similarity_indexes`][dbally.Collection.get_similarity_indexes] method to get a list of all Similarity Indexes (allongside the places where they are used) and update them individually.
 
 ### Detect Similarity Indexes in Views
 If you are using Similarity Indexes to annotate arguments in views, you can use the [`SimilarityIndexDetector`][dbally.similarity.detector.SimilarityIndexDetector] to locate all Similarity Indexes in a view and update them.

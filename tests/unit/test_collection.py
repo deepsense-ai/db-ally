@@ -1,34 +1,16 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name, missing-return-type-doc
 
-from typing import List, Tuple
-from unittest.mock import AsyncMock, Mock, call, create_autospec, patch
+from typing import List, Tuple, Type
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
+from typing_extensions import Annotated
 
 from dbally._collection import Collection
-from dbally.data_models.prompts.iql_prompt_template import IQLPromptTemplate, default_iql_template
-from dbally.iql import IQLQuery
 from dbally.iql._exceptions import IQLError
-from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.llm_client.base import LLMClient
 from dbally.utils.errors import NoViewFoundError
-from dbally.view_selection.base import ViewSelector
-from dbally.views.base import AbstractBaseView, ExposedFunction, ViewExecutionResult
-
-
-class MockViewBase(AbstractBaseView):
-    """
-    Mock view base class
-    """
-
-    def list_filters(self) -> List[ExposedFunction]:
-        return [ExposedFunction("test_filter", "", [])]
-
-    async def apply_filters(self, filters: IQLQuery) -> None:
-        ...
-
-    def execute(self, dry_run=False) -> ViewExecutionResult:
-        return ViewExecutionResult(results=[], context={})
+from dbally.views.base import ExposedFunction, MethodParamWithTyping, ViewExecutionResult
+from tests.unit.mocks import MockIQLGenerator, MockSimilarityIndex, MockViewBase, MockViewSelector
 
 
 class MockView1(MockViewBase):
@@ -71,21 +53,67 @@ class MockViewWithResults(MockViewBase):
     def execute(self, dry_run=False) -> ViewExecutionResult:
         return ViewExecutionResult(results=[{"foo": "bar"}], context={"baz": "qux"})
 
-
-class MockViewSelector(ViewSelector):
-    def __init__(self, name: str = "MockView1") -> None:
-        self.name = name
-
-    async def select_view(self, *_, **__) -> str:
-        return self.name
+    def list_filters(self) -> List[ExposedFunction]:
+        return [ExposedFunction("test_filter", "", [])]
 
 
-class MockIQLGenerator(IQLGenerator):
-    def __init__(self) -> None:
-        super().__init__(llm_client=create_autospec(LLMClient))
+@pytest.fixture(name="similarity_classes")
+def mock_similarity_classes() -> (
+    Tuple[MockSimilarityIndex, MockSimilarityIndex, Type[MockViewBase], Type[MockViewBase]]
+):
+    """
+    Returns two similarity indexes and two views with similarity indexes
+    """
+    foo_index = MockSimilarityIndex("foo")
+    bar_index = MockSimilarityIndex("bar")
 
-    async def generate_iql(self, *_, **__) -> Tuple[str, IQLPromptTemplate]:
-        return "test_filter()", default_iql_template
+    class MockViewWithSimilarity(MockViewBase):
+        """
+        Mock view with similarity index
+        """
+
+        def execute(self, dry_run=False) -> ViewExecutionResult:
+            return ViewExecutionResult(results=[{"foo": "bar"}], context={"baz": "qux"})
+
+        def list_filters(self) -> List[ExposedFunction]:
+            return [
+                ExposedFunction(
+                    "test_filter",
+                    "",
+                    [
+                        MethodParamWithTyping("dog", Annotated[str, foo_index]),
+                        MethodParamWithTyping("cat", Annotated[str, bar_index]),
+                    ],
+                ),
+                ExposedFunction(
+                    "second_filter",
+                    "",
+                    [
+                        MethodParamWithTyping("tiger", Annotated[str, bar_index]),
+                    ],
+                ),
+            ]
+
+    class MockViewWithSimilarity2(MockViewBase):
+        """
+        Mock view with similarity index
+        """
+
+        def execute(self, dry_run=False) -> ViewExecutionResult:
+            return ViewExecutionResult(results=[{"foo": "bar"}], context={"baz": "qux"})
+
+        def list_filters(self) -> List[ExposedFunction]:
+            return [
+                ExposedFunction(
+                    "test_filter",
+                    "",
+                    [
+                        MethodParamWithTyping("monkey", Annotated[str, foo_index]),
+                    ],
+                )
+            ]
+
+    return foo_index, bar_index, MockViewWithSimilarity, MockViewWithSimilarity2
 
 
 @pytest.fixture(name="collection")
@@ -95,8 +123,8 @@ def mock_collection() -> Collection:
     """
     collection = Collection(
         "foo",
-        view_selector=MockViewSelector(),
-        iql_generator=MockIQLGenerator(),
+        view_selector=MockViewSelector("MockView1"),
+        iql_generator=MockIQLGenerator(""),
         nl_responder=AsyncMock(),
         event_handlers=[],
     )
@@ -279,8 +307,8 @@ async def test_ask_view_selection_single_view() -> None:
     """
     collection = Collection(
         "foo",
-        view_selector=MockViewSelector(),
-        iql_generator=MockIQLGenerator(),
+        view_selector=MockViewSelector(""),
+        iql_generator=MockIQLGenerator("test_filter()"),
         nl_responder=AsyncMock(),
         event_handlers=[],
     )
@@ -300,7 +328,7 @@ async def test_ask_view_selection_multiple_views() -> None:
     collection = Collection(
         "foo",
         view_selector=MockViewSelector("MockViewWithResults"),
-        iql_generator=MockIQLGenerator(),
+        iql_generator=MockIQLGenerator("test_filter()"),
         nl_responder=AsyncMock(),
         event_handlers=[],
     )
@@ -321,11 +349,60 @@ async def test_ask_view_selection_no_views() -> None:
     """
     collection = Collection(
         "foo",
-        view_selector=MockViewSelector(),
-        iql_generator=MockIQLGenerator(),
+        view_selector=MockViewSelector(""),
+        iql_generator=MockIQLGenerator("test_filter()"),
         nl_responder=AsyncMock(),
         event_handlers=[],
     )
 
     with pytest.raises(ValueError):
         await collection.ask("Mock question")
+
+
+def test_get_similarity_indexes(
+    similarity_classes: Tuple[MockSimilarityIndex, MockSimilarityIndex, Type[MockViewBase], Type[MockViewBase]],
+    collection: Collection,
+) -> None:
+    """
+    Tests that the get_similarity_indexes method works correctly
+    """
+    (
+        foo_index,
+        bar_index,
+        MockViewWithSimilarity,  # pylint: disable=invalid-name
+        MockViewWithSimilarity2,  # pylint: disable=invalid-name
+    ) = similarity_classes
+    collection.add(MockViewWithSimilarity)
+    collection.add(MockViewWithSimilarity2)
+
+    indexes = collection.get_similarity_indexes()
+    assert len(indexes) == 2
+    assert indexes[foo_index] == [
+        ("MockViewWithSimilarity", "test_filter", "dog"),
+        ("MockViewWithSimilarity2", "test_filter", "monkey"),
+    ]
+    assert indexes[bar_index] == [
+        ("MockViewWithSimilarity", "test_filter", "cat"),
+        ("MockViewWithSimilarity", "second_filter", "tiger"),
+    ]
+
+
+async def test_update_similarity_indexes(
+    similarity_classes: Tuple[MockSimilarityIndex, MockSimilarityIndex, Type[MockViewBase], Type[MockViewBase]],
+    collection: Collection,
+) -> None:
+    """
+    Tests that the update_similarity_indexes method triggers the update method of the similarity indexes
+    """
+    (
+        foo_index,
+        bar_index,
+        MockViewWithSimilarity,  # pylint: disable=invalid-name
+        MockViewWithSimilarity2,  # pylint: disable=invalid-name
+    ) = similarity_classes
+    collection.add(MockViewWithSimilarity)
+    collection.add(MockViewWithSimilarity2)
+
+    await collection.update_similarity_indexes()
+    assert foo_index.update_count == 1
+    assert bar_index.update_count == 1
