@@ -39,6 +39,11 @@ class SimilarityIndex(AbstractSimilarityIndex):
     """
 
     def __init__(self, store: SimilarityStore, fetcher: SimilarityFetcher):
+        """
+        Args:
+            store: stores values gathered by the fetcher
+            fetcher: fetches unique values to be indexed
+        """
         self.store = store
         self.fetcher = fetcher
 

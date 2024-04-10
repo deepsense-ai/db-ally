@@ -24,7 +24,7 @@ class LangSmithEventHandler(EventHandler[RunTree, RunTree]):
 
     async def request_start(self, user_request: RequestStart) -> RunTree:
         """
-        Log the start of the request.
+        Initializes the `RunTree` object with all required attributes.
 
         Args:
             user_request: The start of the request.
@@ -69,7 +69,7 @@ class LangSmithEventHandler(EventHandler[RunTree, RunTree]):
 
     async def event_end(self, event: Union[None, LLMEvent], request_context: RunTree, event_context: RunTree) -> None:
         """
-        Log the end of the event.`
+        Log the end of the event.
 
         Args:
             event: Event to be logged.

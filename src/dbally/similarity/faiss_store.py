@@ -10,12 +10,7 @@ from dbally.similarity.store import SimilarityStore
 
 class FaissStore(SimilarityStore):
     """
-    The FaissStore class facilitates interaction with Meta Faiss.
-
-    This component is used while mapping a user input to the closest matching value in the data source.
-
-    In particular, it indexes values obtained via fetcher, allowing the system to
-    find the closest match to the user's input.
+    The FaissStore class stores text embeddings using Meta Faiss.
     """
 
     def __init__(
@@ -85,7 +80,7 @@ class FaissStore(SimilarityStore):
             text: The text to find similar to.
 
         Returns:
-            Optional[str]: The most similar text or None if no similar text is found.
+            The most similar text or None if no similar text is found.
         """
         index = faiss.read_index(str(self.get_index_path()))
         embedding = np.array(await self.embedding_client.get_embeddings([text]), dtype=np.float32)

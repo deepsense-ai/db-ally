@@ -20,9 +20,9 @@ nav:
           - how-to/pandas_views.md
           - how-to/custom_views.md
       - Using similarity indexes:
-        - how-to/use_custom_similarity_fetcher.md
-        - how-to/use_custom_similarity_store.md
-        - how-to/update_similarity_indexes.md
+          - how-to/use_custom_similarity_fetcher.md
+          - how-to/use_custom_similarity_store.md
+          - how-to/update_similarity_indexes.md
       - how-to/log_runs_to_langsmith.md
       - how-to/create_custom_event_handler.md
       - how-to/openai_assistants_integration.md
@@ -38,7 +38,8 @@ nav:
           - reference/iql/iql_generator.md
       - Event handlers:
           - reference/event_handlers/index.md
-          - reference/event_handlers/available.md
+          - reference/event_handlers/cli_handler.md
+          - reference/event_handlers/langsmith_handler.md
       - View Selection:
           - reference/view_selection/index.md
           - reference/view_selection/llm_view_selector.md
@@ -61,7 +62,6 @@ nav:
       - Embeddings:
           - reference/embeddings/index.md
           - reference/embeddings/openai.md
-      - reference/data_models.md
   - About:
       - about/roadmap.md
 

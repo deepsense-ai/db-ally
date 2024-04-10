@@ -40,7 +40,7 @@ Currently handled events:
 
 * Every call to the **LLM**
 
-::: dbally.audit.event_handlers.EventHandler
+::: dbally.audit.EventHandler
 
 ::: dbally.data_models.audit.RequestStart
 

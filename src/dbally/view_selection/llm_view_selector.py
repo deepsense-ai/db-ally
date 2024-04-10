@@ -10,13 +10,12 @@ from dbally.view_selection.base import ViewSelector
 
 class LLMViewSelector(ViewSelector):
     """
-    The `LLMViewSelector` class is a component designed to leverage the power of LLMs to select
-    the most suitable view for addressing user queries.
+    The `LLMViewSelector` utilises LLMs to select the most suitable view to answer the user question.
 
     Its primary function is to determine the optimal view that can effectively be used to answer a user's question.
 
     The method used to select the most relevant view is `self.select_view`.
-    It formats views in view.name: view.description format and then calls LLM Client,
+    It formats views using view.name: view.description format and then calls LLM Client,
     ultimately returning the name of the most suitable view.
     """
 
@@ -25,14 +24,15 @@ class LLMViewSelector(ViewSelector):
         llm_client: LLMClient,
         prompt_template: Optional[IQLPromptTemplate] = None,
         prompt_builder: Optional[PromptBuilder] = None,
-        promptify_views: Optional[Callable] = None,
+        promptify_views: Optional[Callable[[Dict[str, str]], str]] = None,
     ) -> None:
         """
         Args:
             llm_client: LLM client used to generate IQL
-            prompt_template: template for the prompt
+            prompt_template: template for the prompt used for the view selection
             prompt_builder: PromptBuilder used to insert arguments into the prompt and adjust style per model
-            promptify_views: Function formatting filters for prompt
+            promptify_views: Function formatting filters for prompt. By default names and descriptions of\
+            all views are concatenated
         """
         self._llm_client = llm_client
         self._prompt_template = prompt_template or copy.deepcopy(default_view_selector_template)
@@ -41,15 +41,15 @@ class LLMViewSelector(ViewSelector):
 
     async def select_view(self, question: str, views: Dict[str, str], event_tracker: EventTracker) -> str:
         """
-        Based on user question and list of available views select most relevant one.
+        Based on user question and list of available views select the most relevant one by prompting LLM.
 
         Args:
-            question: user question.
+            question: user question asked in the natural language e.g "Do we have any data scientists?"
             views: dictionary of available view names with corresponding descriptions.
-            event_tracker: event store used to audit the selection process.
+            event_tracker: event tracker used to audit the selection process.
 
         Returns:
-            most relevant view name.
+            The most relevant view name.
         """
 
         views_for_prompt = self._promptify_views(views)

@@ -30,7 +30,7 @@ class SqlAlchemyFetcher(SimilarityFetcher):
         Fetches the data from the source and returns it as a list of strings.
 
         Returns:
-            List[str]: The fetched data.
+            The fetched data.
         """
         with self.sqlalchemy_engine.connect() as conn:
             result = conn.execute(self.get_query())
@@ -54,7 +54,7 @@ class SimpleSqlAlchemyFetcher(SqlAlchemyFetcher):
         Returns query that will be used to fetch the data from the database.
 
         Returns:
-            sqlalchemy.Select: The query to fetch the data.
+            The query to fetch the data.
         """
         return sqlalchemy.select(self.column).select_from(self.table).distinct()
 
@@ -100,7 +100,7 @@ class CaseInsensitiveSqlAlchemyStore(AbstractSqlAlchemyStore):
             text: The text to find similar to.
 
         Returns:
-            Optional[str]: The most similar text or None if no similar text is found.
+            The most similar text or None if no similar text is found.
         """
         with self.sqlalchemy_engine.connect() as conn:
             result = conn.execute(sqlalchemy.select(self.table.c.text).where(self.table.c.text.ilike(text)))

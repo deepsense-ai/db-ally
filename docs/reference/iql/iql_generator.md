@@ -6,3 +6,6 @@
         - generate_iql
 
 ::: dbally.data_models.prompts.iql_prompt_template.default_iql_template
+
+::: dbally.data_models.prompts.IQLPromptTemplate
+
