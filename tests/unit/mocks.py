@@ -58,3 +58,19 @@ class MockSimilarityIndex(AbstractSimilarityIndex):
 
     async def similar(self, text: str) -> str:
         return text
+
+
+class MockLLMClient(LLMClient):
+    # TODO: Start calling super().__init__ and remove the pyling comment below
+    # as soon as the base class is refactored to not have PromptBuilder initialization
+    # hardcoded in its constructor.
+    # See: DBALLY-105
+    # pylint: disable=super-init-not-called
+    def __init__(self, *_, **__) -> None:
+        self.model_name = "mock model"
+
+    async def text_generation(self, *_, **__) -> str:
+        return "mock response"
+
+    async def call(self, *_, **__) -> str:
+        return "mock response"

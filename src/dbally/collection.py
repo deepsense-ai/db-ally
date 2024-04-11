@@ -40,7 +40,8 @@ class Collection:
     Collection is a container for a set of views that can be used by db-ally to answer user questions.
 
     Tip:
-        It is recommended to create new collections using [`dbally.create_colletion`](index.md) function
+        It is recommended to create new collections using the [`dbally.create_colletion`][dbally.create_collection]\
+        function instead of instantiating this class directly.
     """
 
     def __init__(

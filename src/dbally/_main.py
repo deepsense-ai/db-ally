@@ -6,6 +6,7 @@ from .iql_generator.iql_generator import IQLGenerator
 from .llm_client.base import LLMClient
 from .llm_client.openai_client import OpenAIClient
 from .nl_responder.nl_responder import NLResponder
+from .view_selection.base import ViewSelector
 from .view_selection.llm_view_selector import LLMViewSelector
 
 default_llm_client: Optional[LLMClient] = None
@@ -42,10 +43,18 @@ def use_event_handler(event_handler: EventHandler) -> None:
 def create_collection(
     name: str,
     event_handlers: Optional[List[EventHandler]] = None,
+    llm_client: Optional[LLMClient] = None,
+    view_selector: Optional[ViewSelector] = None,
+    iql_generator: Optional[IQLGenerator] = None,
+    nl_responder: Optional[NLResponder] = None,
 ) -> Collection:
     """
     Create a new [Collection](collection.md) that is a container for registering views and the\
     main entrypoint to db-ally features.
+
+    Unlike instantiating a [Collection][dbally.Collection] directly, this function\
+    provides a set of default values for various dependencies like LLM client, view selector,\
+    IQL generator, and NL responder.
 
     ##Example
 
@@ -62,6 +71,16 @@ def create_collection(
         event_handlers: Event handlers used by the collection during query executions. Can be used to\
         log events as [CLIEventHandler](event_handlers/cli.md) or to validate system performance as\
         [LangSmithEventHandler](event_handlers/langsmith.md).
+        llm_client: LLM client used by the collection to generate views and respond to natural language\
+        queries. If None, the default LLM client will be used.
+        view_selector: View selector used by the collection to select the best view for the given query.\
+        If None, a new instance of [LLMViewSelector][dbally.view_selection.llm_view_selector.LLMViewSelector]\
+        will be used.
+        iql_generator: IQL generator used by the collection to generate IQL queries from natural language\
+        queries. If None, a new instance of [IQLGenerator][dbally.iql_generator.iql_generator.IQLGenerator]\
+        will be used.
+        nl_responder: NL responder used by the collection to respond to natural language queries. If None,\
+        a new instance of [NLResponder][dbally.nl_responder.nl_responder.NLResponder] will be used.
 
     Returns:
         a new instance of db-ally Collection
@@ -69,13 +88,14 @@ def create_collection(
     Raises:
         ValueError: if default LLM client is not configured
     """
-    if not default_llm_client:
-        raise ValueError("LLM client is not set.")
+    llm_client = llm_client or default_llm_client
 
-    llm_client = default_llm_client
-    view_selector = LLMViewSelector(llm_client=llm_client)
-    iql_generator = IQLGenerator(llm_client=llm_client)
-    nl_responder = NLResponder(llm_client=llm_client)
+    if not llm_client:
+        raise ValueError("LLM client is not configured. Pass the llm_client argument or set the default llm client")
+
+    view_selector = view_selector or LLMViewSelector(llm_client=llm_client)
+    iql_generator = iql_generator or IQLGenerator(llm_client=llm_client)
+    nl_responder = nl_responder or NLResponder(llm_client=llm_client)
     event_handlers = event_handlers or default_event_handlers
 
     return Collection(
