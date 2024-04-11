@@ -4,20 +4,8 @@ from typing_extensions import Annotated
 
 from dbally import MethodsBaseView, decorators
 from dbally.iql import IQLQuery
-from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.views.base import ViewExecutionResult
-
-
-class MockSimilarityIndex(AbstractSimilarityIndex):
-    def __init__(self, name: str):
-        self.name = name
-
-    async def update(self) -> None:
-        ...
-
-    async def similar(self, text: str) -> str:
-        return text
-
+from tests.unit.mocks import MockSimilarityIndex
 
 index_foo = MockSimilarityIndex("foo")
 index_bar = MockSimilarityIndex("bar")

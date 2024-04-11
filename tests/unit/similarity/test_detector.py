@@ -78,7 +78,7 @@ def test_detector_with_module_not_found():
     """
     with pytest.raises(SimilarityIndexDetectorException) as exc:
         SimilarityIndexDetector.from_path("not_found")
-        assert exc.value.message == "Module not_found not found."
+    assert exc.value.message == "Module not_found not found."
 
 
 def test_detector_with_empty_module():
@@ -97,7 +97,7 @@ def test_detector_with_view_not_found():
     detector = SimilarityIndexDetector.from_path("sample_module.submodule:NotFoundView")
     with pytest.raises(SimilarityIndexDetectorException) as exc:
         detector.list_views()
-        assert exc.value.message == "View NotFoundView not found."
+    assert exc.value.message == "View NotFoundView not found in module sample_module.submodule."
 
 
 def test_detector_with_method_not_found():
@@ -107,7 +107,7 @@ def test_detector_with_method_not_found():
     detector = SimilarityIndexDetector.from_path("sample_module.submodule:FooView.not_found")
     with pytest.raises(SimilarityIndexDetectorException) as exc:
         detector.list_indexes()
-        assert exc.value.message == "Filter method not_found not found in view FooView."
+    assert exc.value.message == "Filter method not_found not found in view FooView."
 
 
 def test_detector_with_argument_not_found():
@@ -117,4 +117,4 @@ def test_detector_with_argument_not_found():
     detector = SimilarityIndexDetector.from_path("sample_module.submodule:FooView.method_bar.not_found")
     with pytest.raises(SimilarityIndexDetectorException) as exc:
         detector.list_indexes()
-        assert exc.value.message == "Argument not_found not found in method FooView.method_bar."
+    assert exc.value.message == "Argument not_found not found in method method_bar."

@@ -1,7 +1,7 @@
 from typing import List, Optional
 
-from ._collection import Collection
 from .audit.event_handlers.base import EventHandler
+from .collection import Collection
 from .iql_generator.iql_generator import IQLGenerator
 from .llm_client.base import LLMClient
 from .llm_client.openai_client import OpenAIClient
