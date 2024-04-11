@@ -6,11 +6,12 @@ from unittest.mock import AsyncMock, Mock, call, patch
 import pytest
 from typing_extensions import Annotated
 
+from dbally._main import create_collection
 from dbally.collection import Collection, IndexUpdateError
 from dbally.iql._exceptions import IQLError
 from dbally.utils.errors import NoViewFoundError
 from dbally.views.base import ExposedFunction, MethodParamWithTyping, ViewExecutionResult
-from tests.unit.mocks import MockIQLGenerator, MockSimilarityIndex, MockViewBase, MockViewSelector
+from tests.unit.mocks import MockIQLGenerator, MockLLMClient, MockSimilarityIndex, MockViewBase, MockViewSelector
 
 
 class MockView1(MockViewBase):
@@ -121,12 +122,12 @@ def mock_collection() -> Collection:
     """
     Returns a collection with two mock views
     """
-    collection = Collection(
+    collection = create_collection(
         "foo",
+        llm_client=MockLLMClient(),
         view_selector=MockViewSelector("MockView1"),
         iql_generator=MockIQLGenerator(""),
         nl_responder=AsyncMock(),
-        event_handlers=[],
     )
     collection.add(MockView1)
     collection.add(MockView2)
