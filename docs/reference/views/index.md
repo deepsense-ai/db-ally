@@ -11,8 +11,5 @@
 ::: dbally.views.base.MethodParamWithTyping
 
 ::: dbally.views.methods_base.MethodsBaseView
-    options:
-        members:
-        - list_filters
 
 ::: dbally.data_models.execution_result.ViewExecutionResult

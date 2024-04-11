@@ -65,8 +65,7 @@ class DataFrameBaseView(MethodsBaseView):
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         """
-        Executes the view and returns the results. The results are filtered based on the applied filters.\
-        Be aware that before running this method you need to execute `apply_filters`
+        Executes the view and returns the results. The results are filtered based on the applied filters.
 
         Args:
             dry_run: If True, the method will only add `context` field to the `ExecutionResult` with the\

@@ -6,7 +6,3 @@
 
 
 ::: dbally.DataFrameBaseView
-    options:
-        members:
-        - apply_filters
-        - execute

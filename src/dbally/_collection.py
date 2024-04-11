@@ -132,7 +132,8 @@ class Collection:
         """
         Lists all registered view names and their descriptions
 
-        :return: Dictionary of view names and descriptions
+        Returns:
+            Dictionary of view names and descriptions
         """
         return {
             name: (textwrap.dedent(view.__doc__).strip() if view.__doc__ else "") for name, view in self._views.items()
