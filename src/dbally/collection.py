@@ -1,7 +1,8 @@
+import asyncio
 import inspect
 import textwrap
 import time
-from typing import Callable, Dict, List, Optional, Type, TypeVar
+from typing import Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
@@ -11,9 +12,27 @@ from dbally.iql import IQLQuery
 from dbally.iql._exceptions import IQLError
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.nl_responder.nl_responder import NLResponder
+from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.utils.errors import NoViewFoundError
 from dbally.view_selection.base import ViewSelector
 from dbally.views.base import AbstractBaseView
+
+
+class IndexUpdateError(Exception):
+    """
+    Exception for when updating any of the Collection's similarity indexes fails.
+
+    Provides a dictionary mapping failed indexes to their
+    respective exceptions as the `failed_indexes` attribute.
+    """
+
+    def __init__(self, message: str, failed_indexes: Dict[AbstractSimilarityIndex, Exception]) -> None:
+        """
+        Args:
+            failed_indexes: Dictionary mapping failed indexes to their respective exceptions.
+        """
+        self.failed_indexes = failed_indexes
+        super().__init__(message)
 
 
 class Collection:
@@ -226,3 +245,43 @@ class Collection:
         await event_tracker.request_end(RequestEnd(result=result))
 
         return result
+
+    def get_similarity_indexes(self) -> Dict[AbstractSimilarityIndex, List[Tuple[str, str, str]]]:
+        """
+        List all similarity indexes from all views in the collection.
+
+        Returns:
+            Dictionary with similarity indexes as keys and values containing lists of places where they are used
+            (represented by a tupple containing view name, method name and argument name)
+        """
+        indexes: Dict[AbstractSimilarityIndex, List[Tuple[str, str, str]]] = {}
+        for view_name in self._views:
+            view = self.get(view_name)
+            filters = view.list_filters()
+            for filter_ in filters:
+                for param in filter_.parameters:
+                    if param.similarity_index:
+                        indexes.setdefault(param.similarity_index, []).append((view_name, filter_.name, param.name))
+        return indexes
+
+    async def update_similarity_indexes(self) -> None:
+        """
+        Update all similarity indexes from all views in the collection.
+
+        Raises:
+            IndexUpdateError: if updating any of the indexes fails. The exception provides `failed_indexes` attribute,
+                a dictionary mapping failed indexes to their respective exceptions. Indexes not present in
+                the dictionary were updated successfully.
+        """
+        indexes = self.get_similarity_indexes()
+        update_corutines = [index.update() for index in indexes]
+        results = await asyncio.gather(*update_corutines, return_exceptions=True)
+        failed_indexes = {
+            index: exception for index, exception in zip(indexes, results) if isinstance(exception, Exception)
+        }
+        if failed_indexes:
+            failed_locations = [loc for index in failed_indexes for loc in indexes[index]]
+            description = ", ".join(
+                f"{view_name}.{method_name}.{param_name}" for view_name, method_name, param_name in failed_locations
+            )
+            raise IndexUpdateError(f"Failed to update similarity indexes for {description}", failed_indexes)

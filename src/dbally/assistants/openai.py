@@ -4,8 +4,8 @@ from typing import Dict, List
 
 from openai.types.beta.threads import RequiredActionFunctionToolCall
 
-from dbally._collection import Collection
 from dbally.assistants.base import AssistantAdapter, FunctionCallingError, FunctionCallState
+from dbally.collection import Collection
 from dbally.utils.errors import UnsupportedQueryError
 
 _DBALLY_INFO = "Dbally has access to the following database views: "

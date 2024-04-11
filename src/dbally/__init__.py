@@ -8,8 +8,8 @@ from dbally.views.pandas_base import DataFrameBaseView
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
 from .__version__ import __version__
-from ._collection import Collection
 from ._main import create_collection, use_event_handler, use_openai_llm
+from .collection import Collection
 
 __all__ = [
     "__version__",
