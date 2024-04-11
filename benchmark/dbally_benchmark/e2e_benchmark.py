@@ -21,7 +21,7 @@ from omegaconf import DictConfig
 from sqlalchemy import create_engine
 
 import dbally
-from dbally._collection import Collection
+from dbally.collection import Collection
 from dbally.data_models.prompts.iql_prompt_template import default_iql_template
 from dbally.data_models.prompts.view_selector_prompt_template import default_view_selector_template
 from dbally.utils.errors import NoViewFoundError, UnsupportedQueryError

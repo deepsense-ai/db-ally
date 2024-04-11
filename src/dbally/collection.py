@@ -18,6 +18,23 @@ from dbally.view_selection.base import ViewSelector
 from dbally.views.base import AbstractBaseView
 
 
+class IndexUpdateError(Exception):
+    """
+    Exception for when updating any of the Collection's similarity indexes fails.
+
+    Provides a dictionary mapping failed indexes to their
+    respective exceptions as the `failed_indexes` attribute.
+    """
+
+    def __init__(self, message: str, failed_indexes: Dict[AbstractSimilarityIndex, Exception]) -> None:
+        """
+        Args:
+            failed_indexes: Dictionary mapping failed indexes to their respective exceptions.
+        """
+        self.failed_indexes = failed_indexes
+        super().__init__(message)
+
+
 class Collection:
     """
     Collection is a container for a set of views that can be used by db-ally to answer user questions.
@@ -250,7 +267,21 @@ class Collection:
     async def update_similarity_indexes(self) -> None:
         """
         Update all similarity indexes from all views in the collection.
+
+        Raises:
+            IndexUpdateError: if updating any of the indexes fails. The exception provides `failed_indexes` attribute,
+                a dictionary mapping failed indexes to their respective exceptions. Indexes not present in
+                the dictionary were updated successfully.
         """
         indexes = self.get_similarity_indexes()
         update_corutines = [index.update() for index in indexes]
-        await asyncio.gather(*update_corutines)
+        results = await asyncio.gather(*update_corutines, return_exceptions=True)
+        failed_indexes = {
+            index: exception for index, exception in zip(indexes, results) if isinstance(exception, Exception)
+        }
+        if failed_indexes:
+            failed_locations = [loc for index in failed_indexes for loc in indexes[index]]
+            description = ", ".join(
+                f"{view_name}.{method_name}.{param_name}" for view_name, method_name, param_name in failed_locations
+            )
+            raise IndexUpdateError(f"Failed to update similarity indexes for {description}", failed_indexes)

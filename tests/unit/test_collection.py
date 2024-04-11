@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, call, patch
 import pytest
 from typing_extensions import Annotated
 
-from dbally._collection import Collection
+from dbally.collection import Collection, IndexUpdateError
 from dbally.iql._exceptions import IQLError
 from dbally.utils.errors import NoViewFoundError
 from dbally.views.base import ExposedFunction, MethodParamWithTyping, ViewExecutionResult
@@ -280,7 +280,7 @@ async def test_ask_feedback_loop(collection_feedback: Collection) -> None:
         ValueError("err3"),
         ValueError("err4"),
     ]
-    with patch("dbally._collection.IQLQuery.parse") as mock_iql_query:
+    with patch("dbally.collection.IQLQuery.parse") as mock_iql_query:
         mock_iql_query.side_effect = errors
 
         await collection_feedback.ask("Mock question")
@@ -405,4 +405,35 @@ async def test_update_similarity_indexes(
 
     await collection.update_similarity_indexes()
     assert foo_index.update_count == 1
+    assert bar_index.update_count == 1
+
+
+async def test_update_similarity_indexes_error(
+    similarity_classes: Tuple[MockSimilarityIndex, MockSimilarityIndex, Type[MockViewBase], Type[MockViewBase]],
+    collection: Collection,
+) -> None:
+    """
+    Tests that the update_similarity_indexes method raises an `IndexUpdateError` exception when
+    the update method of the similarity indexes raises an exception
+    """
+    (
+        foo_index,
+        bar_index,
+        MockViewWithSimilarity,  # pylint: disable=invalid-name
+        MockViewWithSimilarity2,  # pylint: disable=invalid-name
+    ) = similarity_classes
+    collection.add(MockViewWithSimilarity)
+    collection.add(MockViewWithSimilarity2)
+
+    foo_exception = ValueError("foo")
+    foo_index.update = AsyncMock(side_effect=foo_exception)  # type: ignore
+    with pytest.raises(IndexUpdateError) as e:
+        await collection.update_similarity_indexes()
+    assert (
+        str(e.value) == "Failed to update similarity indexes for MockViewWithSimilarity.test_filter.dog, "
+        "MockViewWithSimilarity2.test_filter.monkey"
+    )
+    assert e.value.failed_indexes == {
+        foo_index: foo_exception,
+    }
     assert bar_index.update_count == 1
