@@ -52,6 +52,10 @@ def create_collection(
     Create a new [Collection](collection.md) that is a container for registering views and the\
     main entrypoint to db-ally features.
 
+    Unlike instantiating a [Collection][dbally.Collection] directly, this function\
+    provides a set of default values for various dependencies like LLM client, view selector,\
+    IQL generator, and NL responder.
+
     ##Example
 
     ```python
@@ -70,7 +74,8 @@ def create_collection(
         llm_client: LLM client used by the collection to generate views and respond to natural language\
         queries. If None, the default LLM client will be used.
         view_selector: View selector used by the collection to select the best view for the given query.\
-        If None, a new instance of [LLMViewSelector][dbally.view_selection.LLMViewSelector] will be used.
+        If None, a new instance of [LLMViewSelector][dbally.view_selection.llm_view_selector.LLMViewSelector]\
+        will be used.
         iql_generator: IQL generator used by the collection to generate IQL queries from natural language\
         queries. If None, a new instance of [IQLGenerator][dbally.iql_generator.iql_generator.IQLGenerator]\
         will be used.
