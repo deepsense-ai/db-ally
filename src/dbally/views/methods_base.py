@@ -21,9 +21,11 @@ class MethodsBaseView(AbstractBaseView, metaclass=abc.ABCMeta):
         """
         Lists all methods decorated with the given decorator.
 
-        :param decorator: The decorator to filter the methods
+        Args:
+            decorator: The decorator to filter the methods
 
-        :return: List of exposed methods
+        Returns:
+            List of exposed methods
         """
         methods = []
         for method_name in dir(cls):
@@ -46,6 +48,8 @@ class MethodsBaseView(AbstractBaseView, metaclass=abc.ABCMeta):
 
     def list_filters(self) -> List[ExposedFunction]:
         """
+        List filters in the given view
+
         Returns:
             Filters defined inside the View and decorated with `decorators.view_filter`.
         """
@@ -57,10 +61,12 @@ class MethodsBaseView(AbstractBaseView, metaclass=abc.ABCMeta):
         """
         Converts a IQL FunctionCall node to a method object and its arguments.
 
-        :param func: IQL FunctionCall node
-        :param method_decorator: The decorator that thhe method should have
+        Args:
+            func: IQL FunctionCall node
+            method_decorator: The decorator that thhe method should have
 
-        :return: Tuple with the method object and its arguments
+        Returns:
+            Tuple with the method object and its arguments
         """
         decorator_name = method_decorator.__name__
 
@@ -81,9 +87,11 @@ class MethodsBaseView(AbstractBaseView, metaclass=abc.ABCMeta):
         """
         Converts a IQL FunctonCall filter to a method call. If the method is a coroutine, it will be awaited.
 
-        :param func: IQL FunctionCall node
+        Args:
+            func: IQL FunctionCall node
 
-        :return: The result of the method call
+        Returns:
+            The result of the method call
         """
         method, args = self._method_with_args_from_call(func, decorators.view_filter)
 

@@ -5,7 +5,8 @@ def view_filter() -> typing.Callable:
     """
     Decorator for marking a method as a filter
 
-    :return: Function that returns the decorated method
+    Returns:
+        Function that returns the decorated method
     """
 
     def wrapped(func: typing.Callable) -> typing.Callable:  # pylint: disable=missing-return-doc

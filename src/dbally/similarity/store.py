@@ -5,6 +5,11 @@ from typing import List, Optional
 class SimilarityStore(metaclass=abc.ABCMeta):
     """
     Base class for all stores. Has to be able to store the data and retrieve it.
+
+    This component is used while mapping a user input to the closest matching value in the data source.
+
+    In particular, it is used inside `SimilarityIndex`, allowing the system to
+    find the closest match to the user's input.
     """
 
     @abc.abstractmethod
@@ -25,5 +30,5 @@ class SimilarityStore(metaclass=abc.ABCMeta):
             text: The text to find similar to.
 
         Returns:
-            Optional[str]: The most similar text or None if no similar text is found.
+            The most similar text or None if no similar text is found.
         """

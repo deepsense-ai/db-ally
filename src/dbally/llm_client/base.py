@@ -16,7 +16,7 @@ class LLMClient(abc.ABC):
 
     It accepts parameters including the template, format, event tracker,
     and optional generation parameters like frequency_penalty, max_tokens, and temperature
-    (the full list of options is provided by `LLMOptions` class).
+    (the full list of options is provided by the [`LLMOptions` class](llm_options.md)).
     It constructs a prompt using the `PromptBuilder` instance and generates text using the `self.call` method.
     """
 
@@ -80,9 +80,10 @@ class LLMClient(abc.ABC):
         Calls LLM API endpoint.
 
         Args:
-            prompt: Text to be asked.
-            response_format: Optional argument used in the OpenAI API - used to force json output
+            prompt: prompt passed to the LLM.
+            response_format: Optional argument used in the OpenAI API - used to force a json output
             options: Additional settings used by LLM.
+            event: an LLMEvent instance which fields should be filled during the method execution.
 
         Returns:
             Response string from LLM.

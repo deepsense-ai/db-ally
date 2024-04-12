@@ -20,9 +20,9 @@ nav:
           - how-to/pandas_views.md
           - how-to/custom_views.md
       - Using similarity indexes:
-        - how-to/use_custom_similarity_fetcher.md
-        - how-to/use_custom_similarity_store.md
-        - how-to/update_similarity_indexes.md
+          - how-to/use_custom_similarity_fetcher.md
+          - how-to/use_custom_similarity_store.md
+          - how-to/update_similarity_indexes.md
       - how-to/log_runs_to_langsmith.md
       - how-to/create_custom_event_handler.md
       - how-to/openai_assistants_integration.md
@@ -32,13 +32,14 @@ nav:
       - Views:
           - reference/views/index.md
           - reference/views/databases.md
+          - reference/views/dataframe.md
       - IQL:
           - reference/iql/index.md
           - reference/iql/iql_generator.md
       - Event handlers:
           - reference/event_handlers/index.md
-          - reference/event_handlers/cli.md
-          - reference/event_handlers/langsmith.md
+          - reference/event_handlers/cli_handler.md
+          - reference/event_handlers/langsmith_handler.md
       - View Selection:
           - reference/view_selection/index.md
           - reference/view_selection/llm_view_selector.md
@@ -90,6 +91,11 @@ markdown_extensions:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+
   - admonition
   - pymdownx.superfences
   - pymdownx.snippets
@@ -100,6 +106,7 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
 plugins:
+  - search
   - autorefs:
       enable: true
   - mkdocstrings:

@@ -28,12 +28,12 @@ class NLResponder:
         max_tokens_count: int = 4096,
     ) -> None:
         """
-        Initializes NLResponser class.
-
         Args:
             llm_client: LLM client used to generate natural language response
-            iql_explainer_prompt_template: template for the prompt used to generate the iql explanation
-            nl_responder_prompt_template: template for the prompt used to generate the NL response
+            iql_explainer_prompt_template: template for the prompt used to generate the iql explanation\
+            if not set defaults to `default_iql_explainer_template`
+            nl_responder_prompt_template: template for the prompt used to generate the NL response\
+            if not set defaults to `nl_responder_prompt_template`
             max_tokens_count: maximum number of tokens that can be used in the prompt
         """
 

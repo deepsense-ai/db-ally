@@ -11,11 +11,10 @@ class PromptBuilder:
 
     def __init__(self, model_name: Optional[str] = None) -> None:
         """
-        Init PromptBuilder.
-
         Args:
             model_name: Name of the model to load a tokenizer for.
                         Tokenizer is used to append special tokens to the prompt. If empty, no tokens will be added.
+
         Raises:
             OSError: If model_name is not found in huggingface.co/models
         """
@@ -43,7 +42,7 @@ class PromptBuilder:
         return tuple({**msg, "content": msg["content"].format(**fmt)} for msg in prompt_template.chat)
 
     def build(self, prompt_template: PromptTemplate, fmt: Dict[str, str]) -> Union[str, ChatFormat]:
-        """Build prompt
+        """Build the prompt
 
         Args:
             prompt_template: Prompt template in system/user/assistant openAI format.

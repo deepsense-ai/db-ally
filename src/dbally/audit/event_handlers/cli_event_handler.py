@@ -17,7 +17,21 @@ from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart
 
 class CLIEventHandler(EventHandler):
     """
-    CLI event handler interface.
+    This handler displays all interactions between LLM and user happending during `Collection.ask`\
+    execution inside the terminal.
+
+    ### Usage
+
+    ```python
+        import dbally
+        from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
+
+        dbally.use_event_handler(CLIEventHandler())
+    ```
+
+    After using `CLIEventHandler`, during every `Collection.ask` execution you will see output similar to the one below:
+
+    ![Example output from CLIEventHandler](../../assets/event_handler_example.png)
     """
 
     def __init__(self) -> None:
@@ -33,10 +47,10 @@ class CLIEventHandler(EventHandler):
 
     async def request_start(self, user_request: RequestStart) -> None:
         """
-        Log the start of the request.
+        Displays information about event starting to the terminal.
 
         Args:
-            user_request: The start of the request.
+            user_request: Object containing name of collection and asked query
         """
 
         pprint(f"[orange3 bold]Request starts... \n[orange3 bold]MESSAGE: [grey53]{user_request.question}")
@@ -45,10 +59,11 @@ class CLIEventHandler(EventHandler):
 
     async def event_start(self, event: Union[LLMEvent], request_context: None) -> None:
         """
-        Log the start of the event.
+        Displays information that event has started, then all messages inside the prompt
+
 
         Args:
-            event: Event to be logged.
+            event: LLMEvent to be logged with all the details.
             request_context: Optional context passed from request_start method
         """
 
@@ -64,10 +79,10 @@ class CLIEventHandler(EventHandler):
 
     async def event_end(self, event: Union[None, LLMEvent], request_context: None, event_context: None) -> None:
         """
-        Log the end of the event.`
+        Displays the response from the LLM.
 
         Args:
-            event: Event to be logged.
+            event: LLMEvent to be logged with all the details.
             request_context: Optional context passed from request_start method
             event_context: Optional context passed from event_start method
         """
@@ -79,10 +94,10 @@ class CLIEventHandler(EventHandler):
 
     async def request_end(self, output: RequestEnd, request_context: Optional[dict] = None) -> None:
         """
-        Log the end of the request.
+        Displays the output of the request, namely the `results` and the `context`
 
         Args:
-            output: The output of the request. In this case - PSQL query.
+            output: The output of the request.
             request_context: Optional context passed from request_start method
         """
 

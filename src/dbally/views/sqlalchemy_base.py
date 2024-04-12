@@ -20,15 +20,19 @@ class SqlAlchemyBaseView(MethodsBaseView):
 
     @abc.abstractmethod
     def get_select(self) -> sqlalchemy.Select:
-        """
-        Creates the initial SqlAlchemy select object, which will be used to build the query.
+        r"""
+        Creates the initial
+        [SqlAlchemy select object
+        ](https://docs.sqlalchemy.org/en/20/core/selectable.html#sqlalchemy.sql.expression.Select)
+        which will be used to build the query.
         """
 
     async def apply_filters(self, filters: IQLQuery) -> None:
         """
         Applies the chosen filters to the view.
 
-        :param filters: IQLQuery object representing the filters to apply
+        Args:
+            filters: IQLQuery object representing the filters to apply
         """
         self._select = self._select.where(await self._build_filter_node(filters.root))
 
@@ -64,14 +68,13 @@ class SqlAlchemyBaseView(MethodsBaseView):
         """
         Executes the generated SQL query and returns the results.
 
-        :param dry_run: If True, only generate the query without executing it
+        Args:
+            dry_run: If True, only adds the SQL query to the context field without executing the query.
 
-        :return: Query results
-
-        :raises ValueError: If no SQLAlchemy engine was provided during initialization
+        Returns:
+            Results of the query where `results` will be a list of dictionaries representing retrieved rows or an empty\
+            list if `dry_run` is set to `True`. Inside the `context` field the generated sql will be stored.
         """
-        if self._sqlalchemy_engine is None:
-            raise ValueError("No SQLAlchemy engine provided")
 
         results = []
         sql = str(self._select.compile(bind=self._sqlalchemy_engine, compile_kwargs={"literal_binds": True}))

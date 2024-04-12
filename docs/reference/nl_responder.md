@@ -1,6 +1,18 @@
-# NLResponder
+# Natural Language Responder
 
 `NLResponder` class can be utilized to transform a database output into a natural language response to user queries.
+
+```mermaid
+flowchart LR
+    Q[Do we have any Data Scientists?]
+    Result["`[{'experience': 5, 'position': 'Data Scientist'},
+        {'experience': 2, 'position': 'Data Scientist'}]`"]
+    Responder[Natural Language Responder]
+
+    Q --> Responder
+    Result --> Responder
+    Responder --> Answer["Yes, we have 2 Data scientists in our company."]
+```
 
 The method used to generate the response is `self.generate_response`. It essentially generates a natural language response to the user's question using a LLM. Here's a breakdown of the steps:
 
@@ -14,3 +26,7 @@ Otherwise, a response is generated using a `nl_responder_prompt_template`.
     To understand general idea better, visit the [NL Responder concept page](../concepts/nl_responder.md).
 
 ::: dbally.nl_responder.nl_responder.NLResponder
+
+::: dbally.data_models.prompts.iql_explainer_prompt_template.default_iql_explainer_template
+
+::: dbally.data_models.prompts.nl_responder_prompt_template.default_nl_responder_template

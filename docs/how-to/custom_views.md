@@ -110,7 +110,8 @@ Let's implement the required `apply_filters` method in our `FilteredIterableBase
         """
         Applies the selected filters to the view.
 
-        :param filters: IQLQuery object representing the filters to apply
+        Args:
+            filters: IQLQuery object representing the filters to apply
         """
         self._filter = await self.build_filter_node(filters.root)
 
@@ -118,7 +119,8 @@ Let's implement the required `apply_filters` method in our `FilteredIterableBase
         """
         Turns a filter node from the IQLQuery into a Python function.
 
-        :param node: IQLQuery node representing the filter or logical operator
+        Args:
+            node: IQLQuery node representing the filter or logical operator
         """
         if isinstance(node, syntax.FunctionCall):  # filter
             return await self.call_filter_method(node)

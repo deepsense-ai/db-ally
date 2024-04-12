@@ -40,7 +40,8 @@ class FilteredIterableBaseView(MethodsBaseView):
         """
         Applies the chosen filters to the view.
 
-        :param filters: IQLQuery object representing the filters to apply
+        Args:
+            filters: IQLQuery object representing the filters to apply
         """
         self._filter = await self.build_filter_node(filters.root)
 
@@ -48,7 +49,8 @@ class FilteredIterableBaseView(MethodsBaseView):
         """
         Converts a filter node from the IQLQuery to a Python function.
 
-        :param node: IQLQuery node representing the filter or logical operator
+        Args:
+            node: IQLQuery node representing the filter or logical operator
         """
         if isinstance(node, syntax.FunctionCall):  # filter
             return await self.call_filter_method(node)

@@ -30,13 +30,13 @@ class OpenAIClient(LLMClient):
         event: LLMEvent,
     ) -> str:
         """
-        Calls OpenAI API endpoint.
+        Calls the OpenAI API endpoint.
 
         Args:
             prompt: Prompt as an OpenAI client style list.
-            response_format: Optional argument used in the OpenAI API - used to force json output
-            options: Additional settings used by LLM.
-            event: container with prompt and LLM response.
+            response_format: Optional argument used in the OpenAI API - used to force the json output
+            options: Additional settings used by the LLM.
+            event: container with the prompt, LLM response and call metrics.
 
         Returns:
             Response string from LLM.

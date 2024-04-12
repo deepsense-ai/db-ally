@@ -19,17 +19,19 @@ class Node:
 
     def is_bool_op(self) -> IsBoolOpType:
         """
-           Checks if node is a boolean operation.
+        Checks if node is a boolean operation.
 
-        :returns: True if the node is a boolean operation, otherwise False.
+        Returns:
+            True if the node is a boolean operation, otherwise False.
         """
         return isinstance(self, BoolOp)
 
     def is_function_call(self) -> IsFunctionCallType:
         """
-           Checks if node is a function call.
+        Checks if node is a function call.
 
-        :returns: True if the node is a function call, otherwise False.
+        Returns:
+            True if the node is a function call, otherwise False.
         """
         return isinstance(self, FunctionCall)
 
@@ -43,13 +45,16 @@ class BoolOp(Node):
         """
         Match syntax for convenient query building based on BoolOp type.
 
-        :param not_: Callable executed when node is Not
-        :param and_: Callable executed when node is And
-        :param or_: Callable executed when node is Or
+        Args:
+            not_: Callable executed when node is Not
+            and_: Callable executed when node is And
+            or_: Callable executed when node is Or
 
-        :returns: Result of chosen callable.
+        Returns:
+            Result of chosen callable.
 
-        :raises ValueError: if node is not of any supported boolean types
+        Raises:
+            ValueError: if node is not of any supported boolean types
         """
         if isinstance(self, Not):
             return not_(self)
