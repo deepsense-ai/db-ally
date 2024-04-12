@@ -83,7 +83,7 @@ class LLMClient(abc.ABC):
             prompt: prompt passed to the LLM.
             response_format: Optional argument used in the OpenAI API - used to force a json output
             options: Additional settings used by LLM.
-            event: an LLMEvent instance which fields should be filled during the method executionOptio.
+            event: an LLMEvent instance which fields should be filled during the method execution.
 
         Returns:
             Response string from LLM.
