@@ -11,9 +11,13 @@ class OpenAIClient(LLMClient):
     `OpenAIClient` is a class designed to interact with OpenAI's language model (LLM) endpoints,
     particularly for the GPT models.
 
+    Args:
+        model_name: Name of the [OpenAI's model](https://platform.openai.com/docs/models) to be used,
+            default is "gpt-3.5-turbo".
+        api_key: OpenAI's API key. If None OPENAI_API_KEY environment variable will be used
     """
 
-    def __init__(self, model_name: str, api_key: Optional[str] = None) -> None:
+    def __init__(self, model_name: str = "gpt-3.5-turbo", api_key: Optional[str] = None) -> None:
         try:
             from openai import AsyncOpenAI  # pylint: disable=import-outside-toplevel
         except ImportError as exc:

@@ -8,11 +8,8 @@ import pandas as pd
 
 from dbally import decorators, DataFrameBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
+from dbally.llm_client.openai_client import OpenAIClient
 
-dbally.use_openai_llm(
-    openai_api_key=os.environ["OPENAI_API_KEY"],
-    model_name="gpt-3.5-turbo",
-)
 
 class CandidateView(DataFrameBaseView):
     """
@@ -49,8 +46,8 @@ CANDIDATE_DATA = pd.DataFrame.from_records([
 ])
 
 async def main():
-    collection = dbally.create_collection("recruitment")
-    dbally.use_event_handler(CLIEventHandler())
+    llm = OpenAIClient(model_name="gpt-3.5-turbo")
+    collection = dbally.create_collection("recruitment", llm, event_handlers=[CLIEventHandler()])
     collection.add(CandidateView, lambda: CandidateView(CANDIDATE_DATA))
 
     result = await collection.ask("Find me French candidates suitable for a senior data scientist position.")

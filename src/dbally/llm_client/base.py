@@ -16,7 +16,7 @@ class LLMClient(abc.ABC):
 
     It accepts parameters including the template, format, event tracker,
     and optional generation parameters like frequency_penalty, max_tokens, and temperature
-    (the full list of options is provided by the [`LLMOptions` class](llm_options.md)).
+    (the full list of options is provided by the [`LLMOptions` class][dbally.data_models.llm_options.LLMOptions]).
     It constructs a prompt using the `PromptBuilder` instance and generates text using the `self.call` method.
     """
 

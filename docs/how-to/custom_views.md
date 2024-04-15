@@ -151,7 +151,7 @@ import abc
 from typing import Callable, Any, Iterable
 
 from dbally.iql import IQLQuery
-from dbally.data_models.execution_result import ExecutionResult
+from dbally.data_models.execution_result import ViewExecutionResult
 
 @abc.abstractmethod
 def get_data(self) -> Iterable:
@@ -159,10 +159,10 @@ def get_data(self) -> Iterable:
     Returns the full data to be filtered.
     """
 
-def execute(self, dry_run: bool = False) -> ExecutionResult:
+def execute(self, dry_run: bool = False) -> ViewExecutionResult:
     filtered_data = list(filter(self._filter, self.get_data()))
 
-    return ExecutionResult(results=filtered_data, context={})
+    return ViewExecutionResult(results=filtered_data, context={})
 ```
 
 The `execute` function gets the data (by calling the `get_data` method) and applies the combined filters to it. We're using the [`filter`](https://docs.python.org/3/library/functions.html#filter) function from Python's standard library to accomplish this. The filtered data is then returned as a list.
@@ -216,10 +216,11 @@ Finally, we can use the `CandidatesView` just like any other view in db-ally. We
 ```python
 import asyncio
 import dbally
-from dbally import CLIEventHandler
+from dbally.llm_client.openai_client import OpenAIClient
 
 async def main():
-    collection = dbally.create_collection("recruitment")
+    llm = OpenAIClient(model_name="gpt-3.5-turbo")
+    collection = dbally.create_collection("recruitment", llm)
     collection.add(CandidateView)
 
     result = await collection.ask("Find me French candidates suitable for a senior data scientist position.")

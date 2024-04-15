@@ -63,8 +63,8 @@ class Collection:
             iql_generator: Objects that translates natural language to the\
             [Intermediate Query Language (IQL)](../concepts/iql.md)
             event_handlers: Event handlers used by the collection during query executions. Can be used\
-            to log events as [CLIEventHandler](event_handlers/cli.md) or to validate system performance\
-            as [LangSmithEventHandler](event_handlers/langsmith.md).
+            to log events as [CLIEventHandler](event_handlers/cli_handler.md) or to validate system performance\
+            as [LangSmithEventHandler](event_handlers/langsmith_handler.md).
             nl_responder: Object that translates RAW response from db-ally into natural language.
             n_retries: IQL generator may produce invalid IQL. If this is the case this argument specifies\
             how many times db-ally will try to regenerate it. Previous try with the error message is\

@@ -9,6 +9,7 @@ from sqlalchemy.ext.automap import automap_base
 
 from dbally import decorators, SqlAlchemyBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
+from dbally.llm_client.openai_client import OpenAIClient
 
 
 engine = create_engine('sqlite:///candidates.db')
@@ -17,11 +18,6 @@ Base = automap_base()
 Base.prepare(autoload_with=engine)
 
 Candidate = Base.classes.candidates
-
-dbally.use_openai_llm(
-    openai_api_key=os.environ["OPENAI_API_KEY"],
-    model_name="gpt-3.5-turbo",
-)
 
 class CandidateView(SqlAlchemyBaseView):
     """
@@ -58,8 +54,9 @@ class CandidateView(SqlAlchemyBaseView):
         return Candidate.country == country
 
 async def main():
-    collection = dbally.create_collection("recruitment")
-    dbally.use_event_handler(CLIEventHandler())
+    llm = OpenAIClient(model_name="gpt-3.5-turbo")
+
+    collection = dbally.create_collection("recruitment", llm, event_handlers=[CLIEventHandler()])
     collection.add(CandidateView, lambda: CandidateView(engine))
 
     result = await collection.ask("Find me French candidates suitable for a senior data scientist position.")

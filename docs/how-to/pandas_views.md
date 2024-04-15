@@ -74,8 +74,10 @@ To use the view, you need to create a [Collection](../concepts/collections.md) a
 
 ```python
 import dbally
+from dbally.llm_client.openai_client import OpenAIClient
 
-collection = dbally.create_collection("recruitment")
+llm = OpenAIClient(model_name="gpt-3.5-turbo")
+collection = dbally.create_collection("recruitment", llm)
 collection.add(CandidateView, lambda: CandidateView(CANDIDATE_DATA))
 
 result = await collection.ask("Find me French candidates suitable for a senior data scientist position.")

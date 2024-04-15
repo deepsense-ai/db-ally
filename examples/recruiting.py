@@ -99,10 +99,11 @@ async def recruiting_example(db_description: str, benchmark: Benchmark = example
         benchmark (Benchmark, optional): Benchmark containing set of questions. Defaults to example_benchmark.
     """
 
-    dbally.use_openai_llm()
-    dbally.use_event_handler(CLIEventHandler())
-
-    recruitment_db = dbally.create_collection("recruitment")
+    recruitment_db = dbally.create_collection(
+        "recruitment",
+        llm_client=OpenAIClient(),
+        event_handlers=[CLIEventHandler()],
+    )
     recruitment_db.add(RecruitmentView, lambda: RecruitmentView(ENGINE))
 
     event_tracker = EventTracker()

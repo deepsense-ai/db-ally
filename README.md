@@ -31,6 +31,7 @@ This is a basic implementation of a db-ally view for an example HR application, 
 
 ```python
 from dbally import decorators, SqlAlchemyBaseView, create_collection
+from dbally.llm_client.openai_client import OpenAIClient
 from sqlalchemy import create_engine
 
 class CandidateView(SqlAlchemyBaseView):
@@ -52,7 +53,8 @@ class CandidateView(SqlAlchemyBaseView):
         return Candidate.country == country
 
 engine = create_engine('sqlite:///candidates.db')
-my_collection = create_collection("collection_name")
+llm = OpenAIClient(model_name="gpt-3.5-turbo")
+my_collection = create_collection("collection_name", llm)
 my_collection.add(CandidateView, lambda: CandidateView(engine))
 
 my_collection.ask("Find candidates from United States")
