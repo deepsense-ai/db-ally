@@ -1,6 +1,6 @@
 # Tutorials
 
-All tutorials are opened in Google Colab so that you can easily follow them without any additional setup. If you want you can always access [raw .ipynb tutorial files](https://github.com/deepsense-ai/db-ally/tree/main/docs/tutorials).
+All tutorials are opened in Google Colab so that you can easily follow them without any additional setup.
 
 
 List of tutorials:
