@@ -113,13 +113,18 @@ class FileEventHandler(EventHandler[TextIOWrapper, datetime]):
 
 ## Registering our event handler
 
-To use our event handler, we need to register it with the db-ally `use_event_handler` function.
+To use our event handler, we need to pass it to the collection when creating it:
 
 ```python
 import dbally
+from dbally.llm_client.openai_client import OpenAIClient
 
-dbally.use_event_handler(FileEventHandler())
+my_collection = bally.create_collection(
+    "collection_name",
+    llm_client=OpenAIClient(),
+    event_handlers=[FileEventHandler()],
+)
 ```
 
-Now you can test your event handler by running a query and checking the logs directory for the log files.
+Now you can test your event handler by running a query against the collection and checking the logs directory for the log files.
 

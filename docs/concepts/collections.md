@@ -3,7 +3,7 @@
 At its core, a collection groups together multiple [views](views.md). Once you've defined your views, the next step is to register them within a collection. Here's how you might do it:
 
 ```python
-my_collection = dbally.create_collection("collection_name")
+my_collection = dbally.create_collection("collection_name", llm_client=OpenAIClient())
 my_collection.add(ExampleView)
 my_collection.add(RecipesView)
 ```
@@ -11,7 +11,7 @@ my_collection.add(RecipesView)
 Sometimes, view classes might need certain arguments when they're instantiated. In these instances, you'll want to register your view with a builder function that takes care of supplying these arguments. For instance, with views that rely on SQLAlchemy, you'll typically need to pass a database engine object like so:
 
 ```python
-my_collection = dbally.create_collection("collection_name")
+my_collection = dbally.create_collection("collection_name", llm_client=OpenAIClient())
 engine = sqlalchemy.create_engine("sqlite://")
 my_collection.add(ExampleView, lambda: ExampleView(engine))
 my_collection.add(RecipesView, lambda: RecipesView(engine))

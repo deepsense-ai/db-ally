@@ -5,7 +5,7 @@ db-ally is a Python library that allows you to use natural language to query var
 ## Views
 The majority of the db-ally's codebase is independent of any particular kind of data source. The part that is specific to a data source is the view. A [view](../concepts/views.md) is a class that defines how to interact with a data source. It contains methods that define how to retrieve data from the data source and how to filter the data in response to natural language queries.
 
-There are several methods for creating a view that connects to a SQL database, including creating a custom view from scratch<!-- TODO: link to how-to on custom views-->. However, in most cases the easiest will be to use the `SqlAlchemyBaseView`<!-- TODO: link to reference of SqlAlchemyBaseView--> class provided by db-ally. This class is designed to work with [SQLAlchemy](https://www.sqlalchemy.org/), a popular SQL toolkit and Object-Relational Mapping (ORM) library for Python. To define your view, you will need to produce a class that inherits from `SqlAlchemyBaseView`and implement the `get_select` method, which returns a [SQLAlchemy `Select`](https://docs.sqlalchemy.org/en/20/core/selectable.html#sqlalchemy.sql.expression.Select) object:
+There are several methods for creating a view that connects to a SQL database, including [creating a custom view from scratch](./custom_views.md). However, in most cases the easiest will be to use the [`SqlAlchemyBaseView`][dbally.SqlAlchemyBaseView] class provided by db-ally. This class is designed to work with [SQLAlchemy](https://www.sqlalchemy.org/), a popular SQL toolkit and Object-Relational Mapping (ORM) library for Python. To define your view, you will need to produce a class that inherits from `SqlAlchemyBaseView`and implement the `get_select` method, which returns a [SQLAlchemy `Select`](https://docs.sqlalchemy.org/en/20/core/selectable.html#sqlalchemy.sql.expression.Select) object:
 
 ```python
 from dbally import SqlAlchemyBaseView
@@ -84,7 +84,9 @@ engine = create_engine('sqlite:///candidates.db')
 Once you have defined your view and created an engine, you can register the view with db-ally. You do this by creating a collection and adding the view to it:
 
 ```python
-my_collection = dbally.create_collection("collection_name")
+from dbally.llm_client.openai_client import OpenAIClient
+
+my_collection = dbally.create_collection("collection_name", llm_client=OpenAIClient())
 my_collection.add(CandidateView, lambda: CandidateView(engine))
 ```
 

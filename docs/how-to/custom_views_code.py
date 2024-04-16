@@ -9,12 +9,8 @@ import abc
 from dbally import decorators, MethodsBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.iql import IQLQuery, syntax
-from dbally.data_models.execution_result import ExecutionResult
-
-dbally.use_openai_llm(
-    openai_api_key=os.environ["OPENAI_API_KEY"],
-    model_name="gpt-3.5-turbo",
-)
+from dbally.data_models.execution_result import ViewExecutionResult
+from dbally.llm_client.openai_client import OpenAIClient
 
 @dataclass
 class Candidate:
@@ -65,11 +61,11 @@ class FilteredIterableBaseView(MethodsBaseView):
             return lambda x: not child(x)
         raise ValueError(f"Unsupported grammar: {node}")
 
-    def execute(self, dry_run: bool = False) -> ExecutionResult:
+    def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         print(self._filter)
         filtered_data = list(filter(self._filter, self.get_data()))
 
-        return ExecutionResult(results=filtered_data, context={})
+        return ViewExecutionResult(results=filtered_data, context={})
 
 class CandidateView(FilteredIterableBaseView):
     def get_data(self) -> Iterable:
@@ -103,8 +99,9 @@ class CandidateView(FilteredIterableBaseView):
         return lambda x: x.country == country
 
 async def main():
-    collection = dbally.create_collection("recruitment")
-    dbally.use_event_handler(CLIEventHandler())
+    llm = OpenAIClient(model_name="gpt-3.5-turbo")
+    event_handlers = [CLIEventHandler()]
+    collection = dbally.create_collection("recruitment", llm, event_handlers=event_handlers)
     collection.add(CandidateView)
 
     result = await collection.ask("Find me French candidates suitable for a senior data scientist position.")

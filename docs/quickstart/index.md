@@ -9,8 +9,8 @@ We will cover the following topics:
 
 - [Installation](#installation)
 - [Database Configuration](#configuring-the-database)
-- [OpenAI Access Configuration](#configuring-openai-access)
 - [View Definition](#defining-the-views)
+- [OpenAI Access Configuration](#configuring-openai-access)
 - [Collection Definition](#defining-the-collection)
 - [Query Execution](#running-the-query)
 
@@ -48,19 +48,6 @@ from sqlalchemy.ext.automap import automap_base
 Base = automap_base()
 Base.prepare(autoload_with=engine)
 Candidate = Base.classes.candidates
-```
-
-## OpenAI Access Configuration
-
-To use OpenAI's GPT, configure db-ally and provide your OpenAI API key:
-
-```python
-import dbally
-
-dbally.use_openai_llm(
-    openai_api_key="...",
-    model_name="gpt-3.5-turbo",
-)
 ```
 
 ## View Definition
@@ -112,15 +99,27 @@ By setting up these filters, you enable the LLM to fetch candidates while option
 !!! note
     The `from_country` filter defined above supports only exact matches, which is not always ideal. Thankfully, db-ally comes with a solution for this problem - Similarity Indexes, which can be used to find the most similar value from the ones available. Refer to [Quickstart Part 2: Semantic Similarity](./quickstart2.md) for an example of using semantic similarity when filtering candidates by country.
 
+## OpenAI Access Configuration
+
+To use OpenAI's GPT, configure db-ally and provide your OpenAI API key:
+
+```python
+from dbally.llm_client.openai_client import OpenAIClient
+
+llm = OpenAIClient(model_name="gpt-3.5-turbo", api_key="...")
+```
+
+Replace `...` with your OpenAI API key. Alternatively, you can set the `OPENAI_API_KEY` environment variable with your API key and omit the `api_key` parameter altogether.
+
 ## Collection Definition
 
-Next, create a db-ally collection. A [collection](../concepts/collections.md) is an object where you register views and execute queries.
+Next, create a db-ally collection. A [collection](../concepts/collections.md) is an object where you register views and execute queries. It also requires an AI model to use for generating [IQL queries](../concepts/iql.md) (in this case, the GPT model defined above).
 
 ```python
 import dbally
 
 async def main():
-    collection = dbally.create_collection("recruitment")
+    collection = dbally.create_collection("recruitment", llm)
     collection.add(CandidateView, lambda: CandidateView(engine))
 ```
 

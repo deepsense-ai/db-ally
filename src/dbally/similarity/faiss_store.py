@@ -30,7 +30,7 @@ class FaissStore(SimilarityStore):
             max_distance: The maximum distance between two text embeddings to be considered similar.
             embedding_client: The client to use for creating text embeddings.
             index_type: The type of Faiss index to use. Defaults to faiss.IndexFlatL2. See
-                [https://github.com/facebookresearch/faiss/wiki/Faiss-indexes](Faiss wiki) for more information.
+                [Faiss wiki](https://github.com/facebookresearch/faiss/wiki/Faiss-indexes) for more information.
         """
         super().__init__()
         self.index_dir = index_dir

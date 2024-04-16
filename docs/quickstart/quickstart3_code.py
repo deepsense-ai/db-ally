@@ -10,9 +10,9 @@ from sqlalchemy.ext.automap import automap_base
 import pandas as pd
 
 from dbally import decorators, SqlAlchemyBaseView, DataFrameBaseView, ExecutionResult
-from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
 from dbally.embedding_client.openai import OpenAiEmbeddingClient
+from dbally.llm_client.openai_client import OpenAIClient
 
 engine = create_engine('sqlite:///candidates.db')
 
@@ -21,10 +21,6 @@ Base.prepare(autoload_with=engine)
 
 Candidate = Base.classes.candidates
 
-dbally.use_openai_llm(
-    openai_api_key=os.environ["OPENAI_API_KEY"],
-    model_name="gpt-3.5-turbo",
-)
 
 country_similarity = SimilarityIndex(
         fetcher=SimpleSqlAlchemyFetcher(
@@ -126,8 +122,8 @@ def display_results(result: ExecutionResult):
 async def main():
     await country_similarity.update()
 
-    collection = dbally.create_collection("recruitment")
-    # dbally.use_event_handler(CLIEventHandler())
+    llm = OpenAIClient(model_name="gpt-3.5-turbo")
+    collection = dbally.create_collection("recruitment", llm)
     collection.add(CandidateView, lambda: CandidateView(engine))
     collection.add(JobView, lambda: JobView(jobs_data))
 

@@ -24,6 +24,7 @@ import dbally
 from dbally.collection import Collection
 from dbally.data_models.prompts.iql_prompt_template import default_iql_template
 from dbally.data_models.prompts.view_selector_prompt_template import default_view_selector_template
+from dbally.llm_client.openai_client import OpenAIClient
 from dbally.utils.errors import NoViewFoundError, UnsupportedQueryError
 
 
@@ -81,13 +82,12 @@ async def evaluate(cfg: DictConfig) -> Any:
 
     engine = create_engine(benchmark_cfg.pg_connection_string + f"/{cfg.db_name}")
 
-    if "gpt" in cfg.model_name:
-        dbally.use_openai_llm(
-            model_name="gpt-4",
-            openai_api_key=benchmark_cfg.openai_api_key,
-        )
+    llm_client = OpenAIClient(
+        model_name="gpt-4",
+        api_key=benchmark_cfg.openai_api_key,
+    )
 
-    db = dbally.create_collection(cfg.db_name)
+    db = dbally.create_collection(cfg.db_name, llm_client)
 
     for view_name in cfg.view_names:
         view = VIEW_REGISTRY[ViewName(view_name)]
