@@ -57,9 +57,9 @@ Lastly, we will illustrate how to use the `CandidatesView` like any other view i
 There are two main ways to create custom views:
 
 * By subclassing the `MethodsBaseView`: This is the most common method. These views expect filters to be defined as class methods and help manage them. All the built-in db-ally views use this method.
-* By subclassing the `AbstractBaseView` directly: This is a more low-level method. It makes no assumptions about how filters are defined and managed. This may be useful if you want to create a view that doesn't fit the standard db-ally view pattern, like when the list of available filters is dynamic or comes from an external source. In these cases, you'll need to create the entire filter management logic yourself by implementing the `list_filters` and `apply_filters` methods.
+* By subclassing the `BaseStructuredView` directly: This is a more low-level method. It makes no assumptions about how filters are defined and managed. This may be useful if you want to create a view that doesn't fit the standard db-ally view pattern, like when the list of available filters is dynamic or comes from an external source. In these cases, you'll need to create the entire filter management logic yourself by implementing the `list_filters` and `apply_filters` methods.
 
-If you're not sure which method to choose, we recommend starting with the `MethodsBaseView`. It's simpler and easier to use, and you can switch to the `AbstractBaseView` later if you find you need more control over filter management. For this guide, we'll focus on the `MethodsBaseView`.
+If you're not sure which method to choose, we recommend starting with the `MethodsBaseView`. It's simpler and easier to use, and you can switch to the `BaseStructuredView` later if you find you need more control over filter management. For this guide, we'll focus on the `MethodsBaseView`.
 
 ## The Example
 Throughout the guide, we'll use an example of creating a custom base view called `FilteredIterableBaseView`. To keep things simple, the "data source" it uses is a list defined in Python. The goal is to demonstrate how to create a custom view and define filters for it. In most real-world scenarios, data would usually come from an external source, like a REST API or a database.

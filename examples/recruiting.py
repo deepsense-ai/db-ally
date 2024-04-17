@@ -2,14 +2,14 @@ import asyncio
 from dataclasses import dataclass
 from typing import List
 
+from recruting.db import ENGINE, fill_candidate_table, get_recruitment_db_description
+from recruting.views import RecruitmentView
+
 import dbally
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.llm_client.openai_client import OpenAIClient
 from dbally.prompts.prompt_builder import PromptTemplate
-
-from .db import ENGINE, fill_candidate_table, get_recruitment_db_description
-from .views import RecruitmentView
 
 TEXT2SQL_PROMPT_TEMPLATE = PromptTemplate(
     (

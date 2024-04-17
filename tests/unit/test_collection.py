@@ -8,9 +8,10 @@ from typing_extensions import Annotated
 
 from dbally._main import create_collection
 from dbally.collection import Collection, IndexUpdateError
+from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.iql._exceptions import IQLError
 from dbally.utils.errors import NoViewFoundError
-from dbally.views.base import ExposedFunction, MethodParamWithTyping, ViewExecutionResult
+from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 from tests.unit.mocks import MockIQLGenerator, MockLLMClient, MockSimilarityIndex, MockViewBase, MockViewSelector
 
 
@@ -56,6 +57,9 @@ class MockViewWithResults(MockViewBase):
 
     def list_filters(self) -> List[ExposedFunction]:
         return [ExposedFunction("test_filter", "", [])]
+
+    def get_iql_generator(self, *_, **__):
+        return MockIQLGenerator("test_filter()")
 
 
 @pytest.fixture(name="similarity_classes")
@@ -126,7 +130,6 @@ def mock_collection() -> Collection:
         "foo",
         llm_client=MockLLMClient(),
         view_selector=MockViewSelector("MockView1"),
-        iql_generator=MockIQLGenerator(""),
         nl_responder=AsyncMock(),
     )
     collection.add(MockView1)
@@ -262,10 +265,14 @@ def mock_collection_feedback_loop() -> Collection:
         ]
     )
 
+    class ViewWithMockGenerator(MockViewBase):
+        def get_iql_generator(self, *_, **__):
+            return iql_generator
+
     collection = Collection(
-        "foo", view_selector=Mock(), iql_generator=iql_generator, nl_responder=Mock(), event_handlers=[]
+        "foo", view_selector=Mock(), llm_client=MockLLMClient(), nl_responder=Mock(), event_handlers=[]
     )
-    collection.add(MockView1)
+    collection.add(ViewWithMockGenerator)
     return collection
 
 
@@ -281,19 +288,20 @@ async def test_ask_feedback_loop(collection_feedback: Collection) -> None:
         ValueError("err3"),
         ValueError("err4"),
     ]
-    with patch("dbally.collection.IQLQuery.parse") as mock_iql_query:
+    with patch("dbally.iql._query.IQLQuery.parse") as mock_iql_query:
         mock_iql_query.side_effect = errors
+        iql_generator = collection_feedback.get("ViewWithMockGenerator").get_iql_generator(llm_client=MockLLMClient())
 
         await collection_feedback.ask("Mock question")
 
-        iql_gen_error: Mock = collection_feedback._iql_generator.add_error_msg  # type: ignore
+        iql_gen_error: Mock = iql_generator.add_error_msg  # type: ignore
 
         iql_gen_error.assert_has_calls(
             [call("iql1_c", [errors[0]]), call("iql2_c", [errors[1]]), call("iql3_c", [errors[2]])]
         )
         assert iql_gen_error.call_count == 3
 
-        iql_gen_gen_iql: Mock = collection_feedback._iql_generator.generate_iql  # type: ignore
+        iql_gen_gen_iql: Mock = iql_generator.generate_iql  # type: ignore
 
         for i, c in enumerate(iql_gen_gen_iql.call_args_list):
             if i > 0:
@@ -309,7 +317,7 @@ async def test_ask_view_selection_single_view() -> None:
     collection = Collection(
         "foo",
         view_selector=MockViewSelector(""),
-        iql_generator=MockIQLGenerator("test_filter()"),
+        llm_client=MockLLMClient(),
         nl_responder=AsyncMock(),
         event_handlers=[],
     )
@@ -318,8 +326,7 @@ async def test_ask_view_selection_single_view() -> None:
     result = await collection.ask("Mock question")
     assert result.view_name == "MockViewWithResults"
     assert result.results == [{"foo": "bar"}]
-    assert result.context == {"baz": "qux"}
-    assert result.iql_query == "test_filter()"
+    assert result.context == {"baz": "qux", "iql": "test_filter()"}
 
 
 async def test_ask_view_selection_multiple_views() -> None:
@@ -329,7 +336,7 @@ async def test_ask_view_selection_multiple_views() -> None:
     collection = Collection(
         "foo",
         view_selector=MockViewSelector("MockViewWithResults"),
-        iql_generator=MockIQLGenerator("test_filter()"),
+        llm_client=MockLLMClient(),
         nl_responder=AsyncMock(),
         event_handlers=[],
     )
@@ -340,8 +347,7 @@ async def test_ask_view_selection_multiple_views() -> None:
     result = await collection.ask("Mock question")
     assert result.view_name == "MockViewWithResults"
     assert result.results == [{"foo": "bar"}]
-    assert result.context == {"baz": "qux"}
-    assert result.iql_query == "test_filter()"
+    assert result.context == {"baz": "qux", "iql": "test_filter()"}
 
 
 async def test_ask_view_selection_no_views() -> None:
@@ -351,7 +357,7 @@ async def test_ask_view_selection_no_views() -> None:
     collection = Collection(
         "foo",
         view_selector=MockViewSelector(""),
-        iql_generator=MockIQLGenerator("test_filter()"),
+        llm_client=MockLLMClient(),
         nl_responder=AsyncMock(),
         event_handlers=[],
     )

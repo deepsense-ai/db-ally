@@ -12,7 +12,7 @@ from dbally.iql._exceptions import (
 from dbally.iql._type_validators import validate_arg_type
 
 if TYPE_CHECKING:
-    from dbally.views.base import ExposedFunction
+    from dbally.views.structured import ExposedFunction
 
 
 class IQLProcessor:

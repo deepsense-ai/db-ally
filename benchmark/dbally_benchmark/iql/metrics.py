@@ -7,7 +7,7 @@ from loguru import logger
 
 from dbally.iql._exceptions import IQLError, IQLUnsupportedSyntaxError
 from dbally.iql._query import IQLQuery
-from dbally.views.base import ExposedFunction
+from dbally.views.structured import ExposedFunction
 
 
 def _count_hallucinated_methods_for_single_example(iql: str, allowed_methods: List[str]) -> Tuple[int, int]:

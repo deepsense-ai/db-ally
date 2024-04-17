@@ -24,11 +24,11 @@ from dbally.data_models.prompts.iql_prompt_template import default_iql_template
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llm_client.openai_client import OpenAIClient
 from dbally.utils.errors import UnsupportedQueryError
-from dbally.views.base import AbstractBaseView
+from dbally.views.structured import BaseStructuredView
 
 
 async def _run_iql_for_single_example(
-    example: BIRDExample, view: AbstractBaseView, iql_generator: IQLGenerator
+    example: BIRDExample, view: BaseStructuredView, iql_generator: IQLGenerator
 ) -> IQLResult:
     filter_list = view.list_filters()
     event_tracker = EventTracker()
@@ -44,7 +44,7 @@ async def _run_iql_for_single_example(
 
 
 async def run_iql_for_dataset(
-    dataset: BIRDDataset, view: AbstractBaseView, iql_generator: IQLGenerator
+    dataset: BIRDDataset, view: BaseStructuredView, iql_generator: IQLGenerator
 ) -> List[IQLResult]:
     """
     Runs IQL predictions for a dataset.

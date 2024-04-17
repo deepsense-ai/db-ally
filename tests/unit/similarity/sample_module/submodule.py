@@ -4,7 +4,7 @@ from typing_extensions import Annotated
 
 from dbally import MethodsBaseView, decorators
 from dbally.iql import IQLQuery
-from dbally.views.base import ViewExecutionResult
+from dbally.views.structured import ViewExecutionResult
 from tests.unit.mocks import MockSimilarityIndex
 
 index_foo = MockSimilarityIndex("foo")

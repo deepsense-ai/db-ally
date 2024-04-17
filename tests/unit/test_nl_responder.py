@@ -29,5 +29,5 @@ def answer():
 async def test_nl_responder(llm_client, answer, event_tracker):
     nl_responder = NLResponder(llm_client)
 
-    response = await nl_responder.generate_response(answer, "Mock question", "", event_tracker)
+    response = await nl_responder.generate_response(answer, "Mock question", event_tracker)
     assert response == "db-ally is the best"

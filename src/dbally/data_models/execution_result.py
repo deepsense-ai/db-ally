@@ -32,7 +32,6 @@ class ExecutionResult:
             and all other operations, in seconds.
         execution_time_view: Time taken that the selected view took to execute the query, in seconds.
         view_name: Name of the view that was used to execute the query.
-        iql_query: The IQL query that was used to execute the query.
         textual_response: Optional text response that can be used to display the query results
             in a human-readable format.
     """
@@ -42,5 +41,4 @@ class ExecutionResult:
     execution_time: float
     execution_time_view: float
     view_name: str
-    iql_query: str
     textual_response: Optional[str] = None

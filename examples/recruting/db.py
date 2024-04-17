@@ -72,6 +72,7 @@ class Application(Base):
             status={self.status!r})"
 
 
+Base.metadata.drop_all(ENGINE)
 Base.metadata.create_all(ENGINE)
 
 

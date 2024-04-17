@@ -2,10 +2,10 @@
 
 from dbally.data_models.execution_result import ExecutionResult
 from dbally.views import decorators
-from dbally.views.base import AbstractBaseView
 from dbally.views.methods_base import MethodsBaseView
 from dbally.views.pandas_base import DataFrameBaseView
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
+from dbally.views.structured import BaseStructuredView
 
 from .__version__ import __version__
 from ._main import create_collection
@@ -18,7 +18,7 @@ __all__ = [
     "MethodsBaseView",
     "SqlAlchemyBaseView",
     "Collection",
-    "AbstractBaseView",
+    "BaseStructuredView",
     "DataFrameBaseView",
     "ExecutionResult",
 ]

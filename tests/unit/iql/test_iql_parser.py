@@ -6,7 +6,7 @@ import pytest
 from dbally.iql import IQLArgumentParsingError, IQLQuery, IQLUnsupportedSyntaxError, syntax
 from dbally.iql._exceptions import IQLArgumentValidationError, IQLFunctionNotExists
 from dbally.iql._processor import IQLProcessor
-from dbally.views.base import ExposedFunction, MethodParamWithTyping
+from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 
 
 async def test_iql_parser():
