@@ -1,0 +1,52 @@
+name: Semantic Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      releaseType:
+        description: "version update type"
+        required: true
+        type: choice
+        default: "automatic"
+        options:
+          - "automatic"
+          - "major"
+          - "minor"
+          - "patch"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    concurrency: release
+    permissions:
+      id-token: write
+      contents: write
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/sebchw_example_package
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Python Semantic Release Manual
+        id: release_manual
+        if: ${{ github.event.inputs.releaseType != 'automatic' }}
+        uses: python-semantic-release/python-semantic-release@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          force: ${{ github.event.inputs.releaseType }}
+
+      - name: Python Semantic Release Automatic
+        id: release_automatic
+        if: ${{ github.event.inputs.releaseType == 'automatic' }}
+        uses: python-semantic-release/python-semantic-release@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+        if: steps.release_manual.outputs.released == 'true' || steps.release_automatic.outputs.released == 'true'
