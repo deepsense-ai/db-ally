@@ -24,7 +24,7 @@ jobs:
 
     environment:
       name: pypi
-      url: https://pypi.org/p/sebchw_example_package
+      url: https://pypi.org/p/dbally
 
     steps:
       - uses: actions/checkout@v3
