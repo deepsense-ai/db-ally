@@ -5,10 +5,11 @@ from typing import Any, Callable, List, Tuple
 
 from dbally.iql import syntax
 from dbally.views import decorators
-from dbally.views.base import AbstractBaseView, ExposedFunction, MethodParamWithTyping
+from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
+from dbally.views.structured import BaseStructuredView
 
 
-class MethodsBaseView(AbstractBaseView, metaclass=abc.ABCMeta):
+class MethodsBaseView(BaseStructuredView, metaclass=abc.ABCMeta):
     """
     Base class for views that use view methods to expose filters.
     """

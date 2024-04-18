@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Type
 
 from dbally.similarity import AbstractSimilarityIndex
 from dbally.views import decorators
-from dbally.views.base import ExposedFunction, MethodParamWithTyping
+from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 from dbally.views.methods_base import MethodsBaseView
 
 

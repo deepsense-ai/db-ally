@@ -2,7 +2,6 @@ from typing import List, Optional
 
 from .audit.event_handlers.base import EventHandler
 from .collection import Collection
-from .iql_generator.iql_generator import IQLGenerator
 from .llm_client.base import LLMClient
 from .nl_responder.nl_responder import NLResponder
 from .view_selection.base import ViewSelector
@@ -14,7 +13,6 @@ def create_collection(
     llm_client: LLMClient,
     event_handlers: Optional[List[EventHandler]] = None,
     view_selector: Optional[ViewSelector] = None,
-    iql_generator: Optional[IQLGenerator] = None,
     nl_responder: Optional[NLResponder] = None,
 ) -> Collection:
     """
@@ -45,9 +43,6 @@ def create_collection(
         view_selector: View selector used by the collection to select the best view for the given query.\
         If None, a new instance of [LLMViewSelector][dbally.view_selection.llm_view_selector.LLMViewSelector]\
         will be used.
-        iql_generator: IQL generator used by the collection to generate IQL queries from natural language\
-        queries. If None, a new instance of [IQLGenerator][dbally.iql_generator.iql_generator.IQLGenerator]\
-        will be used.
         nl_responder: NL responder used by the collection to respond to natural language queries. If None,\
         a new instance of [NLResponder][dbally.nl_responder.nl_responder.NLResponder] will be used.
 
@@ -58,7 +53,6 @@ def create_collection(
         ValueError: if default LLM client is not configured
     """
     view_selector = view_selector or LLMViewSelector(llm_client=llm_client)
-    iql_generator = iql_generator or IQLGenerator(llm_client=llm_client)
     nl_responder = nl_responder or NLResponder(llm_client=llm_client)
     event_handlers = event_handlers or []
 
@@ -66,6 +60,6 @@ def create_collection(
         name,
         nl_responder=nl_responder,
         view_selector=view_selector,
-        iql_generator=iql_generator,
+        llm_client=llm_client,
         event_handlers=event_handlers,
     )

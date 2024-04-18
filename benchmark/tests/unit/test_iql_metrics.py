@@ -6,7 +6,7 @@ from dbally_benchmark.iql.metrics import (
     calculate_valid_iql,
 )
 
-from dbally.views.base import ExposedFunction, MethodParamWithTyping
+from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 
 ALLOWED_METHODS = [
     ExposedFunction(

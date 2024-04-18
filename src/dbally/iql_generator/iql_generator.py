@@ -5,7 +5,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.prompts.iql_prompt_template import IQLPromptTemplate, default_iql_template
 from dbally.llm_client.base import LLMClient
 from dbally.prompts.prompt_builder import PromptBuilder
-from dbally.views.base import ExposedFunction
+from dbally.views.exposed_functions import ExposedFunction
 
 
 class IQLGenerator:

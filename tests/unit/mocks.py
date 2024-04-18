@@ -13,10 +13,10 @@ from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llm_client.base import LLMClient
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
-from dbally.views.base import AbstractBaseView, ExposedFunction, ViewExecutionResult
+from dbally.views.structured import BaseStructuredView, ExposedFunction, ViewExecutionResult
 
 
-class MockViewBase(AbstractBaseView):
+class MockViewBase(BaseStructuredView):
     """
     Mock view base class
     """

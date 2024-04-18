@@ -5,13 +5,13 @@ import pandas as pd
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
-from dbally.data_models.prompts.iql_explainer_prompt_template import (
-    IQLExplainerPromptTemplate,
-    default_iql_explainer_template,
-)
 from dbally.data_models.prompts.nl_responder_prompt_template import (
     NLResponderPromptTemplate,
     default_nl_responder_template,
+)
+from dbally.data_models.prompts.query_explainer_prompt_template import (
+    QueryExplainerPromptTemplate,
+    default_query_explainer_template,
 )
 from dbally.llm_client.base import LLMClient
 from dbally.nl_responder.token_counters import count_tokens_for_huggingface, count_tokens_for_openai
@@ -20,17 +20,20 @@ from dbally.nl_responder.token_counters import count_tokens_for_huggingface, cou
 class NLResponder:
     """Class used to generate natural language response from the database output."""
 
+    # Keys used to extract the query from the context (ordered by priority)
+    QUERY_KEYS = ["iql", "sql", "query"]
+
     def __init__(
         self,
         llm_client: LLMClient,
-        iql_explainer_prompt_template: Optional[IQLExplainerPromptTemplate] = None,
+        query_explainer_prompt_template: Optional[QueryExplainerPromptTemplate] = None,
         nl_responder_prompt_template: Optional[NLResponderPromptTemplate] = None,
         max_tokens_count: int = 4096,
     ) -> None:
         """
         Args:
             llm_client: LLM client used to generate natural language response
-            iql_explainer_prompt_template: template for the prompt used to generate the iql explanation\
+            query_explainer_prompt_template: template for the prompt used to generate the iql explanation\
             if not set defaults to `default_iql_explainer_template`
             nl_responder_prompt_template: template for the prompt used to generate the NL response\
             if not set defaults to `nl_responder_prompt_template`
@@ -41,21 +44,18 @@ class NLResponder:
         self._nl_responder_prompt_template = nl_responder_prompt_template or copy.deepcopy(
             default_nl_responder_template
         )
-        self._iql_explainer_prompt_template = iql_explainer_prompt_template or copy.deepcopy(
-            default_iql_explainer_template
+        self._query_explainer_prompt_template = query_explainer_prompt_template or copy.deepcopy(
+            default_query_explainer_template
         )
         self._max_tokens_count = max_tokens_count
 
-    async def generate_response(
-        self, result: ViewExecutionResult, question: str, filters: str, event_tracker: EventTracker
-    ) -> str:
+    async def generate_response(self, result: ViewExecutionResult, question: str, event_tracker: EventTracker) -> str:
         """
         Uses LLM to generate a response in natural language form.
 
         Args:
             result: object representing the result of the query execution
             question: user question
-            filters: filters used in the query
             event_tracker: event store used to audit the generation process
 
         Returns:
@@ -79,9 +79,11 @@ class NLResponder:
             )
 
         if tokens_count > self._max_tokens_count:
+            context = result.context
+            query = next((context.get(key) for key in self.QUERY_KEYS if context.get(key)), question)
             llm_response = await self._llm_client.text_generation(
-                template=self._iql_explainer_prompt_template,
-                fmt={"question": question, "filters": filters},
+                template=self._query_explainer_prompt_template,
+                fmt={"question": question, "query": query, "number_of_results": len(result.results)},
                 event_tracker=event_tracker,
             )
 

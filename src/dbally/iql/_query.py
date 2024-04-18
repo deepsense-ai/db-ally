@@ -4,7 +4,7 @@ from . import syntax
 from ._processor import IQLProcessor
 
 if TYPE_CHECKING:
-    from dbally.views.base import ExposedFunction
+    from dbally.views.structured import ExposedFunction
 
 
 class IQLQuery:

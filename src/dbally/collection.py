@@ -8,14 +8,12 @@ from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import RequestEnd, RequestStart
 from dbally.data_models.execution_result import ExecutionResult
-from dbally.iql import IQLQuery
-from dbally.iql._exceptions import IQLError
-from dbally.iql_generator.iql_generator import IQLGenerator
+from dbally.llm_client.base import LLMClient
 from dbally.nl_responder.nl_responder import NLResponder
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.utils.errors import NoViewFoundError
 from dbally.view_selection.base import ViewSelector
-from dbally.views.base import AbstractBaseView
+from dbally.views.structured import BaseStructuredView
 
 
 class IndexUpdateError(Exception):
@@ -48,7 +46,7 @@ class Collection:
         self,
         name: str,
         view_selector: ViewSelector,
-        iql_generator: IQLGenerator,
+        llm_client: LLMClient,
         event_handlers: List[EventHandler],
         nl_responder: NLResponder,
         n_retries: int = 3,
@@ -60,8 +58,7 @@ class Collection:
             view_selector: As you register more then one [View](views/index.md) within single collection,\
             before generating the IQL query, a View that fits query the most is selected by the\
             [ViewSelector](view_selection/index.md).
-            iql_generator: Objects that translates natural language to the\
-            [Intermediate Query Language (IQL)](../concepts/iql.md)
+            llm_client: LLM client used by the collection to generate views and respond to natural language queries.
             event_handlers: Event handlers used by the collection during query executions. Can be used\
             to log events as [CLIEventHandler](event_handlers/cli_handler.md) or to validate system performance\
             as [LangSmithEventHandler](event_handlers/langsmith_handler.md).
@@ -72,21 +69,21 @@ class Collection:
         """
         self.name = name
         self.n_retries = n_retries
-        self._views: Dict[str, Callable[[], AbstractBaseView]] = {}
-        self._builders: Dict[str, Callable[[], AbstractBaseView]] = {}
+        self._views: Dict[str, Callable[[], BaseStructuredView]] = {}
+        self._builders: Dict[str, Callable[[], BaseStructuredView]] = {}
         self._view_selector = view_selector
-        self._iql_generator = iql_generator
         self._nl_responder = nl_responder
         self._event_handlers = event_handlers
+        self._llm_client = llm_client
 
-    T = TypeVar("T", bound=AbstractBaseView)
+    T = TypeVar("T", bound=BaseStructuredView)
 
     def add(self, view: Type[T], builder: Optional[Callable[[], T]] = None, name: Optional[str] = None) -> None:
         """
         Register new [View](views/index.md) that will be available to query via the collection.
 
         Args:
-            view: A class inherithing from AbstractBaseView. Object of this type will be initialized during\
+            view: A class inherithing from BaseStructuredView. Object of this type will be initialized during\
             query execution. We expect Class instead of object, as otherwise Views must have been implemented\
             stateless, which would be cumbersome.
             builder: Optional factory function that will be used to create the View instance. Use it when you\
@@ -129,7 +126,7 @@ class Collection:
         self._views[name] = view
         self._builders[name] = builder
 
-    def get(self, name: str) -> AbstractBaseView:
+    def get(self, name: str) -> BaseStructuredView:
         """
         Returns an instance of the view with the given name
 
@@ -201,38 +198,21 @@ class Collection:
         else:
             selected_view = await self._view_selector.select_view(question, views, event_tracker)
 
-        start_time_view = time.time()
         view = self.get(selected_view)
-        end_time_view = time.time()
 
-        filter_list = view.list_filters()
-
-        iql_filters, conversation = await self._iql_generator.generate_iql(
-            question=question, filters=filter_list, event_tracker=event_tracker
+        start_time_view = time.time()
+        view_result = await view.ask(
+            query=question,
+            llm_client=self._llm_client,
+            event_tracker=event_tracker,
+            n_retries=self.n_retries,
+            dry_run=dry_run,
         )
-
-        for _ in range(self.n_retries):
-            try:
-                filters = await IQLQuery.parse(iql_filters, filter_list)
-                await view.apply_filters(filters)
-                break
-            except (IQLError, ValueError) as e:
-                conversation = self._iql_generator.add_error_msg(conversation, [e])
-                iql_filters, conversation = await self._iql_generator.generate_iql(
-                    question=question,
-                    filters=filter_list,
-                    event_tracker=event_tracker,
-                    conversation=conversation,
-                )
-                continue
-
-        view_result = view.execute(dry_run=dry_run)
+        end_time_view = time.time()
 
         textual_response = None
         if not dry_run and return_natural_response:
-            textual_response = await self._nl_responder.generate_response(
-                view_result, question, iql_filters, event_tracker
-            )
+            textual_response = await self._nl_responder.generate_response(view_result, question, event_tracker)
 
         result = ExecutionResult(
             results=view_result.results,
@@ -240,7 +220,6 @@ class Collection:
             execution_time=time.time() - start_time,
             execution_time_view=end_time_view - start_time_view,
             view_name=selected_view,
-            iql_query=iql_filters,
             textual_response=textual_response,
         )
 
