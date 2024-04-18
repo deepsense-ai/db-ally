@@ -5,7 +5,7 @@ from typing import Dict, Optional
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
-ENGINE = create_engine("sqlite:///recruitment.db")
+ENGINE = create_engine("sqlite://")
 CSV_PATH = Path(__file__).parent / "data"
 
 
@@ -72,7 +72,6 @@ class Application(Base):
             status={self.status!r})"
 
 
-Base.metadata.drop_all(ENGINE)
 Base.metadata.create_all(ENGINE)
 
 
