@@ -54,7 +54,7 @@ async def test_store_embedding_client(chroma_store_client):
 
     await chroma_store_client.store(["test"])
     chroma_store_client.embedding_calculator.get_embeddings.assert_called_with(["test"])
-    mock_collection.add.assert_called_with(ids=[hash("test")], embeddings="test_embedding", documents=["test"])
+    mock_collection.add.assert_called_with(ids=[str(hash("test"))], embeddings="test_embedding", documents=["test"])
 
 
 @pytest.mark.asyncio
@@ -62,7 +62,7 @@ async def test_store_chroma_embedding_function(chroma_store_function):
     mock_collection = get_mocked_collection(chroma_store_function)
 
     await chroma_store_function.store(["test"])
-    mock_collection.add.assert_called_with(ids=[hash("test")], documents=["test"])
+    mock_collection.add.assert_called_with(ids=[str(hash("test"))], documents=["test"])
 
 
 @pytest.mark.asyncio

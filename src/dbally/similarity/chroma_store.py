@@ -62,7 +62,7 @@ class ChromadbStore(SimilarityStore):
         """
 
         # chroma requires an unique id for every document
-        ids = [hash(x) for x in data]
+        ids = [str(hash(x)) for x in data]
 
         collection = self._get_collection()
 
