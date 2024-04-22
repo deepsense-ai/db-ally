@@ -2,6 +2,15 @@
 
 [ChromadbStore][dbally.similarity.ChromadbStore] allows to use [Chroma vector database](https://docs.trychroma.com/api-reference#methods-on-collection) as a store inside the [SimilarityIndex][dbally.similarity.SimilarityIndex]. Thanks to this, given the query "Show my flights to the USA" and "United States" value representing this country in our database. Similarity index will change `get_flights(to="USA")` into `get_flights(to="United States")`
 
+
+## Prerequisites
+
+To use Chromadb with db-ally you need to install the chromadb extension
+
+```python
+pip install dbally[chromadb]
+```
+
 Let's say we have already implemented our [SimilarityFetcher](../how-to/use_custom_similarity_fetcher.md)
 
 ```python
