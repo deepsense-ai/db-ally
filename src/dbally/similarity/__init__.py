@@ -9,6 +9,11 @@ try:
 except ImportError:
     pass
 
+try:
+    from .chroma_store import ChromadbStore
+except ImportError:
+    pass
+
 __all__ = [
     "AbstractSimilarityIndex",
     "SimilarityIndex",
@@ -17,4 +22,5 @@ __all__ = [
     "SimilarityStore",
     "SimilarityFetcher",
     "FaissStore",
+    "ChromadbStore",
 ]
