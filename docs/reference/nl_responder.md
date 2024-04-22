@@ -27,6 +27,6 @@ Otherwise, a response is generated using a `nl_responder_prompt_template`.
 
 ::: dbally.nl_responder.nl_responder.NLResponder
 
-::: dbally.data_models.prompts.iql_explainer_prompt_template.default_iql_explainer_template
+::: dbally.data_models.prompts.query_explainer_prompt_template
 
 ::: dbally.data_models.prompts.nl_responder_prompt_template.default_nl_responder_template
