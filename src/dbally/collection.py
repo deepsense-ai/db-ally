@@ -13,6 +13,7 @@ from dbally.nl_responder.nl_responder import NLResponder
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.utils.errors import NoViewFoundError
 from dbally.view_selection.base import ViewSelector
+from dbally.views.base import BaseView
 from dbally.views.structured import BaseStructuredView
 
 
@@ -69,21 +70,21 @@ class Collection:
         """
         self.name = name
         self.n_retries = n_retries
-        self._views: Dict[str, Callable[[], BaseStructuredView]] = {}
-        self._builders: Dict[str, Callable[[], BaseStructuredView]] = {}
+        self._views: Dict[str, Callable[[], BaseView]] = {}
+        self._builders: Dict[str, Callable[[], BaseView]] = {}
         self._view_selector = view_selector
         self._nl_responder = nl_responder
         self._event_handlers = event_handlers
         self._llm_client = llm_client
 
-    T = TypeVar("T", bound=BaseStructuredView)
+    T = TypeVar("T", bound=BaseView)
 
     def add(self, view: Type[T], builder: Optional[Callable[[], T]] = None, name: Optional[str] = None) -> None:
         """
         Register new [View](views/index.md) that will be available to query via the collection.
 
         Args:
-            view: A class inherithing from BaseStructuredView. Object of this type will be initialized during\
+            view: A class inherithing from BaseView. Object of this type will be initialized during\
             query execution. We expect Class instead of object, as otherwise Views must have been implemented\
             stateless, which would be cumbersome.
             builder: Optional factory function that will be used to create the View instance. Use it when you\
@@ -126,7 +127,7 @@ class Collection:
         self._views[name] = view
         self._builders[name] = builder
 
-    def get(self, name: str) -> BaseStructuredView:
+    def get(self, name: str) -> BaseView:
         """
         Returns an instance of the view with the given name
 
@@ -229,7 +230,7 @@ class Collection:
 
     def get_similarity_indexes(self) -> Dict[AbstractSimilarityIndex, List[Tuple[str, str, str]]]:
         """
-        List all similarity indexes from all views in the collection.
+        List all similarity indexes from all structured views in the collection.
 
         Returns:
             Dictionary with similarity indexes as keys and values containing lists of places where they are used
@@ -238,6 +239,8 @@ class Collection:
         indexes: Dict[AbstractSimilarityIndex, List[Tuple[str, str, str]]] = {}
         for view_name in self._views:
             view = self.get(view_name)
+            if not isinstance(view, BaseStructuredView):
+                continue
             filters = view.list_filters()
             for filter_ in filters:
                 for param in filter_.parameters:
@@ -247,7 +250,7 @@ class Collection:
 
     async def update_similarity_indexes(self) -> None:
         """
-        Update all similarity indexes from all views in the collection.
+        Update all similarity indexes from all structured views in the collection.
 
         Raises:
             IndexUpdateError: if updating any of the indexes fails. The exception provides `failed_indexes` attribute,

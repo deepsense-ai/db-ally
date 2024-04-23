@@ -12,6 +12,7 @@ from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.iql._exceptions import IQLError
 from dbally.utils.errors import NoViewFoundError
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
+from dbally.views.structured import BaseStructuredView
 from tests.unit.mocks import MockIQLGenerator, MockLLMClient, MockSimilarityIndex, MockViewBase, MockViewSelector
 
 
@@ -290,7 +291,9 @@ async def test_ask_feedback_loop(collection_feedback: Collection) -> None:
     ]
     with patch("dbally.iql._query.IQLQuery.parse") as mock_iql_query:
         mock_iql_query.side_effect = errors
-        iql_generator = collection_feedback.get("ViewWithMockGenerator").get_iql_generator(llm_client=MockLLMClient())
+        view = collection_feedback.get("ViewWithMockGenerator")
+        assert isinstance(view, BaseStructuredView)
+        iql_generator = view.get_iql_generator(llm_client=MockLLMClient())
 
         await collection_feedback.ask("Mock question")
 

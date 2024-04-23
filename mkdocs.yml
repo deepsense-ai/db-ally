@@ -9,9 +9,11 @@ nav:
   - Tutorials:
       - tutorials.md
   - Concepts:
-      - concepts/iql.md
       - concepts/views.md
+      - concepts/structured_views.md
+      - concepts/freeform_views.md
       - concepts/collections.md
+      - concepts/iql.md
       - concepts/similarity_indexes.md
       - concepts/nl_responder.md
   - How-to:
@@ -19,6 +21,7 @@ nav:
           - how-to/sql_views.md
           - how-to/pandas_views.md
           - how-to/custom_views.md
+          - how-to/custom_freeform_views.md
       - Using similarity indexes:
           - how-to/use_custom_similarity_fetcher.md
           - how-to/use_custom_similarity_store.md
@@ -31,6 +34,7 @@ nav:
       - reference/collection.md
       - Views:
           - reference/views/index.md
+          - reference/views/structured.md
           - reference/views/databases.md
           - reference/views/dataframe.md
       - IQL:
