@@ -66,6 +66,10 @@ class Text2SQLFreeformView(BaseView):
             # pylint: disable=broad-except
             try:
                 sql, conversation = await self._generate_sql(query, conversation, llm_client, event_tracker)
+
+                if dry_run:
+                    return ViewExecutionResult(results=[], context={"sql": sql})
+
                 rows = await self._execute_sql(sql)
                 break
             except Exception as e:
