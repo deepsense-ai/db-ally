@@ -240,7 +240,7 @@ class Collection:
         for view_name in self._views:
             view = self.get(view_name)
 
-            if not issubclass(view.__class__, BaseStructuredView):
+            if not isinstance(view, BaseStructuredView):
                 continue
 
             filters = view.list_filters()

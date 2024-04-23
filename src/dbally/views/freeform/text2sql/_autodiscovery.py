@@ -67,7 +67,7 @@ class _AutoDiscoveryBuilderBase:
             blacklist: List of table names to exclude from the auto-discovery.
 
         Returns:
-            _AutoDiscoveryBuilder: The builder instance.
+            The builder instance.
 
         Raises:
             ValueError: If both a whitelist and a blacklist are set.
@@ -86,7 +86,7 @@ class _AutoDiscoveryBuilderBase:
             whitelist: List of table names to include in the auto-discovery.
 
         Returns:
-            _AutoDiscoveryBuilder: The builder instance.
+            The builder instance.
 
         Raises:
             ValueError: If both a whitelist and a blacklist are set.
@@ -102,7 +102,7 @@ class _AutoDiscoveryBuilderBase:
         Use the comments field in the database as a source for the table descriptions.
 
         Returns:
-            _AutoDiscoveryBuilder: The builder instance.
+           The builder instance.
         """
         self._description_extraction = _DescriptionExtractionStrategy()
         return self
@@ -124,7 +124,12 @@ class _AutoDiscoveryBuilderBase:
         ).discover()
 
 
-class _AutoDiscoveryBuilderWithLLM(_AutoDiscoveryBuilderBase):
+class AutoDiscoveryBuilderWithLLM(_AutoDiscoveryBuilderBase):
+    """
+    Builder class for configuring the auto-discovery of the database for text2sql freeform view.
+    It extends the base builder with the ability to use LLM for extra tasks.
+    """
+
     def generate_description_by_llm(self, example_rows_cnt: int = 5) -> Self:
         """
         Use LLM to generate descriptions for the tables.
@@ -134,14 +139,18 @@ class _AutoDiscoveryBuilderWithLLM(_AutoDiscoveryBuilderBase):
             example_rows_cnt: The number of example rows to use for generating the description.
 
         Returns:
-            _AutoDiscoveryBuilder: The builder instance.
+            The builder instance.
         """
         self._description_extraction = _LLMSummaryDescriptionExtraction(example_rows_cnt)
         return self
 
 
-class _AutoDiscoveryBuilder(_AutoDiscoveryBuilderBase):
-    def use_llm(self, llm_client: LLMClient) -> _AutoDiscoveryBuilderWithLLM:
+class AutoDiscoveryBuilder(_AutoDiscoveryBuilderBase):
+    """
+    Builder class for configuring the auto-discovery of the database for text2sql freeform view.
+    """
+
+    def use_llm(self, llm_client: LLMClient) -> AutoDiscoveryBuilderWithLLM:
         """
         Set the LLM client to use for generating descriptions.
 
@@ -149,9 +158,9 @@ class _AutoDiscoveryBuilder(_AutoDiscoveryBuilderBase):
             llm_client: The LLM client to use for generating descriptions.
 
         Returns:
-            _AutoDiscoveryBuilderWithLLM: The builder instance.
+            The builder instance.
         """
-        return _AutoDiscoveryBuilderWithLLM(
+        return AutoDiscoveryBuilderWithLLM(
             engine=self._engine,
             whitelist=self._whitelist,
             blacklist=self._blacklist,
@@ -161,7 +170,7 @@ class _AutoDiscoveryBuilder(_AutoDiscoveryBuilderBase):
         )
 
 
-def configure_text2sql_auto_discovery(engine: Engine) -> _AutoDiscoveryBuilder:
+def configure_text2sql_auto_discovery(engine: Engine) -> AutoDiscoveryBuilder:
     """
     This function is used to automatically discover the tables in the database and generate a yaml file with the tables
     and their columns. The yaml file is used to configure the Text2SQLFreeformView in the dbally library.
@@ -172,7 +181,7 @@ def configure_text2sql_auto_discovery(engine: Engine) -> _AutoDiscoveryBuilder:
     Returns:
         The builder object used to configure the auto-discovery process.
     """
-    return _AutoDiscoveryBuilder(engine)
+    return AutoDiscoveryBuilder(engine)
 
 
 discovery_template = PromptTemplate(
