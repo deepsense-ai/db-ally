@@ -1,6 +1,6 @@
 # How-To: Use Chromadb to Store Similarity Index
 
-[ChromadbStore][dbally.similarity.ChromadbStore] allows to use [Chroma vector database](https://docs.trychroma.com/api-reference#methods-on-collection) as a store inside the [SimilarityIndex][dbally.similarity.SimilarityIndex].With this feature, when someone searches for 'Show my flights to the USA' and we have 'United States' stored in our database as the country's value, the system will recognize the similarity and convert the query from 'get_flights(to="USA")' to 'get_flights(to="United States")'.
+[ChromadbStore][dbally.similarity.ChromadbStore] allows to use [Chroma vector database](https://docs.trychroma.com/api-reference#methods-on-collection) as a store inside the [SimilarityIndex][dbally.similarity.SimilarityIndex]. With this feature, when someone searches for 'Show my flights to the USA' and we have 'United States' stored in our database as the country's value, the system will recognize the similarity and convert the query from 'get_flights(to="USA")' to 'get_flights(to="United States")'.
 
 
 ## Prerequisites
