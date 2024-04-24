@@ -1,3 +1,4 @@
 pkg_resources
 psycopg2-binary
 tiktoken
+chroma-hnswlib

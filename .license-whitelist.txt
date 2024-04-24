@@ -23,3 +23,4 @@ Unlicense
 Proprietary License
 Historical Permission Notice and Disclaimer (HPND)
 ISC
+Apache License v2.0
