@@ -57,7 +57,7 @@ to define your [`ChromadbStore`][dbally.similarity.ChromadbStore].
 store = ChromadbStore(index_name="myChromaIndex", chroma_client=chroma_client, embedding_calculator=embedding_client)
 ```
 
-After this setup, you can initialize the SimilarityIndex, and use it with your db-ally filters.
+After this setup, you can initialize the SimilarityIndex
 
 ```python
 from typing import Annotated
@@ -65,10 +65,6 @@ from typing import Annotated
 country_similarity = SimilarityIndex(store, DummyCountryFetcher())
 
 
-@decorators.view_filter()
-def from_country(self, country: Annotated[str, country_similarity]) -> sqlalchemy.ColumnElement:
-    """
-    Filters candidates from a specific country.
-    """
-    return Candidate.country == country
 ```
+
+and [update it and find the closest matches in the same way as in built-in similarity indices](./use_custom_similarity_store.md/#using-the-similarity-index) .
