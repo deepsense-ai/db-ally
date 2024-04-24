@@ -13,15 +13,15 @@ TEST_NAME = "test"
 
 @pytest.fixture
 def chroma_store_client():
-    store = ChromadbStore(index_name=TEST_NAME, chroma_client=Mock(), embedding_calculator=Mock(spec=EmbeddingClient))
-    store.embedding_calculator.get_embeddings = AsyncMock(return_value="test_embedding")
+    store = ChromadbStore(index_name=TEST_NAME, chroma_client=Mock(), embedding_function=Mock(spec=EmbeddingClient))
+    store.embedding_function.get_embeddings = AsyncMock(return_value="test_embedding")
     return store
 
 
 @pytest.fixture
 def chroma_store_function():
     return ChromadbStore(
-        index_name=TEST_NAME, chroma_client=Mock(), embedding_calculator=Mock(spec=chromadb.EmbeddingFunction)
+        index_name=TEST_NAME, chroma_client=Mock(), embedding_function=Mock(spec=chromadb.EmbeddingFunction)
     )
 
 
@@ -35,7 +35,7 @@ def test_chroma_get_chroma_collection_embedding_chroma_client(chroma_store_clien
 def test_chroma_get_chroma_collection_chroma_embedding_function(chroma_store_function):
     chroma_store_function._get_chroma_collection()
     chroma_store_function.chroma_client.get_or_create_collection.assert_called_with(
-        name=TEST_NAME, metadata=DEFAULT_METADATA, embedding_function=chroma_store_function.embedding_calculator
+        name=TEST_NAME, metadata=DEFAULT_METADATA, embedding_function=chroma_store_function.embedding_function
     )
 
 
@@ -56,7 +56,7 @@ async def test_store_embedding_client(chroma_store_client):
     mock_collection = get_mocked_collection(chroma_store_client)
 
     await chroma_store_client.store(["test"])
-    chroma_store_client.embedding_calculator.get_embeddings.assert_called_with(["test"])
+    chroma_store_client.embedding_function.get_embeddings.assert_called_with(["test"])
     mock_collection.add.assert_called_with(
         ids=[sha256(b"test").hexdigest()], embeddings="test_embedding", documents=["test"]
     )
@@ -76,7 +76,7 @@ async def test_find_similar_embedding_client(chroma_store_client):
 
     result = await chroma_store_client.find_similar("test")
 
-    chroma_store_client.embedding_calculator.get_embeddings.assert_called_with(["test"])
+    chroma_store_client.embedding_function.get_embeddings.assert_called_with(["test"])
     mock_collection.query.assert_called_with(query_embeddings="test_embedding", n_results=1)
 
     assert result == "test"

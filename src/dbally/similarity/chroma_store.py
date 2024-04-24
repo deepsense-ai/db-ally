@@ -14,30 +14,30 @@ class ChromadbStore(SimilarityStore):
         self,
         index_name: str,
         chroma_client: chromadb.Client,
-        embedding_calculator: Union[EmbeddingClient, chromadb.EmbeddingFunction],
+        embedding_function: Union[EmbeddingClient, chromadb.EmbeddingFunction],
         max_distance: Optional[float] = None,
         distance_method: Literal["l2", "ip", "cosine"] = "l2",
     ):
         super().__init__()
         self.index_name = index_name
         self.chroma_client = chroma_client
-        self.embedding_calculator = embedding_calculator
+        self.embedding_function = embedding_function
         self.max_distance = max_distance
 
         self._metadata = {"hnsw:space": distance_method}
 
     def _get_chroma_collection(self) -> chromadb.Collection:
-        """Based on the selected embedding_calculator chooses how to retrieve the Chromadb collection.
+        """Based on the selected embedding_function chooses how to retrieve the Chromadb collection.
             If collection doesn't exist it creates one.
 
         Returns:
             chromadb.Collection: Retrieved collection
         """
-        if isinstance(self.embedding_calculator, EmbeddingClient):
+        if isinstance(self.embedding_function, EmbeddingClient):
             return self.chroma_client.get_or_create_collection(name=self.index_name, metadata=self._metadata)
 
         return self.chroma_client.get_or_create_collection(
-            name=self.index_name, metadata=self._metadata, embedding_function=self.embedding_calculator
+            name=self.index_name, metadata=self._metadata, embedding_function=self.embedding_function
         )
 
     def _return_best_match(self, retrieved: dict) -> Optional[str]:
@@ -66,8 +66,8 @@ class ChromadbStore(SimilarityStore):
 
         collection = self._get_chroma_collection()
 
-        if isinstance(self.embedding_calculator, EmbeddingClient):
-            embeddings = await self.embedding_calculator.get_embeddings(data)
+        if isinstance(self.embedding_function, EmbeddingClient):
+            embeddings = await self.embedding_function.get_embeddings(data)
 
             collection.add(ids=ids, embeddings=embeddings, documents=data)
         else:
@@ -87,8 +87,8 @@ class ChromadbStore(SimilarityStore):
 
         collection = self._get_chroma_collection()
 
-        if isinstance(self.embedding_calculator, EmbeddingClient):
-            embedding = await self.embedding_calculator.get_embeddings([text])
+        if isinstance(self.embedding_function, EmbeddingClient):
+            embedding = await self.embedding_function.get_embeddings([text])
             retrieved = collection.query(query_embeddings=embedding, n_results=1)
         else:
             retrieved = collection.query(query_texts=[text], n_results=1)

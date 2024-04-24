@@ -54,7 +54,7 @@ embedding_client = embedding_functions.DefaultEmbeddingFunction()
 to define your [`ChromadbStore`][dbally.similarity.ChromadbStore].
 
 ```python
-store = ChromadbStore(index_name="myChromaIndex", chroma_client=chroma_client, embedding_calculator=embedding_client)
+store = ChromadbStore(index_name="myChromaIndex", chroma_client=chroma_client, embedding_function=embedding_client)
 ```
 
 After this setup, you can initialize the SimilarityIndex

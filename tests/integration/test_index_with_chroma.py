@@ -27,11 +27,11 @@ class DummyEmbeddingFunction(EmbeddingFunction):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("embedding_calculator", [DummyEmbeddingClient(), DummyEmbeddingFunction()])
-async def test_integration_embedding_client(embedding_calculator):
+@pytest.mark.parametrize("embedding_function", [DummyEmbeddingClient(), DummyEmbeddingFunction()])
+async def test_integration_embedding_client(embedding_function):
     chroma_client = chromadb.Client()
 
-    store = ChromadbStore(index_name="test", chroma_client=chroma_client, embedding_calculator=embedding_calculator)
+    store = ChromadbStore(index_name="test", chroma_client=chroma_client, embedding_function=embedding_function)
     fetcher = DummyCountryFetcher()
 
     index = SimilarityIndex(store, fetcher)
