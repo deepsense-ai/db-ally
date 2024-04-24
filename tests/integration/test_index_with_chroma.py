@@ -31,14 +31,14 @@ class DummyEmbeddingFunction(EmbeddingFunction):
 async def test_integration_embedding_client(embedding_calculator):
     chroma_client = chromadb.Client()
 
-    store = ChromadbStore(index_name="test", client=chroma_client, embedding_calculator=embedding_calculator)
+    store = ChromadbStore(index_name="test", chroma_client=chroma_client, embedding_calculator=embedding_calculator)
     fetcher = DummyCountryFetcher()
 
     index = SimilarityIndex(store, fetcher)
 
     await index.update()
 
-    assert store._get_collection().count() == 3
+    assert store._get_chroma_collection().count() == 3
 
     similar = await index.similar("USA")
 

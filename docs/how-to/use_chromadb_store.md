@@ -1,6 +1,6 @@
 # How-To: Use Chromadb to Store Similarity Index
 
-[ChromadbStore][dbally.similarity.ChromadbStore] allows to use [Chroma vector database](https://docs.trychroma.com/api-reference#methods-on-collection) as a store inside the [SimilarityIndex][dbally.similarity.SimilarityIndex]. Thanks to this, given the query "Show my flights to the USA" and "United States" value representing this country in our database. Similarity index will change `get_flights(to="USA")` into `get_flights(to="United States")`
+[ChromadbStore][dbally.similarity.ChromadbStore] allows to use [Chroma vector database](https://docs.trychroma.com/api-reference#methods-on-collection) as a store inside the [SimilarityIndex][dbally.similarity.SimilarityIndex].With this feature, when someone searches for 'Show my flights to the USA' and we have 'United States' stored in our database as the country's value, the system will recognize the similarity and convert the query from 'get_flights(to="USA")' to 'get_flights(to="United States")'.
 
 
 ## Prerequisites
@@ -33,7 +33,7 @@ or [set up Chromadb in the client/server mode](https://docs.trychroma.com/usage-
 chroma_client = chromadb.HttpClient(host='localhost', port=8000)
 ```
 
-Next, you can either use [dbally embedding clients][dbally.embedding_client.EmbeddingClient], such as [OpenAiEmbeddingClient][dbally.embedding_client.OpenAiEmbeddingClient]
+Next, you can either use [one of dbally embedding clients][dbally.embedding_client.EmbeddingClient], such as [OpenAiEmbeddingClient][dbally.embedding_client.OpenAiEmbeddingClient]
 
 ```python
 from dbally.embedding_client import OpenAiEmbeddingClient
@@ -54,7 +54,7 @@ embedding_client = embedding_functions.DefaultEmbeddingFunction()
 to define your [`ChromadbStore`][dbally.similarity.ChromadbStore].
 
 ```python
-store = ChromadbStore(index_name="myChromaIndex", client=chroma_client, embedding_calculator=embedding_client)
+store = ChromadbStore(index_name="myChromaIndex", chroma_client=chroma_client, embedding_calculator=embedding_client)
 ```
 
 After this setup, you can initialize the SimilarityIndex, and use it with your db-ally filters.

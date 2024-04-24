@@ -1,3 +1,4 @@
+from hashlib import sha256
 from typing import List, Literal, Optional, Union
 
 import chromadb
@@ -12,30 +13,30 @@ class ChromadbStore(SimilarityStore):
     def __init__(
         self,
         index_name: str,
-        client: chromadb.Client,
+        chroma_client: chromadb.Client,
         embedding_calculator: Union[EmbeddingClient, chromadb.EmbeddingFunction],
         max_distance: Optional[float] = None,
         distance_method: Literal["l2", "ip", "cosine"] = "l2",
     ):
         super().__init__()
         self.index_name = index_name
-        self.client = client
+        self.chroma_client = chroma_client
         self.embedding_calculator = embedding_calculator
         self.max_distance = max_distance
 
         self._metadata = {"hnsw:space": distance_method}
 
-    def _get_collection(self) -> chromadb.Collection:
-        """Based on the selected embedding_calculator chooses how to retrieve the collection.
+    def _get_chroma_collection(self) -> chromadb.Collection:
+        """Based on the selected embedding_calculator chooses how to retrieve the Chromadb collection.
             If collection doesn't exist it creates one.
 
         Returns:
             chromadb.Collection: Retrieved collection
         """
         if isinstance(self.embedding_calculator, EmbeddingClient):
-            return self.client.get_or_create_collection(name=self.index_name, metadata=self._metadata)
+            return self.chroma_client.get_or_create_collection(name=self.index_name, metadata=self._metadata)
 
-        return self.client.get_or_create_collection(
+        return self.chroma_client.get_or_create_collection(
             name=self.index_name, metadata=self._metadata, embedding_function=self.embedding_calculator
         )
 
@@ -62,9 +63,9 @@ class ChromadbStore(SimilarityStore):
         """
 
         # chroma requires an unique id for every document
-        ids = [str(hash(x)) for x in data]
+        ids = [sha256(x.encode("utf-8")).hexdigest() for x in data]
 
-        collection = self._get_collection()
+        collection = self._get_chroma_collection()
 
         if isinstance(self.embedding_calculator, EmbeddingClient):
             embeddings = await self.embedding_calculator.get_embeddings(data)
@@ -85,7 +86,7 @@ class ChromadbStore(SimilarityStore):
             The most similar text or None if no similar text is found.
         """
 
-        collection = self._get_collection()
+        collection = self._get_chroma_collection()
 
         if isinstance(self.embedding_calculator, EmbeddingClient):
             embedding = await self.embedding_calculator.get_embeddings([text])
