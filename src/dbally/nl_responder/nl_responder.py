@@ -34,7 +34,7 @@ class NLResponder:
         Args:
             llm_client: LLM client used to generate natural language response
             query_explainer_prompt_template: template for the prompt used to generate the iql explanation\
-            if not set defaults to `default_iql_explainer_template`
+            if not set defaults to `default_query_explainer_template`
             nl_responder_prompt_template: template for the prompt used to generate the NL response\
             if not set defaults to `nl_responder_prompt_template`
             max_tokens_count: maximum number of tokens that can be used in the prompt
