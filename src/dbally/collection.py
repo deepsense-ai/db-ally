@@ -239,8 +239,10 @@ class Collection:
         indexes: Dict[AbstractSimilarityIndex, List[Tuple[str, str, str]]] = {}
         for view_name in self._views:
             view = self.get(view_name)
+
             if not isinstance(view, BaseStructuredView):
                 continue
+
             filters = view.list_filters()
             for filter_ in filters:
                 for param in filter_.parameters:

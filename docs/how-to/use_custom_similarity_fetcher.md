@@ -13,15 +13,15 @@ To use a similarity index with data from a custom source, you need to create a c
 
 ## Creating a Custom Fetcher
 
-To craft a custom fetcher, you need to create a class extending the `AbstractFetcher` class provided by db-ally. The `AbstractFetcher` class possesses a single asynchronous method, `fetch`, which you need to implement. This method should give back a list of strings representing all possible values from your data source.
+To craft a custom fetcher, you need to create a class extending the `SimilarityFetcher` class provided by db-ally. The `SimilarityFetcher` class possesses a single asynchronous method, `fetch`, which you need to implement. This method should give back a list of strings representing all possible values from your data source.
 
 For example, if you wish to index the list of dog breeds from the web API provided by [dog.ceo](https://dog.ceo/), you can create a fetcher like this:
 
 ```python
-from dbally.similarity.fetcher import AbstractFetcher
+from dbally.similarity.fetcher import SimilarityFetcher
 import requests
 
-class DogBreedsFetcher(AbstractFetcher):
+class DogBreedsFetcher(SimilarityFetcher):
     async def fetch(self):
         response = requests.get('https://dog.ceo/api/breeds/list/all').json()
         breeds = response['message'].keys()
