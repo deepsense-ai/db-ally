@@ -156,10 +156,7 @@ logging_use_named_masks = false
 major_on_zero = false
 allow_zero_version = true
 tag_format = "v{version}"
-version_variables = [
-    "setup.cfg:version",
-    "src/dbally/__version__.py:__version__",
-]
+version_variables = ["src/dbally/__version__.py:__version__"]
 build_command = "pip install build && python -m build"
 
 [tool.semantic_release.branches.main]
