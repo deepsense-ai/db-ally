@@ -28,8 +28,8 @@ class LLMClient(abc.ABC):
         self,
         template: PromptTemplate,
         fmt: dict,
-        event_tracker: EventTracker,
         *,
+        event_tracker: Optional[EventTracker] = None,
         frequency_penalty: Optional[float] = 0.0,
         max_tokens: Optional[int] = 128,
         n: Optional[int] = 1,
@@ -62,6 +62,7 @@ class LLMClient(abc.ABC):
 
         event = LLMEvent(prompt=prompt, type=type(template).__name__)
 
+        event_tracker = event_tracker or EventTracker()
         async with event_tracker.track_event(event) as span:
             event.response = await self.call(prompt, template.response_format, options, event)
             span(event)
