@@ -1,37 +1,19 @@
 # Concept: Views
 
-Views provide a way for developers using db-ally to define what they need from the LLM, including:
+Views are a core concept in db-ally. They represent a way to define what you need from the LLM and connect it to the data source. The library provides two types of views:
 
-* The desired data structure, such as the specific fields to include from the data source.
-* A set of operations the LLM may employ in response to natural language queries (currently only “filters” are supported, with more to come)
+* [Structured views](structured_views.md) *(recommended)* - these define a desired data structure and a set of operations that the LLM may use in response to natural language queries.
+* [Freeform views](freeform_views.md) - these provide a more flexible way to define views, without a specific data structure or predefined operations.
 
-Given different natural language queries, a db-ally view will produce different responses while maintaining a consistent data structure. This consistency offers a reliable interface for integration - the code consuming responses from a particular view knows what data structure to expect and can utilize this knowledge when displaying or processing the data. This feature of db-ally makes it stand out in terms of reliability and stability compared to standard text-to-SQL approaches.
+Structured views are built on top of [IQL](iql.md), a simple language that acts as an abstraction layer between natural language and data source-specific query syntax, such as SQL. IQL allows the LLM to express complex queries in a more straightforward manner. In contrast, freeform views operate directly on the raw data source, using the data source's query language.
 
-Each view can contain one or more “filters”, which the LLM may decide to choose and apply to the extracted data so that it meets the criteria specified in the natural language query. Given such a query, LLM chooses which filters to use, provides arguments to the filters, and connects the filters with Boolean operators. The LLM expresses these filter combinations using a special language called [IQL](iql.md), in which the defined view filters provide a layer of abstraction between the LLM and the raw syntax used to query the data source (e.g., SQL).
+We consider **structured views** to be at the heart of db-ally. These enable the library's core benefits (consistency, security, efficiency, and portability), and provide a reliable interface for integration. Structured views are especially useful for applications with precise requirements in behavior or data format. For this reason, we recommend using structured views whenever possible.
 
-!!! example
-    For instance, this is a simple view that uses SQLAlchemy to select data from specific columns in a SQL database. It contains a single filter, that the LLM may optionally use to control which table rows to fetch: <!-- TODO: Add a link to how-to about SQL views -->
+Here are the differences between structured and freeform views, in terms of the core benefits of db-ally:
 
-    ```python
-    class CandidateView(SqlAlchemyBaseView):
-        """
-        A view for retrieving candidates from the database.
-        """
+* **Consistency**: Structured views ensure predictable output formats, while freeform views offer more flexibility and can define views that do not require a fixed data structure. The former is easier to integrate with other systems and more predictable, while the latter provides more flexibility.
+* **Security**: Structured views limit data source operations to those predefined by developers, whereas freeform views often allow the LLM to execute arbitrary operations on the data source. The former approach is considerably more secure (including protection against SQL injection attacks), whilst the latter approach is more flexible but requires developers to ensure the security of data sources outside of db-ally.
+* **Efficiency**: Structured views provide [a layer of abstraction](iql.md) between the model and the data, which enables the LLM to focus on essential aspects, improving performance. Complex operations from the data source perspective can appear simple to the LLM. Conversely, freeform views can operate on the raw data source, which can be powerful but may also make it more challenging for the LLM to deliver good performance.
+* **Portability**: Both structured and freeform views are typically defined in terms of a specific data source type and can be integrated with various database technologies and other data sources. However, freeform views integrate easier with data sources that already use a query language which the LLM can generate (like SQL), while structured views aren't similarly limited since they come with their query language (IQL).
 
-        def get_select(self):
-            """
-            Defines which columns to select
-            """
-            return sqlalchemy.select(Candidate.id, Candidate.name, Candidate.country)
-
-        @decorators.view_filter()
-        def from_country(self, country: str):
-            """
-            Filter candidates from a specific country.
-            """
-            return Candidate.country == country
-    ```
-
-A project might implement multiple views, each tailored to different output formats and filters for various use cases. The LLM selects the appropriate view which best corresponds to the specific natural language query. For further details, consider reading our article on [Collections](collections.md).
-
-See the [Quickstart](../quickstart/index.md) guide for a complete example of how to define and use views.
+A project might implement multiple views, of both types, each customised for different use cases. The LLM selects the most appropriate view corresponding to the specific natural language query. For further details, consider reading our article on [Collections](collections.md).

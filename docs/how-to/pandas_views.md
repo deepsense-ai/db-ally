@@ -1,6 +1,6 @@
 # How-To: Use Pandas DataFrames with db-ally
 
-In this guide, you will learn how to write [views](../concepts/views.md) that use [Pandas](https://pandas.pydata.org/) DataFrames as their data source. You will understand how to define such a view, create filters that operate on the DataFrame, and register it while providing it with the source DataFrame.
+In this guide, you will learn how to write [structured views](../concepts/structured_views.md) that use [Pandas](https://pandas.pydata.org/) DataFrames as their data source. You will understand how to define such a view, create filters that operate on the DataFrame, and register it while providing it with the source DataFrame.
 
 The example used in this guide is a DataFrame containing information about candidates. The DataFrame includes columns such as `id`, `name`, `country`, `years_of_experience`. This is the same use case as the one in the [Quickstart](../quickstart/index.md) and [Custom Views](./custom_views.md) guides. Please feel free to compare the different approaches.
 

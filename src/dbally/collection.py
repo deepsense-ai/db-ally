@@ -84,7 +84,7 @@ class Collection:
         Register new [View](views/index.md) that will be available to query via the collection.
 
         Args:
-            view: A class inherithing from BaseStructuredView. Object of this type will be initialized during\
+            view: A class inherithing from BaseView. Object of this type will be initialized during\
             query execution. We expect Class instead of object, as otherwise Views must have been implemented\
             stateless, which would be cumbersome.
             builder: Optional factory function that will be used to create the View instance. Use it when you\
@@ -230,7 +230,7 @@ class Collection:
 
     def get_similarity_indexes(self) -> Dict[AbstractSimilarityIndex, List[Tuple[str, str, str]]]:
         """
-        List all similarity indexes from all views in the collection.
+        List all similarity indexes from all structured views in the collection.
 
         Returns:
             Dictionary with similarity indexes as keys and values containing lists of places where they are used
@@ -252,7 +252,7 @@ class Collection:
 
     async def update_similarity_indexes(self) -> None:
         """
-        Update all similarity indexes from all views in the collection.
+        Update all similarity indexes from all structured views in the collection.
 
         Raises:
             IndexUpdateError: if updating any of the indexes fails. The exception provides `failed_indexes` attribute,

@@ -1,15 +1,9 @@
 # Base View classes
 
 !!! tip
-    * To understand the general idea better, visit [Views concept page](../../concepts/views.md).
-    * To learn how to support custom data sources, visit [How-to: create your custom view page](../../how-to/custom_views.md)
+    * To understand the general idea better, visit [Concept: Views](../../concepts/views.md) and [Concept: Freeform Views](../../concepts/freeform_views.md)
+    * To learn about structured views, which in most cases are the recommended way to define views, see the reference for the [`BaseStructuredView`][dbally.views.structured.BaseStructuredView] class
 
-::: dbally.views.structured.BaseStructuredView
-
-::: dbally.views.exposed_functions.ExposedFunction
-
-::: dbally.views.exposed_functions.MethodParamWithTyping
-
-::: dbally.views.methods_base.MethodsBaseView
+::: dbally.views.base.BaseView
 
 ::: dbally.data_models.execution_result.ViewExecutionResult
