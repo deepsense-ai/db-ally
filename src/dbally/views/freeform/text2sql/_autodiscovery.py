@@ -50,6 +50,7 @@ class _AutoDiscoveryBuilderBase:
         description_extraction: Optional[_DescriptionExtractionStrategy] = None,
         similarity_enabled: bool = False,
         llm_client: Optional[LLMClient] = None,
+        selected_columns: Optional[List[str]] = None,
     ) -> None:
         self._engine = engine
         self._llm_client = llm_client
@@ -58,6 +59,7 @@ class _AutoDiscoveryBuilderBase:
         self._whitelist = whitelist
         self._description_extraction = description_extraction or _DBCommentsDescriptionExtraction()
         self._similarity_enabled = similarity_enabled
+        self._selected_columns = selected_columns
 
     def with_blacklist(self, blacklist: List[str]) -> Self:
         """
@@ -121,6 +123,7 @@ class _AutoDiscoveryBuilderBase:
             blacklist=self._blacklist,
             description_extraction=self._description_extraction,
             similarity_enabled=self._similarity_enabled,
+            selected_columns=self._selected_columns,
         ).discover()
 
 
@@ -232,6 +235,7 @@ class _Text2SQLAutoDiscovery:
         llm_client: Optional[LLMClient] = None,
         blacklist: Optional[List[str]] = None,
         similarity_enabled: bool = False,
+        selected_columns: Optional[List[str]] = None,
     ) -> None:
         self._llm_client = llm_client
         self._engine = engine
@@ -239,6 +243,7 @@ class _Text2SQLAutoDiscovery:
         self._blacklist = blacklist
         self._description_extraction = description_extraction
         self._similarity_enabled = similarity_enabled
+        self._selected_columns = selected_columns
 
     async def discover(self) -> Text2SQLConfig:
         """
@@ -263,10 +268,33 @@ class _Text2SQLAutoDiscovery:
 
             ddl = self._get_table_ddl(table)
 
+            # self._selected_columns.append("PRIMARY")
+            # self._selected_columns.append("FOREIGN")
+            ddl = ddl.replace("NOT NULL", "").replace("NULL", "")
+
+            # ddl_splitted = ddl.split("\n")
+            # lines_to_be_left = ddl_splitted[:3]
+
+            # for line in ddl_splitted[3:]:
+            #    if any(col in line for col in self._selected_columns):
+            #        lines_to_be_left.append(line)
+
+            # ddl = "\n".join(lines_to_be_left)
+            # This starts from thousand to few thousand tokens per columns if we do not apply any limitations
+            for column_name, column in self._iterate_str_columns(table):
+                # if column_name in self._selected_columns:
+                # if  "Below columns with limited amount of unique values are listed:" not in ddl:
+                #    ddl += "Below columns with limited amount of unique values are listed:\n"
+                example_values = self._get_column_example_values(connection, table, column)
+                if len(set(example_values)) <= 9 or (len(str(example_values)) < 50):
+                    ddl += f"{column_name}: {example_values}\n"
+
             if isinstance(self._description_extraction, _DBCommentsDescriptionExtraction):
                 description = table.comment
             elif isinstance(self._description_extraction, _LLMSummaryDescriptionExtraction):
-                example_rows = self._get_example_rows(connection, table, self._description_extraction.example_rows_cnt)
+                example_rows = self._get_example_rows(
+                    connection, table, self._description_extraction.example_rows_cnt
+                )  # One row of one table is about 1000 characters...
                 description = await self._generate_llm_summary(ddl, example_rows)
             else:
                 raise ValueError(f"Invalid description extraction strategy: {self._description_extraction}")
@@ -330,7 +358,7 @@ class _Text2SQLAutoDiscovery:
 
     @staticmethod
     def _get_column_example_values(connection: Connection, table: Table, column: Column) -> List[Any]:
-        example_values = connection.execute(table.select().with_only_columns(column).distinct().limit(5)).fetchall()
+        example_values = connection.execute(table.select().with_only_columns(column).distinct().limit(10)).fetchall()
         return [x[0] for x in example_values]
 
     def _get_table_ddl(self, table: Table) -> str:

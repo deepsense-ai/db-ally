@@ -157,7 +157,9 @@ class Collection:
             name: (textwrap.dedent(view.__doc__).strip() if view.__doc__ else "") for name, view in self._views.items()
         }
 
-    async def ask(self, question: str, dry_run: bool = False, return_natural_response: bool = False) -> ExecutionResult:
+    async def ask(
+        self, question: str, dry_run: bool = False, retry_if_empty: bool = False, return_natural_response: bool = False
+    ) -> ExecutionResult:
         """
         Ask question in a text form and retrieve the answer based on the available views.
 
@@ -172,6 +174,7 @@ class Collection:
             question: question posed using natural language representation e.g\
             "What job offers for Data Scientists do we have?"
             dry_run: if True, only generate the query without executing it
+            retry_if_empty: if True, the query will be retried if the result is empty
             return_natural_response: if True (and dry_run is False as natural response requires query results),
                                      the natural response will be included in the answer
 
@@ -208,6 +211,7 @@ class Collection:
             event_tracker=event_tracker,
             n_retries=self.n_retries,
             dry_run=dry_run,
+            retry_if_empty=retry_if_empty,
         )
         end_time_view = time.time()
 
