@@ -84,6 +84,7 @@ class FaissStore(SimilarityStore):
         """
         index = faiss.read_index(str(self.get_index_path()))
         embedding = np.array(await self.embedding_client.get_embeddings([text]), dtype=np.float32)
+        # TODO this 1 makes it incompatible with general selectors.
         scores, similar = index.search(embedding, 1)
         best_distance, best_idx = scores[0][0], similar[0][0]
 

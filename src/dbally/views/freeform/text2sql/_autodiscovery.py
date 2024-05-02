@@ -48,9 +48,9 @@ class _AutoDiscoveryBuilderBase:
         blacklist: Optional[List[str]] = None,
         whitelist: Optional[List[str]] = None,
         description_extraction: Optional[_DescriptionExtractionStrategy] = None,
+        columns_description: Optional[Dict[str, str]] = None,
         similarity_enabled: bool = False,
         llm_client: Optional[LLMClient] = None,
-        selected_columns: Optional[List[str]] = None,
     ) -> None:
         self._engine = engine
         self._llm_client = llm_client
@@ -59,7 +59,7 @@ class _AutoDiscoveryBuilderBase:
         self._whitelist = whitelist
         self._description_extraction = description_extraction or _DBCommentsDescriptionExtraction()
         self._similarity_enabled = similarity_enabled
-        self._selected_columns = selected_columns
+        self._columns_description = columns_description
 
     def with_blacklist(self, blacklist: List[str]) -> Self:
         """
@@ -122,8 +122,8 @@ class _AutoDiscoveryBuilderBase:
             whitelist=self._whitelist,
             blacklist=self._blacklist,
             description_extraction=self._description_extraction,
+            columns_description=self._columns_description,
             similarity_enabled=self._similarity_enabled,
-            selected_columns=self._selected_columns,
         ).discover()
 
 
@@ -234,16 +234,16 @@ class _Text2SQLAutoDiscovery:
         whitelist: Optional[List[str]] = None,
         llm_client: Optional[LLMClient] = None,
         blacklist: Optional[List[str]] = None,
+        columns_description: Optional[Dict[str, str]] = None,
         similarity_enabled: bool = False,
-        selected_columns: Optional[List[str]] = None,
     ) -> None:
         self._llm_client = llm_client
         self._engine = engine
         self._whitelist = whitelist
         self._blacklist = blacklist
         self._description_extraction = description_extraction
+        self._columns_description = columns_description
         self._similarity_enabled = similarity_enabled
-        self._selected_columns = selected_columns
 
     async def discover(self) -> Text2SQLConfig:
         """
@@ -268,26 +268,10 @@ class _Text2SQLAutoDiscovery:
 
             ddl = self._get_table_ddl(table)
 
-            # self._selected_columns.append("PRIMARY")
-            # self._selected_columns.append("FOREIGN")
-            ddl = ddl.replace("NOT NULL", "").replace("NULL", "")
+            ddl = self._print_column_values(ddl, table, connection)
 
-            # ddl_splitted = ddl.split("\n")
-            # lines_to_be_left = ddl_splitted[:3]
-
-            # for line in ddl_splitted[3:]:
-            #    if any(col in line for col in self._selected_columns):
-            #        lines_to_be_left.append(line)
-
-            # ddl = "\n".join(lines_to_be_left)
-            # This starts from thousand to few thousand tokens per columns if we do not apply any limitations
-            for column_name, column in self._iterate_str_columns(table):
-                # if column_name in self._selected_columns:
-                # if  "Below columns with limited amount of unique values are listed:" not in ddl:
-                #    ddl += "Below columns with limited amount of unique values are listed:\n"
-                example_values = self._get_column_example_values(connection, table, column)
-                if len(set(example_values)) <= 9 or (len(str(example_values)) < 50):
-                    ddl += f"{column_name}: {example_values}\n"
+            if self._columns_description is not None:
+                ddl = self._describe_columns(ddl, self._columns_description)
 
             if isinstance(self._description_extraction, _DBCommentsDescriptionExtraction):
                 description = table.comment
@@ -336,6 +320,31 @@ class _Text2SQLAutoDiscovery:
             fmt={"dialect": self._engine.dialect.name, "table_ddl": ddl, "example_rows": example_rows},
         )
 
+    def _print_column_values(self, ddl: str, table: Table, connection: Connection) -> str:
+        ddl += "Below columns with limited amount of unique values are listed:\n"
+        for column_name, column in self._iterate_str_columns(table):
+            example_values = self._get_column_example_values(connection, table, column, n_rows=10)
+            if len(set(example_values)) <= 9 or (len(str(example_values)) < 50):
+                ddl += f"{column_name}: {example_values}\n"
+
+        return ddl
+
+    def _describe_columns(self, ddl: str, columns_description: Dict[str, str]) -> str:
+        """This function is used to describe evert column of the table. It should resolve all disambiguities
+
+        Args:
+            ddl: _description_
+            table: _description_
+            columns_description: _description_
+
+        Returns:
+            _description_
+        """
+        for column in ddl:
+            ddl += f"{column}: {columns_description.get(column, 'No description available')}\n"
+
+        return ddl
+
     def _iterate_tables(self) -> Iterator[Tuple[str, Table]]:
         meta = MetaData()
         meta.reflect(bind=self._engine)
@@ -357,9 +366,12 @@ class _Text2SQLAutoDiscovery:
         return [{str(k): v for k, v in dict(row._mapping).items()} for row in rows]
 
     @staticmethod
-    def _get_column_example_values(connection: Connection, table: Table, column: Column) -> List[Any]:
-        example_values = connection.execute(table.select().with_only_columns(column).distinct().limit(10)).fetchall()
+    def _get_column_example_values(connection: Connection, table: Table, column: Column, n_rows=5) -> List[Any]:
+        example_values = connection.execute(
+            table.select().with_only_columns(column).distinct().limit(n_rows)
+        ).fetchall()
         return [x[0] for x in example_values]
 
     def _get_table_ddl(self, table: Table) -> str:
-        return str(CreateTable(table).compile(self._engine))
+        ddl = str(CreateTable(table).compile(self._engine))
+        return ddl.replace("NOT NULL", "").replace("NULL", "")

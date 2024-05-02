@@ -1,4 +1,5 @@
-from typing import Iterable, Tuple
+from copy import copy
+from typing import Iterable, List, Optional, Tuple
 
 import sqlalchemy
 from sqlalchemy import text
@@ -11,52 +12,9 @@ from dbally.views.base import BaseView
 
 from ._config import Text2SQLConfig
 from ._errors import Text2SQLError
-
-
-class EmptyResultException(Exception):
-    """Raised when the result of a query is empty."""
-
-
-text2sql_prompt = PromptTemplate(
-    chat=(
-        {
-            "role": "system",
-            "content": "You are a very smart database programmer. "
-            "You have access to the following {dialect} tables:\n"
-            "{tables}\n"
-            "Create SQL query to answer user question. Return only SQL surrounded in ```sql <QUERY> ``` block.\n",
-        },
-        {
-            "role": "user",
-            "content": "{question}\nReturn ONLY the SQL query, with no explanation. Make sure that query "
-            "is correct and executable.",
-        },
-    ),
-)
-
-text2sql_cot_prompt = PromptTemplate(
-    chat=(
-        {
-            "role": "system",
-            "content": "You are a very smart database programmer. "
-            "You have access to the following {dialect} tables:\n"
-            "{tables}\n"
-            "Perform following tasks:\n"
-            "1. Based on the user question, rewrite the tables definition USING SAME FORMAT AS ABOVE leaving"
-            "only the columns that may be useful to answer the query.\n"
-            # This leads to hallucinations, and it most often selects only columns it will use.
-            "2. Think about the solution to the task. Start thinking about what you need to do in FROM and"
-            "WHERE statements to answer the question. If any complex processing is required describe it."
-            "Make this proces concise and do not generate SQL query yet\n"
-            "3. Based on the user question, write the SQL query, with no explanation. Write SQL surrounded"
-            "in ```sql <QUERY> ``` block. Make sure that query is correct and executable.\n",
-        },
-        {
-            "role": "user",
-            "content": "{question}\n. ",
-        },
-    ),
-)
+from ._exceptions import EmptyResultException
+from .columns_selector import BaseSelector
+from .value_retriever import ValueRetriever
 
 
 class Text2SQLFreeformView(BaseView):
@@ -64,10 +22,22 @@ class Text2SQLFreeformView(BaseView):
     Text2SQLFreeformView is a class designed to interact with the database using text2sql queries.
     """
 
-    def __init__(self, engine: sqlalchemy.engine.Engine, config: Text2SQLConfig) -> None:
+    def __init__(
+        self,
+        engine: sqlalchemy.engine.Engine,
+        config: Text2SQLConfig,
+        prompt: PromptTemplate,
+        columns_selector: Optional[BaseSelector] = None,
+        few_shot_selector: Optional[BaseSelector] = None,
+        value_retriever: Optional[ValueRetriever] = None,
+    ) -> None:
         super().__init__()
         self._engine = engine
         self._config = config
+        self._prompt = prompt
+        self.columns_selector = columns_selector
+        self.few_shot_selector = few_shot_selector
+        self.value_retriever = value_retriever
 
     async def ask(
         self,
@@ -101,7 +71,7 @@ class Text2SQLFreeformView(BaseView):
         """
 
         # conversation = text2sql_prompt
-        conversation = text2sql_cot_prompt
+        conversation = self._prompt
         # conversation = text2sql_where_prompt
         sql, rows = None, None
         exceptions = []
@@ -147,27 +117,47 @@ class Text2SQLFreeformView(BaseView):
             },
         )
 
+    def _format_tables(self, ddl, selected_columns: List[str]) -> str:
+        columns = copy(selected_columns)
+
+        columns.append("PRIMARY")
+        columns.append("FOREIGN")
+
+        ddl_splitted = ddl.split("\n")
+        lines_to_be_left = ddl_splitted[:3]
+
+        for line in ddl_splitted[3:-2]:
+            if any(col in line for col in selected_columns):
+                lines_to_be_left.append(line)
+
+        lines_to_be_left.append(ddl_splitted[-2])
+
+        ddl = "\n".join(lines_to_be_left)
+
+        return ddl
+
     async def _generate_sql(
         self, query: str, conversation: PromptTemplate, llm_client: LLMClient, event_tracker: EventTracker
     ) -> Tuple[str, PromptTemplate]:
-        # query_embedding = await self.emb_client.get_embeddings([query])
+        ddl = self._get_tables_context()
 
-        # results = self.sim_client.query(
-        #     query_embeddings=query_embedding,
-        #     n_results=5,
-        #     where= {"db_id": {"$ne": self.db_id}}
-        # )
+        if self.columns_selector is not None:
+            selected_columns = self.columns_selector.get_similar(query)
+            ddl = self._format_tables(ddl, selected_columns)
 
-        # few_shot_prompt = "/* Some example questions and corresponding
-        # SQL queries are provided based on similar problems : */\n"
+        fmt = {"tables": ddl, "dialect": self._engine.dialect.name, "question": query}
 
-        # for question, metadata in results["documents"]:
-        #     few_shot_prompt += f"/* Answer the following: {question} */\n"
-        #     few_shot_prompt += f"{metadata['sql']}\n"
+        if self.few_shot_selector is not None:
+            few_shot = self.few_shot_selector.get_similar(query)
+            fmt["few_shot"] = few_shot
+
+        if self.value_retriever is not None:
+            matched_values = self.value_retriever.get_values(query)
+            fmt["matched_values"] = matched_values
 
         response = await llm_client.text_generation(
             template=conversation,
-            fmt={"tables": self._get_tables_context(), "dialect": self._engine.dialect.name, "question": query},
+            fmt=fmt,
             event_tracker=event_tracker,
             max_tokens=1024,
         )
