@@ -18,7 +18,7 @@ class ChromadbStore(SimilarityStore):
         max_distance: Optional[float] = None,
         distance_method: Literal["l2", "ip", "cosine"] = "l2",
     ):
-        super().__init__()
+        super().__init__(n_returned=1)
         self.index_name = index_name
         self.chroma_client = chroma_client
         self.embedding_function = embedding_function
@@ -89,8 +89,8 @@ class ChromadbStore(SimilarityStore):
 
         if isinstance(self.embedding_function, EmbeddingClient):
             embedding = await self.embedding_function.get_embeddings([text])
-            retrieved = collection.query(query_embeddings=embedding, n_results=1)
+            retrieved = collection.query(query_embeddings=embedding, n_results=self.n_returned)
         else:
-            retrieved = collection.query(query_texts=[text], n_results=1)
+            retrieved = collection.query(query_texts=[text], n_results=self.n_returned)
 
         return self._return_best_match(retrieved)

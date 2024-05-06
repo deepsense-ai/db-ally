@@ -32,7 +32,7 @@ class FaissStore(SimilarityStore):
             index_type: The type of Faiss index to use. Defaults to faiss.IndexFlatL2. See
                 [Faiss wiki](https://github.com/facebookresearch/faiss/wiki/Faiss-indexes) for more information.
         """
-        super().__init__()
+        super().__init__(n_returned=1)
         self.index_dir = index_dir
         self.index_name = index_name
         self.max_distance = max_distance
@@ -72,6 +72,15 @@ class FaissStore(SimilarityStore):
         with open(self.get_index_path(create=True).with_suffix(".npy"), "wb") as file:
             np.save(file, np.array(data, dtype="str"))
 
+    def _filter_similar(self, scores, similar):
+        best_distance, best_idx = scores[0][0], similar[0][0]
+
+        if best_idx != -1 and (self.max_distance is None or best_distance <= self.max_distance):
+            with open(self.get_index_path().with_suffix(".npy"), "rb") as file:
+                data = np.load(file)
+                return data[best_idx]
+        return None
+
     async def find_similar(self, text: str) -> Optional[str]:
         """
         Finds the most similar text in the store or returns None if no similar text is found.
@@ -85,11 +94,6 @@ class FaissStore(SimilarityStore):
         index = faiss.read_index(str(self.get_index_path()))
         embedding = np.array(await self.embedding_client.get_embeddings([text]), dtype=np.float32)
         # TODO this 1 makes it incompatible with general selectors.
-        scores, similar = index.search(embedding, 1)
-        best_distance, best_idx = scores[0][0], similar[0][0]
+        scores, similar = index.search(embedding, self.n_returned)
 
-        if best_idx != -1 and (self.max_distance is None or best_distance <= self.max_distance):
-            with open(self.get_index_path().with_suffix(".npy"), "rb") as file:
-                data = np.load(file)
-                return data[best_idx]
-        return None
+        return self._filter_similar(scores, similar)

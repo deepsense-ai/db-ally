@@ -12,6 +12,9 @@ class SimilarityStore(metaclass=abc.ABCMeta):
     find the closest match to the user's input.
     """
 
+    def __init__(self, n_returned: int) -> None:
+        self.n_returned = n_returned
+
     @abc.abstractmethod
     async def store(self, data: List[str]) -> None:
         """
