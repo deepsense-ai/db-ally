@@ -32,6 +32,8 @@ class Text2SQLFreeformView(BaseView):
         value_retriever: Optional[ValueRetriever] = None,
     ) -> None:
         super().__init__()
+        # TODO Think if somehow this can be changed into an
+        # agentic system taking a list of LLM agents defined in text2sql.agents.py
         self._engine = engine
         self._config = config
         self._prompt = prompt
@@ -140,6 +142,9 @@ class Text2SQLFreeformView(BaseView):
         self, query: str, conversation: PromptTemplate, llm_client: LLMClient, event_tracker: EventTracker
     ) -> Tuple[str, PromptTemplate]:
         ddl = self._get_tables_context()
+
+        # TODO maybe this should be each splitted to separate agents,
+        # We run entire pipeline through small agents and save results of every agent so it is easilt debugable.
 
         if self.columns_selector is not None:
             selected_columns = self.columns_selector.get_similar(query)

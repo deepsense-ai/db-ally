@@ -373,5 +373,6 @@ class _Text2SQLAutoDiscovery:
         return [x[0] for x in example_values]
 
     def _get_table_ddl(self, table: Table) -> str:
+        # TODO Maybe this should return some kind of object that is motified instead of working on simple string?
         ddl = str(CreateTable(table).compile(self._engine))
         return ddl.replace("NOT NULL", "").replace("NULL", "")

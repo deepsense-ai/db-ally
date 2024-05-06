@@ -10,6 +10,7 @@ class RetrievedValue:
 
     table: str
     column: str
+    value: str
 
 
 class ValueRetriever:
