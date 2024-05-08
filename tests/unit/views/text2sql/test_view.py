@@ -1,3 +1,4 @@
+import json
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -32,7 +33,11 @@ def sample_db() -> Engine:
 
 async def test_text2sql_view(sample_db: Engine):
     mock_llm = Mock()
-    mock_llm.text_generation = AsyncMock(return_value="SELECT * FROM customers WHERE city = 'New York'")
+    llm_response = {
+        "sql": "SELECT * FROM customers WHERE city = :city",
+        "parameters": [{"name": "city", "value": "New York"}],
+    }
+    mock_llm.text_generation = AsyncMock(return_value=json.dumps(llm_response))
 
     config = Text2SQLConfig(
         tables={
@@ -48,7 +53,7 @@ async def test_text2sql_view(sample_db: Engine):
 
     response = await collection.ask("Show me customers from New York")
 
-    assert response.context["sql"] == "SELECT * FROM customers WHERE city = 'New York'"
+    assert response.context["sql"] == llm_response["sql"]
     assert response.results == [
         {"id": 1, "name": "Alice", "city": "New York"},
         {"id": 3, "name": "Charlie", "city": "New York"},
