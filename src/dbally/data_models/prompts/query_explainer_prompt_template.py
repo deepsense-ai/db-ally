@@ -4,6 +4,8 @@ from dbally.data_models.prompts.common_validation_utils import _check_prompt_var
 from dbally.data_models.prompts.prompt_template import ChatFormat, PromptTemplate
 
 
+# TODO Move this prompt Template to the package responsible for NL Responses.
+# TODO Move this as close to the file using it as possible.
 class QueryExplainerPromptTemplate(PromptTemplate):
     """
     Class for prompt templates meant to generate explanations for queries

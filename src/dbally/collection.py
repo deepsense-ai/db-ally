@@ -202,6 +202,7 @@ class Collection:
         view = self.get(selected_view)
 
         start_time_view = time.time()
+        # TODO Thus LLM Options must be available from here.
         view_result = await view.ask(
             query=question,
             llm_client=self._llm_client,

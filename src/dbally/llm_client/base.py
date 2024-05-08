@@ -21,6 +21,7 @@ class LLMClient(abc.ABC):
     """
 
     def __init__(self, model_name: str):
+        # TODO Allow for passing LLMOptions during initialization
         self.model_name = model_name
         self._prompt_builder = PromptBuilder(self.model_name)
 
@@ -39,6 +40,8 @@ class LLMClient(abc.ABC):
         temperature: Optional[float] = 1.0,
         top_p: Optional[float] = 1.0,
     ) -> str:
+        # TODO Accepts LLMOptions parameter here too. Object Options are
+        # TODO merged with the passed ones with passed one overftigint object's
         """
         For a given a PromptType and format dict creates a prompt and
         returns the response from LLM.

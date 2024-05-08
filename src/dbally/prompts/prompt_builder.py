@@ -6,6 +6,9 @@ if TYPE_CHECKING:
     from transformers.tokenization_utils import PreTrainedTokenizer
 
 
+# TODO consider moving data_models.prompts here
+
+
 class PromptBuilder:
     """Class used to build prompts"""
 

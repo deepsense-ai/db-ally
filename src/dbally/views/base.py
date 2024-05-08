@@ -11,6 +11,7 @@ class BaseView(metaclass=abc.ABCMeta):
     implementing this interface have to be able to execute queries and return the result.
     """
 
+    # TODO LLMOptions must be passed here too.
     @abc.abstractmethod
     async def ask(
         self, query: str, llm_client: LLMClient, event_tracker: EventTracker, n_retries: int = 3, dry_run: bool = False

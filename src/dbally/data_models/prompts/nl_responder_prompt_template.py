@@ -4,6 +4,7 @@ from dbally.data_models.prompts.common_validation_utils import _check_prompt_var
 from dbally.data_models.prompts.prompt_template import ChatFormat, PromptTemplate
 
 
+# TODO Move this prompt Template to the package responsible for NL Responses
 class NLResponderPromptTemplate(PromptTemplate):
     """
     Class for prompt templates meant for the natural response.

@@ -5,6 +5,7 @@ from dbally.data_models.prompts.prompt_template import ChatFormat, PromptTemplat
 from dbally.utils.errors import UnsupportedQueryError
 
 
+# TODO Move this prompt Template to the package responsible for IQL
 class IQLPromptTemplate(PromptTemplate):
     """
     Class for prompt templates meant for the IQL

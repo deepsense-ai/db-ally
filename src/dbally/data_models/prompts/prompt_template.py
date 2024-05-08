@@ -4,6 +4,9 @@ from typing_extensions import Self
 
 from dbally.data_models.prompts.common_validation_utils import ChatFormat, PromptTemplateError
 
+# TODO As we move all prompt templates to the packages themselve dbally.data_models.prompts
+# will become just a module consisting of this file
+
 
 def _check_chat_order(chat: ChatFormat) -> ChatFormat:
     """

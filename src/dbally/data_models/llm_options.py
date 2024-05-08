@@ -2,6 +2,7 @@ from dataclasses import asdict, dataclass
 from typing import List, Optional, Union
 
 
+# TODO utilize this dataclass in the LLMClient class
 @dataclass
 class LLMOptions:
     """
