@@ -33,6 +33,7 @@ Below you can find a list of planned integrations.
 ### LLMs
 
 - [x] OpenAI models
+- [ ] Claude 3
 - [ ] LLama-2
 - [ ] Mistral / Mixtral
 - [ ] VertexAI Gemini
@@ -40,7 +41,8 @@ Below you can find a list of planned integrations.
 ### Vector stores
 
 - [x] FAISS
-- [ ] Chroma
+- [x] Chroma
+- [ ] Elasticsearch
 - [ ] Weaviate
 - [ ] Qdrant
 - [ ] VertexAI Vector Search
