@@ -1,4 +1,6 @@
-from typing import Iterable, Tuple
+import json
+from dataclasses import dataclass
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import sqlalchemy
 from sqlalchemy import text
@@ -19,11 +21,72 @@ text2sql_prompt = PromptTemplate(
             "content": "You are a very smart database programmer. "
             "You have access to the following {dialect} tables:\n"
             "{tables}\n"
-            "Create SQL query to answer user question. Return only SQL surrounded in ```sql <QUERY> ``` block.\n",
+            "Create SQL query to answer user question. Response with JSON containing following keys:\n\n"
+            "- sql: SQL query to answer the question, with parameter :placeholders for user input.\n"
+            "- parameters: a list of parameters to be used in the query, represented by maps with the following keys:\n"
+            "  - name: the name of the parameter\n"
+            "  - value: the value of the parameter\n"
+            "  - table: the table the parameter is used with (if any)\n"
+            "  - column: the column the parameter is compared to (if any)\n",
         },
         {"role": "user", "content": "{question}"},
     ),
 )
+
+
+@dataclass
+class SQLParameterOption:
+    """
+    A class representing the options for a SQL parameter.
+    """
+
+    name: str
+    value: str
+    table: Optional[str] = None
+    column: Optional[str] = None
+
+    # Maybe use pydantic instead of this method?
+    # On the other hand, it would introduce a new dependency
+    @staticmethod
+    def from_dict(data: Dict[str, str]) -> "SQLParameterOption":
+        """
+        Creates an instance of SQLParameterOption from a dictionary.
+
+        Args:
+            data: The dictionary to create the instance from.
+
+        Returns:
+            An instance of SQLParameterOption.
+
+        Raises:
+            ValueError: If the dictionary is invalid.
+        """
+        if not isinstance(data, dict):
+            raise ValueError("Paramter data should be a dictionary")
+
+        if "name" not in data or not isinstance(data["name"], str):
+            raise ValueError("Parameter name should be a string")
+
+        if "value" not in data or not isinstance(data["value"], str):
+            raise ValueError(f"Value for parameter {data['name']} should be a string")
+
+        if "table" in data and data["table"] is not None and not isinstance(data["table"], str):
+            raise ValueError(f"Table for parameter {data['name']} should be a string")
+
+        if "column" in data and data["column"] is not None and not isinstance(data["column"], str):
+            raise ValueError(f"Column for parameter {data['name']} should be a string")
+
+        return SQLParameterOption(data["name"], data["value"], data.get("table"), data.get("column"))
+
+    async def value_with_similarity(self) -> str:
+        """
+        Returns the value after passing it through a similarity index if available for the given table and column.
+
+        Returns:
+            str: The value after passing it through a similarity index.
+        """
+        # TODO: Lookup similarity index for the given volumn
+        return self.value
 
 
 class Text2SQLFreeformView(BaseView):
@@ -65,15 +128,15 @@ class Text2SQLFreeformView(BaseView):
             # We want to catch all exceptions to retry the process.
             # pylint: disable=broad-except
             try:
-                sql, conversation = await self._generate_sql(query, conversation, llm_client, event_tracker)
+                sql, parameters, conversation = await self._generate_sql(query, conversation, llm_client, event_tracker)
 
                 if dry_run:
                     return ViewExecutionResult(results=[], context={"sql": sql})
 
-                rows = await self._execute_sql(sql)
+                rows = await self._execute_sql(sql, parameters)
                 break
             except Exception as e:
-                conversation = conversation.add_user_message(f"Query is invalid! Error: {e}")
+                conversation = conversation.add_user_message(f"Response is invalid! Error: {e}")
                 exceptions.append(e)
                 continue
 
@@ -91,7 +154,7 @@ class Text2SQLFreeformView(BaseView):
 
     async def _generate_sql(
         self, query: str, conversation: PromptTemplate, llm_client: LLMClient, event_tracker: EventTracker
-    ) -> Tuple[str, PromptTemplate]:
+    ) -> Tuple[str, List[SQLParameterOption], PromptTemplate]:
         response = await llm_client.text_generation(
             template=conversation,
             fmt={"tables": self._get_tables_context(), "dialect": self._engine.dialect.name, "question": query},
@@ -99,14 +162,20 @@ class Text2SQLFreeformView(BaseView):
         )
 
         conversation = conversation.add_assistant_message(response)
+        data = json.loads(response)
+        sql = data["sql"]
+        parameters = data.get("parameters", [])
 
-        response = response.split("```sql")[-1].strip("\n")
-        response = response.replace("```", "")
-        return response, conversation
+        if not isinstance(parameters, list):
+            raise ValueError("Parameters should be a list of dictionaries")
+        param_objs = [SQLParameterOption.from_dict(param) for param in parameters]
 
-    async def _execute_sql(self, sql: str) -> Iterable:
+        return sql, param_objs, conversation
+
+    async def _execute_sql(self, sql: str, parameters: List[SQLParameterOption]) -> Iterable:
+        param_values = {param.name: param.value for param in parameters}
         with self._engine.connect() as conn:
-            return conn.execute(text(sql)).fetchall()
+            return conn.execute(text(sql), param_values).fetchall()
 
     def _get_tables_context(self) -> str:
         context = ""
