@@ -73,25 +73,6 @@ class DballyTool(BaseTool):
         except UnsupportedQueryError:
             return "database master can't answer this question"
 
-##################################################################################
-# Helper function to print chat messages taken from https://github.com/langchain-ai/langgraph/blob/e0770d68b31b3fbf38d091857c86017ab2d9c853/examples/customer-support/customer-support.ipynb
-##################################################################################
-
-def _print_event(event: dict, _printed: set, max_length=1500):
-    current_state = event.get("dialog_state")
-    if current_state:
-        print(f"Currently in: ", current_state[-1])
-    message = event.get("messages")
-    if message:
-        if isinstance(message, list):
-            message = message[-1]
-        if message.id not in _printed:
-            msg_repr = message.pretty_repr(html=True)
-            if len(msg_repr) > max_length:
-                msg_repr = msg_repr[:max_length] + " ... (truncated)"
-            print(msg_repr)
-            _printed.add(message.id)
-
 ###################################################################################
 # Database definition
 ##################################################################################
@@ -195,15 +176,13 @@ def main():
         }
     }
 
-    #Run the assistant loop
-    _printed = set()
     while True:
         question = input("Enter your message: ")
         events = app.stream(
             {"messages": ("user", question)}, graph_config, stream_mode="values"
         )
         for event in events:
-            _print_event(event, _printed)
+            event["messages"][-1].pretty_print()
 
 
 if __name__ == "__main__":
