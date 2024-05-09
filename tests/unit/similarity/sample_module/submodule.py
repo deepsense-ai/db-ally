@@ -20,7 +20,8 @@ class FooView(MethodsBaseView):
     def method_bar(self, city: Annotated[str, index_foo], year: Annotated[int, index_bar]) -> str:
         return f"hello {city} in {year}"
 
-    async def apply_filters(self, filters: IQLQuery) -> None: ...
+    async def apply_filters(self, filters: IQLQuery) -> None:
+        ...
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         return ViewExecutionResult(results=[], context={})
@@ -38,7 +39,8 @@ class BarView(MethodsBaseView):
         """
         return f"hello {city} in {year}"
 
-    async def apply_filters(self, filters: IQLQuery) -> None: ...
+    async def apply_filters(self, filters: IQLQuery) -> None:
+        ...
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         return ViewExecutionResult(results=[], context={})

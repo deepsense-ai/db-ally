@@ -24,7 +24,8 @@ class MockViewBase(BaseStructuredView):
     def list_filters(self) -> List[ExposedFunction]:
         return []
 
-    async def apply_filters(self, filters: IQLQuery) -> None: ...
+    async def apply_filters(self, filters: IQLQuery) -> None:
+        ...
 
     def execute(self, dry_run=False) -> ViewExecutionResult:
         return ViewExecutionResult(results=[], context={})

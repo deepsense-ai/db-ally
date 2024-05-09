@@ -25,7 +25,8 @@ class MockMethodsBase(MethodsBaseView):
     def method_bar(self, cities: List[str], year: Literal["2023", "2024"], pairs: List[Tuple[str, int]]) -> str:
         return f"hello {cities} in {year} of {pairs}"
 
-    async def apply_filters(self, filters: IQLQuery) -> None: ...
+    async def apply_filters(self, filters: IQLQuery) -> None:
+        ...
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         return ViewExecutionResult(results=[], context={})
