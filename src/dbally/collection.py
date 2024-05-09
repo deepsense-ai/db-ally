@@ -183,7 +183,7 @@ class Collection:
             IQLError: if incorrect IQL was generated `n_retries` amount of times.
             ValueError: if incorrect IQL was generated `n_retries` amount of times.
         """
-        start_time = time.time()
+        start_time = time.monotonic()
 
         event_tracker = EventTracker.initialize_with_handlers(self._event_handlers)
 
@@ -201,7 +201,7 @@ class Collection:
 
         view = self.get(selected_view)
 
-        start_time_view = time.time()
+        start_time_view = time.monotonic()
         view_result = await view.ask(
             query=question,
             llm_client=self._llm_client,
@@ -209,7 +209,7 @@ class Collection:
             n_retries=self.n_retries,
             dry_run=dry_run,
         )
-        end_time_view = time.time()
+        end_time_view = time.monotonic()
 
         textual_response = None
         if not dry_run and return_natural_response:
@@ -218,7 +218,7 @@ class Collection:
         result = ExecutionResult(
             results=view_result.results,
             context=view_result.context,
-            execution_time=time.time() - start_time,
+            execution_time=time.monotonic() - start_time,
             execution_time_view=end_time_view - start_time_view,
             view_name=selected_view,
             textual_response=textual_response,

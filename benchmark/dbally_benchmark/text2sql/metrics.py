@@ -21,9 +21,9 @@ class _ExecutionResult:
 
 def _run_query(query: str, engine: Engine) -> _ExecutionResult:
     with engine.connect() as connection:
-        start_time = time.time()
+        start_time = time.monotonic()
         rows = connection.execute(text(query)).fetchall()
-        execution_time = time.time() - start_time
+        execution_time = time.monotonic() - start_time
 
     return _ExecutionResult(
         results=[dict(row._mapping) for row in rows],  # pylint: disable=protected-access
