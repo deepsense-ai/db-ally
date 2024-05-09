@@ -5,8 +5,8 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate
 from dbally.llm_client.base import LLMClient
 from dbally.prompts import PromptBuilder
-from dbally.views.view_selector_prompt_template import default_view_selector_template
 from dbally.view_selection.base import ViewSelector
+from dbally.views.view_selector_prompt_template import default_view_selector_template
 
 
 class LLMViewSelector(ViewSelector):

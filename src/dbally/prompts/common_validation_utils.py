@@ -1,6 +1,5 @@
 import re
-from typing import List, Set, Tuple, Dict
-
+from typing import Dict, List, Set, Tuple
 
 ChatFormat = Tuple[Dict[str, str], ...]
 
