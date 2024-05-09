@@ -139,13 +139,13 @@ def build_graph(recruitment_db: Collection):
     tool_node = ToolNode(tools)
     assistant_node = Assistant(runnable)
 
-    graph = StateGraph(State)
-    graph.add_node("assistant", assistant_node)
-    graph.add_node("action", tool_node)
-    graph.set_entry_point("assistant")
+    builder = StateGraph(State)
+    builder.add_node("assistant", assistant_node)
+    builder.add_node("action", tool_node)
+    builder.set_entry_point("assistant")
 
-    graph.add_edge("action", "assistant")
-    graph.add_conditional_edges(
+    builder.add_edge("action", "assistant")
+    builder.add_conditional_edges(
         "assistant",
         tools_condition,
         # "action" calls one of our tools. END causes the graph to terminate (and respond to the user)
@@ -153,9 +153,9 @@ def build_graph(recruitment_db: Collection):
     )
 
     memory = SqliteSaver.from_conn_string(":memory:")
-    app = graph.compile(checkpointer=memory)
+    graph = builder.compile(checkpointer=memory)
 
-    return app
+    return graph
 
 def main():
     db_engine = set_database()
