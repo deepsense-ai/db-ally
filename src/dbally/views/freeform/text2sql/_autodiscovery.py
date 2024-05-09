@@ -144,6 +144,17 @@ class AutoDiscoveryBuilderWithLLM(_AutoDiscoveryBuilderBase):
         self._description_extraction = _LLMSummaryDescriptionExtraction(example_rows_cnt)
         return self
 
+    def suggest_similarity_indexes(self) -> Self:
+        """
+        Enable the suggestion of similarity indexes for the columns in the tables.
+        The suggestion is based on the generated table descriptions and example values from the column.
+
+        Returns:
+            The builder instance.
+        """
+        self._similarity_enabled = True
+        return self
+
 
 class AutoDiscoveryBuilder(_AutoDiscoveryBuilderBase):
     """
@@ -295,7 +306,11 @@ class _Text2SQLAutoDiscovery:
                 template=similarity_template,
                 fmt={"table_summary": description, "column_name": column.name, "values": example_values},
             )
-            similarity[column_name] = similarity_type
+
+            similarity_type = similarity_type.upper()
+
+            if similarity_type in ["SEMANTIC", "TRIGRAM"]:
+                similarity[column_name] = similarity_type
 
         return similarity
 

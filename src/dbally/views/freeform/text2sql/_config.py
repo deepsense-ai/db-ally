@@ -1,8 +1,18 @@
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Iterable, Optional, Tuple
 
 import yaml
+
+
+class Text2SQLSimilarityType(str, Enum):
+    """
+    Enum for the types of similarity indexes supported by Text2SQL.
+    """
+
+    SEMANTIC = "SEMANTIC"
+    TRIGRAM = "TRIGRAM"
 
 
 @dataclass
@@ -13,7 +23,7 @@ class Text2SQLTableConfig:
 
     ddl: str
     description: Optional[str] = None
-    similarity: Optional[Dict[str, str]] = None
+    similarity: Optional[Dict[str, Text2SQLSimilarityType]] = None
 
 
 class Text2SQLConfig:
@@ -48,3 +58,15 @@ class Text2SQLConfig:
         """
         data = {table_name: table.__dict__ for table_name, table in self.tables.items()}
         file_path.write_text(yaml.dump(data))
+
+    def iterate_similarity_indexes(self) -> Iterable[Tuple[str, str, Text2SQLSimilarityType]]:
+        """
+        Iterate over the similarity indexes in the configuration.
+
+        Yields:
+            The table name, column name, and similarity type.
+        """
+        for table_name, table in self.tables.items():
+            if table.similarity:
+                for column_name, similarity_type in table.similarity.items():
+                    yield table_name, column_name, similarity_type
