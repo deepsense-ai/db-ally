@@ -41,7 +41,7 @@ class PromptTemplate:
     Class for prompt templates
 
     Attributes:
-        response_format: Optional argument used in the OpenAI API - used to force json output
+        response_format: Optional argument for OpenAI Turbo models - may be used to force json output
         llm_response_parser: Function parsing the LLM response into IQL
     """
 

@@ -27,10 +27,12 @@ text2sql_prompt = PromptTemplate(
             "  - name: the name of the parameter\n"
             "  - value: the value of the parameter\n"
             "  - table: the table the parameter is used with (if any)\n"
-            "  - column: the column the parameter is compared to (if any)\n",
+            "  - column: the column the parameter is compared to (if any)\n\n"
+            "Respond ONLY with the raw JSON response. Don't include any additional text or characters.",
         },
         {"role": "user", "content": "{question}"},
     ),
+    response_format={"type": "json_object"},
 )
 
 

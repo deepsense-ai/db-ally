@@ -36,7 +36,7 @@ async def main():
         for _, table_config in config.tables.items():
             connection.execute(sqlalchemy.text(table_config.ddl))
 
-    llm_client = OpenAIClient("gpt-4")
+    llm_client = OpenAIClient()
     collection = dbally.create_collection("text2sql", llm_client=llm_client, event_handlers=[CLIEventHandler()])
     collection.add(Text2SQLFreeformView, lambda: Text2SQLFreeformView(engine, config))
 
