@@ -5,11 +5,11 @@ import pandas as pd
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
-from dbally.data_models.prompts.nl_responder_prompt_template import (
+from dbally.nl_responder.nl_responder_prompt_template import (
     NLResponderPromptTemplate,
     default_nl_responder_template,
 )
-from dbally.data_models.prompts.query_explainer_prompt_template import (
+from dbally.nl_responder.query_explainer_prompt_template import (
     QueryExplainerPromptTemplate,
     default_query_explainer_template,
 )

@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Dict, Optional, Union
 
-from dbally.data_models.prompts.prompt_template import ChatFormat, PromptTemplate
+from dbally.prompts.prompt_template import PromptTemplate
+from dbally.prompts import ChatFormat
 
 if TYPE_CHECKING:
     from transformers.tokenization_utils import PreTrainedTokenizer

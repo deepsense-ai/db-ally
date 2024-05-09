@@ -1,7 +1,9 @@
 from typing import Callable, Dict, Optional
 
-from dbally.data_models.prompts.common_validation_utils import _check_prompt_variables
-from dbally.data_models.prompts.prompt_template import ChatFormat, PromptTemplate
+from dbally.prompts.common_validation_utils import _check_prompt_variables
+
+from dbally.prompts.prompt_template import PromptTemplate
+from dbally.prompts import ChatFormat
 
 
 class NLResponderPromptTemplate(PromptTemplate):

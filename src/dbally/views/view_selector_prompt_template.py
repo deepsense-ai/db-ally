@@ -1,8 +1,9 @@
 import json
 from typing import Callable, Dict, Optional
 
-from dbally.data_models.prompts.common_validation_utils import _check_prompt_variables
-from dbally.data_models.prompts.prompt_template import ChatFormat, PromptTemplate
+from dbally.prompts import ChatFormat
+from dbally.prompts.common_validation_utils import _check_prompt_variables
+from dbally.prompts.prompt_template import PromptTemplate
 
 
 class ViewSelectorPromptTemplate(PromptTemplate):

@@ -5,8 +5,8 @@ from sqlalchemy import text
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
-from dbally.data_models.prompts import PromptTemplate
 from dbally.llm_client.base import LLMClient
+from dbally.prompts.prompt_template import PromptTemplate
 from dbally.views.base import BaseView
 
 from ._config import Text2SQLConfig
