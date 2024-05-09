@@ -1,9 +1,9 @@
 import pytest
 
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate
-from dbally.prompts import PromptTemplateError, ChatFormat
-from dbally.prompts.prompt_template import PromptTemplate
+from dbally.prompts import ChatFormat, PromptTemplateError
 from dbally.prompts.prompt_builder import PromptBuilder
+from dbally.prompts.prompt_template import PromptTemplate
 
 
 @pytest.fixture()
