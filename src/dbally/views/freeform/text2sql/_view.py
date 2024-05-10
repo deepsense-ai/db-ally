@@ -56,7 +56,7 @@ class Text2SQLFreeformView(BaseView):
             event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
-            llm_options: The options to use for the LLM client.
+            llm_options: options to use for the LLM client.
 
         Returns:
             The result of the query.

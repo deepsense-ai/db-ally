@@ -41,7 +41,7 @@ class LLMClient(abc.ABC):
             template: Prompt template in system/user/assistant openAI format.
             fmt: Dictionary with formatting.
             event_tracker: Event store used to audit the generation process.
-            options: The options to use for the LLM client.
+            options: options to use for the LLM client.
 
         Returns:
             Text response from LLM.
