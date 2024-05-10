@@ -1,8 +1,7 @@
 import pytest
 
-from dbally.data_models.prompts.iql_prompt_template import IQLPromptTemplate
-from dbally.data_models.prompts.prompt_template import ChatFormat, PromptTemplate, PromptTemplateError
-from dbally.prompts.prompt_builder import PromptBuilder
+from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate
+from dbally.prompts import ChatFormat, PromptBuilder, PromptTemplate, PromptTemplateError
 
 
 @pytest.fixture()

@@ -7,9 +7,9 @@ Collection of mock objects for unit tests.
 from typing import List, Tuple
 from unittest.mock import create_autospec
 
-from dbally.data_models.prompts.iql_prompt_template import IQLPromptTemplate, default_iql_template
 from dbally.iql import IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
+from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template
 from dbally.llm_client.base import LLMClient
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector

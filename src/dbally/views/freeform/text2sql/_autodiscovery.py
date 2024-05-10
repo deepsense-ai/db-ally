@@ -4,8 +4,8 @@ from sqlalchemy import Column, Connection, Engine, MetaData, Table
 from sqlalchemy.sql.ddl import CreateTable
 from typing_extensions import Self
 
-from dbally.data_models.prompts import PromptTemplate
 from dbally.llm_client.base import LLMClient
+from dbally.prompts import PromptTemplate
 
 from ._config import Text2SQLConfig, Text2SQLTableConfig
 

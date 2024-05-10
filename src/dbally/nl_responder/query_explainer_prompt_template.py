@@ -1,7 +1,6 @@
 from typing import Callable, Dict, Optional
 
-from dbally.data_models.prompts.common_validation_utils import _check_prompt_variables
-from dbally.data_models.prompts.prompt_template import ChatFormat, PromptTemplate
+from dbally.prompts import ChatFormat, PromptTemplate, check_prompt_variables
 
 
 class QueryExplainerPromptTemplate(PromptTemplate):
@@ -22,7 +21,7 @@ class QueryExplainerPromptTemplate(PromptTemplate):
         llm_response_parser: Callable = lambda x: x,
     ) -> None:
         super().__init__(chat, response_format, llm_response_parser)
-        self.chat = _check_prompt_variables(chat, {"question", "query", "number_of_results"})
+        self.chat = check_prompt_variables(chat, {"question", "query", "number_of_results"})
 
 
 default_query_explainer_template = QueryExplainerPromptTemplate(
