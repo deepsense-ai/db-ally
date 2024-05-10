@@ -5,7 +5,7 @@ from sqlalchemy.sql.ddl import CreateTable
 from typing_extensions import Self
 
 from dbally.llm_client.base import LLMClient
-from dbally.prompts.prompt_template import PromptTemplate
+from dbally.prompts import PromptTemplate
 
 from ._config import Text2SQLConfig, Text2SQLTableConfig
 
