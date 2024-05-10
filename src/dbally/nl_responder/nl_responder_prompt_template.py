@@ -1,7 +1,7 @@
 from typing import Callable, Dict, Optional
 
 from dbally.prompts import ChatFormat
-from dbally.prompts.common_validation_utils import _check_prompt_variables
+from dbally.prompts.common_validation_utils import check_prompt_variables
 from dbally.prompts.prompt_template import PromptTemplate
 
 
@@ -26,7 +26,7 @@ class NLResponderPromptTemplate(PromptTemplate):
         """
 
         super().__init__(chat, response_format, llm_response_parser)
-        self.chat = _check_prompt_variables(chat, {"rows", "question"})
+        self.chat = check_prompt_variables(chat, {"rows", "question"})
 
 
 default_nl_responder_template = NLResponderPromptTemplate(

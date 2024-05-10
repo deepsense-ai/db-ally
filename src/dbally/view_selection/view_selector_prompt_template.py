@@ -2,7 +2,7 @@ import json
 from typing import Callable, Dict, Optional
 
 from dbally.prompts import ChatFormat
-from dbally.prompts.common_validation_utils import _check_prompt_variables
+from dbally.prompts.common_validation_utils import check_prompt_variables
 from dbally.prompts.prompt_template import PromptTemplate
 
 
@@ -18,7 +18,7 @@ class ViewSelectorPromptTemplate(PromptTemplate):
         llm_response_parser: Callable = lambda x: x,
     ):
         super().__init__(chat, response_format, llm_response_parser)
-        self.chat = _check_prompt_variables(chat, {"views"})
+        self.chat = check_prompt_variables(chat, {"views"})
 
 
 def _convert_llm_json_response_to_selected_view(llm_response_json: str) -> str:

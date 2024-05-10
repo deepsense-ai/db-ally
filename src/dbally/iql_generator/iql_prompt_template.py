@@ -1,7 +1,7 @@
 from typing import Callable, Dict, Optional
 
 from dbally.prompts import ChatFormat
-from dbally.prompts.common_validation_utils import _check_prompt_variables
+from dbally.prompts.common_validation_utils import check_prompt_variables
 from dbally.prompts.prompt_template import PromptTemplate
 from dbally.utils.errors import UnsupportedQueryError
 
@@ -18,7 +18,7 @@ class IQLPromptTemplate(PromptTemplate):
         llm_response_parser: Callable = lambda x: x,
     ):
         super().__init__(chat, response_format, llm_response_parser)
-        self.chat = _check_prompt_variables(chat, {"filters", "question"})
+        self.chat = check_prompt_variables(chat, {"filters", "question"})
 
 
 def _validate_iql_response(llm_response: str) -> str:
