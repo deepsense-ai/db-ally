@@ -1,8 +1,6 @@
 from typing import Callable, Dict, Optional
 
-from dbally.prompts import ChatFormat
-from dbally.prompts.common_validation_utils import check_prompt_variables
-from dbally.prompts.prompt_template import PromptTemplate
+from dbally.prompts import ChatFormat, PromptTemplate, check_prompt_variables
 from dbally.utils.errors import UnsupportedQueryError
 
 

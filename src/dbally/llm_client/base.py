@@ -7,8 +7,7 @@ from typing import Dict, List, Optional, Union
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import LLMEvent
 from dbally.data_models.llm_options import LLMOptions
-from dbally.prompts import ChatFormat
-from dbally.prompts.prompt_builder import PromptBuilder, PromptTemplate
+from dbally.prompts import ChatFormat, PromptBuilder, PromptTemplate
 
 
 class LLMClient(abc.ABC):
