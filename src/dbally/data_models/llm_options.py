@@ -1,7 +1,7 @@
 from dataclasses import asdict, dataclass
 from typing import List, Optional, Union
 
-from openai._types import NOT_GIVEN, NotGiven
+from openai import NOT_GIVEN, NotGiven
 
 
 @dataclass
