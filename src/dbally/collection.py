@@ -8,6 +8,7 @@ from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import RequestEnd, RequestStart
 from dbally.data_models.execution_result import ExecutionResult
+from dbally.data_models.llm_options import LLMOptions
 from dbally.llm_client.base import LLMClient
 from dbally.nl_responder.nl_responder import NLResponder
 from dbally.similarity.index import AbstractSimilarityIndex
@@ -157,7 +158,13 @@ class Collection:
             name: (textwrap.dedent(view.__doc__).strip() if view.__doc__ else "") for name, view in self._views.items()
         }
 
-    async def ask(self, question: str, dry_run: bool = False, return_natural_response: bool = False) -> ExecutionResult:
+    async def ask(
+        self,
+        question: str,
+        dry_run: bool = False,
+        return_natural_response: bool = False,
+        llm_options: Optional[LLMOptions] = None,
+    ) -> ExecutionResult:
         """
         Ask question in a text form and retrieve the answer based on the available views.
 
@@ -174,6 +181,7 @@ class Collection:
             dry_run: if True, only generate the query without executing it
             return_natural_response: if True (and dry_run is False as natural response requires query results),
                                      the natural response will be included in the answer
+            llm_options: The options to use for the LLM client.
 
         Returns:
             ExecutionResult object representing the result of the query execution.
@@ -208,6 +216,7 @@ class Collection:
             event_tracker=event_tracker,
             n_retries=self.n_retries,
             dry_run=dry_run,
+            llm_options=llm_options,
         )
         end_time_view = time.monotonic()
 

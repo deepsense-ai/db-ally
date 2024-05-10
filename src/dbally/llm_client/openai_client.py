@@ -17,13 +17,18 @@ class OpenAIClient(LLMClient):
         api_key: OpenAI's API key. If None OPENAI_API_KEY environment variable will be used
     """
 
-    def __init__(self, model_name: str = "gpt-3.5-turbo", api_key: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        model_name: str = "gpt-3.5-turbo",
+        api_key: Optional[str] = None,
+        default_options: Optional[LLMOptions] = None,
+    ) -> None:
         try:
             from openai import AsyncOpenAI  # pylint: disable=import-outside-toplevel
         except ImportError as exc:
             raise ImportError("You need to install openai package to use GPT models") from exc
 
-        super().__init__(model_name)
+        super().__init__(model_name=model_name, default_options=default_options)
         self._client = AsyncOpenAI(api_key=api_key)
 
     async def call(
@@ -52,7 +57,10 @@ class OpenAIClient(LLMClient):
             response_format = None
 
         response = await self._client.chat.completions.create(
-            messages=prompt, model=self.model_name, response_format=response_format, **options.dict()  # type: ignore
+            messages=prompt,
+            model=self.model_name,
+            response_format=response_format,
+            **options.dict(),  # type: ignore
         )
 
         event.completion_tokens = response.usage.completion_tokens

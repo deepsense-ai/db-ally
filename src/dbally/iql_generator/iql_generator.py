@@ -2,6 +2,7 @@ import copy
 from typing import Callable, List, Optional, Tuple, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
+from dbally.data_models.llm_options import LLMOptions
 from dbally.data_models.prompts.iql_prompt_template import IQLPromptTemplate, default_iql_template
 from dbally.llm_client.base import LLMClient
 from dbally.prompts.prompt_builder import PromptBuilder
@@ -49,6 +50,7 @@ class IQLGenerator:
         question: str,
         event_tracker: EventTracker,
         conversation: Optional[IQLPromptTemplate] = None,
+        llm_options: Optional[LLMOptions] = None,
     ) -> Tuple[str, IQLPromptTemplate]:
         """
         Uses LLM to generate IQL in text form
@@ -58,6 +60,7 @@ class IQLGenerator:
             filters: list of filters exposed by the view
             event_tracker: event store used to audit the generation process
             conversation: conversation to be continued
+            llm_options: options to use for the LLM client
 
         Returns:
             IQL - iql generated based on the user question
@@ -70,6 +73,7 @@ class IQLGenerator:
             template=template,
             fmt={"filters": filters_for_prompt, "question": question},
             event_tracker=event_tracker,
+            options=llm_options,
         )
 
         iql_filters = self._prompt_template.llm_response_parser(llm_response)

@@ -1,8 +1,9 @@
 import abc
-from typing import List
+from typing import List, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
+from dbally.data_models.llm_options import LLMOptions
 from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llm_client.base import LLMClient
@@ -30,7 +31,13 @@ class BaseStructuredView(BaseView):
         return IQLGenerator(llm_client=llm_client)
 
     async def ask(
-        self, query: str, llm_client: LLMClient, event_tracker: EventTracker, n_retries: int = 3, dry_run: bool = False
+        self,
+        query: str,
+        llm_client: LLMClient,
+        event_tracker: EventTracker,
+        n_retries: int = 3,
+        dry_run: bool = False,
+        llm_options: Optional[LLMOptions] = None,
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result. It generates the IQL query from the natural language query\
@@ -42,6 +49,7 @@ class BaseStructuredView(BaseView):
             event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
+            llm_options: The options to use for the LLM client.
 
         Returns:
             The result of the query.
@@ -50,7 +58,10 @@ class BaseStructuredView(BaseView):
         filter_list = self.list_filters()
 
         iql_filters, conversation = await iql_generator.generate_iql(
-            question=query, filters=filter_list, event_tracker=event_tracker
+            question=query,
+            filters=filter_list,
+            event_tracker=event_tracker,
+            llm_options=llm_options,
         )
 
         for _ in range(n_retries):
@@ -65,6 +76,7 @@ class BaseStructuredView(BaseView):
                     filters=filter_list,
                     event_tracker=event_tracker,
                     conversation=conversation,
+                    llm_options=llm_options,
                 )
                 continue
 

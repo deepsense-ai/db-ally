@@ -1,7 +1,9 @@
 import abc
+from typing import Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
+from dbally.data_models.llm_options import LLMOptions
 from dbally.llm_client.base import LLMClient
 
 
@@ -13,7 +15,13 @@ class BaseView(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     async def ask(
-        self, query: str, llm_client: LLMClient, event_tracker: EventTracker, n_retries: int = 3, dry_run: bool = False
+        self,
+        query: str,
+        llm_client: LLMClient,
+        event_tracker: EventTracker,
+        n_retries: int = 3,
+        dry_run: bool = False,
+        llm_options: Optional[LLMOptions] = None,
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result.
@@ -24,6 +32,7 @@ class BaseView(metaclass=abc.ABCMeta):
             event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
+            llm_options: The options to use for the LLM client.
 
         Returns:
             The result of the query.

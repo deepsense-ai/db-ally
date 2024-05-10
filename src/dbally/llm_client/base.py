@@ -2,7 +2,7 @@
 # pylint: disable=W9015,R0914
 
 import abc
-from typing import Dict, List, Optional, Union
+from typing import Dict, Optional, Union
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import LLMEvent
@@ -20,8 +20,9 @@ class LLMClient(abc.ABC):
     It constructs a prompt using the `PromptBuilder` instance and generates text using the `self.call` method.
     """
 
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, default_options: Optional[LLMOptions] = None):
         self.model_name = model_name
+        self._default_options = default_options or LLMOptions()
         self._prompt_builder = PromptBuilder(self.model_name)
 
     async def text_generation(  # pylint: disable=R0913
@@ -30,33 +31,22 @@ class LLMClient(abc.ABC):
         fmt: dict,
         *,
         event_tracker: Optional[EventTracker] = None,
-        frequency_penalty: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 128,
-        n: Optional[int] = 1,
-        presence_penalty: Optional[float] = 0.0,
-        seed: Optional[int] = None,
-        stop: Optional[Union[str, List[str]]] = None,
-        temperature: Optional[float] = 1.0,
-        top_p: Optional[float] = 1.0,
+        options: Optional[LLMOptions] = None,
     ) -> str:
         """
         For a given a PromptType and format dict creates a prompt and
         returns the response from LLM.
 
+        Args:
+            template: Prompt template in system/user/assistant openAI format.
+            fmt: Dictionary with formatting.
+            event_tracker: Event store used to audit the generation process.
+            options: The options to use for the LLM client.
+
         Returns:
             Text response from LLM.
         """
-
-        options = LLMOptions(
-            frequency_penalty=frequency_penalty,
-            max_tokens=max_tokens,
-            n=n,
-            presence_penalty=presence_penalty,
-            seed=seed,
-            stop=stop,
-            temperature=temperature,
-            top_p=top_p,
-        )
+        options = (self._default_options | options) if options else self._default_options
 
         prompt = self._prompt_builder.build(template, fmt)
 
