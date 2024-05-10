@@ -2,7 +2,7 @@ from typing import Callable, Dict, Optional
 
 from typing_extensions import Self
 
-from . import ChatFormat, PromptTemplateError
+from .common_validation_utils import ChatFormat, PromptTemplateError
 
 
 def _check_chat_order(chat: ChatFormat) -> ChatFormat:
