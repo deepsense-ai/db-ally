@@ -65,7 +65,12 @@ class LLMClient(Generic[LLMClientOptions], ABC):
 
         event_tracker = event_tracker or EventTracker()
         async with event_tracker.track_event(event) as span:
-            event.response = await self.call(prompt, template.response_format, options, event)
+            event.response = await self.call(
+                prompt=prompt,
+                response_format=template.response_format,
+                options=options,
+                event=event,
+            )
             span(event)
 
         return event.response
