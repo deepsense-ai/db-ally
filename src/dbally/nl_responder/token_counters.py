@@ -1,6 +1,6 @@
 from typing import Dict
 
-from dbally.data_models.prompts.common_validation_utils import ChatFormat
+from dbally.prompts import ChatFormat
 
 
 def count_tokens_for_openai(messages: ChatFormat, fmt: Dict[str, str], model: str) -> int:

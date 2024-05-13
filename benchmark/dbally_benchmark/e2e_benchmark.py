@@ -22,10 +22,10 @@ from sqlalchemy import create_engine
 
 import dbally
 from dbally.collection import Collection
-from dbally.data_models.prompts.iql_prompt_template import default_iql_template
-from dbally.data_models.prompts.view_selector_prompt_template import default_view_selector_template
+from dbally.iql_generator.iql_prompt_template import default_iql_template
 from dbally.llm_client.openai_client import OpenAIClient
 from dbally.utils.errors import NoViewFoundError, UnsupportedQueryError
+from dbally.view_selection.view_selector_prompt_template import default_view_selector_template
 
 
 async def _run_dbally_for_single_example(example: BIRDExample, collection: Collection) -> Text2SQLResult:

@@ -7,9 +7,9 @@ import sqlalchemy
 
 from dbally import decorators
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.prompts.iql_prompt_template import default_iql_template
 from dbally.iql import IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
+from dbally.iql_generator.iql_prompt_template import default_iql_template
 from dbally.views.methods_base import MethodsBaseView
 
 

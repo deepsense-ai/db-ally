@@ -8,7 +8,7 @@ from typing import Dict, Generic, Optional, Type, TypeVar, Union
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import LLMEvent
-from dbally.prompts.prompt_builder import ChatFormat, PromptBuilder, PromptTemplate
+from dbally.prompts import ChatFormat, PromptBuilder, PromptTemplate
 
 LLMClientOptions = TypeVar("LLMClientOptions")
 

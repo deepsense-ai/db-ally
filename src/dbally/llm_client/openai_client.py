@@ -5,7 +5,7 @@ from openai import NOT_GIVEN, NotGiven
 
 from dbally.data_models.audit import LLMEvent
 from dbally.llm_client.base import LLMClient
-from dbally.prompts.prompt_builder import ChatFormat
+from dbally.prompts import ChatFormat
 
 from .base import LLMOptions
 
