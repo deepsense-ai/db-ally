@@ -2,9 +2,8 @@ import copy
 from typing import Callable, List, Optional, Tuple, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.llm_options import LLMOptions
 from dbally.data_models.prompts.iql_prompt_template import IQLPromptTemplate, default_iql_template
-from dbally.llm_client.base import LLMClient
+from dbally.llm_client.base import LLMClient, LLMOptions
 from dbally.prompts.prompt_builder import PromptBuilder
 from dbally.views.exposed_functions import ExposedFunction
 

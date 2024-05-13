@@ -3,8 +3,7 @@ from typing import Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
-from dbally.data_models.llm_options import LLMOptions
-from dbally.llm_client.base import LLMClient
+from dbally.llm_client.base import LLMClient, LLMOptions
 
 
 class BaseView(metaclass=abc.ABCMeta):

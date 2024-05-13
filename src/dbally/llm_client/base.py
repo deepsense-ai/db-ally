@@ -2,27 +2,38 @@
 # pylint: disable=W9015,R0914
 
 import abc
-from typing import Dict, Optional, Union
+from abc import ABC
+from dataclasses import asdict, dataclass
+from typing import Dict, Generic, Optional, Type, TypeVar, Union
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import LLMEvent
-from dbally.data_models.llm_options import LLMOptions
 from dbally.prompts.prompt_builder import ChatFormat, PromptBuilder, PromptTemplate
 
+LLMClientOptions = TypeVar("LLMClientOptions")
 
-class LLMClient(abc.ABC):
+
+@dataclass
+class LLMOptions(ABC):
+    """
+    Abstract dataclass that represents all available LLM call options.
+    """
+
+    dict = asdict
+
+
+class LLMClient(Generic[LLMClientOptions], ABC):
     """
     Abstract client for interaction with LLM.
 
-    It accepts parameters including the template, format, event tracker,
-    and optional generation parameters like frequency_penalty, max_tokens, and temperature
-    (the full list of options is provided by the [`LLMOptions` class][dbally.data_models.llm_options.LLMOptions]).
     It constructs a prompt using the `PromptBuilder` instance and generates text using the `self.call` method.
     """
 
-    def __init__(self, model_name: str, default_options: Optional[LLMOptions] = None):
+    _options_cls: Type[LLMClientOptions]
+
+    def __init__(self, model_name: str, default_options: Optional[LLMClientOptions] = None) -> None:
         self.model_name = model_name
-        self._default_options = default_options or LLMOptions()
+        self.default_options = default_options or self._options_cls()
         self._prompt_builder = PromptBuilder(self.model_name)
 
     async def text_generation(  # pylint: disable=R0913
@@ -31,7 +42,7 @@ class LLMClient(abc.ABC):
         fmt: dict,
         *,
         event_tracker: Optional[EventTracker] = None,
-        options: Optional[LLMOptions] = None,
+        options: Optional[LLMClientOptions] = None,
     ) -> str:
         """
         For a given a PromptType and format dict creates a prompt and
@@ -46,7 +57,7 @@ class LLMClient(abc.ABC):
         Returns:
             Text response from LLM.
         """
-        options = (self._default_options | options) if options else self._default_options
+        options = options if options else self.default_options
 
         prompt = self._prompt_builder.build(template, fmt)
 

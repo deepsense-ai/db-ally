@@ -3,10 +3,9 @@ from typing import List, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
-from dbally.data_models.llm_options import LLMOptions
 from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.llm_client.base import LLMClient
+from dbally.llm_client.base import LLMClient, LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
 
 from .base import BaseView

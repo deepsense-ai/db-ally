@@ -2,9 +2,8 @@ import copy
 from typing import Callable, Dict, Optional
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.llm_options import LLMOptions
 from dbally.data_models.prompts import IQLPromptTemplate, default_view_selector_template
-from dbally.llm_client.base import LLMClient
+from dbally.llm_client.base import LLMClient, LLMOptions
 from dbally.prompts import PromptBuilder
 from dbally.view_selection.base import ViewSelector
 

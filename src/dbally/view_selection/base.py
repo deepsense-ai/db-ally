@@ -2,7 +2,7 @@ import abc
 from typing import Dict, Optional
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.llm_options import LLMOptions
+from dbally.llm_client.base import LLMOptions
 
 
 class ViewSelector(abc.ABC):
