@@ -1,6 +1,6 @@
 import socket
 from getpass import getuser
-from typing import Union
+from typing import Optional, Union
 
 from langsmith.client import Client
 from langsmith.run_trees import RunTree
@@ -19,7 +19,7 @@ class LangSmithEventHandler(EventHandler[RunTree, RunTree]):
         [How-To: Log db-ally runs to LangSmith](../../how-to/log_runs_to_langsmith.md)
     """
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: Optional[str] = None):
         self._client = Client(api_key=api_key)
 
     async def request_start(self, user_request: RequestStart) -> RunTree:
@@ -88,5 +88,4 @@ class LangSmithEventHandler(EventHandler[RunTree, RunTree]):
             request_context: Optional context passed from request_start method
         """
         request_context.end(outputs={"sql": output.result.context["sql"]})
-        res = request_context.post(exclude_child_runs=False)
-        res.result()
+        request_context.post(exclude_child_runs=False)
