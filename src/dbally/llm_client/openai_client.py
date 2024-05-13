@@ -33,8 +33,8 @@ class OpenAIClient(LLMClient[OpenAIOptions]):
     particularly for the GPT models.
 
     Args:
-        model_name: Name of the [OpenAI's model](https://platform.openai.com/docs/models)\
-            to be used, default is "gpt-3.5-turbo".
+        model_name: Name of the [OpenAI's model](https://platform.openai.com/docs/models) to be used,\
+            default is "gpt-3.5-turbo".
         api_key: OpenAI's API key. If None OPENAI_API_KEY environment variable will be used
         default_options: Default options to be used in the LLM calls.
     """
