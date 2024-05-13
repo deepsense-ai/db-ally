@@ -4,13 +4,14 @@
 Collection of mock objects for unit tests.
 """
 
+from dataclasses import dataclass
 from typing import List, Tuple
 from unittest.mock import create_autospec
 
 from dbally.iql import IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template
-from dbally.llm_client.base import LLMClient
+from dbally.llm_client.base import LLMClient, LLMOptions
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.structured import BaseStructuredView, ExposedFunction, ViewExecutionResult
@@ -60,7 +61,14 @@ class MockSimilarityIndex(AbstractSimilarityIndex):
         return text
 
 
-class MockLLMClient(LLMClient):
+@dataclass
+class MockLLMOptions(LLMOptions):
+    mock_property: int
+
+
+class MockLLMClient(LLMClient[MockLLMOptions]):
+    _options_cls = MockLLMOptions
+
     # TODO: Start calling super().__init__ and remove the pyling comment below
     # as soon as the base class is refactored to not have PromptBuilder initialization
     # hardcoded in its constructor.

@@ -1,11 +1,10 @@
-from dataclasses import dataclass
 from unittest.mock import ANY, AsyncMock, Mock, call
 
 import pytest
 
 from dbally import create_collection
-from dbally.llm_client.base import LLMClient, LLMOptions
-from tests.unit.mocks import MockViewBase
+from dbally.llm_client.base import LLMClient
+from tests.unit.mocks import MockLLMOptions, MockViewBase
 
 
 class MockView1(MockViewBase):
@@ -16,12 +15,9 @@ class MockView2(MockViewBase):
     ...
 
 
-@dataclass
-class MockLLMOptions(LLMOptions):
-    mock_property: int
-
-
 class MockLLMClient(LLMClient[MockLLMOptions]):
+    _options_cls = MockLLMOptions
+
     # TODO: Start calling super().__init__ and remove the pyling comment below
     # as soon as the base class is refactored to not have PromptBuilder initialization
     # hardcoded in its constructor.
