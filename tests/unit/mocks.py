@@ -63,22 +63,14 @@ class MockSimilarityIndex(AbstractSimilarityIndex):
 
 @dataclass
 class MockLLMOptions(LLMOptions):
-    mock_property: int
+    mock_property: int = 0
 
 
 class MockLLMClient(LLMClient[MockLLMOptions]):
     _options_cls = MockLLMOptions
 
-    # TODO: Start calling super().__init__ and remove the pyling comment below
-    # as soon as the base class is refactored to not have PromptBuilder initialization
-    # hardcoded in its constructor.
-    # See: DBALLY-105
-    # pylint: disable=super-init-not-called
     def __init__(self, *_, **__) -> None:
-        self.model_name = "mock model"
-
-    async def text_generation(self, *_, **__) -> str:
-        return "mock response"
+        super().__init__("gpt-4-mock")
 
     async def call(self, *_, **__) -> str:
         return "mock response"
