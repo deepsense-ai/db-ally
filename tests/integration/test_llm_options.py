@@ -37,7 +37,7 @@ class MockLLMClient(LLMClient[MockLLMOptions]):
 
 
 @pytest.mark.asyncio
-async def test_llm_options_propation():
+async def test_llm_options_propagation():
     default_options = MockLLMOptions(mock_property=1)
     custom_options = MockLLMOptions(mock_property=2)
     llm_client = MockLLMClient(default_options=default_options)
