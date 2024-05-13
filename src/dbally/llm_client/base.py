@@ -4,6 +4,7 @@
 import abc
 from abc import ABC
 from dataclasses import asdict, dataclass
+from functools import cached_property
 from typing import Dict, Generic, Optional, Type, TypeVar, Union
 
 from dbally.audit.event_tracker import EventTracker
@@ -34,11 +35,17 @@ class LLMClient(Generic[LLMClientOptions], ABC):
     def __init__(self, model_name: str, default_options: Optional[LLMClientOptions] = None) -> None:
         self.model_name = model_name
         self.default_options = default_options or self._options_cls()
-        self._prompt_builder = PromptBuilder(self.model_name)
 
     def __init_subclass__(cls) -> None:
         if not hasattr(cls, "_options_cls"):
             raise TypeError(f"Class {cls.__name__} is missing the '_options_cls' attribute")
+
+    @cached_property
+    def _prompt_builder(self) -> PromptBuilder:
+        """
+        Prompt builder used to construct final prompts for the LLM.
+        """
+        return PromptBuilder()
 
     async def text_generation(  # pylint: disable=R0913
         self,
