@@ -3,7 +3,7 @@ from typing import Callable, Dict, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate
-from dbally.llm_client.base import LLMClient
+from dbally.llm_client.base import LLMClient, LLMOptions
 from dbally.prompts import PromptBuilder
 from dbally.view_selection.base import ViewSelector
 from dbally.view_selection.view_selector_prompt_template import default_view_selector_template
@@ -40,7 +40,13 @@ class LLMViewSelector(ViewSelector):
         self._prompt_builder = prompt_builder or PromptBuilder()
         self._promptify_views = promptify_views or _promptify_views
 
-    async def select_view(self, question: str, views: Dict[str, str], event_tracker: EventTracker) -> str:
+    async def select_view(
+        self,
+        question: str,
+        views: Dict[str, str],
+        event_tracker: EventTracker,
+        llm_options: Optional[LLMOptions] = None,
+    ) -> str:
         """
         Based on user question and list of available views select the most relevant one by prompting LLM.
 
@@ -48,6 +54,7 @@ class LLMViewSelector(ViewSelector):
             question: user question asked in the natural language e.g "Do we have any data scientists?"
             views: dictionary of available view names with corresponding descriptions.
             event_tracker: event tracker used to audit the selection process.
+            llm_options: options to use for the LLM client.
 
         Returns:
             The most relevant view name.
@@ -56,7 +63,10 @@ class LLMViewSelector(ViewSelector):
         views_for_prompt = self._promptify_views(views)
 
         llm_response = await self._llm_client.text_generation(
-            self._prompt_template, fmt={"views": views_for_prompt, "question": question}, event_tracker=event_tracker
+            template=self._prompt_template,
+            fmt={"views": views_for_prompt, "question": question},
+            event_tracker=event_tracker,
+            options=llm_options,
         )
         selected_view = self._prompt_template.llm_response_parser(llm_response)
         return selected_view
@@ -67,6 +77,7 @@ def _promptify_views(views: Dict[str, str]) -> str:
     Formats views for prompt
 
     Args:
+        views: dictionary of available view names with corresponding descriptions.
 
     Returns:
         views_for_prompt: views formatted for prompt

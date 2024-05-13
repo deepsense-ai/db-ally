@@ -1,11 +1,11 @@
-from typing import Iterable, Tuple
+from typing import Iterable, Optional, Tuple
 
 import sqlalchemy
 from sqlalchemy import text
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
-from dbally.llm_client.base import LLMClient
+from dbally.llm_client.base import LLMClient, LLMOptions
 from dbally.prompts import PromptTemplate
 from dbally.views.base import BaseView
 
@@ -37,7 +37,13 @@ class Text2SQLFreeformView(BaseView):
         self._config = config
 
     async def ask(
-        self, query: str, llm_client: LLMClient, event_tracker: EventTracker, n_retries: int = 3, dry_run: bool = False
+        self,
+        query: str,
+        llm_client: LLMClient,
+        event_tracker: EventTracker,
+        n_retries: int = 3,
+        dry_run: bool = False,
+        llm_options: Optional[LLMOptions] = None,
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result. It generates the SQL query from the natural language query and
@@ -49,6 +55,7 @@ class Text2SQLFreeformView(BaseView):
             event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
+            llm_options: options to use for the LLM client.
 
         Returns:
             The result of the query.
@@ -65,7 +72,13 @@ class Text2SQLFreeformView(BaseView):
             # We want to catch all exceptions to retry the process.
             # pylint: disable=broad-except
             try:
-                sql, conversation = await self._generate_sql(query, conversation, llm_client, event_tracker)
+                sql, conversation = await self._generate_sql(
+                    query=query,
+                    conversation=conversation,
+                    llm_client=llm_client,
+                    event_tracker=event_tracker,
+                    llm_options=llm_options,
+                )
 
                 if dry_run:
                     return ViewExecutionResult(results=[], context={"sql": sql})
@@ -90,12 +103,18 @@ class Text2SQLFreeformView(BaseView):
         )
 
     async def _generate_sql(
-        self, query: str, conversation: PromptTemplate, llm_client: LLMClient, event_tracker: EventTracker
+        self,
+        query: str,
+        conversation: PromptTemplate,
+        llm_client: LLMClient,
+        event_tracker: EventTracker,
+        llm_options: Optional[LLMOptions] = None,
     ) -> Tuple[str, PromptTemplate]:
         response = await llm_client.text_generation(
             template=conversation,
             fmt={"tables": self._get_tables_context(), "dialect": self._engine.dialect.name, "question": query},
             event_tracker=event_tracker,
+            options=llm_options,
         )
 
         conversation = conversation.add_assistant_message(response)

@@ -2,27 +2,43 @@
 # pylint: disable=W9015,R0914
 
 import abc
-from typing import Dict, List, Optional, Union
+from abc import ABC
+from dataclasses import asdict, dataclass
+from typing import Dict, Generic, Optional, Type, TypeVar, Union
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import LLMEvent
-from dbally.data_models.llm_options import LLMOptions
 from dbally.prompts import ChatFormat, PromptBuilder, PromptTemplate
 
+LLMClientOptions = TypeVar("LLMClientOptions")
 
-class LLMClient(abc.ABC):
+
+@dataclass
+class LLMOptions(ABC):
+    """
+    Abstract dataclass that represents all available LLM call options.
+    """
+
+    dict = asdict
+
+
+class LLMClient(Generic[LLMClientOptions], ABC):
     """
     Abstract client for interaction with LLM.
 
-    It accepts parameters including the template, format, event tracker,
-    and optional generation parameters like frequency_penalty, max_tokens, and temperature
-    (the full list of options is provided by the [`LLMOptions` class][dbally.data_models.llm_options.LLMOptions]).
     It constructs a prompt using the `PromptBuilder` instance and generates text using the `self.call` method.
     """
 
-    def __init__(self, model_name: str):
+    _options_cls: Type[LLMClientOptions]
+
+    def __init__(self, model_name: str, default_options: Optional[LLMClientOptions] = None) -> None:
         self.model_name = model_name
+        self.default_options = default_options or self._options_cls()
         self._prompt_builder = PromptBuilder(self.model_name)
+
+    def __init_subclass__(cls) -> None:
+        if not hasattr(cls, "_options_cls"):
+            raise TypeError(f"Class {cls.__name__} is missing the '_options_cls' attribute")
 
     async def text_generation(  # pylint: disable=R0913
         self,
@@ -30,33 +46,22 @@ class LLMClient(abc.ABC):
         fmt: dict,
         *,
         event_tracker: Optional[EventTracker] = None,
-        frequency_penalty: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 128,
-        n: Optional[int] = 1,
-        presence_penalty: Optional[float] = 0.0,
-        seed: Optional[int] = None,
-        stop: Optional[Union[str, List[str]]] = None,
-        temperature: Optional[float] = 1.0,
-        top_p: Optional[float] = 1.0,
+        options: Optional[LLMClientOptions] = None,
     ) -> str:
         """
         For a given a PromptType and format dict creates a prompt and
         returns the response from LLM.
 
+        Args:
+            template: Prompt template in system/user/assistant openAI format.
+            fmt: Dictionary with formatting.
+            event_tracker: Event store used to audit the generation process.
+            options: options to use for the LLM client.
+
         Returns:
             Text response from LLM.
         """
-
-        options = LLMOptions(
-            frequency_penalty=frequency_penalty,
-            max_tokens=max_tokens,
-            n=n,
-            presence_penalty=presence_penalty,
-            seed=seed,
-            stop=stop,
-            temperature=temperature,
-            top_p=top_p,
-        )
+        options = options if options else self.default_options
 
         prompt = self._prompt_builder.build(template, fmt)
 
@@ -64,7 +69,12 @@ class LLMClient(abc.ABC):
 
         event_tracker = event_tracker or EventTracker()
         async with event_tracker.track_event(event) as span:
-            event.response = await self.call(prompt, template.response_format, options, event)
+            event.response = await self.call(
+                prompt=prompt,
+                response_format=template.response_format,
+                options=options,
+                event=event,
+            )
             span(event)
 
         return event.response

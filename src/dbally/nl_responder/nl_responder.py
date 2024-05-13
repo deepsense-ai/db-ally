@@ -5,7 +5,7 @@ import pandas as pd
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
-from dbally.llm_client.base import LLMClient
+from dbally.llm_client.base import LLMClient, LLMOptions
 from dbally.nl_responder.nl_responder_prompt_template import NLResponderPromptTemplate, default_nl_responder_template
 from dbally.nl_responder.query_explainer_prompt_template import (
     QueryExplainerPromptTemplate,
@@ -46,7 +46,13 @@ class NLResponder:
         )
         self._max_tokens_count = max_tokens_count
 
-    async def generate_response(self, result: ViewExecutionResult, question: str, event_tracker: EventTracker) -> str:
+    async def generate_response(
+        self,
+        result: ViewExecutionResult,
+        question: str,
+        event_tracker: EventTracker,
+        llm_options: Optional[LLMOptions] = None,
+    ) -> str:
         """
         Uses LLM to generate a response in natural language form.
 
@@ -54,6 +60,7 @@ class NLResponder:
             result: object representing the result of the query execution
             question: user question
             event_tracker: event store used to audit the generation process
+            llm_options: options to use for the LLM client.
 
         Returns:
             Natural language response to the user question.
@@ -82,6 +89,7 @@ class NLResponder:
                 template=self._query_explainer_prompt_template,
                 fmt={"question": question, "query": query, "number_of_results": len(result.results)},
                 event_tracker=event_tracker,
+                options=llm_options,
             )
 
             return llm_response
@@ -90,6 +98,7 @@ class NLResponder:
             template=self._nl_responder_prompt_template,
             fmt={"rows": _promptify_rows(result.results), "question": question},
             event_tracker=event_tracker,
+            options=llm_options,
         )
         return llm_response
 
