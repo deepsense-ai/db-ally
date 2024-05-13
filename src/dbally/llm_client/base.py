@@ -36,6 +36,10 @@ class LLMClient(Generic[LLMClientOptions], ABC):
         self.default_options = default_options or self._options_cls()
         self._prompt_builder = PromptBuilder(self.model_name)
 
+    def __init_subclass__(cls) -> None:
+        if not hasattr(cls, "_options_cls"):
+            raise TypeError(f"Class {cls.__name__} is missing the '_options_cls' attribute")
+
     async def text_generation(  # pylint: disable=R0913
         self,
         template: PromptTemplate,
