@@ -1,8 +1,10 @@
 import abc
+from typing import List
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.llm_client.base import LLMClient
+from dbally.similarity import AbstractSimilarityIndex
 
 
 class BaseView(metaclass=abc.ABCMeta):
@@ -28,3 +30,12 @@ class BaseView(metaclass=abc.ABCMeta):
         Returns:
             The result of the query.
         """
+
+    def list_similarity_indexes(self) -> List[AbstractSimilarityIndex]:
+        """
+        Lists all the similarity indexes used by the view.
+
+        Returns:
+            List of similarity indexes.
+        """
+        return []
