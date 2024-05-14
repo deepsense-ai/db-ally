@@ -13,19 +13,19 @@ class PromptBuilder:
     def __init__(self, model_name: Optional[str] = None) -> None:
         """
         Args:
-            model_name: Name of the model to load a tokenizer for.
-                        Tokenizer is used to append special tokens to the prompt. If empty, no tokens will be added.
+            model_name: name of the tokenizer model to use. If provided, the tokenizer will convert the prompt to the
+                format expected by the model. The model_name should be a model available on huggingface.co/models.
 
         Raises:
             OSError: If model_name is not found in huggingface.co/models
         """
         self._tokenizer: Optional["PreTrainedTokenizer"] = None
 
-        if model_name is not None and not model_name.startswith("gpt"):
+        if model_name is not None:
             try:
                 from transformers import AutoTokenizer  # pylint: disable=import-outside-toplevel
             except ImportError as exc:
-                raise ImportError("You need to install transformers package to use huggingface models.") from exc
+                raise ImportError("You need to install transformers package to use huggingface tokenizers") from exc
 
             self._tokenizer = AutoTokenizer.from_pretrained(model_name)
 

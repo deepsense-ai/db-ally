@@ -4,7 +4,6 @@ from typing import Callable, List, Optional, Tuple, TypeVar
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template
 from dbally.llm_client.base import LLMClient, LLMOptions
-from dbally.prompts.prompt_builder import PromptBuilder
 from dbally.views.exposed_functions import ExposedFunction
 
 
@@ -28,19 +27,16 @@ class IQLGenerator:
         self,
         llm_client: LLMClient,
         prompt_template: Optional[IQLPromptTemplate] = None,
-        prompt_builder: Optional[PromptBuilder] = None,
         promptify_view: Optional[Callable] = None,
     ) -> None:
         """
         Args:
             llm_client: LLM client used to generate IQL
             prompt_template: If not provided by the users is set to `default_iql_template`
-            prompt_builder: PromptBuilder used to insert arguments into the prompt and adjust style per model.
             promptify_view: Function formatting filters for prompt
         """
         self._llm_client = llm_client
         self._prompt_template = prompt_template or copy.deepcopy(default_iql_template)
-        self._prompt_builder = prompt_builder or PromptBuilder()
         self._promptify_view = promptify_view or _promptify_filters
 
     async def generate_iql(
