@@ -5,7 +5,7 @@ from dbally.prompts import ChatFormat
 
 def count_tokens_for_openai(messages: ChatFormat, fmt: Dict[str, str], model: str) -> int:
     """
-    Counts the number of tokens in the messages for OpenAIs' models.
+    Counts the number of tokens in the messages for OpenAI's models.
 
     Args:
         messages: Messages to count tokens for.
@@ -31,6 +31,33 @@ def count_tokens_for_openai(messages: ChatFormat, fmt: Dict[str, str], model: st
         num_tokens += len(encoding.encode(message["content"].format(**fmt)))
 
     num_tokens += 2  # every reply starts with "<im_start>assistant"
+    return num_tokens
+
+
+def count_tokens_for_anthropic(messages: ChatFormat, fmt: Dict[str, str]) -> int:
+    """
+    Counts the number of tokens in the messages for Anthropic's models.
+
+    Args:
+        messages: Messages to count tokens for.
+        fmt: Arguments to be used with prompt.
+
+    Returns:
+        Number of tokens in the messages.
+
+    Raises:
+        ImportError: If anthropic package is not installed.
+    """
+
+    try:
+        from anthropic._tokenizers import sync_get_tokenizer  # pylint: disable=import-outside-toplevel
+    except ImportError as exc:
+        raise ImportError("You need to install anthropic package to use Claude models") from exc
+
+    tokenizer = sync_get_tokenizer()
+    num_tokens = 0
+    for message in messages:
+        num_tokens += len(tokenizer.encode(message["content"].format(**fmt)))
     return num_tokens
 
 

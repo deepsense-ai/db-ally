@@ -11,7 +11,11 @@ from dbally.nl_responder.query_explainer_prompt_template import (
     QueryExplainerPromptTemplate,
     default_query_explainer_template,
 )
-from dbally.nl_responder.token_counters import count_tokens_for_huggingface, count_tokens_for_openai
+from dbally.nl_responder.token_counters import (
+    count_tokens_for_anthropic,
+    count_tokens_for_huggingface,
+    count_tokens_for_openai,
+)
 
 
 class NLResponder:
@@ -74,7 +78,11 @@ class NLResponder:
                 fmt={"rows": rows, "question": question},
                 model=self._llm_client.model_name,
             )
-
+        elif "claude" in self._llm_client.model_name:
+            tokens_count = count_tokens_for_anthropic(
+                messages=self._nl_responder_prompt_template.chat,
+                fmt={"rows": rows, "question": question},
+            )
         else:
             tokens_count = count_tokens_for_huggingface(
                 messages=self._nl_responder_prompt_template.chat,

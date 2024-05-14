@@ -47,3 +47,23 @@ def check_prompt_variables(chat: ChatFormat, variables_to_check: Set[str]) -> Ch
             "You need to format the following variables: {variables_to_check}"
         )
     return chat
+
+
+def extract_system_prompt(chat: ChatFormat) -> Tuple[ChatFormat, str]:
+    """
+    Extracts the system prompt from the chat.
+
+    Args:
+        chat: chat to extract the system prompt from
+
+    Returns:
+        chat without the system prompt and system prompt
+    """
+    system_prompt = ""
+    chat_without_system = []
+    for message in chat:
+        if message["role"] == "system":
+            system_prompt = message["content"]
+        else:
+            chat_without_system.append(message)
+    return tuple(chat_without_system), system_prompt
