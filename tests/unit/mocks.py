@@ -5,9 +5,10 @@ Collection of mock objects for unit tests.
 """
 
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from unittest.mock import create_autospec
 
+from dbally import NOT_GIVEN, NotGiven
 from dbally.iql import IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template
@@ -63,7 +64,8 @@ class MockSimilarityIndex(AbstractSimilarityIndex):
 
 @dataclass
 class MockLLMOptions(LLMOptions):
-    mock_property: int
+    mock_property1: Union[int, NotGiven] = NOT_GIVEN
+    mock_property2: Union[str, NotGiven] = NOT_GIVEN
 
 
 class MockLLMClient(LLMClient[MockLLMOptions]):

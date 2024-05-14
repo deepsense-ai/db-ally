@@ -4,12 +4,15 @@
 import abc
 from abc import ABC
 from dataclasses import asdict, dataclass
-from typing import Dict, Generic, Optional, Type, TypeVar, Union
+from typing import Any, ClassVar, Dict, Generic, Optional, Type, TypeVar, Union
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import LLMEvent
 from dbally.prompts import ChatFormat, PromptBuilder, PromptTemplate
 
+from .._types import NotGiven
+
+LLMOptionsNotGiven = TypeVar("LLMOptionsNotGiven")
 LLMClientOptions = TypeVar("LLMClientOptions")
 
 
@@ -19,7 +22,37 @@ class LLMOptions(ABC):
     Abstract dataclass that represents all available LLM call options.
     """
 
-    dict = asdict
+    _not_given: ClassVar[Optional[LLMOptionsNotGiven]] = None
+
+    def __or__(self, other: "LLMOptions") -> "LLMOptions":
+        """
+        Merges two LLMOptions, prioritizing non-NOT_GIVEN values from the 'other' object.
+        """
+        self_dict = asdict(self)
+        other_dict = asdict(other)
+
+        updated_dict = {
+            key: other_dict.get(key, self_dict[key])
+            if not isinstance(other_dict.get(key), NotGiven)
+            else self_dict[key]
+            for key in self_dict
+        }
+
+        return self.__class__(**updated_dict)
+
+    def dict(self) -> Dict[str, Any]:
+        """
+        Creates a dictionary representation of the LLMOptions instance.
+        If a value is None, it will be replaced with the _not_given value.
+
+        Returns:
+            A dictionary representation of the LLMOptions instance.
+        """
+        options = asdict(self)
+        return {
+            key: self._not_given if value is None or isinstance(value, NotGiven) else value
+            for key, value in options.items()
+        }
 
 
 class LLMClient(Generic[LLMClientOptions], ABC):
@@ -61,7 +94,7 @@ class LLMClient(Generic[LLMClientOptions], ABC):
         Returns:
             Text response from LLM.
         """
-        options = options if options else self.default_options
+        options = (self.default_options | options) if options else self.default_options
 
         prompt = self._prompt_builder.build(template, fmt)
 

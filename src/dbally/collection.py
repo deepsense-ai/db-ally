@@ -179,8 +179,9 @@ class Collection:
             "What job offers for Data Scientists do we have?"
             dry_run: if True, only generate the query without executing it
             return_natural_response: if True (and dry_run is False as natural response requires query results),
-                                     the natural response will be included in the answer
-            llm_options: options to use for the LLM client.
+                the natural response will be included in the answer
+            llm_options: options to use for the LLM client. If provided, these options will be merged with the default
+                options provided to the LLM client, prioritizing option values other than NOT_GIVEN
 
         Returns:
             ExecutionResult object representing the result of the query execution.
