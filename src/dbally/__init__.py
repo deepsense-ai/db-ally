@@ -9,6 +9,7 @@ from dbally.views.structured import BaseStructuredView
 
 from .__version__ import __version__
 from ._main import create_collection
+from ._types import NOT_GIVEN, NotGiven
 from .collection import Collection
 
 __all__ = [
@@ -21,4 +22,6 @@ __all__ = [
     "BaseStructuredView",
     "DataFrameBaseView",
     "ExecutionResult",
+    "NotGiven",
+    "NOT_GIVEN",
 ]

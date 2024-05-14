@@ -1,12 +1,14 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Union
+from typing import ClassVar, Dict, List, Optional, Union
 
-from openai import NOT_GIVEN, NotGiven
+from openai import NOT_GIVEN as OPENAI_NOT_GIVEN
+from openai import NotGiven as OpenAINotGiven
 
 from dbally.data_models.audit import LLMEvent
 from dbally.llm_client.base import LLMClient
 from dbally.prompts import ChatFormat
 
+from .._types import NOT_GIVEN, NotGiven
 from .base import LLMOptions
 
 
@@ -16,6 +18,8 @@ class OpenAIOptions(LLMOptions):
     Dataclass that represents all available LLM call options for the OpenAI API. Each of them is
     described in the [OpenAI API documentation](https://platform.openai.com/docs/api-reference/chat/create.)
     """
+
+    _not_given: ClassVar[Optional[OpenAINotGiven]] = OPENAI_NOT_GIVEN
 
     frequency_penalty: Union[Optional[float], NotGiven] = NOT_GIVEN
     max_tokens: Union[Optional[int], NotGiven] = NOT_GIVEN
