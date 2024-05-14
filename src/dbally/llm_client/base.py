@@ -43,7 +43,7 @@ class LLMOptions(ABC):
     def dict(self) -> Dict[str, Any]:
         """
         Creates a dictionary representation of the LLMOptions instance.
-        If a value is None, it will be replaced with the _not_given value.
+        If a value is None, it will be replaced with a provider-specific not-given sentinel.
 
         Returns:
             A dictionary representation of the LLMOptions instance.
