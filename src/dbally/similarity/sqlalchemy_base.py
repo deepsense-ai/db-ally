@@ -36,7 +36,7 @@ class SqlAlchemyFetcher(SimilarityFetcher):
             result = conn.execute(self.get_query())
             return [row[0] for row in result]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Returns a string representation of the fetcher.
 
@@ -67,7 +67,7 @@ class SimpleSqlAlchemyFetcher(SqlAlchemyFetcher):
         """
         return sqlalchemy.select(self.column).select_from(self.table).distinct()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Returns a string representation of the fetcher.
 
