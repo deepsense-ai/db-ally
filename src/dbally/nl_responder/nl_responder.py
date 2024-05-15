@@ -79,7 +79,7 @@ class NLResponder:
                 model=self._llm_client.model_name,
             )
         elif "claude" in self._llm_client.model_name:
-            tokens_count = count_tokens_for_anthropic(
+            tokens_count = await count_tokens_for_anthropic(
                 messages=self._nl_responder_prompt_template.chat,
                 fmt={"rows": rows, "question": question},
             )

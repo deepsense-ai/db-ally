@@ -1,10 +1,10 @@
-class DballyError(Exception):
+class DbAllyError(Exception):
     """
-    Base class for all exceptions raised by dbally.
+    Base class for all exceptions raised by db-ally.
     """
 
 
-class LLMError(DballyError):
+class LLMError(DbAllyError):
     """
     Base class for all exceptions raised by the LLMClient.
     """

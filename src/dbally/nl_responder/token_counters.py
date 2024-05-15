@@ -34,7 +34,7 @@ def count_tokens_for_openai(messages: ChatFormat, fmt: Dict[str, str], model: st
     return num_tokens
 
 
-def count_tokens_for_anthropic(messages: ChatFormat, fmt: Dict[str, str]) -> int:
+async def count_tokens_for_anthropic(messages: ChatFormat, fmt: Dict[str, str]) -> int:
     """
     Counts the number of tokens in the messages for Anthropic's models.
 
@@ -50,11 +50,11 @@ def count_tokens_for_anthropic(messages: ChatFormat, fmt: Dict[str, str]) -> int
     """
 
     try:
-        from anthropic._tokenizers import sync_get_tokenizer  # pylint: disable=import-outside-toplevel
+        from anthropic._tokenizers import async_get_tokenizer  # pylint: disable=import-outside-toplevel
     except ImportError as exc:
         raise ImportError("You need to install anthropic package to use Claude models") from exc
 
-    tokenizer = sync_get_tokenizer()
+    tokenizer = await async_get_tokenizer()
     num_tokens = 0
     for message in messages:
         num_tokens += len(tokenizer.encode(message["content"].format(**fmt)))
