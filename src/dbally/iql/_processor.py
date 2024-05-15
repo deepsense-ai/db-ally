@@ -1,6 +1,7 @@
 import ast
-from typing import TYPE_CHECKING, Any, List, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Union
 
+from dbally.audit.event_tracker import EventTracker
 from dbally.iql import syntax
 from dbally.iql._exceptions import (
     IQLArgumentParsingError,
@@ -20,9 +21,12 @@ class IQLProcessor:
     Parses IQL string to tree structure.
     """
 
-    def __init__(self, source: str, allowed_functions: List["ExposedFunction"]):
+    def __init__(
+        self, source: str, allowed_functions: List["ExposedFunction"], event_tracker: Optional[EventTracker] = None
+    ) -> None:
         self.source = source
         self.allowed_functions = {func.name: func for func in allowed_functions}
+        self._event_tracker = event_tracker or EventTracker()
 
     async def process(self) -> syntax.Node:
         """
@@ -84,7 +88,7 @@ class IQLProcessor:
             arg_value = self._parse_arg(arg)
 
             if arg_def.similarity_index:
-                arg_value = await arg_def.similarity_index.similar(arg_value)
+                arg_value = await arg_def.similarity_index.similar(arg_value, event_tracker=self._event_tracker)
 
             check_result = validate_arg_type(arg_def.type, arg_value)
 

@@ -1,6 +1,6 @@
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
-from dbally.data_models.audit import LLMEvent
+from dbally.data_models.audit import LLMEvent, SimilarityEvent
 
 
 class EventSpan:
@@ -11,7 +11,7 @@ class EventSpan:
     def __init__(self) -> None:
         self.data = None
 
-    def __call__(self, data: LLMEvent) -> None:
+    def __call__(self, data: Union[LLMEvent, SimilarityEvent]) -> None:
         """
         Call method for logging events.
 

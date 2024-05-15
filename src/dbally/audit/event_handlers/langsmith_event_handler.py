@@ -6,7 +6,7 @@ from langsmith.client import Client
 from langsmith.run_trees import RunTree
 
 from dbally.audit.event_handlers.base import EventHandler
-from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart
+from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 
 class LangSmithEventHandler(EventHandler[RunTree, RunTree]):
@@ -47,7 +47,7 @@ class LangSmithEventHandler(EventHandler[RunTree, RunTree]):
 
         return run_tree
 
-    async def event_start(self, event: Union[None, LLMEvent], request_context: RunTree) -> RunTree:
+    async def event_start(self, event: Union[None, LLMEvent, SimilarityEvent], request_context: RunTree) -> RunTree:
         """
         Log the start of the event.
 
@@ -67,12 +67,21 @@ class LangSmithEventHandler(EventHandler[RunTree, RunTree]):
                 run_type="llm",
                 inputs={"prompts": [event.prompt]},
             )
+            return child_run
 
+        if isinstance(event, SimilarityEvent):
+            child_run = request_context.create_child(
+                name="Similarity Lookup",
+                run_type="tool",
+                inputs={"input": event.input_value, "store": event.store, "fetcher": event.fetcher},
+            )
             return child_run
 
         raise ValueError("Unsupported event")
 
-    async def event_end(self, event: Union[None, LLMEvent], request_context: RunTree, event_context: RunTree) -> None:
+    async def event_end(
+        self, event: Union[None, LLMEvent, SimilarityEvent], request_context: RunTree, event_context: RunTree
+    ) -> None:
         """
         Log the end of the event.
 
@@ -83,6 +92,8 @@ class LangSmithEventHandler(EventHandler[RunTree, RunTree]):
         """
         if isinstance(event, LLMEvent):
             event_context.end(outputs={"output": event.response})
+        elif isinstance(event, SimilarityEvent):
+            event_context.end(outputs={"output": event.output_value})
 
     async def request_end(self, output: RequestEnd, request_context: RunTree) -> None:
         """
