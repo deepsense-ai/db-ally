@@ -2,7 +2,7 @@ import abc
 from abc import ABC
 from typing import Generic, TypeVar, Union
 
-from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart
+from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 RequestCtx = TypeVar("RequestCtx")
 EventCtx = TypeVar("EventCtx")
@@ -26,13 +26,13 @@ class EventHandler(Generic[RequestCtx, EventCtx], ABC):
         """
 
     @abc.abstractmethod
-    async def event_start(self, event: Union[LLMEvent], request_context: RequestCtx) -> EventCtx:
+    async def event_start(self, event: Union[LLMEvent, SimilarityEvent], request_context: RequestCtx) -> EventCtx:
         """
         Function that is called during every event execution.
 
 
         Args:
-            event: LLMEvent to be logged with all the details.
+            event: db-ally event to be logged with all the details.
             request_context: Optional context passed from request_start method
 
         Returns:
@@ -41,13 +41,13 @@ class EventHandler(Generic[RequestCtx, EventCtx], ABC):
 
     @abc.abstractmethod
     async def event_end(
-        self, event: Union[None, LLMEvent], request_context: RequestCtx, event_context: EventCtx
+        self, event: Union[None, LLMEvent, SimilarityEvent], request_context: RequestCtx, event_context: EventCtx
     ) -> None:
         """
         Function that is called during every event execution.
 
         Args:
-            event: LLMEvent to be logged with all the details.
+            event: db-ally event to be logged with all the details.
             request_context: Optional context passed from request_start method
             event_context: Optional context passed from event_start method
         """

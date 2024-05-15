@@ -12,12 +12,12 @@ except ImportError:
     pprint = print  # type: ignore
 
 from dbally.audit.event_handlers.base import EventHandler
-from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart
+from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 
 class CLIEventHandler(EventHandler):
     """
-    This handler displays all interactions between LLM and user happending during `Collection.ask`\
+    This handler displays all interactions between LLM and user happening during `Collection.ask`\
     execution inside the terminal.
 
     ### Usage
@@ -57,13 +57,13 @@ class CLIEventHandler(EventHandler):
         pprint("[grey53]\n=======================================")
         pprint("[grey53]=======================================\n")
 
-    async def event_start(self, event: Union[LLMEvent], request_context: None) -> None:
+    async def event_start(self, event: Union[LLMEvent, SimilarityEvent], request_context: None) -> None:
         """
         Displays information that event has started, then all messages inside the prompt
 
 
         Args:
-            event: LLMEvent to be logged with all the details.
+            event: db-ally event to be logged with all the details.
             request_context: Optional context passed from request_start method
         """
 
@@ -76,19 +76,32 @@ class CLIEventHandler(EventHandler):
                     self._print_syntax(msg["content"], "text")
             else:
                 self._print_syntax(f"{event.prompt}", "text")
+        elif isinstance(event, SimilarityEvent):
+            pprint(
+                f"[cyan bold]Similarity event starts... \n"
+                f"[cyan bold]INPUT: [grey53]{event.input_value}\n"
+                f"[cyan bold]STORE: [grey53]{event.store}\n"
+                f"[cyan bold]FETCHER: [grey53]{event.fetcher}\n"
+            )
 
-    async def event_end(self, event: Union[None, LLMEvent], request_context: None, event_context: None) -> None:
+    async def event_end(
+        self, event: Union[None, LLMEvent, SimilarityEvent], request_context: None, event_context: None
+    ) -> None:
         """
         Displays the response from the LLM.
 
         Args:
-            event: LLMEvent to be logged with all the details.
+            event: db-ally event to be logged with all the details.
             request_context: Optional context passed from request_start method
             event_context: Optional context passed from event_start method
         """
 
         if isinstance(event, LLMEvent):
             pprint(f"\n[green bold]RESPONSE: {event.response}")
+            pprint("[grey53]\n=======================================")
+            pprint("[grey53]=======================================\n")
+        elif isinstance(event, SimilarityEvent):
+            pprint(f"[green bold]OUTPUT: {event.output_value}")
             pprint("[grey53]\n=======================================")
             pprint("[grey53]=======================================\n")
 

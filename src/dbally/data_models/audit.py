@@ -30,6 +30,19 @@ class LLMEvent:
 
 
 @dataclass
+class SimilarityEvent:
+    """
+    SimilarityEvent is fired when a SimilarityIndex lookup is performed.
+    """
+
+    store: str
+    fetcher: str
+
+    input_value: str
+    output_value: Optional[str] = None
+
+
+@dataclass
 class RequestStart:
     """
     Class representing request start data.

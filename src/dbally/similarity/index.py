@@ -1,5 +1,8 @@
 import abc
+from typing import Optional
 
+from dbally.audit.event_tracker import EventTracker
+from dbally.data_models.audit import SimilarityEvent
 from dbally.similarity.fetcher import SimilarityFetcher
 from dbally.similarity.store import SimilarityStore
 
@@ -20,12 +23,13 @@ class AbstractSimilarityIndex(metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    async def similar(self, text: str) -> str:
+    async def similar(self, text: str, event_tracker: Optional[EventTracker] = None) -> str:
         """
         Finds the most similar text or returns the original text if no similar text is found.
 
         Args:
             text: The text to find similar to.
+            event_tracker: The event tracker to use for auditing the similarity search.
 
         Returns:
             str: The most similar text or the original text if no similar text is found.
@@ -54,15 +58,24 @@ class SimilarityIndex(AbstractSimilarityIndex):
         data = await self.fetcher.fetch()
         await self.store.store(data)
 
-    async def similar(self, text: str) -> str:
+    async def similar(self, text: str, event_tracker: Optional[EventTracker] = None) -> str:
         """
         Finds the most similar text in the store or returns the original text if no similar text is found.
 
         Args:
             text: The text to find similar to.
+            event_tracker: The event tracker to use for auditing the similarity search.
 
         Returns:
             str: The most similar text or the original text if no similar text is found.
         """
-        found = await self.store.find_similar(text)
+
+        event_tracker = event_tracker or EventTracker()
+        event = SimilarityEvent(input_value=text, store=repr(self.store), fetcher=repr(self.fetcher))
+
+        async with event_tracker.track_event(event) as span:
+            found = await self.store.find_similar(text)
+            event.output_value = found
+            span(event)
+
         return found if found else text

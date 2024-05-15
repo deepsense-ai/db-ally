@@ -65,7 +65,7 @@ class BaseStructuredView(BaseView):
 
         for _ in range(n_retries):
             try:
-                filters = await IQLQuery.parse(iql_filters, filter_list)
+                filters = await IQLQuery.parse(iql_filters, filter_list, event_tracker=event_tracker)
                 await self.apply_filters(filters)
                 break
             except (IQLError, ValueError) as e:

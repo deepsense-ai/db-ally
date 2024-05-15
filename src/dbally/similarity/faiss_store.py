@@ -92,3 +92,12 @@ class FaissStore(SimilarityStore):
                 data = np.load(file)
                 return data[best_idx]
         return None
+
+    def __repr__(self) -> str:
+        """
+        Returns the string representation of the FaissStore.
+
+        Returns:
+            str: The string representation of the FaissStore.
+        """
+        return f"{self.__class__.__name__}(index_dir={self.index_dir}, index_name={self.index_name})"
