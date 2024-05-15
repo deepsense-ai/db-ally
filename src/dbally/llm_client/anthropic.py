@@ -33,7 +33,7 @@ class AnthropicOptions(LLMOptions):
         """
         Returns a dictionary representation of the LLMOptions instance.
         If a value is None, it will be replaced with a provider-specific not-given sentinel,
-        except for max_tokens, which is set to 256 if not provided.
+        except for max_tokens, which is set to 4096 if not provided.
 
         Returns:
             A dictionary representation of the LLMOptions instance.
