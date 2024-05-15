@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any, ClassVar, Dict, List, Optional, Union
 
 from anthropic import NOT_GIVEN as ANTHROPIC_NOT_GIVEN
+from anthropic import APIConnectionError, APIResponseValidationError, APIStatusError
 from anthropic import NotGiven as AnthropicNotGiven
 
 from dbally.data_models.audit import LLMEvent
@@ -9,6 +10,7 @@ from dbally.llm_client.base import LLMClient, LLMOptions
 from dbally.prompts.common_validation_utils import extract_system_prompt
 from dbally.prompts.prompt_builder import ChatFormat
 
+from .._exceptions import LLMConnectionError, LLMResponseError, LLMStatusError
 from .._types import NOT_GIVEN, NotGiven
 
 
@@ -16,7 +18,7 @@ from .._types import NOT_GIVEN, NotGiven
 class AnthropicOptions(LLMOptions):
     """
     Dataclass that represents all available LLM call options for the Anthropic API. Each of them is
-    described in the [Anthropic API documentation](https://docs.anthropic.com/en/api/messages)
+    described in the [Anthropic API documentation](https://docs.anthropic.com/en/api/messages).
     """
 
     _not_given: ClassVar[Optional[AnthropicNotGiven]] = ANTHROPIC_NOT_GIVEN
@@ -30,7 +32,8 @@ class AnthropicOptions(LLMOptions):
     def dict(self) -> Dict[str, Any]:
         """
         Returns a dictionary representation of the LLMOptions instance.
-        If a value is None, it will be replaced with the _not_given value.
+        If a value is None, it will be replaced with a provider-specific not-given sentinel,
+        except for max_tokens, which is set to 256 if not provided.
 
         Returns:
             A dictionary representation of the LLMOptions instance.
@@ -39,7 +42,7 @@ class AnthropicOptions(LLMOptions):
 
         # Anthropic API requires max_tokens to be set
         if isinstance(options["max_tokens"], AnthropicNotGiven) or options["max_tokens"] is None:
-            options["max_tokens"] = 256
+            options["max_tokens"] = 4096
 
         return options
 
@@ -50,9 +53,9 @@ class AnthropicClient(LLMClient[AnthropicOptions]):
     particularly for the Claude models.
 
     Args:
-        model_name: Name of the [Anthropic's model](https://docs.anthropic.com/claude/docs/models-overview) to be used,
+        model_name: Name of the [Anthropic's model](https://docs.anthropic.com/claude/docs/models-overview) to be used,\
             default is "claude-3-opus-20240229".
-        api_key: Anthropic's API key. If None ANTHROPIC_API_KEY environment variable will be used
+        api_key: Anthropic's API key. If None ANTHROPIC_API_KEY environment variable will be used.
         default_options: Default options to be used in the LLM calls.
     """
 
@@ -84,21 +87,33 @@ class AnthropicClient(LLMClient[AnthropicOptions]):
 
         Args:
             prompt: Prompt as an Anthropic client style list.
-            response_format: Optional argument used in the OpenAI API - used to force the json output
+            response_format: Optional argument used in the OpenAI API - used to force the json output.
             options: Additional settings used by the LLM.
-            event: container with the prompt, LLM response and call metrics.
+            event: Container with the prompt, LLM response and call metrics.
 
         Returns:
             Response string from LLM.
+
+        Raises:
+            LLMConnectionError: If there was an error connecting to the LLM API.
+            LLMStatusError: If the LLM API returned an error status.
+            LLMResponseError: If the LLM API returned an invalid response.
         """
         prompt, system = extract_system_prompt(prompt)
 
-        response = await self._client.messages.create(
-            messages=prompt,
-            model=self.model_name,
-            system=system,
-            **options.dict(),  # type: ignore
-        )
+        try:
+            response = await self._client.messages.create(
+                messages=prompt,
+                model=self.model_name,
+                system=system,
+                **options.dict(),  # type: ignore
+            )
+        except APIConnectionError as exc:
+            raise LLMConnectionError() from exc
+        except APIStatusError as exc:
+            raise LLMStatusError(exc.message, exc.status_code) from exc
+        except APIResponseValidationError as exc:
+            raise LLMResponseError() from exc
 
         event.completion_tokens = response.usage.output_tokens
         event.prompt_tokens = response.usage.input_tokens

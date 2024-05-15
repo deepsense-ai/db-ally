@@ -2,21 +2,22 @@ from dataclasses import dataclass
 from typing import ClassVar, Dict, List, Optional, Union
 
 from openai import NOT_GIVEN as OPENAI_NOT_GIVEN
+from openai import APIConnectionError, APIResponseValidationError, APIStatusError
 from openai import NotGiven as OpenAINotGiven
 
 from dbally.data_models.audit import LLMEvent
-from dbally.llm_client.base import LLMClient
+from dbally.llm_client.base import LLMClient, LLMOptions
 from dbally.prompts import ChatFormat
 
+from .._exceptions import LLMConnectionError, LLMResponseError, LLMStatusError
 from .._types import NOT_GIVEN, NotGiven
-from .base import LLMOptions
 
 
 @dataclass
 class OpenAIOptions(LLMOptions):
     """
     Dataclass that represents all available LLM call options for the OpenAI API. Each of them is
-    described in the [OpenAI API documentation](https://platform.openai.com/docs/api-reference/chat/create.)
+    described in the [OpenAI API documentation](https://platform.openai.com/docs/api-reference/chat/create).
     """
 
     _not_given: ClassVar[Optional[OpenAINotGiven]] = OPENAI_NOT_GIVEN
@@ -39,7 +40,7 @@ class OpenAIClient(LLMClient[OpenAIOptions]):
     Args:
         model_name: Name of the [OpenAI's model](https://platform.openai.com/docs/models) to be used,\
             default is "gpt-3.5-turbo".
-        api_key: OpenAI's API key. If None OPENAI_API_KEY environment variable will be used
+        api_key: OpenAI's API key. If None OPENAI_API_KEY environment variable will be used.
         default_options: Default options to be used in the LLM calls.
     """
 
@@ -71,12 +72,17 @@ class OpenAIClient(LLMClient[OpenAIOptions]):
 
         Args:
             prompt: Prompt as an OpenAI client style list.
-            response_format: Optional argument used in the OpenAI API - used to force the json output
+            response_format: Optional argument used in the OpenAI API - used to force the json output.
             options: Additional settings used by the LLM.
-            event: container with the prompt, LLM response and call metrics.
+            event: Container with the prompt, LLM response and call metrics.
 
         Returns:
             Response string from LLM.
+
+        Raises:
+            LLMConnectionError: If there is an issue with the connection to the LLM API.
+            LLMStatusError: If the LLM API returns an error status.
+            LLMResponseError: If there is an issue with the response from the LLM API.
         """
 
         # only "turbo" models support response_format argument
@@ -84,12 +90,19 @@ class OpenAIClient(LLMClient[OpenAIOptions]):
         if "turbo" not in self.model_name:
             response_format = None
 
-        response = await self._client.chat.completions.create(
-            messages=prompt,
-            model=self.model_name,
-            response_format=response_format,
-            **options.dict(),  # type: ignore
-        )
+        try:
+            response = await self._client.chat.completions.create(
+                messages=prompt,
+                model=self.model_name,
+                response_format=response_format,
+                **options.dict(),  # type: ignore
+            )
+        except APIConnectionError as exc:
+            raise LLMConnectionError() from exc
+        except APIStatusError as exc:
+            raise LLMStatusError(exc.message, exc.status_code) from exc
+        except APIResponseValidationError as exc:
+            raise LLMResponseError() from exc
 
         event.completion_tokens = response.usage.completion_tokens
         event.prompt_tokens = response.usage.prompt_tokens
