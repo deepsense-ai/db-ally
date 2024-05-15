@@ -54,10 +54,10 @@ def extract_system_prompt(chat: ChatFormat) -> Tuple[ChatFormat, str]:
     Extracts the system prompt from the chat.
 
     Args:
-        chat: chat to extract the system prompt from
+        chat: Chat to extract the system prompt from
 
     Returns:
-        chat without the system prompt and system prompt
+        Chat without the system prompt and system prompt
     """
     system_prompt = ""
     chat_without_system = []
