@@ -12,7 +12,7 @@ from dbally import NOT_GIVEN, NotGiven
 from dbally.iql import IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template
-from dbally.llm_client.base import LLMClient, LLMOptions
+from dbally.llms.base import LLMClient, LLMOptions
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.structured import BaseStructuredView, ExposedFunction, ViewExecutionResult

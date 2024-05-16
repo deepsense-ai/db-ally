@@ -5,7 +5,7 @@ from openai import NOT_GIVEN as OPENAI_NOT_GIVEN
 from openai import NotGiven as OpenAINotGiven
 
 from dbally.data_models.audit import LLMEvent
-from dbally.llm_client.base import LLMClient
+from dbally.llms.base import LLMClient
 from dbally.prompts import ChatFormat
 
 from .._types import NOT_GIVEN, NotGiven

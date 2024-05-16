@@ -21,8 +21,8 @@ from omegaconf import DictConfig
 from sqlalchemy import create_engine
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.llm_client.base import LLMClient
-from dbally.llm_client.openai_client import OpenAIClient
+from dbally.llms.base import LLMClient
+from dbally.llms.litellm import OpenAIClient
 
 
 def _load_db_schema(db_name: str, encoding: Optional[str] = None) -> str:

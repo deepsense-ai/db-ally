@@ -3,7 +3,7 @@ from typing import Callable, List, Optional, Tuple, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template
-from dbally.llm_client.base import LLMClient, LLMOptions
+from dbally.llms.base import LLMClient, LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
 
 

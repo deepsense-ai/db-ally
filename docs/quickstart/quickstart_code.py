@@ -9,7 +9,7 @@ from sqlalchemy.ext.automap import automap_base
 
 from dbally import decorators, SqlAlchemyBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
-from dbally.llm_client.openai_client import OpenAIClient
+from dbally.llms.litellm import OpenAIClient
 
 
 engine = create_engine('sqlite:///candidates.db')

@@ -8,7 +8,7 @@ import pandas as pd
 
 from dbally import decorators, DataFrameBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
-from dbally.llm_client.openai_client import OpenAIClient
+from dbally.llms.litellm import OpenAIClient
 
 
 class CandidateView(DataFrameBaseView):

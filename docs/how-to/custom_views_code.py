@@ -10,7 +10,7 @@ from dbally import decorators, MethodsBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.iql import IQLQuery, syntax
 from dbally.data_models.execution_result import ViewExecutionResult
-from dbally.llm_client.openai_client import OpenAIClient
+from dbally.llms.litellm import OpenAIClient
 
 @dataclass
 class Candidate:
