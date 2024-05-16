@@ -1,7 +1,7 @@
-from typing import List, Optional, Tuple, Dict
+from typing import Dict, List, Optional, Tuple
 
-from elasticsearch import Elasticsearch
 import numpy as np
+from elasticsearch import Elasticsearch
 from loguru import logger
 
 from dbally.embedding_client.base import EmbeddingClient

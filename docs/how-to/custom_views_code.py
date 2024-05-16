@@ -1,6 +1,5 @@
 # pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring, missing-class-docstring, missing-raises-doc
 import dbally
-import os
 import asyncio
 from dataclasses import dataclass
 from typing import Iterable, Callable, Any

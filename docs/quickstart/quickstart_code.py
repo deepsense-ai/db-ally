@@ -1,6 +1,5 @@
 # pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring
 import dbally
-import os
 import asyncio
 
 import sqlalchemy
