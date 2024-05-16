@@ -1,4 +1,5 @@
 # pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring
+import dbally
 import os
 import asyncio
 from typing_extensions import Annotated
@@ -8,15 +9,16 @@ import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 
-import dbally
 from dbally import decorators, SqlAlchemyBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
-from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
+from dbally.similarity import SimpleSqlAlchemyFetcher, SimilarityIndex
 from dbally.embedding_client.openai import OpenAiEmbeddingClient
 from dbally.llm_client.openai_client import OpenAIClient
+from dbally.similarity.elastic_store import ElasticStore
 
 load_dotenv()
 engine = create_engine("sqlite:///candidates.db")
+
 
 Base = automap_base()
 Base.prepare(autoload_with=engine)
@@ -29,9 +31,11 @@ country_similarity = SimilarityIndex(
         table=Candidate,
         column=Candidate.country,
     ),
-    store=FaissStore(
-        index_dir="./similarity_indexes",
+    store=ElasticStore(
         index_name="country_similarity",
+        host=os.environ["ELASTIC_STORE_CONNECTION_STRING"],
+        ca_cert_path=os.environ["ELASTIC_CERT_PATH"],
+        http_auth_tuple=(os.environ["ELASTIC_AUTH_USER"], os.environ["ELASTIC_USER_PASSWORD"]),
         embedding_client=OpenAiEmbeddingClient(
             api_key=os.environ["OPENAI_API_KEY"],
         ),
@@ -78,11 +82,11 @@ class CandidateView(SqlAlchemyBaseView):
 async def main():
     await country_similarity.update()
 
-    llm = OpenAIClient(model_name="gpt-3.5-turbo")
+    llm = OpenAIClient(model_name="gpt-3.5-turbo", api_key=os.environ["OPENAI_API_KEY"])
     collection = dbally.create_collection("recruitment", llm, event_handlers=[CLIEventHandler()])
     collection.add(CandidateView, lambda: CandidateView(engine))
 
-    result = await collection.ask("Find someone from the United States with more than 2 years of experience.")
+    result = await collection.ask("Find someone from the RUS with more than 2 years of experience.")
 
     print(f"The generated SQL query is: {result.context.get('sql')}")
     print()
