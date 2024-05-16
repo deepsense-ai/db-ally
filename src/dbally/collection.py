@@ -8,7 +8,7 @@ from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import RequestEnd, RequestStart
 from dbally.data_models.execution_result import ExecutionResult
-from dbally.llms.base import LLMClient, LLMOptions
+from dbally.llms.base import LLMClient, LLMParams
 from dbally.nl_responder.nl_responder import NLResponder
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.utils.errors import NoViewFoundError
@@ -162,7 +162,7 @@ class Collection:
         question: str,
         dry_run: bool = False,
         return_natural_response: bool = False,
-        llm_options: Optional[LLMOptions] = None,
+        llm_options: Optional[LLMParams] = None,
     ) -> ExecutionResult:
         """
         Ask question in a text form and retrieve the answer based on the available views.

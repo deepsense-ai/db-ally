@@ -8,7 +8,7 @@ from recruting.views import RecruitmentView
 import dbally
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.audit.event_tracker import EventTracker
-from dbally.llms.litellm import OpenAIClient
+from dbally.llms.litellm import LiteLLMClient
 from dbally.prompts import PromptTemplate
 
 TEXT2SQL_PROMPT_TEMPLATE = PromptTemplate(
@@ -101,13 +101,13 @@ async def recruiting_example(db_description: str, benchmark: Benchmark = example
 
     recruitment_db = dbally.create_collection(
         "recruitment",
-        llm_client=OpenAIClient(),
+        llm_client=LiteLLMClient(),
         event_handlers=[CLIEventHandler()],
     )
     recruitment_db.add(RecruitmentView, lambda: RecruitmentView(ENGINE))
 
     event_tracker = EventTracker()
-    llm_client = OpenAIClient("gpt-4")
+    llm_client = LiteLLMClient("gpt-4")
 
     for question in benchmark.questions:
         await recruitment_db.ask(question.dbally_question, return_natural_response=True)

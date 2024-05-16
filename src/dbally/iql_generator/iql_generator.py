@@ -3,7 +3,7 @@ from typing import Callable, List, Optional, Tuple, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template
-from dbally.llms.base import LLMClient, LLMOptions
+from dbally.llms.base import LLMClient, LLMParams
 from dbally.views.exposed_functions import ExposedFunction
 
 
@@ -45,7 +45,7 @@ class IQLGenerator:
         question: str,
         event_tracker: EventTracker,
         conversation: Optional[IQLPromptTemplate] = None,
-        llm_options: Optional[LLMOptions] = None,
+        llm_options: Optional[LLMParams] = None,
     ) -> Tuple[str, IQLPromptTemplate]:
         """
         Uses LLM to generate IQL in text form

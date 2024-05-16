@@ -22,7 +22,7 @@ from sqlalchemy import create_engine
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.llms.base import LLMClient
-from dbally.llms.litellm import OpenAIClient
+from dbally.llms.litellm import LiteLLMClient
 
 
 def _load_db_schema(db_name: str, encoding: Optional[str] = None) -> str:
@@ -88,7 +88,7 @@ async def evaluate(cfg: DictConfig) -> Any:
     engine = create_engine(benchmark_cfg.pg_connection_string + f"/{cfg.db_name}")
 
     if "gpt" in cfg.model_name:
-        llm_client = OpenAIClient(
+        llm_client = LiteLLMClient(
             model_name=cfg.model_name,
             api_key=benchmark_cfg.openai_api_key,
         )

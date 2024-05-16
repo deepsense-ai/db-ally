@@ -5,7 +5,7 @@ from sqlalchemy import text
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
-from dbally.llms.base import LLMClient, LLMOptions
+from dbally.llms.base import LLMClient, LLMParams
 from dbally.prompts import PromptTemplate
 from dbally.views.base import BaseView
 
@@ -43,7 +43,7 @@ class Text2SQLFreeformView(BaseView):
         event_tracker: EventTracker,
         n_retries: int = 3,
         dry_run: bool = False,
-        llm_options: Optional[LLMOptions] = None,
+        llm_options: Optional[LLMParams] = None,
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result. It generates the SQL query from the natural language query and
@@ -108,7 +108,7 @@ class Text2SQLFreeformView(BaseView):
         conversation: PromptTemplate,
         llm_client: LLMClient,
         event_tracker: EventTracker,
-        llm_options: Optional[LLMOptions] = None,
+        llm_options: Optional[LLMParams] = None,
     ) -> Tuple[str, PromptTemplate]:
         response = await llm_client.text_generation(
             template=conversation,

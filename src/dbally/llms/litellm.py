@@ -9,11 +9,11 @@ from dbally.llms.base import LLMClient
 from dbally.prompts import ChatFormat
 
 from .._types import NOT_GIVEN, NotGiven
-from .base import LLMOptions
+from .base import LLMParams
 
 
 @dataclass
-class OpenAIOptions(LLMOptions):
+class LiteLLMParams(LLMParams):
     """
     Dataclass that represents all available LLM call options for the OpenAI API. Each of them is
     described in the [OpenAI API documentation](https://platform.openai.com/docs/api-reference/chat/create.)
@@ -31,9 +31,9 @@ class OpenAIOptions(LLMOptions):
     top_p: Union[Optional[float], NotGiven] = NOT_GIVEN
 
 
-class OpenAIClient(LLMClient[OpenAIOptions]):
+class LiteLLMClient(LLMClient[LiteLLMParams]):
     """
-    `OpenAIClient` is a class designed to interact with OpenAI's language model (LLM) endpoints,
+    `LiteLLMClient` is a class designed to interact with OpenAI's language model (LLM) endpoints,
     particularly for the GPT models.
 
     Args:
@@ -43,13 +43,13 @@ class OpenAIClient(LLMClient[OpenAIOptions]):
         default_options: Default options to be used in the LLM calls.
     """
 
-    _options_cls = OpenAIOptions
+    _options_cls = LiteLLMParams
 
     def __init__(
         self,
         model_name: str = "gpt-3.5-turbo",
         api_key: Optional[str] = None,
-        default_options: Optional[OpenAIOptions] = None,
+        default_options: Optional[LiteLLMParams] = None,
     ) -> None:
         try:
             from openai import AsyncOpenAI  # pylint: disable=import-outside-toplevel
@@ -63,7 +63,7 @@ class OpenAIClient(LLMClient[OpenAIOptions]):
         self,
         prompt: Union[str, ChatFormat],
         response_format: Optional[Dict[str, str]],
-        options: OpenAIOptions,
+        options: LiteLLMParams,
         event: LLMEvent,
     ) -> str:
         """

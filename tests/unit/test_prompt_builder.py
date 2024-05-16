@@ -27,7 +27,7 @@ def hf_prompt_builder():
     return builder
 
 
-def test_openai_client_prompt(default_prompt_builder, simple_template):
+def test_litellm_prompt(default_prompt_builder, simple_template):
     prompt = default_prompt_builder.build(simple_template, fmt={"question": "Example user question?"})
     assert prompt == (
         {"content": "You are a helpful assistant.", "role": "system"},

@@ -27,9 +27,9 @@ def create_collection(
 
     ```python
         from dbally import create_collection
-        from dbally.llm_client.openai_client import OpenAIClient
+        from dbally.llms.litellm import LiteLLMClient
 
-        collection = create_collection("my_collection", llm_client=OpenAIClient())
+        collection = create_collection("my_collection", llm_client=LiteLLMClient())
     ```
 
     Args:

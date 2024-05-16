@@ -84,9 +84,9 @@ engine = create_engine('sqlite:///candidates.db')
 Once you have defined your view and created an engine, you can register the view with db-ally. You do this by creating a collection and adding the view to it:
 
 ```python
-from dbally.llm_client.openai_client import OpenAIClient
+from dbally.llms.litellm import LiteLLMClient
 
-my_collection = dbally.create_collection("collection_name", llm_client=OpenAIClient())
+my_collection = dbally.create_collection("collection_name", llm_client=LiteLLMClient())
 my_collection.add(CandidateView, lambda: CandidateView(engine))
 ```
 

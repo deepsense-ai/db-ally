@@ -22,7 +22,7 @@ from sqlalchemy import create_engine
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.iql_generator.iql_prompt_template import default_iql_template
-from dbally.llms.litellm import OpenAIClient
+from dbally.llms.litellm import LiteLLMClient
 from dbally.utils.errors import UnsupportedQueryError
 from dbally.views.structured import BaseStructuredView
 
@@ -96,7 +96,7 @@ async def evaluate(cfg: DictConfig) -> Any:
     view = VIEW_REGISTRY[ViewName(view_name)](engine)
 
     if "gpt" in cfg.model_name:
-        llm_client = OpenAIClient(
+        llm_client = LiteLLMClient(
             model_name=cfg.model_name,
             api_key=benchmark_cfg.openai_api_key,
         )
