@@ -12,7 +12,7 @@ from dbally import NOT_GIVEN, NotGiven
 from dbally.iql import IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template
-from dbally.llms.base import LLMClient, LLMParams
+from dbally.llms.base import LLMClient, LLMOptions
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.structured import BaseStructuredView, ExposedFunction, ViewExecutionResult
@@ -63,18 +63,18 @@ class MockSimilarityIndex(AbstractSimilarityIndex):
 
 
 @dataclass
-class MockLLMParams(LLMParams):
+class MockLLMOptions(LLMOptions):
     mock_property1: Union[int, NotGiven] = NOT_GIVEN
     mock_property2: Union[str, NotGiven] = NOT_GIVEN
 
 
-class MockLLMClient(LLMClient[MockLLMParams]):
-    _options_cls = MockLLMParams
+class MockLLMClient(LLMClient[MockLLMOptions]):
+    _options_cls = MockLLMOptions
 
     def __init__(
         self,
         model_name: str = "gpt-4-mock",
-        default_options: Optional[MockLLMParams] = None,
+        default_options: Optional[MockLLMOptions] = None,
     ) -> None:
         super().__init__(model_name, default_options)
 

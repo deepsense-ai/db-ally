@@ -3,7 +3,7 @@ from unittest.mock import ANY, AsyncMock, call
 import pytest
 
 from dbally import create_collection
-from tests.unit.mocks import MockLLMClient, MockLLMParams, MockViewBase
+from tests.unit.mocks import MockLLMClient, MockLLMOptions, MockViewBase
 
 
 class MockView1(MockViewBase):
@@ -16,9 +16,9 @@ class MockView2(MockViewBase):
 
 @pytest.mark.asyncio
 async def test_llm_options_propagation():
-    default_options = MockLLMParams(mock_property1=1, mock_property2="default mock")
-    custom_options = MockLLMParams(mock_property1=2)
-    expected_options = MockLLMParams(mock_property1=2, mock_property2="default mock")
+    default_options = MockLLMOptions(mock_property1=1, mock_property2="default mock")
+    custom_options = MockLLMOptions(mock_property1=2)
+    expected_options = MockLLMOptions(mock_property1=2, mock_property2="default mock")
 
     llm_client = MockLLMClient(default_options=default_options)
 

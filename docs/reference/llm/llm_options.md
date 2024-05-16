@@ -1,3 +1,3 @@
-# LLMParams
+# LLMOptions
 
-::: dbally.data_models.llm_options.LLMParams
+::: dbally.data_models.llm_options.LLMOptions

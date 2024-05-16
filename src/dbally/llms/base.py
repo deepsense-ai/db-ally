@@ -13,21 +13,21 @@ from dbally.prompts import ChatFormat, PromptBuilder, PromptTemplate
 
 from .._types import NotGiven
 
-LLMParamsNotGiven = TypeVar("LLMParamsNotGiven")
+LLMOptionsNotGiven = TypeVar("LLMOptionsNotGiven")
 LLMClientOptions = TypeVar("LLMClientOptions")
 
 
 @dataclass
-class LLMParams(ABC):
+class LLMOptions(ABC):
     """
     Abstract dataclass that represents all available LLM call options.
     """
 
-    _not_given: ClassVar[Optional[LLMParamsNotGiven]] = None
+    _not_given: ClassVar[Optional[LLMOptionsNotGiven]] = None
 
-    def __or__(self, other: "LLMParams") -> "LLMParams":
+    def __or__(self, other: "LLMOptions") -> "LLMOptions":
         """
-        Merges two LLMParams, prioritizing non-NOT_GIVEN values from the 'other' object.
+        Merges two LLMOptions, prioritizing non-NOT_GIVEN values from the 'other' object.
         """
         self_dict = asdict(self)
         other_dict = asdict(other)
@@ -43,11 +43,11 @@ class LLMParams(ABC):
 
     def dict(self) -> Dict[str, Any]:
         """
-        Creates a dictionary representation of the LLMParams instance.
+        Creates a dictionary representation of the LLMOptions instance.
         If a value is None, it will be replaced with a provider-specific not-given sentinel.
 
         Returns:
-            A dictionary representation of the LLMParams instance.
+            A dictionary representation of the LLMOptions instance.
         """
         options = asdict(self)
         return {
@@ -124,7 +124,7 @@ class LLMClient(Generic[LLMClientOptions], ABC):
         self,
         prompt: Union[str, ChatFormat],
         response_format: Optional[Dict[str, str]],
-        options: LLMParams,
+        options: LLMOptions,
         event: LLMEvent,
     ) -> str:
         """

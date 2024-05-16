@@ -2,7 +2,7 @@ import random
 from typing import Dict, Optional
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.llms.base import LLMParams
+from dbally.llms.base import LLMOptions
 from dbally.view_selection.base import ViewSelector
 
 
@@ -16,7 +16,7 @@ class RandomViewSelector(ViewSelector):
         question: str,
         views: Dict[str, str],
         event_tracker: EventTracker,
-        llm_options: Optional[LLMParams] = None,
+        llm_options: Optional[LLMOptions] = None,
     ) -> str:
         """
         Dummy implementation returning random view.

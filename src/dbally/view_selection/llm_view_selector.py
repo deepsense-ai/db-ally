@@ -3,7 +3,7 @@ from typing import Callable, Dict, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate
-from dbally.llms.base import LLMClient, LLMParams
+from dbally.llms.base import LLMClient, LLMOptions
 from dbally.view_selection.base import ViewSelector
 from dbally.view_selection.view_selector_prompt_template import default_view_selector_template
 
@@ -41,7 +41,7 @@ class LLMViewSelector(ViewSelector):
         question: str,
         views: Dict[str, str],
         event_tracker: EventTracker,
-        llm_options: Optional[LLMParams] = None,
+        llm_options: Optional[LLMOptions] = None,
     ) -> str:
         """
         Based on user question and list of available views select the most relevant one by prompting LLM.
