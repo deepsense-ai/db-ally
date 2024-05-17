@@ -8,6 +8,7 @@ from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llm_client.base import LLMClient, LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
 
+from ..similarity import AbstractSimilarityIndex
 from .base import BaseView
 
 
@@ -109,3 +110,19 @@ class BaseStructuredView(BaseView):
         Args:
             dry_run: if True, should only generate the query without executing it
         """
+
+    def list_similarity_indexes(self) -> List[AbstractSimilarityIndex]:
+        """
+        Lists all the similarity indexes used by the view.
+
+        Returns:
+            List of similarity indexes.
+
+        """
+        indexes = set()
+        filters = self.list_filters()
+        for filter_ in filters:
+            for param in filter_.parameters:
+                if param.similarity_index:
+                    indexes.add(param.similarity_index)
+        return list(indexes)

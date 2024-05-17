@@ -1,15 +1,16 @@
-from typing import Iterable, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
 import sqlalchemy
-from sqlalchemy import text
+from sqlalchemy import ColumnClause, Table, text
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.llm_client.base import LLMClient, LLMOptions
 from dbally.prompts import PromptTemplate
+from dbally.similarity import AbstractSimilarityIndex, SimilarityIndex, SimilarityStore, SimpleSqlAlchemyFetcher
 from dbally.views.base import BaseView
 
-from ._config import Text2SQLConfig
+from ._config import Text2SQLConfig, Text2SQLSimilarityType
 from ._errors import Text2SQLError
 
 text2sql_prompt = PromptTemplate(
@@ -31,10 +32,33 @@ class Text2SQLFreeformView(BaseView):
     Text2SQLFreeformView is a class designed to interact with the database using text2sql queries.
     """
 
-    def __init__(self, engine: sqlalchemy.engine.Engine, config: Text2SQLConfig) -> None:
+    def __init__(
+        self,
+        engine: sqlalchemy.engine.Engine,
+        config: Text2SQLConfig,
+        similarity_store_builders: Optional[Dict[Text2SQLSimilarityType, Callable[[str], SimilarityStore]]] = None,
+        similarity_indexes: Optional[Dict[str, Dict[str, SimilarityIndex]]] = None,
+    ) -> None:
         super().__init__()
         self._engine = engine
         self._config = config
+        self._similarity_indexes = similarity_indexes or {}
+        store_builders = similarity_store_builders or {}
+
+        for table_name, column_name, similarity_type in self._config.iterate_similarity_indexes():
+            if column_name not in self._similarity_indexes[table_name] and similarity_type in store_builders:
+                store_name = f"text2sql-freeform-index_{table_name}_{column_name}"
+                store_builder = store_builders[similarity_type]
+
+                default_fetcher = SimpleSqlAlchemyFetcher(
+                    sqlalchemy_engine=self._engine,
+                    column=ColumnClause(column_name),
+                    table=Table(table_name, sqlalchemy.MetaData()),
+                )
+
+                self._similarity_indexes[table_name][column_name] = SimilarityIndex(
+                    store=store_builder(store_name), fetcher=default_fetcher
+                )
 
     async def ask(
         self,
@@ -133,3 +157,12 @@ class Text2SQLFreeformView(BaseView):
             context += f"{table.ddl}\n"
 
         return context
+
+    def list_similarity_indexes(self) -> List[AbstractSimilarityIndex]:
+        """
+        List all similarity indexes used by the view.
+
+        Returns:
+            List of similarity indexes.
+        """
+        return [index for tables in self._similarity_indexes.values() for index in tables.values()]
