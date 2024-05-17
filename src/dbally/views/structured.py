@@ -5,7 +5,8 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.llms.clients.base import LLMClient, LLMOptions
+from dbally.llms import LLM
+from dbally.llms.clients import LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
 
 from .base import BaseView
@@ -17,22 +18,22 @@ class BaseStructuredView(BaseView):
     to be able to list all available filters, apply them and execute queries.
     """
 
-    def get_iql_generator(self, llm_client: LLMClient) -> IQLGenerator:
+    def get_iql_generator(self, llm: LLM) -> IQLGenerator:
         """
         Returns the IQL generator for the view.
 
         Args:
-            llm_client: LLM client used to generate the IQL queries
+            llm: LLM used to generate the IQL queries
 
         Returns:
             IQLGenerator: IQL generator for the view
         """
-        return IQLGenerator(llm_client=llm_client)
+        return IQLGenerator(llm=llm)
 
     async def ask(
         self,
         query: str,
-        llm_client: LLMClient,
+        llm: LLM,
         event_tracker: EventTracker,
         n_retries: int = 3,
         dry_run: bool = False,
@@ -44,16 +45,16 @@ class BaseStructuredView(BaseView):
 
         Args:
             query: The natural language query to execute.
-            llm_client: The LLM client used to execute the query.
+            llm: The LLM used to execute the query.
             event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
-            llm_options: options to use for the LLM client.
+            llm_options: Options to use for the LLM.
 
         Returns:
             The result of the query.
         """
-        iql_generator = self.get_iql_generator(llm_client)
+        iql_generator = self.get_iql_generator(llm)
         filter_list = self.list_filters()
 
         iql_filters, conversation = await iql_generator.generate_iql(

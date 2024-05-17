@@ -3,12 +3,10 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
-from functools import cached_property
-from typing import Any, ClassVar, Dict, Generic, Optional, Type, TypeVar, Union
+from typing import Any, ClassVar, Dict, Generic, Optional, TypeVar
 
-from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import LLMEvent
-from dbally.prompts import ChatFormat, PromptBuilder, PromptTemplate
+from dbally.prompts import ChatFormat
 
 from ..._types import NotGiven
 
@@ -62,74 +60,16 @@ class LLMClient(Generic[LLMClientOptions], ABC):
     It constructs a prompt using the `PromptBuilder` instance and generates text using the `self.call` method.
     """
 
-    _options_cls: Type[LLMClientOptions]
-
-    def __init__(
-        self,
-        model_name: str,
-        default_options: Optional[LLMClientOptions] = None,
-        api_key: Optional[str] = None,
-    ) -> None:
+    def __init__(self, model_name: str, api_key: Optional[str] = None) -> None:
         self.model_name = model_name
-        self.default_options = default_options or self._options_cls()
         self.api_key = api_key
-
-    def __init_subclass__(cls) -> None:
-        if not hasattr(cls, "_options_cls"):
-            raise TypeError(f"Class {cls.__name__} is missing the '_options_cls' attribute")
-
-    @cached_property
-    def _prompt_builder(self) -> PromptBuilder:
-        """
-        Prompt builder used to construct final prompts for the LLM.
-        """
-        return PromptBuilder()
-
-    async def text_generation(  # pylint: disable=R0913
-        self,
-        template: PromptTemplate,
-        fmt: dict,
-        *,
-        event_tracker: Optional[EventTracker] = None,
-        options: Optional[LLMClientOptions] = None,
-    ) -> str:
-        """
-        For a given a PromptType and format dict creates a prompt and
-        returns the response from LLM.
-
-        Args:
-            template: Prompt template in system/user/assistant openAI format.
-            fmt: Dictionary with formatting.
-            event_tracker: Event store used to audit the generation process.
-            options: options to use for the LLM client.
-
-        Returns:
-            Text response from LLM.
-        """
-        options = (self.default_options | options) if options else self.default_options
-
-        prompt = self._prompt_builder.build(template, fmt)
-
-        event = LLMEvent(prompt=prompt, type=type(template).__name__)
-
-        event_tracker = event_tracker or EventTracker()
-        async with event_tracker.track_event(event) as span:
-            event.response = await self.call(
-                prompt=prompt,
-                response_format=template.response_format,
-                options=options,
-                event=event,
-            )
-            span(event)
-
-        return event.response
 
     @abstractmethod
     async def call(
         self,
-        prompt: Union[str, ChatFormat],
+        prompt: ChatFormat,
         response_format: Optional[Dict[str, str]],
-        options: LLMOptions,
+        options: LLMClientOptions,
         event: LLMEvent,
     ) -> str:
         """

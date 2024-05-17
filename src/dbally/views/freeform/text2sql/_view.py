@@ -5,7 +5,8 @@ from sqlalchemy import text
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
-from dbally.llms.clients.base import LLMClient, LLMOptions
+from dbally.llms.base import LLM
+from dbally.llms.clients.base import LLMOptions
 from dbally.prompts import PromptTemplate
 from dbally.views.base import BaseView
 
@@ -39,7 +40,7 @@ class Text2SQLFreeformView(BaseView):
     async def ask(
         self,
         query: str,
-        llm_client: LLMClient,
+        llm: LLM,
         event_tracker: EventTracker,
         n_retries: int = 3,
         dry_run: bool = False,
@@ -51,11 +52,11 @@ class Text2SQLFreeformView(BaseView):
 
         Args:
             query: The natural language query to execute.
-            llm_client: The LLM client used to execute the query.
+            llm: The LLM used to execute the query.
             event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
-            llm_options: options to use for the LLM client.
+            llm_options: Options to use for the LLM.
 
         Returns:
             The result of the query.
@@ -75,7 +76,7 @@ class Text2SQLFreeformView(BaseView):
                 sql, conversation = await self._generate_sql(
                     query=query,
                     conversation=conversation,
-                    llm_client=llm_client,
+                    llm=llm,
                     event_tracker=event_tracker,
                     llm_options=llm_options,
                 )
@@ -106,11 +107,11 @@ class Text2SQLFreeformView(BaseView):
         self,
         query: str,
         conversation: PromptTemplate,
-        llm_client: LLMClient,
+        llm: LLM,
         event_tracker: EventTracker,
         llm_options: Optional[LLMOptions] = None,
     ) -> Tuple[str, PromptTemplate]:
-        response = await llm_client.text_generation(
+        response = await llm.text_generation(
             template=conversation,
             fmt={"tables": self._get_tables_context(), "dialect": self._engine.dialect.name, "question": query},
             event_tracker=event_tracker,

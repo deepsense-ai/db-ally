@@ -3,7 +3,8 @@ from typing import Callable, Dict, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate
-from dbally.llms.clients.base import LLMClient, LLMOptions
+from dbally.llms import LLM
+from dbally.llms.clients import LLMOptions
 from dbally.view_selection.base import ViewSelector
 from dbally.view_selection.view_selector_prompt_template import default_view_selector_template
 
@@ -21,18 +22,18 @@ class LLMViewSelector(ViewSelector):
 
     def __init__(
         self,
-        llm_client: LLMClient,
+        llm: LLM,
         prompt_template: Optional[IQLPromptTemplate] = None,
         promptify_views: Optional[Callable[[Dict[str, str]], str]] = None,
     ) -> None:
         """
         Args:
-            llm_client: LLM client used to generate IQL
+            llm: LLM used to generate IQL
             prompt_template: template for the prompt used for the view selection
             promptify_views: Function formatting filters for prompt. By default names and descriptions of\
             all views are concatenated
         """
-        self._llm_client = llm_client
+        self._llm = llm
         self._prompt_template = prompt_template or copy.deepcopy(default_view_selector_template)
         self._promptify_views = promptify_views or _promptify_views
 
@@ -58,7 +59,7 @@ class LLMViewSelector(ViewSelector):
 
         views_for_prompt = self._promptify_views(views)
 
-        llm_response = await self._llm_client.text_generation(
+        llm_response = await self._llm.text_generation(
             template=self._prompt_template,
             fmt={"views": views_for_prompt, "question": question},
             event_tracker=event_tracker,

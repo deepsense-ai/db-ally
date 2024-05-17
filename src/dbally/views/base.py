@@ -3,7 +3,8 @@ from typing import Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
-from dbally.llms.clients.base import LLMClient, LLMOptions
+from dbally.llms import LLM
+from dbally.llms.clients import LLMOptions
 
 
 class BaseView(metaclass=abc.ABCMeta):
@@ -16,7 +17,7 @@ class BaseView(metaclass=abc.ABCMeta):
     async def ask(
         self,
         query: str,
-        llm_client: LLMClient,
+        llm: LLM,
         event_tracker: EventTracker,
         n_retries: int = 3,
         dry_run: bool = False,
@@ -27,11 +28,11 @@ class BaseView(metaclass=abc.ABCMeta):
 
         Args:
             query: The natural language query to execute.
-            llm_client: The LLM client used to execute the query.
+            llm: The LLM used to execute the query.
             event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
-            llm_options: options to use for the LLM client.
+            llm_options: Options to use for the LLM.
 
         Returns:
             The result of the query.

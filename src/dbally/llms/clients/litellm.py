@@ -37,30 +37,9 @@ class LiteLLMClient(LLMClient[LiteLLMOptions]):
 
     _options_cls = LiteLLMOptions
 
-    def __init__(
-        self,
-        model_name: str = "gpt-3.5-turbo",
-        default_options: Optional[LiteLLMOptions] = None,
-        api_key: Optional[str] = None,
-    ) -> None:
-        """
-        Constructs a new `LiteLLMClient` instance.
-
-        Args:
-            model_name: Name of the [OpenAI's model](https://platform.openai.com/docs/models) to be used,\
-                default is "gpt-3.5-turbo".
-            default_options: Default options to be used in the LLM calls.
-            api_key: OpenAI's API key. If None OPENAI_API_KEY environment variable will be used
-        """
-        super().__init__(
-            model_name=model_name,
-            default_options=default_options,
-            api_key=api_key,
-        )
-
     async def call(
         self,
-        prompt: Union[str, ChatFormat],
+        prompt: ChatFormat,
         response_format: Optional[Dict[str, str]],
         options: LiteLLMOptions,
         event: LLMEvent,
@@ -84,7 +63,7 @@ class LiteLLMClient(LLMClient[LiteLLMOptions]):
         """
         try:
             response = await litellm.acompletion(
-                messages=list(prompt),
+                messages=prompt,
                 model=self.model_name,
                 api_key=self.api_key,
                 response_format=response_format,

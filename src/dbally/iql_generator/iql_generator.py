@@ -3,7 +3,8 @@ from typing import Callable, List, Optional, Tuple, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template
-from dbally.llms.clients.base import LLMClient, LLMOptions
+from dbally.llms import LLM
+from dbally.llms.clients import LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
 
 
@@ -25,17 +26,17 @@ class IQLGenerator:
 
     def __init__(
         self,
-        llm_client: LLMClient,
+        llm: LLM,
         prompt_template: Optional[IQLPromptTemplate] = None,
         promptify_view: Optional[Callable] = None,
     ) -> None:
         """
         Args:
-            llm_client: LLM client used to generate IQL
+            llm: LLM used to generate IQL
             prompt_template: If not provided by the users is set to `default_iql_template`
             promptify_view: Function formatting filters for prompt
         """
-        self._llm_client = llm_client
+        self._llm = llm
         self._prompt_template = prompt_template or copy.deepcopy(default_iql_template)
         self._promptify_view = promptify_view or _promptify_filters
 
@@ -64,7 +65,7 @@ class IQLGenerator:
 
         template = conversation or self._prompt_template
 
-        llm_response = await self._llm_client.text_generation(
+        llm_response = await self._llm.text_generation(
             template=template,
             fmt={"filters": filters_for_prompt, "question": question},
             event_tracker=event_tracker,
