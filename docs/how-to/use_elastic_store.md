@@ -1,7 +1,7 @@
 # How-To: Use Elastic to Store Similarity Index
 
 [The similarity index](../concepts/similarity_indexes.md) is a feature provided by db-ally designed to map user input to the closest matching value in a data source. In this guide, we will show you how to execute similarity search by using elastic search.
-In the example the elastic search engine is provided by official docker image. 
+In the example the elastic search engine is provided by official docker image.
 
 ## Environment setup
 
@@ -16,7 +16,7 @@ docker cp es01:/usr/share/elasticsearch/config/certs/http_ca.crt .
 curl --cacert http_ca.crt -u elastic:$ELASTIC_PASSWORD https://localhost:9200
 ```
 
-* Store specific (docker container creation printed) output to following variables in the project .venv file 
+* Store specific (docker container creation printed) output to following variables in the project .venv file:
   - ELASTIC_STORE_CONNECTION_STRING (e.g ```https://localhost:9200```),
   - ELASTIC_CERT_PATH (e.g ```/home/username/certs/http_ca.crt```)
   - ELASTIC_AUTH_USER (e.g ```"elastic```)

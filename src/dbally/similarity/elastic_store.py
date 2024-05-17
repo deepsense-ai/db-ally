@@ -2,7 +2,6 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from elasticsearch import Elasticsearch
-from loguru import logger
 
 from dbally.embedding_client.base import EmbeddingClient
 from dbally.similarity.store import SimilarityStore
