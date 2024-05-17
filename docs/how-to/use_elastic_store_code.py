@@ -1,14 +1,15 @@
 # pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring
-import dbally
 import os
 import asyncio
 from typing_extensions import Annotated
 
+import asyncclick as click
 from dotenv import load_dotenv
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 
+import dbally
 from dbally import decorators, SqlAlchemyBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.similarity import SimpleSqlAlchemyFetcher, SimilarityIndex
@@ -79,14 +80,19 @@ class CandidateView(SqlAlchemyBaseView):
         return Candidate.country == country
 
 
-async def main():
+@click.command()
+@click.argument("country", type=str, default="United States")
+@click.argument("years_of_experience", type=str, default="2")
+async def main(country="United States", years_of_experience="2"):
     await country_similarity.update()
 
     llm = OpenAIClient(model_name="gpt-3.5-turbo", api_key=os.environ["OPENAI_API_KEY"])
     collection = dbally.create_collection("recruitment", llm, event_handlers=[CLIEventHandler()])
     collection.add(CandidateView, lambda: CandidateView(engine))
 
-    result = await collection.ask("Find someone from the RUS with more than 2 years of experience.")
+    result = await collection.ask(
+        f"Find someone from the {country} with more than {years_of_experience} years of experience."
+    )
 
     print(f"The generated SQL query is: {result.context.get('sql')}")
     print()

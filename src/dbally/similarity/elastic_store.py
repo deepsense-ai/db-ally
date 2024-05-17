@@ -1,7 +1,8 @@
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-from elasticsearch import Elasticsearch
+from elasticsearch import AsyncElasticsearch
+from elasticsearch.helpers import async_bulk
 
 from dbally.embedding_client.base import EmbeddingClient
 from dbally.similarity.store import SimilarityStore
@@ -30,7 +31,7 @@ class ElasticStore(SimilarityStore):
 
         """
         super().__init__()
-        self.es = Elasticsearch(
+        self.es = AsyncElasticsearch(
             hosts=host,
             http_auth=http_auth_tuple,
             ca_certs=ca_cert_path,
@@ -45,6 +46,26 @@ class ElasticStore(SimilarityStore):
                 "num_candidates": 50,
             }
         }
+
+    async def generate_data(self, data):
+        """Asynchronously generates and yields documents with embeddings for a list of words.
+
+        This coroutine iterates over a list of strings, fetches their embeddings using an asynchronous client,
+        and yields documents formatted for indexing in Elasticsearch. Each document contains the word, and
+        its corresponding embedding, reshaped as a flat array.
+
+        Args:
+            data (list of str): A list of words for which embeddings are to be generated.
+
+        Yields:
+            dict: A dictionary formatted for Elasticsearch indexing, containing:
+                - "_index" (str): The name of the Elasticsearch index.
+                - "column" (str): The original word.
+                - "search_vector" (numpy.ndarray): The embedding vector for the word, as a flat 1D array.
+        """
+        for word in data:
+            embedding = np.array(await self.embedding_client.get_embeddings([word]), dtype=np.float32).reshape(-1)
+            yield {"_index": self.index_name, "column": word, "search_vector": embedding}
 
     async def store(self, data: List[str]) -> None:
         """
@@ -64,26 +85,25 @@ class ElasticStore(SimilarityStore):
             }
         }
 
-        self.es.indices.delete(index=self.index_name)
-        self.es.indices.create(index=self.index_name, mappings=mappings)
+        await self.es.indices.delete(index=self.index_name)
+        await self.es.indices.create(index=self.index_name, mappings=mappings)
 
-        operations = []
-        for word in data:
-            payload = {}
-            operations.append({"index": {"_index": self.index_name}})
-            # Transforming the title into an embedding using the model
-            # embedding = self.model.encode(word)
-            embedding = np.array(await self.embedding_client.get_embeddings([word]), dtype=np.float32).reshape(-1)
-            payload["column"] = word
-            payload["search_vector"] = embedding
-            operations.append(payload)
-
-        self.es.bulk(index=self.index_name, operations=operations, refresh=True)
+        await async_bulk(self.es, self.generate_data(data))
 
     @staticmethod
     def _filter_response(res):
+        """Extracts and returns a specific field from the first hit in an Elasticsearch response.
+
+        This function processes a response from an Elasticsearch query to extract a specific nested field ('column')
+        from the first element in the list of hits, if any exist. If there are no hits, it returns None.
+
+        Args:
+            res (dict): The response dictionary from an Elasticsearch query.
+
+        Returns:
+            The value of the 'column' field from the first hit in the response, or None if there are no hits.
+        """
         if len(res["hits"]["hits"]) != 0:
-            # result = [hit["_source"]["column"] for hit in res["hits"]["hits"]]
             result = res["hits"]["hits"][0]["_source"]["column"]
         else:
             result = None
@@ -99,14 +119,13 @@ class ElasticStore(SimilarityStore):
         Returns:
             The most similar text or None if no similar text is found.
         """
-        # embedding = self.model.encode(text)
         embedding = np.array(await self.embedding_client.get_embeddings([text]), dtype=np.float32).reshape(-1)
 
         for key in self.search_algorithm:
             self.search_algorithm[key]["query_vector"] = embedding
             break
 
-        search_results = self.es.search(
+        search_results = await self.es.search(
             **self.search_algorithm,
         )
         result = self._filter_response(search_results)
