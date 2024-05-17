@@ -12,7 +12,7 @@ import pandas as pd
 from dbally import decorators, SqlAlchemyBaseView, DataFrameBaseView, ExecutionResult
 from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
 from dbally.embedding_client.openai import OpenAiEmbeddingClient
-from dbally.llms.litellm import LiteLLMClient
+from dbally.llms.clients.litellm import LiteLLMClient
 
 engine = create_engine('sqlite:///candidates.db')
 

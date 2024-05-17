@@ -7,7 +7,7 @@ import pytest
 
 import dbally
 from dbally.audit.event_tracker import EventTracker
-from dbally.llms.base import LLMClient
+from dbally.llms.clients.base import LLMClient
 from dbally.view_selection.llm_view_selector import LLMViewSelector
 
 from .mocks import MockLLMClient

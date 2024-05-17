@@ -5,7 +5,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.llms.base import LLMClient, LLMOptions
+from dbally.llms.clients.base import LLMClient, LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
 
 from .base import BaseView

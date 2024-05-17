@@ -5,7 +5,7 @@ import pandas as pd
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
-from dbally.llms.base import LLMClient, LLMOptions
+from dbally.llms.clients.base import LLMClient, LLMOptions
 from dbally.nl_responder.nl_responder_prompt_template import NLResponderPromptTemplate, default_nl_responder_template
 from dbally.nl_responder.query_explainer_prompt_template import (
     QueryExplainerPromptTemplate,

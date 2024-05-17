@@ -5,12 +5,11 @@ import litellm
 from openai import APIConnectionError, APIResponseValidationError, APIStatusError
 
 from dbally.data_models.audit import LLMEvent
-from dbally.llms.base import LLMClient
+from dbally.llms.clients.base import LLMClient, LLMOptions
 from dbally.prompts import ChatFormat
 
-from .._exceptions import LLMConnectionError, LLMResponseError, LLMStatusError
-from .._types import NOT_GIVEN, NotGiven
-from .base import LLMOptions
+from ..._exceptions import LLMConnectionError, LLMResponseError, LLMStatusError
+from ..._types import NOT_GIVEN, NotGiven
 
 
 @dataclass

@@ -10,7 +10,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import LLMEvent
 from dbally.prompts import ChatFormat, PromptBuilder, PromptTemplate
 
-from .._types import NotGiven
+from ..._types import NotGiven
 
 LLMOptionsNotGiven = TypeVar("LLMOptionsNotGiven")
 LLMClientOptions = TypeVar("LLMClientOptions")

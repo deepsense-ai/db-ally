@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from .audit.event_handlers.base import EventHandler
 from .collection import Collection
-from .llms.base import LLMClient
+from .llms.clients.base import LLMClient
 from .nl_responder.nl_responder import NLResponder
 from .view_selection.base import ViewSelector
 from .view_selection.llm_view_selector import LLMViewSelector
