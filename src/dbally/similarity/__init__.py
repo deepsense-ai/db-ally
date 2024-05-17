@@ -4,6 +4,7 @@ from .sqlalchemy_base import SimpleSqlAlchemyFetcher, SqlAlchemyFetcher
 from .store import SimilarityStore
 
 # depends on the faiss package
+
 try:
     from .faiss_store import FaissStore
 except ImportError:
@@ -11,6 +12,11 @@ except ImportError:
 
 try:
     from .chroma_store import ChromadbStore
+except ImportError:
+    pass
+
+try:
+    from .elastic_store import ElasticStore
 except ImportError:
     pass
 
@@ -22,5 +28,6 @@ __all__ = [
     "SimilarityStore",
     "SimilarityFetcher",
     "FaissStore",
+    "ElasticStore",
     "ChromadbStore",
 ]
