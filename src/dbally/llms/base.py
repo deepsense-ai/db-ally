@@ -74,7 +74,7 @@ class LLM(Generic[LLMClientOptions], ABC):
         """
         return sum(len(message["content"].format(**fmt)) for message in messages)
 
-    async def text_generation(  # pylint: disable=R0913
+    async def text_generation(
         self,
         template: PromptTemplate,
         fmt: Dict[str, str],
