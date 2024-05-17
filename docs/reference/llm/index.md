@@ -11,5 +11,5 @@ frequency_penalty, max_tokens, and temperature.
 It constructs prompts using the [`PromptBuilder`](./prompt_builder.md) instance.
 
 
-::: dbally.llms.base.LLMClient
+::: dbally.llm_client.base.LLMClient
 

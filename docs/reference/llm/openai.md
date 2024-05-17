@@ -1,3 +1,3 @@
 # OpenAILLMClient
 
-::: dbally.llms.litellm.LiteLLMClient
+::: dbally.llm_client.openai_client.OpenAIClient
