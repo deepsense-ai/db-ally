@@ -1,7 +1,8 @@
 import pytest
 
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate
-from dbally.prompts import ChatFormat, PromptBuilder, PromptTemplate, PromptTemplateError
+from dbally.prompts import ChatFormat, PromptTemplate, PromptTemplateError
+from tests.unit.mocks import MockLLM
 
 
 @pytest.fixture()
@@ -16,22 +17,24 @@ def simple_template():
 
 
 @pytest.fixture()
-def default_prompt_builder():
-    builder = PromptBuilder()
-    return builder
+def llm():
+    return MockLLM()
 
 
-def test_litellm_client_prompt(default_prompt_builder, simple_template):
-    prompt = default_prompt_builder.build(simple_template, fmt={"question": "Example user question?"})
-    assert prompt == (
+def test_default_llm_build_prompt(llm, simple_template):
+    prompt = llm._build_prompt(
+        template=simple_template,
+        fmt={"question": "Example user question?"},
+    )
+    assert prompt == [
         {"content": "You are a helpful assistant.", "role": "system"},
         {"content": "Example user question?", "role": "user"},
-    )
+    ]
 
 
-def test_missing_format_dict(default_prompt_builder, simple_template):
+def test_missing_format_dict(llm, simple_template):
     with pytest.raises(KeyError):
-        _ = default_prompt_builder.build(simple_template, fmt={})
+        _ = llm._build_prompt(simple_template, fmt={})
 
 
 @pytest.mark.parametrize(
@@ -60,10 +63,10 @@ def test_chat_order_validation(invalid_chat):
         _ = PromptTemplate(chat=invalid_chat)
 
 
-def test_dynamic_few_shot(default_prompt_builder, simple_template):
+def test_dynamic_few_shot(llm, simple_template):
     assert (
         len(
-            default_prompt_builder.build(
+            llm._build_prompt(
                 simple_template.add_assistant_message("assistant message").add_user_message("user message"),
                 fmt={"question": "user question"},
             )

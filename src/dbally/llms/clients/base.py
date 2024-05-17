@@ -55,9 +55,7 @@ class LLMOptions(ABC):
 
 class LLMClient(Generic[LLMClientOptions], ABC):
     """
-    Abstract client for interaction with LLM.
-
-    It constructs a prompt using the `PromptBuilder` instance and generates text using the `self.call` method.
+    Abstract client for a direct communication with LLM.
     """
 
     def __init__(self, model_name: str, api_key: Optional[str] = None) -> None:
