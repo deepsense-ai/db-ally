@@ -219,10 +219,10 @@ Finally, we can use the `CandidatesView` just like any other view in db-ally. We
 ```python
 import asyncio
 import dbally
-from dbally.llms.litellm import LiteLLMClient
+from dbally.llms.litellm import LiteLLM
 
 async def main():
-    llm = LiteLLMClient(model_name="gpt-3.5-turbo")
+    llm = LiteLLM(model_name="gpt-3.5-turbo")
     collection = dbally.create_collection("recruitment", llm)
     collection.add(CandidateView)
 

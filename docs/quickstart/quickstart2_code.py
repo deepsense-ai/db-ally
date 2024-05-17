@@ -12,7 +12,7 @@ from dbally import decorators, SqlAlchemyBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
 from dbally.embedding_client.openai import OpenAiEmbeddingClient
-from dbally.llms.clients.litellm import LiteLLMClient
+from dbally.llms.litellm import LiteLLM
 
 engine = create_engine('sqlite:///candidates.db')
 
@@ -73,7 +73,7 @@ class CandidateView(SqlAlchemyBaseView):
 async def main():
     await country_similarity.update()
 
-    llm = LiteLLMClient(model_name="gpt-3.5-turbo")
+    llm = LiteLLM(model_name="gpt-3.5-turbo")
     collection = dbally.create_collection("recruitment", llm, event_handlers=[CLIEventHandler()])
     collection.add(CandidateView, lambda: CandidateView(engine))
 

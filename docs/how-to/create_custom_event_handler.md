@@ -117,11 +117,11 @@ To use our event handler, we need to pass it to the collection when creating it:
 
 ```python
 import dbally
-from dbally.llms.litellm import LiteLLMClient
+from dbally.llms.litellm import LiteLLM
 
 my_collection = bally.create_collection(
     "collection_name",
-    llm_client=LiteLLMClient(),
+    llm_client=LiteLLM(),
     event_handlers=[FileEventHandler()],
 )
 ```
