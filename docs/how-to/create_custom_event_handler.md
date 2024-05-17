@@ -121,7 +121,7 @@ from dbally.llms.litellm import LiteLLM
 
 my_collection = bally.create_collection(
     "collection_name",
-    llm_client=LiteLLM(),
+    llm=LiteLLM(),
     event_handlers=[FileEventHandler()],
 )
 ```

@@ -86,7 +86,7 @@ Once you have defined your view and created an engine, you can register the view
 ```python
 from dbally.llms.litellm import LiteLLM
 
-my_collection = dbally.create_collection("collection_name", llm_client=LiteLLM())
+my_collection = dbally.create_collection("collection_name", llm=LiteLLM())
 my_collection.add(CandidateView, lambda: CandidateView(engine))
 ```
 

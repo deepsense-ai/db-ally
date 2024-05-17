@@ -63,7 +63,7 @@ If you have a [collection](../concepts/collections.md) and want to update Simila
 from db_ally import create_collection
 from db_ally.llms.litellm import LiteLLM
 
-my_collection = create_collection("collection_name", llm_client=LiteLLM())
+my_collection = create_collection("collection_name", llm=LiteLLM())
 
 # ... add views to the collection
 
