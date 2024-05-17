@@ -24,6 +24,7 @@ nav:
       - Using similarity indexes:
           - how-to/use_custom_similarity_fetcher.md
           - how-to/use_chromadb_store.md
+          - how-to/use_elastic_store.md
           - how-to/use_custom_similarity_store.md
           - how-to/update_similarity_indexes.md
       - how-to/log_runs_to_langsmith.md
