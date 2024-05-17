@@ -11,7 +11,7 @@ from dbally.nl_responder.query_explainer_prompt_template import (
     QueryExplainerPromptTemplate,
     default_query_explainer_template,
 )
-from dbally.nl_responder.token_counters import count_tokens_for_huggingface, count_tokens_for_openai
+from dbally.nl_responder.token_counters import count_tokens
 
 
 class NLResponder:
@@ -65,22 +65,13 @@ class NLResponder:
         Returns:
             Natural language response to the user question.
         """
-
         rows = _promptify_rows(result.results)
 
-        if "gpt" in self._llm_client.model_name:
-            tokens_count = count_tokens_for_openai(
-                messages=self._nl_responder_prompt_template.chat,
-                fmt={"rows": rows, "question": question},
-                model=self._llm_client.model_name,
-            )
-
-        else:
-            tokens_count = count_tokens_for_huggingface(
-                messages=self._nl_responder_prompt_template.chat,
-                fmt={"rows": rows, "question": question},
-                model=self._llm_client.model_name,
-            )
+        tokens_count = count_tokens(
+            messages=self._nl_responder_prompt_template.chat,
+            fmt={"rows": rows, "question": question},
+            model=self._llm_client.model_name,
+        )
 
         if tokens_count > self._max_tokens_count:
             context = result.context

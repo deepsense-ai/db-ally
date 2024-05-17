@@ -1,8 +1,7 @@
 # disable args docstring check as args are documented in OpenAI API docs
 # pylint: disable=W9015,R0914
 
-import abc
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 from functools import cached_property
 from typing import Any, ClassVar, Dict, Generic, Optional, Type, TypeVar, Union
@@ -65,9 +64,15 @@ class LLMClient(Generic[LLMClientOptions], ABC):
 
     _options_cls: Type[LLMClientOptions]
 
-    def __init__(self, model_name: str, default_options: Optional[LLMClientOptions] = None) -> None:
+    def __init__(
+        self,
+        model_name: str,
+        default_options: Optional[LLMClientOptions] = None,
+        api_key: Optional[str] = None,
+    ) -> None:
         self.model_name = model_name
         self.default_options = default_options or self._options_cls()
+        self.api_key = api_key
 
     def __init_subclass__(cls) -> None:
         if not hasattr(cls, "_options_cls"):
@@ -119,7 +124,7 @@ class LLMClient(Generic[LLMClientOptions], ABC):
 
         return event.response
 
-    @abc.abstractmethod
+    @abstractmethod
     async def call(
         self,
         prompt: Union[str, ChatFormat],

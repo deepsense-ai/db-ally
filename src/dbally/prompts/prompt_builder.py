@@ -1,33 +1,11 @@
-from typing import TYPE_CHECKING, Dict, Optional, Union
+from typing import Dict, Union
 
 from .common_validation_utils import ChatFormat
 from .prompt_template import PromptTemplate
 
-if TYPE_CHECKING:
-    from transformers.tokenization_utils import PreTrainedTokenizer
-
 
 class PromptBuilder:
     """Class used to build prompts"""
-
-    def __init__(self, model_name: Optional[str] = None) -> None:
-        """
-        Args:
-            model_name: name of the tokenizer model to use. If provided, the tokenizer will convert the prompt to the
-                format expected by the model. The model_name should be a model available on huggingface.co/models.
-
-        Raises:
-            OSError: If model_name is not found in huggingface.co/models
-        """
-        self._tokenizer: Optional["PreTrainedTokenizer"] = None
-
-        if model_name is not None:
-            try:
-                from transformers import AutoTokenizer  # pylint: disable=import-outside-toplevel
-            except ImportError as exc:
-                raise ImportError("You need to install transformers package to use huggingface tokenizers") from exc
-
-            self._tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     def format_prompt(self, prompt_template: PromptTemplate, fmt: Dict[str, str]) -> ChatFormat:
         """
@@ -57,7 +35,4 @@ class PromptBuilder:
             KeyError: If fmt does not fill all template arguments.
         """
 
-        prompt = self.format_prompt(prompt_template, fmt)
-        if self._tokenizer is not None:
-            prompt = self._tokenizer.apply_chat_template(prompt, tokenize=False, add_generation_prompt=True)
-        return prompt
+        return self.format_prompt(prompt_template, fmt)
