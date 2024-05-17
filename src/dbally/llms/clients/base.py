@@ -61,6 +61,13 @@ class LLMClient(Generic[LLMClientOptions], ABC):
     """
 
     def __init__(self, model_name: str, api_key: Optional[str] = None) -> None:
+        """
+        Construct a new LLMClient instance.
+
+        Args:
+            model_name: Name of the model to be used.
+            api_key: API key to be used.
+        """
         self.model_name = model_name
         self.api_key = api_key
 

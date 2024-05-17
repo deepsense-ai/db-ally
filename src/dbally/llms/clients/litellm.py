@@ -15,8 +15,8 @@ from ..._types import NOT_GIVEN, NotGiven
 @dataclass
 class LiteLLMOptions(LLMOptions):
     """
-    Dataclass that represents all available LLM call options for the OpenAI API. Each of them is
-    described in the [OpenAI API documentation](https://platform.openai.com/docs/api-reference/chat/create.)
+    Dataclass that represents all available LLM call options for the LiteLLM client.
+    Each of them is described in the [LiteLLM documentation](https://docs.litellm.ai/docs/completion/input).
     """
 
     frequency_penalty: Union[Optional[float], NotGiven] = NOT_GIVEN
@@ -31,8 +31,8 @@ class LiteLLMOptions(LLMOptions):
 
 class LiteLLMClient(LLMClient[LiteLLMOptions]):
     """
-    `LiteLLMClient` is a class designed to interact with OpenAI's language model (LLM) endpoints,
-    particularly for the GPT models.
+    Client for the LiteLLM that supports calls to 100+ LLMs APIs, including OpenAI, Anthropic, VertexAI,
+    Hugging Face and others.
     """
 
     _options_cls = LiteLLMOptions

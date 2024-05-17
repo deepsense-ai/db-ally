@@ -10,7 +10,7 @@ from dbally.prompts import ChatFormat
 
 class LiteLLM(LLM[LiteLLMOptions]):
     """
-    LiteLLM supports 100+ LLMs, including GPT, Claude, Gemini and Hugging Face models.
+    Class for interaction with any LLM supported by LiteLLM API.
     """
 
     _options_cls = LiteLLMOptions
@@ -25,9 +25,12 @@ class LiteLLM(LLM[LiteLLMOptions]):
         Construct a new LiteLLM instance.
 
         Args:
-            model_name: Name of the model to be used.
+            model_name: Name of the [LiteLLM supported model](https://docs.litellm.ai/docs/providers) to be used,
+                default is "gpt-3.5-turbo".
             default_options: Default options to be used.
-            api_key: API key to be used.
+            api_key: API key to be used. API key to be used. If not specified, an environment variable will be used,
+                for more information, follow the instructions for your specific vendor in the\
+                [LiteLLM documentation](https://docs.litellm.ai/docs/providers).
         """
         super().__init__(
             model_name=model_name,
@@ -44,7 +47,7 @@ class LiteLLM(LLM[LiteLLMOptions]):
 
     def count_tokens(self, messages: ChatFormat, fmt: Dict[str, str]) -> int:
         """
-        Count tokens in the messages.
+        Count tokens in the messages using a specified model.
 
         Args:
             messages: Messages to count tokens for.
