@@ -37,6 +37,28 @@ class LiteLLMClient(LLMClient[LiteLLMOptions]):
 
     _options_cls = LiteLLMOptions
 
+    def __init__(
+        self,
+        model_name: str,
+        *,
+        base_url: Optional[str] = None,
+        api_key: Optional[str] = None,
+        api_version: Optional[str] = None,
+    ) -> None:
+        """
+        Constructs a new LiteLLMClient instance.
+
+        Args:
+            model_name: Name of the model to use.
+            base_url: Base URL of the LLM API.
+            api_key: API key used to authenticate with the LLM API.
+            api_version: API version of the LLM API.
+        """
+        super().__init__(model_name)
+        self.base_url = base_url
+        self.api_key = api_key
+        self.api_version = api_version
+
     async def call(
         self,
         prompt: ChatFormat,
@@ -65,7 +87,9 @@ class LiteLLMClient(LLMClient[LiteLLMOptions]):
             response = await litellm.acompletion(
                 messages=prompt,
                 model=self.model_name,
+                base_url=self.base_url,
                 api_key=self.api_key,
+                api_version=self.api_version,
                 response_format=response_format,
                 **options.dict(),  # type: ignore
             )

@@ -112,7 +112,7 @@ async def recruiting_example(db_description: str, benchmark: Benchmark = example
     for question in benchmark.questions:
         await recruitment_db.ask(question.dbally_question, return_natural_response=True)
         gpt_question = question.gpt_question if question.gpt_question else question.dbally_question
-        gpt_response = await llm.text_generation(
+        gpt_response = await llm.generate_text(
             TEXT2SQL_PROMPT_TEMPLATE, {"schema": db_description, "question": gpt_question}, event_tracker=event_tracker
         )
 

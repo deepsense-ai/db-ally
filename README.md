@@ -31,7 +31,7 @@ This is a basic implementation of a db-ally view for an example HR application, 
 
 ```python
 from dbally import decorators, SqlAlchemyBaseView, create_collection
-from dbally.llms.litellm import LiteLLMClient
+from dbally.llms.litellm import LiteLLM
 from sqlalchemy import create_engine
 
 class CandidateView(SqlAlchemyBaseView):
@@ -53,7 +53,7 @@ class CandidateView(SqlAlchemyBaseView):
         return Candidate.country == country
 
 engine = create_engine('sqlite:///candidates.db')
-llm = LiteLLMClient(model_name="gpt-3.5-turbo")
+llm = LiteLLM(model_name="gpt-3.5-turbo")
 my_collection = create_collection("collection_name", llm)
 my_collection.add(CandidateView, lambda: CandidateView(engine))
 
@@ -82,12 +82,12 @@ pip install dbally
 
 Additionally, you can install one of our extensions to use specific features.
 
-* `dbally[openai]`: Use [OpenAI's models](https://platform.openai.com/docs/models)
+* `dbally[litellm]`: Use [100+ LLMs](https://docs.litellm.ai/docs/providers)
 * `dbally[faiss]`: Use [Faiss](https://github.com/facebookresearch/faiss) indexes for similarity search
 * `dbally[langsmith]`: Use [LangSmith](https://www.langchain.com/langsmith) for query tracking
 
 ```bash
-pip install dbally[openai,faiss,langsmith]
+pip install dbally[litellm,faiss,langsmith]
 ```
 
 ## License

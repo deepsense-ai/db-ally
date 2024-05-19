@@ -111,7 +111,7 @@ class Text2SQLFreeformView(BaseView):
         event_tracker: EventTracker,
         llm_options: Optional[LLMOptions] = None,
     ) -> Tuple[str, PromptTemplate]:
-        response = await llm.text_generation(
+        response = await llm.generate_text(
             template=conversation,
             fmt={"tables": self._get_tables_context(), "dialect": self._engine.dialect.name, "question": query},
             event_tracker=event_tracker,

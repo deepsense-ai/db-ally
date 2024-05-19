@@ -7,7 +7,7 @@ import pytest
 
 import dbally
 from dbally.audit.event_tracker import EventTracker
-from dbally.llms import LLM
+from dbally.llms.base import LLM
 from dbally.view_selection.llm_view_selector import LLMViewSelector
 from tests.unit.mocks import MockLLM
 from tests.unit.test_collection import MockView1, MockView2

@@ -8,8 +8,8 @@ from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import RequestEnd, RequestStart
 from dbally.data_models.execution_result import ExecutionResult
-from dbally.llms import LLM
-from dbally.llms.clients import LLMOptions
+from dbally.llms.base import LLM
+from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.utils.errors import NoViewFoundError

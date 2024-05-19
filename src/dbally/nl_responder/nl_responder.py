@@ -74,7 +74,7 @@ class NLResponder:
         if tokens_count > self._max_tokens_count:
             context = result.context
             query = next((context.get(key) for key in self.QUERY_KEYS if context.get(key)), question)
-            llm_response = await self._llm.text_generation(
+            llm_response = await self._llm.generate_text(
                 template=self._query_explainer_prompt_template,
                 fmt={"question": question, "query": query, "number_of_results": len(result.results)},
                 event_tracker=event_tracker,
@@ -83,7 +83,7 @@ class NLResponder:
 
             return llm_response
 
-        llm_response = await self._llm.text_generation(
+        llm_response = await self._llm.generate_text(
             template=self._nl_responder_prompt_template,
             fmt={"rows": _promptify_rows(result.results), "question": question},
             event_tracker=event_tracker,

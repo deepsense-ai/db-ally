@@ -1,6 +1,3 @@
-# disable args docstring check as args are documented in OpenAI API docs
-# pylint: disable=W9015,R0914
-
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 from typing import Any, ClassVar, Dict, Generic, Optional, TypeVar
@@ -11,7 +8,7 @@ from dbally.prompts import ChatFormat
 from ..._types import NotGiven
 
 LLMOptionsNotGiven = TypeVar("LLMOptionsNotGiven")
-LLMClientOptions = TypeVar("LLMClientOptions")
+LLMClientOptions = TypeVar("LLMClientOptions", bound="LLMOptions")
 
 
 @dataclass
@@ -58,16 +55,14 @@ class LLMClient(Generic[LLMClientOptions], ABC):
     Abstract client for a direct communication with LLM.
     """
 
-    def __init__(self, model_name: str, api_key: Optional[str] = None) -> None:
+    def __init__(self, model_name: str) -> None:
         """
-        Construct a new LLMClient instance.
+        Constructs a new LLMClient instance.
 
         Args:
             model_name: Name of the model to be used.
-            api_key: API key to be used.
         """
         self.model_name = model_name
-        self.api_key = api_key
 
     @abstractmethod
     async def call(
@@ -78,13 +73,13 @@ class LLMClient(Generic[LLMClientOptions], ABC):
         event: LLMEvent,
     ) -> str:
         """
-        Calls LLM API endpoint.
+        Calls LLM inference API.
 
         Args:
-            prompt: prompt passed to the LLM.
+            prompt: Prompt passed to the LLM.
             response_format: Optional argument used in the OpenAI API - used to force a json output
             options: Additional settings used by LLM.
-            event: an LLMEvent instance which fields should be filled during the method execution.
+            event: LLMEvent instance which fields should be filled during the method execution.
 
         Returns:
             Response string from LLM.

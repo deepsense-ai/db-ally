@@ -3,8 +3,8 @@ from typing import Callable, Dict, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate
-from dbally.llms import LLM
-from dbally.llms.clients import LLMOptions
+from dbally.llms.base import LLM
+from dbally.llms.clients.base import LLMOptions
 from dbally.view_selection.base import ViewSelector
 from dbally.view_selection.view_selector_prompt_template import default_view_selector_template
 
@@ -59,7 +59,7 @@ class LLMViewSelector(ViewSelector):
 
         views_for_prompt = self._promptify_views(views)
 
-        llm_response = await self._llm.text_generation(
+        llm_response = await self._llm.generate_text(
             template=self._prompt_template,
             fmt={"views": views_for_prompt, "question": question},
             event_tracker=event_tracker,

@@ -1,6 +1,6 @@
 # mypy: disable-error-code="empty-body"
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 import pytest
 import sqlalchemy
@@ -11,6 +11,7 @@ from dbally.iql import IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.iql_generator.iql_prompt_template import default_iql_template
 from dbally.views.methods_base import MethodsBaseView
+from tests.unit.mocks import MockLLM
 
 
 class MockView(MethodsBaseView):
@@ -33,26 +34,25 @@ class MockView(MethodsBaseView):
 
 
 @pytest.fixture
-def view():
-    view = MockView()
-    return view
+def view() -> MockView:
+    return MockView()
 
 
 @pytest.fixture
-def llm_client():
-    mock_client = Mock()
-    mock_client.text_generation = AsyncMock(return_value="LLM IQL mock answer")
-    return mock_client
+def llm() -> MockLLM:
+    llm = MockLLM()
+    llm._client.call = AsyncMock(return_value="LLM IQL mock answer")
+    return llm
 
 
 @pytest.fixture
-def event_tracker():
+def event_tracker() -> EventTracker:
     return EventTracker()
 
 
 @pytest.mark.asyncio
-async def test_iql_generation(llm_client, event_tracker, view):
-    iql_generator = IQLGenerator(llm_client, default_iql_template)
+async def test_iql_generation(llm: MockLLM, event_tracker: EventTracker, view: MockView) -> None:
+    iql_generator = IQLGenerator(llm, default_iql_template)
 
     filters_for_prompt = iql_generator._promptify_view(view.list_filters())
     filters_in_prompt = set(filters_for_prompt.split("\n"))
@@ -72,8 +72,8 @@ async def test_iql_generation(llm_client, event_tracker, view):
     assert response2 == ("LLM IQL mock answer", template_after_2nd_response)
 
 
-def test_add_error_msg(llm_client):
-    iql_generator = IQLGenerator(llm_client, default_iql_template)
+def test_add_error_msg(llm: MockLLM) -> None:
+    iql_generator = IQLGenerator(llm, default_iql_template)
     errors = [ValueError("Mock_error")]
 
     conversation = default_iql_template.add_assistant_message(content="Assistant")

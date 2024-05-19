@@ -22,6 +22,12 @@ To install db-ally, execute the following command:
 pip install dbally
 ```
 
+Since we will be using OpenAI's GPT, you also need to install the `litellm` extension:
+
+```bash
+pip install dbally[litellm]
+```
+
 ## Database Configuration
 
 In this guide, we will use an example SQLAlchemy database containing a single table named `candidates`. This table includes columns such as `id`, `name`, `country`, `years_of_experience`, `position`, `university`, `skills`, and `tags`. You can download the example database from [candidates.db](candidates.db). Alternatively, you can use your own database and models.

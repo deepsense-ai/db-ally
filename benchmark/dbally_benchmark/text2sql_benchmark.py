@@ -39,7 +39,7 @@ async def _run_text2sql_for_single_example(example: BIRDExample, llm: LiteLLM) -
 
     db_schema = _load_db_schema(example.db_id)
 
-    response = await llm.text_generation(
+    response = await llm.generate_text(
         TEXT2SQL_PROMPT_TEMPLATE, {"schema": db_schema, "question": example.question}, event_tracker=event_tracker
     )
 

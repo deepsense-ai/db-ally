@@ -4,13 +4,12 @@ import pytest
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
-from dbally.llms.base import LLM
 from dbally.nl_responder.nl_responder import NLResponder
 from tests.unit.mocks import MockLLM
 
 
 @pytest.fixture
-def llm() -> LLM:
+def llm() -> MockLLM:
     llm = MockLLM()
     llm._client.call = AsyncMock(return_value="db-ally is the best")
     return llm
@@ -27,7 +26,7 @@ def answer() -> ViewExecutionResult:
 
 
 @pytest.mark.asyncio
-async def test_nl_responder(llm: LLM, answer: ViewExecutionResult, event_tracker: EventTracker):
+async def test_nl_responder(llm: MockLLM, answer: ViewExecutionResult, event_tracker: EventTracker):
     nl_responder = NLResponder(llm)
     response = await nl_responder.generate_response(answer, "Mock question", event_tracker)
     assert response == "db-ally is the best"

@@ -11,31 +11,24 @@ from dbally.prompts.prompt_template import PromptTemplate
 
 class LLM(Generic[LLMClientOptions], ABC):
     """
-    Abstract class for the Language Model (LLM) interaction.
+    Abstract class for interaction with Large Language Model.
     """
 
     _options_cls: Type[LLMClientOptions]
 
-    def __init__(
-        self,
-        model_name: str,
-        default_options: Optional[LLMOptions] = None,
-        api_key: Optional[str] = None,
-    ) -> None:
+    def __init__(self, model_name: str, default_options: Optional[LLMOptions] = None) -> None:
         """
-        Construct a new LLM instance.
+        Constructs a new LLM instance.
 
         Args:
             model_name: Name of the model to be used.
             default_options: Default options to be used.
-            api_key: API key to be used.
 
         Raises:
             TypeError: If the subclass is missing the '_options_cls' attribute.
         """
         self.model_name = model_name
         self.default_options = default_options or self._options_cls()
-        self.api_key = api_key
 
     def __init_subclass__(cls) -> None:
         if not hasattr(cls, "_options_cls"):
@@ -48,9 +41,9 @@ class LLM(Generic[LLMClientOptions], ABC):
         Client for the LLM.
         """
 
-    def _build_prompt(self, template: PromptTemplate, fmt: Dict[str, str]) -> ChatFormat:
+    def _format_prompt(self, template: PromptTemplate, fmt: Dict[str, str]) -> ChatFormat:
         """
-        Build prompt for the given template and format.
+        Applies formatting to the prompt template.
 
         Args:
             template: Prompt template in system/user/assistant openAI format.
@@ -63,7 +56,7 @@ class LLM(Generic[LLMClientOptions], ABC):
 
     def count_tokens(self, messages: ChatFormat, fmt: Dict[str, str]) -> int:
         """
-        Count tokens in the messages.
+        Counts tokens in the messages.
 
         Args:
             messages: Messages to count tokens for.
@@ -74,7 +67,7 @@ class LLM(Generic[LLMClientOptions], ABC):
         """
         return sum(len(message["content"].format(**fmt)) for message in messages)
 
-    async def text_generation(
+    async def generate_text(
         self,
         template: PromptTemplate,
         fmt: Dict[str, str],
@@ -83,8 +76,7 @@ class LLM(Generic[LLMClientOptions], ABC):
         options: Optional[LLMOptions] = None,
     ) -> str:
         """
-        For a given a PromptType and format dict creates a prompt and
-        returns the response from LLM.
+        Prepares and sends a prompt to the LLM and returns the response.
 
         Args:
             template: Prompt template in system/user/assistant openAI format.
@@ -96,7 +88,7 @@ class LLM(Generic[LLMClientOptions], ABC):
             Text response from LLM.
         """
         options = (self.default_options | options) if options else self.default_options
-        prompt = self._build_prompt(template, fmt)
+        prompt = self._format_prompt(template, fmt)
         event = LLMEvent(prompt=prompt, type=type(template).__name__)
         event_tracker = event_tracker or EventTracker()
 

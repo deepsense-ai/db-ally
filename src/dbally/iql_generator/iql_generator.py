@@ -3,8 +3,8 @@ from typing import Callable, List, Optional, Tuple, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template
-from dbally.llms import LLM
-from dbally.llms.clients import LLMOptions
+from dbally.llms.base import LLM
+from dbally.llms.clients.base import LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
 
 
@@ -65,7 +65,7 @@ class IQLGenerator:
 
         template = conversation or self._prompt_template
 
-        llm_response = await self._llm.text_generation(
+        llm_response = await self._llm.generate_text(
             template=template,
             fmt={"filters": filters_for_prompt, "question": question},
             event_tracker=event_tracker,
