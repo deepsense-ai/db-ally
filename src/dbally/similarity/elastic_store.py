@@ -37,7 +37,7 @@ class ElasticStore(SimilarityStore):
             search_algorithm (Optional[Dict], optional): The search algorithm configuration. Defaults to a KNN search with specified parameters.
         """
         super().__init__()
-        self.es = AsyncElasticsearch(
+        self.client = AsyncElasticsearch(
             hosts=host,
             http_auth=(http_user, http_password),
             ca_certs=ca_cert_path,
@@ -91,10 +91,10 @@ class ElasticStore(SimilarityStore):
             }
         }
 
-        await self.es.indices.delete(index=self.index_name)
-        await self.es.indices.create(index=self.index_name, mappings=mappings)
+        await self.client.indices.delete(index=self.index_name)
+        await self.client.indices.create(index=self.index_name, mappings=mappings)
 
-        await async_bulk(self.es, self.generate_data(data))
+        await async_bulk(self.client, self.generate_data(data))
 
     @staticmethod
     def _filter_response(res: Dict) -> Optional[str]:
@@ -131,8 +131,10 @@ class ElasticStore(SimilarityStore):
             self.search_algorithm[key]["query_vector"] = embedding
             break
 
-        search_results = await self.es.search(
+        search_results = await self.client.search(
             **self.search_algorithm,
         )
-        result = self._filter_response(search_results)
-        return result
+
+        return (
+            search_results["hits"]["hits"][0]["_source"]["column"] if len(search_results["hits"]["hits"]) != 0 else None
+        )
