@@ -36,7 +36,8 @@ country_similarity = SimilarityIndex(
         index_name="country_similarity",
         host=os.environ["ELASTIC_STORE_CONNECTION_STRING"],
         ca_cert_path=os.environ["ELASTIC_CERT_PATH"],
-        http_auth_tuple=(os.environ["ELASTIC_AUTH_USER"], os.environ["ELASTIC_USER_PASSWORD"]),
+        http_user=os.environ["ELASTIC_AUTH_USER"],
+        http_password=os.environ["ELASTIC_USER_PASSWORD"],
         embedding_client=OpenAiEmbeddingClient(
             api_key=os.environ["OPENAI_API_KEY"],
         ),
