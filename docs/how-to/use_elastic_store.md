@@ -54,7 +54,7 @@ country_similarity = SimilarityIndex(
 ```
 
 You can then use this store to create a similarity index that maps user input to the closest matching value.
-For example To Search 'Russia' while querying 'RUS' or 'United States` while asking about the USA.
+Now you can use this index to map user input to the closest matching value. For example, a user may type 'United States' and our index would return 'USA'.```
 
 ## Links
 * [Similarity Indexes](./use_custom_similiarity_store.md)
