@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 import pytest
 import sqlalchemy
@@ -7,6 +7,7 @@ from sqlalchemy import Engine, text
 import dbally
 from dbally.views.freeform.text2sql import Text2SQLConfig, Text2SQLFreeformView
 from dbally.views.freeform.text2sql._config import Text2SQLTableConfig
+from tests.unit.mocks import MockLLM
 
 
 @pytest.fixture
@@ -31,8 +32,8 @@ def sample_db() -> Engine:
 
 
 async def test_text2sql_view(sample_db: Engine):
-    mock_llm = Mock()
-    mock_llm.text_generation = AsyncMock(return_value="SELECT * FROM customers WHERE city = 'New York'")
+    llm = MockLLM()
+    llm._client.call = AsyncMock(return_value="SELECT * FROM customers WHERE city = 'New York'")
 
     config = Text2SQLConfig(
         tables={
@@ -43,7 +44,7 @@ async def test_text2sql_view(sample_db: Engine):
         }
     )
 
-    collection = dbally.create_collection(name="test_collection", llm_client=mock_llm)
+    collection = dbally.create_collection(name="test_collection", llm=llm)
     collection.add(Text2SQLFreeformView, lambda: Text2SQLFreeformView(sample_db, config))
 
     response = await collection.ask("Show me customers from New York")

@@ -4,7 +4,7 @@ from sqlalchemy import Column, Connection, Engine, MetaData, Table
 from sqlalchemy.sql.ddl import CreateTable
 from typing_extensions import Self
 
-from dbally.llm_client.base import LLMClient
+from dbally.llms.base import LLM
 from dbally.prompts import PromptTemplate
 
 from ._config import Text2SQLConfig, Text2SQLTableConfig
@@ -36,7 +36,7 @@ class _AutoDiscoveryBuilderBase:
     Builder class for configuring the auto-discovery of the database for text2sql freeform view.
     """
 
-    _llm_client: Optional[LLMClient]
+    _llm: Optional[LLM]
     _blacklist: Optional[List[str]]
     _whitelist: Optional[List[str]]
     _description_extraction: _DescriptionExtractionStrategy
@@ -49,10 +49,10 @@ class _AutoDiscoveryBuilderBase:
         whitelist: Optional[List[str]] = None,
         description_extraction: Optional[_DescriptionExtractionStrategy] = None,
         similarity_enabled: bool = False,
-        llm_client: Optional[LLMClient] = None,
+        llm: Optional[LLM] = None,
     ) -> None:
         self._engine = engine
-        self._llm_client = llm_client
+        self._llm = llm
 
         self._blacklist = blacklist
         self._whitelist = whitelist
@@ -115,7 +115,7 @@ class _AutoDiscoveryBuilderBase:
             Text2SQLConfig: The configuration object for the text2sql freeform view.
         """
         return await _Text2SQLAutoDiscovery(
-            llm_client=self._llm_client,
+            llm=self._llm,
             engine=self._engine,
             whitelist=self._whitelist,
             blacklist=self._blacklist,
@@ -150,12 +150,12 @@ class AutoDiscoveryBuilder(_AutoDiscoveryBuilderBase):
     Builder class for configuring the auto-discovery of the database for text2sql freeform view.
     """
 
-    def use_llm(self, llm_client: LLMClient) -> AutoDiscoveryBuilderWithLLM:
+    def use_llm(self, llm: LLM) -> AutoDiscoveryBuilderWithLLM:
         """
         Set the LLM client to use for generating descriptions.
 
         Args:
-            llm_client: The LLM client to use for generating descriptions.
+            llm: The LLM client to use for generating descriptions.
 
         Returns:
             The builder instance.
@@ -166,7 +166,7 @@ class AutoDiscoveryBuilder(_AutoDiscoveryBuilderBase):
             blacklist=self._blacklist,
             description_extraction=self._description_extraction,
             similarity_enabled=self._similarity_enabled,
-            llm_client=llm_client,
+            llm=llm,
         )
 
 
@@ -229,11 +229,11 @@ class _Text2SQLAutoDiscovery:
         engine: Engine,
         description_extraction: _DescriptionExtractionStrategy,
         whitelist: Optional[List[str]] = None,
-        llm_client: Optional[LLMClient] = None,
+        llm: Optional[LLM] = None,
         blacklist: Optional[List[str]] = None,
         similarity_enabled: bool = False,
     ) -> None:
-        self._llm_client = llm_client
+        self._llm = llm
         self._engine = engine
         self._whitelist = whitelist
         self._blacklist = blacklist
@@ -285,13 +285,13 @@ class _Text2SQLAutoDiscovery:
     async def _suggest_similarity_indexes(
         self, connection: Connection, description: str, table: Table
     ) -> Dict[str, str]:
-        if self._llm_client is None:
+        if self._llm is None:
             raise ValueError("LLM client is required for suggesting similarity indexes.")
 
         similarity = {}
         for column_name, column in self._iterate_str_columns(table):
             example_values = self._get_column_example_values(connection, table, column)
-            similarity_type = await self._llm_client.text_generation(
+            similarity_type = await self._llm.generate_text(
                 template=similarity_template,
                 fmt={"table_summary": description, "column_name": column.name, "values": example_values},
             )
@@ -300,10 +300,10 @@ class _Text2SQLAutoDiscovery:
         return similarity
 
     async def _generate_llm_summary(self, ddl: str, example_rows: List[dict]) -> str:
-        if self._llm_client is None:
+        if self._llm is None:
             raise ValueError("LLM client is required for generating descriptions.")
 
-        return await self._llm_client.text_generation(
+        return await self._llm.generate_text(
             template=discovery_template,
             fmt={"dialect": self._engine.dialect.name, "table_ddl": ddl, "example_rows": example_rows},
         )

@@ -5,13 +5,13 @@ import pandas as pd
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
-from dbally.llm_client.base import LLMClient, LLMOptions
+from dbally.llms.base import LLM
+from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder_prompt_template import NLResponderPromptTemplate, default_nl_responder_template
 from dbally.nl_responder.query_explainer_prompt_template import (
     QueryExplainerPromptTemplate,
     default_query_explainer_template,
 )
-from dbally.nl_responder.token_counters import count_tokens_for_huggingface, count_tokens_for_openai
 
 
 class NLResponder:
@@ -22,22 +22,21 @@ class NLResponder:
 
     def __init__(
         self,
-        llm_client: LLMClient,
+        llm: LLM,
         query_explainer_prompt_template: Optional[QueryExplainerPromptTemplate] = None,
         nl_responder_prompt_template: Optional[NLResponderPromptTemplate] = None,
         max_tokens_count: int = 4096,
     ) -> None:
         """
         Args:
-            llm_client: LLM client used to generate natural language response
-            query_explainer_prompt_template: template for the prompt used to generate the iql explanation\
-            if not set defaults to `default_query_explainer_template`
-            nl_responder_prompt_template: template for the prompt used to generate the NL response\
-            if not set defaults to `nl_responder_prompt_template`
+            llm: LLM used to generate natural language response
+            query_explainer_prompt_template: template for the prompt used to generate the iql explanation
+                if not set defaults to `default_query_explainer_template`
+            nl_responder_prompt_template: template for the prompt used to generate the NL response
+                if not set defaults to `nl_responder_prompt_template`
             max_tokens_count: maximum number of tokens that can be used in the prompt
         """
-
-        self._llm_client = llm_client
+        self._llm = llm
         self._nl_responder_prompt_template = nl_responder_prompt_template or copy.deepcopy(
             default_nl_responder_template
         )
@@ -65,27 +64,17 @@ class NLResponder:
         Returns:
             Natural language response to the user question.
         """
-
         rows = _promptify_rows(result.results)
 
-        if "gpt" in self._llm_client.model_name:
-            tokens_count = count_tokens_for_openai(
-                messages=self._nl_responder_prompt_template.chat,
-                fmt={"rows": rows, "question": question},
-                model=self._llm_client.model_name,
-            )
-
-        else:
-            tokens_count = count_tokens_for_huggingface(
-                messages=self._nl_responder_prompt_template.chat,
-                fmt={"rows": rows, "question": question},
-                model=self._llm_client.model_name,
-            )
+        tokens_count = self._llm.count_tokens(
+            messages=self._nl_responder_prompt_template.chat,
+            fmt={"rows": rows, "question": question},
+        )
 
         if tokens_count > self._max_tokens_count:
             context = result.context
             query = next((context.get(key) for key in self.QUERY_KEYS if context.get(key)), question)
-            llm_response = await self._llm_client.text_generation(
+            llm_response = await self._llm.generate_text(
                 template=self._query_explainer_prompt_template,
                 fmt={"question": question, "query": query, "number_of_results": len(result.results)},
                 event_tracker=event_tracker,
@@ -94,7 +83,7 @@ class NLResponder:
 
             return llm_response
 
-        llm_response = await self._llm_client.text_generation(
+        llm_response = await self._llm.generate_text(
             template=self._nl_responder_prompt_template,
             fmt={"rows": _promptify_rows(result.results), "question": question},
             event_tracker=event_tracker,

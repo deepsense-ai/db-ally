@@ -10,7 +10,7 @@ from dbally import decorators, MethodsBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.iql import IQLQuery, syntax
 from dbally.data_models.execution_result import ViewExecutionResult
-from dbally.llm_client.openai_client import OpenAIClient
+from dbally.llms.litellm import LiteLLM
 
 @dataclass
 class Candidate:
@@ -99,7 +99,7 @@ class CandidateView(FilteredIterableBaseView):
         return lambda x: x.country == country
 
 async def main():
-    llm = OpenAIClient(model_name="gpt-3.5-turbo")
+    llm = LiteLLM(model_name="gpt-3.5-turbo")
     event_handlers = [CLIEventHandler()]
     collection = dbally.create_collection("recruitment", llm, event_handlers=event_handlers)
     collection.add(CandidateView)

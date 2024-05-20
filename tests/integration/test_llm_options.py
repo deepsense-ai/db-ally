@@ -3,15 +3,8 @@ from unittest.mock import ANY, AsyncMock, call
 import pytest
 
 from dbally import create_collection
-from tests.unit.mocks import MockLLMClient, MockLLMOptions, MockViewBase
-
-
-class MockView1(MockViewBase):
-    ...
-
-
-class MockView2(MockViewBase):
-    ...
+from tests.unit.mocks import MockLLM, MockLLMOptions
+from tests.unit.test_collection import MockView1, MockView2
 
 
 @pytest.mark.asyncio
@@ -20,18 +13,16 @@ async def test_llm_options_propagation():
     custom_options = MockLLMOptions(mock_property1=2)
     expected_options = MockLLMOptions(mock_property1=2, mock_property2="default mock")
 
-    llm_client = MockLLMClient(default_options=default_options)
+    llm = MockLLM(default_options=default_options)
+    llm._client.call = AsyncMock(return_value="MockView1")
 
     collection = create_collection(
         name="test_collection",
-        llm_client=llm_client,
+        llm=llm,
     )
-
+    collection.n_retries = 0
     collection.add(MockView1)
     collection.add(MockView2)
-
-    collection.n_retries = 0
-    collection._llm_client.call = AsyncMock(return_value="MockView1")
 
     await collection.ask(
         question="Mock question",
@@ -39,9 +30,9 @@ async def test_llm_options_propagation():
         llm_options=custom_options,
     )
 
-    assert llm_client.call.call_count == 3
+    assert llm._client.call.call_count == 3
 
-    llm_client.call.assert_has_calls(
+    llm._client.call.assert_has_calls(
         [
             call(
                 prompt=ANY,
