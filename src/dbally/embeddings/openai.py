@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from dbally.embedding_client.base import EmbeddingClient
+from dbally.embeddings.base import EmbeddingClient
 
 
 class OpenAiEmbeddingClient(EmbeddingClient):

@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, Mock
 import chromadb
 import pytest
 
-from dbally.embedding_client import EmbeddingClient
+from dbally.embeddings import EmbeddingClient
 from dbally.similarity import ChromadbStore
 
 DEFAULT_METADATA = {"hnsw:space": "l2"}
