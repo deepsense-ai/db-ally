@@ -1,8 +1,13 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Union
 
-import litellm
-from openai import APIConnectionError, APIResponseValidationError, APIStatusError
+try:
+    import litellm
+
+    HAVE_LITELLM = True
+except ImportError:
+    HAVE_LITELLM = False
+
 
 from dbally.data_models.audit import LLMEvent
 from dbally.llms.clients.base import LLMClient, LLMOptions
@@ -53,7 +58,13 @@ class LiteLLMClient(LLMClient[LiteLLMOptions]):
             base_url: Base URL of the LLM API.
             api_key: API key used to authenticate with the LLM API.
             api_version: API version of the LLM API.
+
+        Raises:
+            ImportError: If the litellm package is not installed.
         """
+        if not HAVE_LITELLM:
+            raise ImportError("You need to install litellm package to use LiteLLM models")
+
         super().__init__(model_name)
         self.base_url = base_url
         self.api_key = api_key
@@ -91,17 +102,17 @@ class LiteLLMClient(LLMClient[LiteLLMOptions]):
                 api_key=self.api_key,
                 api_version=self.api_version,
                 response_format=response_format,
-                **options.dict(),  # type: ignore
+                **options.dict(),
             )
-        except APIConnectionError as exc:
+        except litellm.openai.APIConnectionError as exc:
             raise LLMConnectionError() from exc
-        except APIStatusError as exc:
+        except litellm.openai.APIStatusError as exc:
             raise LLMStatusError(exc.message, exc.status_code) from exc
-        except APIResponseValidationError as exc:
+        except litellm.openai.APIResponseValidationError as exc:
             raise LLMResponseError() from exc
 
         event.completion_tokens = response.usage.completion_tokens
         event.prompt_tokens = response.usage.prompt_tokens
         event.total_tokens = response.usage.total_tokens
 
-        return response.choices[0].message.content  # type: ignore
+        return response.choices[0].message.content

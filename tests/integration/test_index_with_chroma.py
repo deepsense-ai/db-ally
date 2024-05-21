@@ -2,7 +2,7 @@ import chromadb
 import pytest
 from chromadb import Documents, EmbeddingFunction, Embeddings
 
-from dbally.embedding_client.base import EmbeddingClient
+from dbally.embeddings.base import EmbeddingClient
 from dbally.similarity import ChromadbStore
 from dbally.similarity.fetcher import SimilarityFetcher
 from dbally.similarity.index import SimilarityIndex
