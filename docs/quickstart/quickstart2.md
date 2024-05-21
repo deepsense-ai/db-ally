@@ -66,8 +66,9 @@ country_store = FaissStore(
     index_dir="./similarity_indexes",
     index_name="country_similarity",
     embedding_client=LiteLLMEmbeddingClient(
-        api_key="your-api-key",
-    )
+        model="text-embedding-3-small",  # to use openai embedding model
+        api_key=os.environ["OPENAI_API_KEY"],
+    ),
 )
 ```
 

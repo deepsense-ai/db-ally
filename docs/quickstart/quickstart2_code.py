@@ -31,8 +31,9 @@ country_similarity = SimilarityIndex(
         index_dir="./similarity_indexes",
         index_name="country_similarity",
         embedding_client=LiteLLMEmbeddingClient(
+            model="text-embedding-3-small",  # to use openai embedding model
             api_key=os.environ["OPENAI_API_KEY"],
-        )
+        ),
     ),
 )
 

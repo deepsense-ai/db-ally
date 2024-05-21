@@ -7,7 +7,7 @@
 
 To use Chromadb with db-ally you need to install the chromadb extension
 
-```python
+```bash
 pip install dbally[chromadb]
 ```
 
@@ -39,22 +39,27 @@ Next, you can either use [one of dbally embedding clients][dbally.embeddings.Emb
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 
 embedding_client=LiteLLMEmbeddingClient(
-        api_key="your-api-key",
-    )
-
+    model="text-embedding-3-small",  # to use openai embedding model
+    api_key="your-api-key",
+)
 ```
 
 or [Chromadb embedding functions](https://docs.trychroma.com/embeddings)
 
-```
+```python
 from chromadb.utils import embedding_functions
+
 embedding_client = embedding_functions.DefaultEmbeddingFunction()
 ```
 
 to define your [`ChromadbStore`][dbally.similarity.ChromadbStore].
 
 ```python
-store = ChromadbStore(index_name="myChromaIndex", chroma_client=chroma_client, embedding_function=embedding_client)
+store = ChromadbStore(
+    index_name="myChromaIndex",
+    chroma_client=chroma_client,
+    embedding_function=embedding_client,
+)
 ```
 
 After this setup, you can initialize the SimilarityIndex
@@ -63,8 +68,6 @@ After this setup, you can initialize the SimilarityIndex
 from typing import Annotated
 
 country_similarity = SimilarityIndex(store, DummyCountryFetcher())
-
-
 ```
 
 and [update it and find the closest matches in the same way as in built-in similarity indices](./use_custom_similarity_store.md/#using-the-similarity-index) .
