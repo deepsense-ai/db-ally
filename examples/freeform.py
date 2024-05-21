@@ -1,44 +1,70 @@
 import asyncio
+from typing import List
 
 import sqlalchemy
 
 import dbally
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
-from dbally.llm_client.openai_client import OpenAIClient
-from dbally.views.freeform.text2sql import Text2SQLConfig, Text2SQLFreeformView, Text2SQLTableConfig
+from dbally.llms import LiteLLM
+from dbally.views.freeform.text2sql import BaseText2SQLView, ColumnConfig, TableConfig
+
+
+class MyText2SqlView(BaseText2SQLView):
+    """
+    A Text2SQL view for the example.
+    """
+
+    def get_tables(self) -> List[TableConfig]:
+        """
+        Get the tables used by the view.
+
+        Returns:
+            A list of tables.
+        """
+        return [
+            TableConfig(
+                name="customers",
+                columns=[
+                    ColumnConfig("id", "SERIAL PRIMARY KEY"),
+                    ColumnConfig("name", "VARCHAR(255)"),
+                    ColumnConfig("city", "VARCHAR(255)"),
+                    ColumnConfig("country", "VARCHAR(255)"),
+                    ColumnConfig("age", "INTEGER"),
+                ],
+            ),
+            TableConfig(
+                name="products",
+                columns=[
+                    ColumnConfig("id", "SERIAL PRIMARY KEY"),
+                    ColumnConfig("name", "VARCHAR(255)"),
+                    ColumnConfig("category", "VARCHAR(255)"),
+                    ColumnConfig("price", "REAL"),
+                ],
+            ),
+            TableConfig(
+                name="purchases",
+                columns=[
+                    ColumnConfig("customer_id", "INTEGER"),
+                    ColumnConfig("product_id", "INTEGER"),
+                    ColumnConfig("quantity", "INTEGER"),
+                    ColumnConfig("date", "TEXT"),
+                ],
+            ),
+        ]
 
 
 async def main():
     """Main function to run the example."""
-    config = Text2SQLConfig(
-        tables={
-            "customers": Text2SQLTableConfig(
-                ddl="CREATE TABLE customers (id INTEGER, name TEXT, city TEXT, country TEXT, age INTEGER)",
-                description="Table of customers",
-                similarity={"city": "city", "country": "country"},
-            ),
-            "products": Text2SQLTableConfig(
-                ddl="CREATE TABLE products (id INTEGER, name TEXT, category TEXT, price REAL)",
-                description="Table of products",
-                similarity={"name": "name", "category": "category"},
-            ),
-            "purchases": Text2SQLTableConfig(
-                ddl="CREATE TABLE purchases (customer_id INTEGER, product_id INTEGER, quantity INTEGER, date TEXT)",
-                description="Table of purchases",
-                similarity={},
-            ),
-        }
-    )
     engine = sqlalchemy.create_engine("sqlite:///:memory:")
 
     # Create tables from config
     with engine.connect() as connection:
-        for _, table_config in config.tables.items():
+        for table_config in MyText2SqlView(engine).get_tables():
             connection.execute(sqlalchemy.text(table_config.ddl))
 
-    llm_client = OpenAIClient()
-    collection = dbally.create_collection("text2sql", llm_client=llm_client, event_handlers=[CLIEventHandler()])
-    collection.add(Text2SQLFreeformView, lambda: Text2SQLFreeformView(engine, config))
+    llm = LiteLLM()
+    collection = dbally.create_collection("text2sql", llm=llm, event_handlers=[CLIEventHandler()])
+    collection.add(MyText2SqlView, lambda: MyText2SqlView(engine))
 
     await collection.ask("What are the names of products bought by customers from London?")
     await collection.ask("Which customers bought products from the category 'electronics'?")

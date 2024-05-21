@@ -46,7 +46,7 @@ class TableConfig:
             The DDL for the table.
         """
         return (
-            f"CREATE TABLE {self.name} )"
+            f"CREATE TABLE {self.name} ("
             + ", ".join(f"{column.name} {column.data_type}" for column in self.columns)
             + ");"
         )
