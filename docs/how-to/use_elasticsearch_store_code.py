@@ -15,7 +15,7 @@ from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.similarity import SimpleSqlAlchemyFetcher, SimilarityIndex
 from dbally.embedding_client.openai import OpenAiEmbeddingClient
 from dbally.llm_client.openai_client import OpenAIClient
-from dbally.similarity.elastic_store import ElasticStore
+from dbally.similarity.elasticsearch_store import ElasticsearchStore
 
 load_dotenv()
 engine = create_engine("sqlite:///candidates.db")
@@ -32,7 +32,7 @@ country_similarity = SimilarityIndex(
         table=Candidate,
         column=Candidate.country,
     ),
-    store=ElasticStore(
+    store=ElasticsearchStore(
         index_name="country_similarity",
         host=os.environ["ELASTIC_STORE_CONNECTION_STRING"],
         ca_cert_path=os.environ["ELASTIC_CERT_PATH"],

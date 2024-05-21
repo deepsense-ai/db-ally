@@ -16,7 +16,12 @@ except ImportError:
     pass
 
 try:
-    from .elastic_store import ElasticStore
+    from .elasticsearch_store import ElasticsearchStore
+except ImportError:
+    pass
+
+try:
+    from .elastic_vector_search import ElasticVectorStore
 except ImportError:
     pass
 
@@ -28,6 +33,7 @@ __all__ = [
     "SimilarityStore",
     "SimilarityFetcher",
     "FaissStore",
-    "ElasticStore",
+    "ElasticsearchStore",
+    "ElasticVectorStore",
     "ChromadbStore",
 ]

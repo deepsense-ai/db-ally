@@ -34,7 +34,7 @@ class DummyCountryFetcher(SimilarityFetcher):
 ```
 
 ### Data store:
-Elastic store similarity search works on embeddings. For create embeddings the embedding client is passed as an argument. 
+Elastic store similarity search works on embeddings. For create embeddings the embedding client is passed as an argument.
 For example, we can use:
 * [OpenAiEmbeddingClient][dbally.embedding_client.OpenAiEmbeddingClient].
 
@@ -75,4 +75,4 @@ Now you can use this index to map user input to the closest matching value. For 
 
 ## Links
 * [Similarity Indexes](./use_custom_similiarity_store.md)
-* [Example](./use_elastic_store_code.py)
+* [Example](./use_elasticsearch_store_code.py)
