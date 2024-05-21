@@ -64,7 +64,7 @@ async def test_autodiscovery_whitelist(sample_db: Engine):
 
 async def test_autodiscovery_llm_descriptions(sample_db: Engine):
     mock_client = Mock()
-    mock_client.text_generation = AsyncMock(return_value="LLM mock answer")
+    mock_client.generate_text = AsyncMock(return_value="LLM mock answer")
 
     config = await (
         configure_text2sql_auto_discovery(sample_db)

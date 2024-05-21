@@ -1,33 +1,32 @@
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 import pytest
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.nl_responder.nl_responder import NLResponder
+from tests.unit.mocks import MockLLM
 
 
 @pytest.fixture
-def llm_client():
-    mock_client = Mock()
-    mock_client.text_generation = AsyncMock(return_value="db-ally is the best")
-    mock_client.model_name = "gpt-4"
-    return mock_client
+def llm() -> MockLLM:
+    llm = MockLLM()
+    llm._client.call = AsyncMock(return_value="db-ally is the best")
+    return llm
 
 
 @pytest.fixture
-def event_tracker():
+def event_tracker() -> EventTracker:
     return EventTracker()
 
 
 @pytest.fixture
-def answer():
+def answer() -> ViewExecutionResult:
     return ViewExecutionResult(results=[{"id": 1, "name": "Mock name"}], context={"sql": "Mock SQL"})
 
 
 @pytest.mark.asyncio
-async def test_nl_responder(llm_client, answer, event_tracker):
-    nl_responder = NLResponder(llm_client)
-
+async def test_nl_responder(llm: MockLLM, answer: ViewExecutionResult, event_tracker: EventTracker):
+    nl_responder = NLResponder(llm)
     response = await nl_responder.generate_response(answer, "Mock question", event_tracker)
     assert response == "db-ally is the best"

@@ -12,7 +12,7 @@ import pandas as pd
 from dbally import decorators, SqlAlchemyBaseView, DataFrameBaseView, ExecutionResult
 from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
 from dbally.embedding_client.openai import OpenAiEmbeddingClient
-from dbally.llm_client.openai_client import OpenAIClient
+from dbally.llms.litellm import LiteLLM
 
 engine = create_engine('sqlite:///candidates.db')
 
@@ -122,7 +122,7 @@ def display_results(result: ExecutionResult):
 async def main():
     await country_similarity.update()
 
-    llm = OpenAIClient(model_name="gpt-3.5-turbo")
+    llm = LiteLLM(model_name="gpt-3.5-turbo")
     collection = dbally.create_collection("recruitment", llm)
     collection.add(CandidateView, lambda: CandidateView(engine))
     collection.add(JobView, lambda: JobView(jobs_data))

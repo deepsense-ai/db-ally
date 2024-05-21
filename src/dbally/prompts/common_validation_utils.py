@@ -1,7 +1,7 @@
 import re
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Set
 
-ChatFormat = Tuple[Dict[str, str], ...]
+ChatFormat = List[Dict[str, str]]
 
 
 class PromptTemplateError(Exception):

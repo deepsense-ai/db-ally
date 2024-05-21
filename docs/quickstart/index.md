@@ -22,10 +22,10 @@ To install db-ally, execute the following command:
 pip install dbally
 ```
 
-Since we will be using OpenAI's GPT, you also need to install the `openai` extension:
+Since we will be using OpenAI's GPT, you also need to install the `litellm` extension:
 
 ```bash
-pip install dbally[openai]
+pip install dbally[litellm]
 ```
 
 ## Database Configuration
@@ -104,9 +104,9 @@ By setting up these filters, you enable the LLM to fetch candidates while option
 To use OpenAI's GPT, configure db-ally and provide your OpenAI API key:
 
 ```python
-from dbally.llm_client.openai_client import OpenAIClient
+from dbally.llms.litellm import LiteLLM
 
-llm = OpenAIClient(model_name="gpt-3.5-turbo", api_key="...")
+llm = LiteLLM(model_name="gpt-3.5-turbo", api_key="...")
 ```
 
 Replace `...` with your OpenAI API key. Alternatively, you can set the `OPENAI_API_KEY` environment variable with your API key and omit the `api_key` parameter altogether.

@@ -8,7 +8,8 @@ from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import RequestEnd, RequestStart
 from dbally.data_models.execution_result import ExecutionResult
-from dbally.llm_client.base import LLMClient, LLMOptions
+from dbally.llms.base import LLM
+from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.utils.errors import NoViewFoundError
@@ -46,7 +47,7 @@ class Collection:
         self,
         name: str,
         view_selector: ViewSelector,
-        llm_client: LLMClient,
+        llm: LLM,
         event_handlers: List[EventHandler],
         nl_responder: NLResponder,
         n_retries: int = 3,
@@ -58,7 +59,7 @@ class Collection:
             view_selector: As you register more then one [View](views/index.md) within single collection,\
             before generating the IQL query, a View that fits query the most is selected by the\
             [ViewSelector](view_selection/index.md).
-            llm_client: LLM client used by the collection to generate views and respond to natural language queries.
+            llm: LLM used by the collection to generate views and respond to natural language queries.
             event_handlers: Event handlers used by the collection during query executions. Can be used\
             to log events as [CLIEventHandler](event_handlers/cli_handler.md) or to validate system performance\
             as [LangSmithEventHandler](event_handlers/langsmith_handler.md).
@@ -74,7 +75,7 @@ class Collection:
         self._view_selector = view_selector
         self._nl_responder = nl_responder
         self._event_handlers = event_handlers
-        self._llm_client = llm_client
+        self._llm = llm
 
     T = TypeVar("T", bound=BaseView)
 
@@ -216,7 +217,7 @@ class Collection:
         start_time_view = time.monotonic()
         view_result = await view.ask(
             query=question,
-            llm_client=self._llm_client,
+            llm=self._llm,
             event_tracker=event_tracker,
             n_retries=self.n_retries,
             dry_run=dry_run,

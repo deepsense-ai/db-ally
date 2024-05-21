@@ -23,7 +23,7 @@ from sqlalchemy import create_engine
 import dbally
 from dbally.collection import Collection
 from dbally.iql_generator.iql_prompt_template import default_iql_template
-from dbally.llm_client.openai_client import OpenAIClient
+from dbally.llms.litellm import LiteLLM
 from dbally.utils.errors import NoViewFoundError, UnsupportedQueryError
 from dbally.view_selection.view_selector_prompt_template import default_view_selector_template
 
@@ -82,12 +82,12 @@ async def evaluate(cfg: DictConfig) -> Any:
 
     engine = create_engine(benchmark_cfg.pg_connection_string + f"/{cfg.db_name}")
 
-    llm_client = OpenAIClient(
+    llm = LiteLLM(
         model_name="gpt-4",
         api_key=benchmark_cfg.openai_api_key,
     )
 
-    db = dbally.create_collection(cfg.db_name, llm_client)
+    db = dbally.create_collection(cfg.db_name, llm)
 
     for view_name in cfg.view_names:
         view = VIEW_REGISTRY[ViewName(view_name)]

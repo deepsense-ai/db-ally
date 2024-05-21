@@ -21,8 +21,7 @@ from omegaconf import DictConfig
 from sqlalchemy import create_engine
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.llm_client.base import LLMClient
-from dbally.llm_client.openai_client import OpenAIClient
+from dbally.llms.litellm import LiteLLM
 
 
 def _load_db_schema(db_name: str, encoding: Optional[str] = None) -> str:
@@ -35,12 +34,12 @@ def _load_db_schema(db_name: str, encoding: Optional[str] = None) -> str:
     return db_schema
 
 
-async def _run_text2sql_for_single_example(example: BIRDExample, llm_client: LLMClient) -> Text2SQLResult:
+async def _run_text2sql_for_single_example(example: BIRDExample, llm: LiteLLM) -> Text2SQLResult:
     event_tracker = EventTracker()
 
     db_schema = _load_db_schema(example.db_id)
 
-    response = await llm_client.text_generation(
+    response = await llm.generate_text(
         TEXT2SQL_PROMPT_TEMPLATE, {"schema": db_schema, "question": example.question}, event_tracker=event_tracker
     )
 
@@ -49,13 +48,13 @@ async def _run_text2sql_for_single_example(example: BIRDExample, llm_client: LLM
     )
 
 
-async def run_text2sql_for_dataset(dataset: BIRDDataset, llm_client: LLMClient) -> List[Text2SQLResult]:
+async def run_text2sql_for_dataset(dataset: BIRDDataset, llm: LiteLLM) -> List[Text2SQLResult]:
     """
     Transforms questions into SQL queries using a Text2SQL model.
 
     Args:
         dataset: The dataset containing questions to be transformed into SQL queries.
-        llm_client: LLM client.
+        llm: LLM client.
 
     Returns:
         A list of Text2SQLResult objects representing the predictions.
@@ -64,9 +63,7 @@ async def run_text2sql_for_dataset(dataset: BIRDDataset, llm_client: LLMClient) 
     results: List[Text2SQLResult] = []
 
     for group in batch(dataset, 5):
-        current_results = await asyncio.gather(
-            *[_run_text2sql_for_single_example(example, llm_client) for example in group]
-        )
+        current_results = await asyncio.gather(*[_run_text2sql_for_single_example(example, llm) for example in group])
         results = [*current_results, *results]
 
     return results
@@ -88,7 +85,7 @@ async def evaluate(cfg: DictConfig) -> Any:
     engine = create_engine(benchmark_cfg.pg_connection_string + f"/{cfg.db_name}")
 
     if "gpt" in cfg.model_name:
-        llm_client = OpenAIClient(
+        llm = LiteLLM(
             model_name=cfg.model_name,
             api_key=benchmark_cfg.openai_api_key,
         )
@@ -112,7 +109,7 @@ async def evaluate(cfg: DictConfig) -> Any:
     evaluation_dataset = BIRDDataset.from_json_file(
         Path(cfg.dataset_path), difficulty_levels=cfg.get("difficulty_levels")
     )
-    text2sql_results = await run_text2sql_for_dataset(dataset=evaluation_dataset, llm_client=llm_client)
+    text2sql_results = await run_text2sql_for_dataset(dataset=evaluation_dataset, llm=llm)
 
     with open(output_dir / results_file_name, "w", encoding="utf-8") as outfile:
         json.dump([result.model_dump() for result in text2sql_results], outfile, indent=4)

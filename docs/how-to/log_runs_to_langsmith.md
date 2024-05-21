@@ -29,7 +29,7 @@ from dbally.audit.event_handlers.langsmith_event_handler import LangSmithEventHa
 
 my_collection = dbally.create_collection(
     "collection_name",
-    llm_client=OpenAIClient(),
+    llm=LiteLLM(),
     event_handlers=[LangSmithEventHandler(api_key="your_api_key")],
 )
 ```
