@@ -4,7 +4,7 @@ from typing import List, Optional
 import faiss
 import numpy as np
 
-from dbally.embedding_client.base import EmbeddingClient
+from dbally.embeddings.base import EmbeddingClient
 from dbally.similarity.store import SimilarityStore
 
 

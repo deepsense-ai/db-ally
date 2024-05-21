@@ -3,7 +3,7 @@ from typing import List, Literal, Optional, Union
 
 import chromadb
 
-from dbally.embedding_client.base import EmbeddingClient
+from dbally.embeddings.base import EmbeddingClient
 from dbally.similarity.store import SimilarityStore
 
 
