@@ -60,18 +60,18 @@ Next, let's define a store that will store the country names and can be used to 
 
 ```python
 from dbally.similarity import FaissStore
-from dbally.embedding_client.openai import OpenAiEmbeddingClient
+from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 
 country_store = FaissStore(
     index_dir="./similarity_indexes",
     index_name="country_similarity",
-    embedding_client=OpenAiEmbeddingClient(
+    embedding_client=LiteLLMEmbeddingClient(
         api_key="your-api-key",
     )
 )
 ```
 
-In this example, we used the `FaissStore` store, which employs the `faiss` library for fast similarity search. We also used the `OpenAiEmbeddingClient` to get the semantic embeddings for the country names. Replace `your-api-key` with your OpenAI API key.
+In this example, we used the `FaissStore` store, which employs the `faiss` library for fast similarity search. We also used the `LiteLLMEmbeddingClient` to get the semantic embeddings for the country names. Replace `your-api-key` with your OpenAI API key.
 
 Finally, let's define the similarity index:
 

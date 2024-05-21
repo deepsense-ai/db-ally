@@ -1,15 +1,16 @@
-# disable args docstring check as args are documented in OpenAI API docs
-import abc
+from abc import ABC, abstractmethod
 from typing import List
 
 
-class EmbeddingClient(metaclass=abc.ABCMeta):
-    """Abstract client for creating text embeddings."""
+class EmbeddingClient(ABC):
+    """
+    Abstract client for creating text embeddings.
+    """
 
-    @abc.abstractmethod
+    @abstractmethod
     async def get_embeddings(self, data: List[str]) -> List[List[float]]:
         """
-        For a given list of strings returns a list of embeddings.
+        Creates embeddings for the given strings.
 
         Args:
             data: List of strings to get embeddings for.

@@ -11,7 +11,7 @@ import pandas as pd
 
 from dbally import decorators, SqlAlchemyBaseView, DataFrameBaseView, ExecutionResult
 from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
-from dbally.embeddings.openai import OpenAiEmbeddingClient
+from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 from dbally.llms.litellm import LiteLLM
 
 engine = create_engine('sqlite:///candidates.db')
@@ -31,7 +31,7 @@ country_similarity = SimilarityIndex(
     store=FaissStore(
         index_dir="./similarity_indexes",
         index_name="country_similarity",
-        embedding_client=OpenAiEmbeddingClient(
+        embedding_client=LiteLLMEmbeddingClient(
             api_key=os.environ["OPENAI_API_KEY"],
         )
     ),

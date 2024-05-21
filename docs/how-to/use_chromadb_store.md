@@ -33,12 +33,12 @@ or [set up Chromadb in the client/server mode](https://docs.trychroma.com/usage-
 chroma_client = chromadb.HttpClient(host='localhost', port=8000)
 ```
 
-Next, you can either use [one of dbally embedding clients][dbally.embedding_client.EmbeddingClient], such as [OpenAiEmbeddingClient][dbally.embedding_client.OpenAiEmbeddingClient]
+Next, you can either use [one of dbally embedding clients][dbally.embeddings.EmbeddingClient], such as [LiteLLMEmbeddingClient][dbally.embeddings.LiteLLMEmbeddingClient]
 
 ```python
-from dbally.embedding_client import OpenAiEmbeddingClient
+from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 
-embedding_client=OpenAiEmbeddingClient(
+embedding_client=LiteLLMEmbeddingClient(
         api_key="your-api-key",
     )
 

@@ -1,4 +1,4 @@
 from .base import EmbeddingClient
-from .openai import OpenAiEmbeddingClient
+from .litellm import LiteLLMEmbeddingClient
 
-__all__ = ["EmbeddingClient", "OpenAiEmbeddingClient"]
+__all__ = ["EmbeddingClient", "LiteLLMEmbeddingClient"]

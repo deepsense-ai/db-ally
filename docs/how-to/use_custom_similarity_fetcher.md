@@ -43,13 +43,13 @@ breeds_similarity = SimilarityIndex(
     store=FaissStore(
     index_dir="./similarity_indexes",
     index_name="breeds_similarity",
-    embedding_client=OpenAiEmbeddingClient(
+    embedding_client=LiteLLMEmbeddingClient(
         api_key="your-api-key",
     )
 )
 ```
 
-In this example, we used the FaissStore, which utilizes the `faiss` library for rapid similarity search. We also employed the `OpenAiEmbeddingClient` to get the semantic embeddings for the dog breeds. Depending on your needs, you can use a different built-in store or create [a custom one](../how-to/use_custom_similarity_store.md).
+In this example, we used the FaissStore, which utilizes the `faiss` library for rapid similarity search. We also employed the `LiteLLMEmbeddingClient` to get the semantic embeddings for the dog breeds. Depending on your needs, you can use a different built-in store or create [a custom one](../how-to/use_custom_similarity_store.md).
 
 ## Using the Similarity Index
 
