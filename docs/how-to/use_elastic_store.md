@@ -2,10 +2,13 @@
 
 ElasticStore[https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-store.html] can be used as a store in [SimilarityIndex](../concepts/similarity_indexes.md). In this guide, we will show you how to execute similarity search by using elastic search.
 In the example the elastic search engine is provided by official docker image.
+There are two approaches available to perform similarity search Elastic Search Store and Elastic Vector Search.
+Elastic Search Store uses embeddings and kNN search to find similarities while Elastic Vector Search - semantic search - uses ELSER (Elastic Learned Sparse EncodeR) model
+to encode and search the data.
 
 ## Environment setup
 
-* [Download and deploy elastic search docker image](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html). Instructions to set up kibana environment are not required.
+* [Download and deploy elastic search docker image](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html).
 
 ```commandline
 docker network create elastic
@@ -14,6 +17,12 @@ docker run --name es01 --net elastic -p 9200:9200 -it -m 1GB docker.elastic.co/e
 # Copy the generated elastic password and enrollment token. These credentials are only shown when you start Elasticsearch for the first time. You can regenerate the credentials using the following commands.
 docker cp es01:/usr/share/elasticsearch/config/certs/http_ca.crt .
 curl --cacert http_ca.crt -u elastic:$ELASTIC_PASSWORD https://localhost:9200
+
+# For vector search it is required to enroll to appropiate subscryption level or trial verison which supports machine learning.
+# It is required to download ELSER model for example through kibana
+docker run --name kib01 --net elastic -p 5601:5601 docker.elastic.co/kibana/kibana:8.13.4
+# [Description how to download/enable ELSER model](https://www.elastic.co/guide/en/machine-learning/current/ml-nlp-elser.html)
+
 ```
 
 * Install elastic search python client
@@ -54,7 +63,7 @@ To implement a Similarity Index with elastic store create ElasticStore object an
 
 embeddings=OpenAiEmbeddingClient(api_key="your-api-key")
 
-data_store = ElasticStore(
+data_store = ElasticsearchStore(
         index_name="country_similarity",
         host="https://localhost:9200",
         ca_cert_path="path_to_cert/http_ca.crt",
@@ -63,16 +72,23 @@ data_store = ElasticStore(
         embedding_client=embeddings,
     ),
 
+```
 
+After this setup, you can initialize the SimilarityIndex
+
+```python
 country_similarity = SimilarityIndex(
     fetcher=DummyCountryFetcher(),
     store=data_store
 )
 ```
 
+and [update it and find the closest matches in the same way as in built-in similarity indices](./use_custom_similarity_store.md/#using-the-similar
+
 You can then use this store to create a similarity index that maps user input to the closest matching value.
 Now you can use this index to map user input to the closest matching value. For example, a user may type 'United States' and our index would return 'USA'.```
 
 ## Links
 * [Similarity Indexes](./use_custom_similiarity_store.md)
-* [Example](./use_elasticsearch_store_code.py)
+* [Example Elastic Search Store](./use_elasticsearch_store_code.py)
+* [Example Elastic Vector Search](./use_elastic_vector_search_code.py)
