@@ -1,6 +1,7 @@
+import abc
 import json
 from dataclasses import dataclass
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import sqlalchemy
 from sqlalchemy import ColumnClause, Table, text
@@ -9,10 +10,10 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.llm_client.base import LLMClient, LLMOptions
 from dbally.prompts import PromptTemplate
-from dbally.similarity import AbstractSimilarityIndex, SimilarityIndex, SimilarityStore, SimpleSqlAlchemyFetcher
+from dbally.similarity import AbstractSimilarityIndex, SimpleSqlAlchemyFetcher
 from dbally.views.base import BaseView
 
-from ._config import Text2SQLConfig, Text2SQLSimilarityType
+from ._config import TableConfig
 from ._errors import Text2SQLError
 
 text2sql_prompt = PromptTemplate(
@@ -92,7 +93,7 @@ class SQLParameterOption:
         return self.value
 
 
-class Text2SQLFreeformView(BaseView):
+class BaseText2SQLView(BaseView, abc.ABC):
     """
     Text2SQLFreeformView is a class designed to interact with the database using text2sql queries.
     """
@@ -100,30 +101,10 @@ class Text2SQLFreeformView(BaseView):
     def __init__(
         self,
         engine: sqlalchemy.engine.Engine,
-        config: Text2SQLConfig,
-        similarity_store_builders: Optional[Dict[Text2SQLSimilarityType, Callable[[str], SimilarityStore]]] = None,
-        similarity_indexes: Optional[Dict[str, Dict[str, SimilarityIndex]]] = None,
     ) -> None:
         super().__init__()
         self._engine = engine
-        self._config = config
-        self._similarity_indexes = similarity_indexes or {}
-        store_builders = similarity_store_builders or {}
-
-        for table_name, column_name, similarity_type in self._config.iterate_similarity_indexes():
-            if column_name not in self._similarity_indexes[table_name] and similarity_type in store_builders:
-                store_name = f"text2sql-freeform-index_{table_name}_{column_name}"
-                store_builder = store_builders[similarity_type]
-
-                default_fetcher = SimpleSqlAlchemyFetcher(
-                    sqlalchemy_engine=self._engine,
-                    column=ColumnClause(column_name),
-                    table=Table(table_name, sqlalchemy.MetaData()),
-                )
-
-                self._similarity_indexes[table_name][column_name] = SimilarityIndex(
-                    store=store_builder(store_name), fetcher=default_fetcher
-                )
+        self._table_index = {table.name: table for table in self.get_tables()}
 
     async def ask(
         self,
@@ -172,7 +153,7 @@ class Text2SQLFreeformView(BaseView):
                 if dry_run:
                     return ViewExecutionResult(results=[], context={"sql": sql})
 
-                rows = await self._execute_sql(sql, parameters)
+                rows = await self._execute_sql(sql, parameters, event_tracker=event_tracker)
                 break
             except Exception as e:
                 conversation = conversation.add_user_message(f"Response is invalid! Error: {e}")
@@ -217,17 +198,43 @@ class Text2SQLFreeformView(BaseView):
 
         return sql, param_objs, conversation
 
-    async def _execute_sql(self, sql: str, parameters: List[SQLParameterOption]) -> Iterable:
-        param_values = {param.name: param.value for param in parameters}
+    async def _execute_sql(
+        self, sql: str, parameters: List[SQLParameterOption], event_tracker: EventTracker
+    ) -> Iterable:
+        param_values = {}
+
+        for param in parameters:
+            if param.table in self._table_index and self._table_index[param.table][param.column].similarity_index:
+                similarity_index = self._table_index[param.table][param.column].similarity_index
+                param_values[param.name] = await similarity_index.similar(param.value, event_tracker=event_tracker)
+            else:
+                param_values[param.name] = param.value
+
         with self._engine.connect() as conn:
             return conn.execute(text(sql), param_values).fetchall()
 
     def _get_tables_context(self) -> str:
         context = ""
-        for table in self._config.tables.values():
+        for table in self._table_index.values():
             context += f"{table.ddl}\n"
 
         return context
+
+    @abc.abstractmethod
+    def get_tables(self) -> List[TableConfig]:
+        """
+        Get the tables used by the view.
+
+        Returns:
+            A dictionary of tables.
+        """
+
+    def _create_default_fetcher(self, table: str, column: str) -> SimpleSqlAlchemyFetcher:
+        return SimpleSqlAlchemyFetcher(
+            sqlalchemy_engine=self._engine,
+            column=ColumnClause(column),
+            table=Table(table, sqlalchemy.MetaData()),
+        )
 
     def list_similarity_indexes(self) -> List[AbstractSimilarityIndex]:
         """
@@ -236,4 +243,9 @@ class Text2SQLFreeformView(BaseView):
         Returns:
             List of similarity indexes.
         """
-        return [index for tables in self._similarity_indexes.values() for index in tables.values()]
+        return [
+            column.similarity_index
+            for table in self.get_tables()
+            for column in table.columns
+            if column.similarity_index
+        ]
