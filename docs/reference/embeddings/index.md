@@ -1,3 +1,3 @@
 # EmbeddingClient
 
-::: dbally.embedding_client.EmbeddingClient
+::: dbally.embeddings.EmbeddingClient

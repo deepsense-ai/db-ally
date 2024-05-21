@@ -1,7 +1,7 @@
 site_name: db-ally
 repo_url: https://github.com/deepsense-ai/db-ally
 nav:
-  - db-ally: index.md
+  - Home: index.md
   - Quickstart:
       - quickstart/index.md
       - quickstart/quickstart2.md
@@ -49,10 +49,8 @@ nav:
           - reference/view_selection/llm_view_selector.md
       - reference/nl_responder.md
       - LLMs:
-          - reference/llm/index.md
-          - reference/llm/llm_options.md
-          - reference/llm/openai.md
-          - reference/llm/prompt_builder.md
+          - reference/llms/index.md
+          - reference/llms/litellm.md
       - Similarity:
           - reference/similarity/index.md
           - Store:
@@ -66,12 +64,13 @@ nav:
           - reference/similarity/detector.md
       - Embeddings:
           - reference/embeddings/index.md
-          - reference/embeddings/openai.md
-  - About:
-      - about/roadmap.md
+          - reference/embeddings/litellm.md
+  - Roadmap: roadmap.md
 
 theme:
   name: material
+  icon:
+    repo: fontawesome/brands/github
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -86,7 +85,9 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
   features:
+    - navigation.footer
     - navigation.tabs
+    - navigation.top
     - content.code.annotate
     - content.code.copy
 extra_css:

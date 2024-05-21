@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+---
+
 # Roadmap
 
 db-ally is actively developed and maintained by a core team at [deepsense.ai](https://deepsense.ai) and a community of contributors.
@@ -33,10 +38,10 @@ Below you can find a list of planned integrations.
 ### LLMs
 
 - [x] OpenAI models
-- [ ] Claude 3
-- [ ] LLama-2
-- [ ] Mistral / Mixtral
-- [ ] VertexAI Gemini
+- [x] Claude 3
+- [x] LLama-2
+- [x] Mistral / Mixtral
+- [x] VertexAI Gemini
 
 ### Vector stores
 
