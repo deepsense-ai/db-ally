@@ -2,9 +2,9 @@ import copy
 from typing import Callable, List, Optional, Tuple, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.prompts.iql_prompt_template import IQLPromptTemplate, default_iql_template
-from dbally.llm_client.base import LLMClient
-from dbally.prompts.prompt_builder import PromptBuilder
+from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template
+from dbally.llms.base import LLM
+from dbally.llms.clients.base import LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
 
 
@@ -26,21 +26,18 @@ class IQLGenerator:
 
     def __init__(
         self,
-        llm_client: LLMClient,
+        llm: LLM,
         prompt_template: Optional[IQLPromptTemplate] = None,
-        prompt_builder: Optional[PromptBuilder] = None,
         promptify_view: Optional[Callable] = None,
     ) -> None:
         """
         Args:
-            llm_client: LLM client used to generate IQL
+            llm: LLM used to generate IQL
             prompt_template: If not provided by the users is set to `default_iql_template`
-            prompt_builder: PromptBuilder used to insert arguments into the prompt and adjust style per model.
             promptify_view: Function formatting filters for prompt
         """
-        self._llm_client = llm_client
+        self._llm = llm
         self._prompt_template = prompt_template or copy.deepcopy(default_iql_template)
-        self._prompt_builder = prompt_builder or PromptBuilder()
         self._promptify_view = promptify_view or _promptify_filters
 
     async def generate_iql(
@@ -49,6 +46,7 @@ class IQLGenerator:
         question: str,
         event_tracker: EventTracker,
         conversation: Optional[IQLPromptTemplate] = None,
+        llm_options: Optional[LLMOptions] = None,
     ) -> Tuple[str, IQLPromptTemplate]:
         """
         Uses LLM to generate IQL in text form
@@ -58,6 +56,7 @@ class IQLGenerator:
             filters: list of filters exposed by the view
             event_tracker: event store used to audit the generation process
             conversation: conversation to be continued
+            llm_options: options to use for the LLM client
 
         Returns:
             IQL - iql generated based on the user question
@@ -66,10 +65,11 @@ class IQLGenerator:
 
         template = conversation or self._prompt_template
 
-        llm_response = await self._llm_client.text_generation(
+        llm_response = await self._llm.generate_text(
             template=template,
             fmt={"filters": filters_for_prompt, "question": question},
             event_tracker=event_tracker,
+            options=llm_options,
         )
 
         iql_filters = self._prompt_template.llm_response_parser(llm_response)

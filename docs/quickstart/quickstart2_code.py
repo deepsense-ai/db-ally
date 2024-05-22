@@ -12,8 +12,8 @@ import dbally
 from dbally import decorators, SqlAlchemyBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
-from dbally.embedding_client.openai import OpenAiEmbeddingClient
-from dbally.llm_client.openai_client import OpenAIClient
+from dbally.embeddings.litellm import LiteLLMEmbeddingClient
+from dbally.llms.litellm import LiteLLM
 
 load_dotenv()
 engine = create_engine("sqlite:///candidates.db")
@@ -32,7 +32,8 @@ country_similarity = SimilarityIndex(
     store=FaissStore(
         index_dir="./similarity_indexes",
         index_name="country_similarity",
-        embedding_client=OpenAiEmbeddingClient(
+        embedding_client=LiteLLMEmbeddingClient(
+            model="text-embedding-3-small",  # to use openai embedding model
             api_key=os.environ["OPENAI_API_KEY"],
         ),
     ),
@@ -78,7 +79,7 @@ class CandidateView(SqlAlchemyBaseView):
 async def main():
     await country_similarity.update()
 
-    llm = OpenAIClient(model_name="gpt-3.5-turbo")
+    llm = LiteLLM(model_name="gpt-3.5-turbo")
     collection = dbally.create_collection("recruitment", llm, event_handlers=[CLIEventHandler()])
     collection.add(CandidateView, lambda: CandidateView(engine))
 

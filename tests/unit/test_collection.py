@@ -13,7 +13,7 @@ from dbally.iql._exceptions import IQLError
 from dbally.utils.errors import NoViewFoundError
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 from dbally.views.structured import BaseStructuredView
-from tests.unit.mocks import MockIQLGenerator, MockLLMClient, MockSimilarityIndex, MockViewBase, MockViewSelector
+from tests.unit.mocks import MockIQLGenerator, MockLLM, MockSimilarityIndex, MockViewBase, MockViewSelector
 
 
 class MockView1(MockViewBase):
@@ -129,7 +129,7 @@ def mock_collection() -> Collection:
     """
     collection = create_collection(
         "foo",
-        llm_client=MockLLMClient(),
+        llm=MockLLM(),
         view_selector=MockViewSelector("MockView1"),
         nl_responder=AsyncMock(),
     )
@@ -270,9 +270,7 @@ def mock_collection_feedback_loop() -> Collection:
         def get_iql_generator(self, *_, **__):
             return iql_generator
 
-    collection = Collection(
-        "foo", view_selector=Mock(), llm_client=MockLLMClient(), nl_responder=Mock(), event_handlers=[]
-    )
+    collection = Collection("foo", view_selector=Mock(), llm=MockLLM(), nl_responder=Mock(), event_handlers=[])
     collection.add(ViewWithMockGenerator)
     return collection
 
@@ -293,7 +291,7 @@ async def test_ask_feedback_loop(collection_feedback: Collection) -> None:
         mock_iql_query.side_effect = errors
         view = collection_feedback.get("ViewWithMockGenerator")
         assert isinstance(view, BaseStructuredView)
-        iql_generator = view.get_iql_generator(llm_client=MockLLMClient())
+        iql_generator = view.get_iql_generator(llm=MockLLM())
 
         await collection_feedback.ask("Mock question")
 
@@ -320,7 +318,7 @@ async def test_ask_view_selection_single_view() -> None:
     collection = Collection(
         "foo",
         view_selector=MockViewSelector(""),
-        llm_client=MockLLMClient(),
+        llm=MockLLM(),
         nl_responder=AsyncMock(),
         event_handlers=[],
     )
@@ -339,7 +337,7 @@ async def test_ask_view_selection_multiple_views() -> None:
     collection = Collection(
         "foo",
         view_selector=MockViewSelector("MockViewWithResults"),
-        llm_client=MockLLMClient(),
+        llm=MockLLM(),
         nl_responder=AsyncMock(),
         event_handlers=[],
     )
@@ -360,7 +358,7 @@ async def test_ask_view_selection_no_views() -> None:
     collection = Collection(
         "foo",
         view_selector=MockViewSelector(""),
-        llm_client=MockLLMClient(),
+        llm=MockLLM(),
         nl_responder=AsyncMock(),
         event_handlers=[],
     )

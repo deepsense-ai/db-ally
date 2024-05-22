@@ -1,7 +1,7 @@
 import re
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Set
 
-ChatFormat = Tuple[Dict[str, str], ...]
+ChatFormat = List[Dict[str, str]]
 
 
 class PromptTemplateError(Exception):
@@ -22,7 +22,7 @@ def _extract_variables(text: str) -> List[str]:
     return re.findall(pattern, text)
 
 
-def _check_prompt_variables(chat: ChatFormat, variables_to_check: Set[str]) -> ChatFormat:
+def check_prompt_variables(chat: ChatFormat, variables_to_check: Set[str]) -> ChatFormat:
     """
     Function validates a given chat to make sure it contains variables required.
 

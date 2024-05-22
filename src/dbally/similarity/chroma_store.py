@@ -3,7 +3,7 @@ from typing import List, Literal, Optional, Union
 
 import chromadb
 
-from dbally.embedding_client.base import EmbeddingClient
+from dbally.embeddings.base import EmbeddingClient
 from dbally.similarity.store import SimilarityStore
 
 
@@ -13,7 +13,7 @@ class ChromadbStore(SimilarityStore):
     def __init__(
         self,
         index_name: str,
-        chroma_client: chromadb.Client,
+        chroma_client: chromadb.ClientAPI,
         embedding_function: Union[EmbeddingClient, chromadb.EmbeddingFunction],
         max_distance: Optional[float] = None,
         distance_method: Literal["l2", "ip", "cosine"] = "l2",
@@ -94,3 +94,12 @@ class ChromadbStore(SimilarityStore):
             retrieved = collection.query(query_texts=[text], n_results=1)
 
         return self._return_best_match(retrieved)
+
+    def __repr__(self) -> str:
+        """
+        Returns the string representation of the object.
+
+        Returns:
+            str: The string representation of the object.
+        """
+        return f"{self.__class__.__name__}(index_name={self.index_name})"

@@ -1,9 +1,9 @@
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Dict, List, Optional
+from typing import AsyncIterator, Dict, List, Optional, Union
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_span import EventSpan
-from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart
+from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 
 class EventTracker:
@@ -69,7 +69,7 @@ class EventTracker:
         self._handlers.append(event_handler)
 
     @asynccontextmanager
-    async def track_event(self, event: LLMEvent) -> AsyncIterator[EventSpan]:
+    async def track_event(self, event: Union[LLMEvent, SimilarityEvent]) -> AsyncIterator[EventSpan]:
         """
         Context manager for processing an event.
 

@@ -1,11 +1,12 @@
 import abc
-from typing import List
+from typing import List, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.llm_client.base import LLMClient
+from dbally.llms.base import LLM
+from dbally.llms.clients.base import LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
 
 from .base import BaseView
@@ -17,20 +18,26 @@ class BaseStructuredView(BaseView):
     to be able to list all available filters, apply them and execute queries.
     """
 
-    def get_iql_generator(self, llm_client: LLMClient) -> IQLGenerator:
+    def get_iql_generator(self, llm: LLM) -> IQLGenerator:
         """
         Returns the IQL generator for the view.
 
         Args:
-            llm_client: LLM client used to generate the IQL queries
+            llm: LLM used to generate the IQL queries
 
         Returns:
             IQLGenerator: IQL generator for the view
         """
-        return IQLGenerator(llm_client=llm_client)
+        return IQLGenerator(llm=llm)
 
     async def ask(
-        self, query: str, llm_client: LLMClient, event_tracker: EventTracker, n_retries: int = 3, dry_run: bool = False
+        self,
+        query: str,
+        llm: LLM,
+        event_tracker: EventTracker,
+        n_retries: int = 3,
+        dry_run: bool = False,
+        llm_options: Optional[LLMOptions] = None,
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result. It generates the IQL query from the natural language query\
@@ -38,24 +45,28 @@ class BaseStructuredView(BaseView):
 
         Args:
             query: The natural language query to execute.
-            llm_client: The LLM client used to execute the query.
+            llm: The LLM used to execute the query.
             event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
+            llm_options: Options to use for the LLM.
 
         Returns:
             The result of the query.
         """
-        iql_generator = self.get_iql_generator(llm_client)
+        iql_generator = self.get_iql_generator(llm)
         filter_list = self.list_filters()
 
         iql_filters, conversation = await iql_generator.generate_iql(
-            question=query, filters=filter_list, event_tracker=event_tracker
+            question=query,
+            filters=filter_list,
+            event_tracker=event_tracker,
+            llm_options=llm_options,
         )
 
         for _ in range(n_retries):
             try:
-                filters = await IQLQuery.parse(iql_filters, filter_list)
+                filters = await IQLQuery.parse(iql_filters, filter_list, event_tracker=event_tracker)
                 await self.apply_filters(filters)
                 break
             except (IQLError, ValueError) as e:
@@ -65,6 +76,7 @@ class BaseStructuredView(BaseView):
                     filters=filter_list,
                     event_tracker=event_tracker,
                     conversation=conversation,
+                    llm_options=llm_options,
                 )
                 continue
 

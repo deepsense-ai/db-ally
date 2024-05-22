@@ -4,13 +4,16 @@
 Collection of mock objects for unit tests.
 """
 
-from typing import List, Tuple
-from unittest.mock import create_autospec
+from dataclasses import dataclass
+from functools import cached_property
+from typing import List, Optional, Tuple, Union
 
-from dbally.data_models.prompts.iql_prompt_template import IQLPromptTemplate, default_iql_template
+from dbally import NOT_GIVEN, NotGiven
 from dbally.iql import IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.llm_client.base import LLMClient
+from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template
+from dbally.llms.base import LLM
+from dbally.llms.clients.base import LLMClient, LLMOptions
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.structured import BaseStructuredView, ExposedFunction, ViewExecutionResult
@@ -34,7 +37,7 @@ class MockViewBase(BaseStructuredView):
 class MockIQLGenerator(IQLGenerator):
     def __init__(self, iql: str) -> None:
         self.iql = iql
-        super().__init__(llm_client=create_autospec(LLMClient))
+        super().__init__(llm=MockLLM())
 
     async def generate_iql(self, *_, **__) -> Tuple[str, IQLPromptTemplate]:
         return self.iql, default_iql_template
@@ -60,17 +63,26 @@ class MockSimilarityIndex(AbstractSimilarityIndex):
         return text
 
 
-class MockLLMClient(LLMClient):
-    # TODO: Start calling super().__init__ and remove the pyling comment below
-    # as soon as the base class is refactored to not have PromptBuilder initialization
-    # hardcoded in its constructor.
-    # See: DBALLY-105
-    # pylint: disable=super-init-not-called
-    def __init__(self, *_, **__) -> None:
-        self.model_name = "mock model"
+@dataclass
+class MockLLMOptions(LLMOptions):
+    mock_property1: Union[int, NotGiven] = NOT_GIVEN
+    mock_property2: Union[str, NotGiven] = NOT_GIVEN
 
-    async def text_generation(self, *_, **__) -> str:
-        return "mock response"
+
+class MockLLMClient(LLMClient[MockLLMOptions]):
+    def __init__(self, model_name: str) -> None:
+        super().__init__(model_name)
 
     async def call(self, *_, **__) -> str:
         return "mock response"
+
+
+class MockLLM(LLM[MockLLMOptions]):
+    _options_cls = MockLLMOptions
+
+    def __init__(self, default_options: Optional[MockLLMOptions] = None) -> None:
+        super().__init__("mock-llm", default_options)
+
+    @cached_property
+    def _client(self) -> MockLLMClient:
+        return MockLLMClient(model_name=self.model_name)

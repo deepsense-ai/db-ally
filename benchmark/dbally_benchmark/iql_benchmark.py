@@ -20,9 +20,9 @@ from omegaconf import DictConfig
 from sqlalchemy import create_engine
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.prompts.iql_prompt_template import default_iql_template
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.llm_client.openai_client import OpenAIClient
+from dbally.iql_generator.iql_prompt_template import default_iql_template
+from dbally.llms.litellm import LiteLLM
 from dbally.utils.errors import UnsupportedQueryError
 from dbally.views.structured import BaseStructuredView
 
@@ -96,13 +96,13 @@ async def evaluate(cfg: DictConfig) -> Any:
     view = VIEW_REGISTRY[ViewName(view_name)](engine)
 
     if "gpt" in cfg.model_name:
-        llm_client = OpenAIClient(
+        llm = LiteLLM(
             model_name=cfg.model_name,
             api_key=benchmark_cfg.openai_api_key,
         )
     else:
         raise ValueError("Only OpenAI's GPT models are supported for now.")
-    iql_generator = IQLGenerator(llm_client=llm_client)
+    iql_generator = IQLGenerator(llm=llm)
 
     run = None
     if cfg.neptune.log:

@@ -36,6 +36,15 @@ class SqlAlchemyFetcher(SimilarityFetcher):
             result = conn.execute(self.get_query())
             return [row[0] for row in result]
 
+    def __repr__(self) -> str:
+        """
+        Returns a string representation of the fetcher.
+
+        Returns:
+            str: The string representation of the fetcher.
+        """
+        return f"{self.__class__.__name__}()"
+
 
 class SimpleSqlAlchemyFetcher(SqlAlchemyFetcher):
     """
@@ -57,6 +66,15 @@ class SimpleSqlAlchemyFetcher(SqlAlchemyFetcher):
             The query to fetch the data.
         """
         return sqlalchemy.select(self.column).select_from(self.table).distinct()
+
+    def __repr__(self) -> str:
+        """
+        Returns a string representation of the fetcher.
+
+        Returns:
+            str: The string representation of the fetcher.
+        """
+        return f"{self.__class__.__name__}(table={self.table.name}, column={self.column.name})"
 
 
 class AbstractSqlAlchemyStore(SimilarityStore, metaclass=abc.ABCMeta):

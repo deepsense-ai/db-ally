@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Optional, Union
 
 from dbally.data_models.execution_result import ExecutionResult
-from dbally.data_models.prompts.prompt_template import ChatFormat
+from dbally.prompts import ChatFormat
 
 
 class EventType(Enum):
@@ -27,6 +27,19 @@ class LLMEvent:
     completion_tokens: Optional[int] = None
     prompt_tokens: Optional[int] = None
     total_tokens: Optional[int] = None
+
+
+@dataclass
+class SimilarityEvent:
+    """
+    SimilarityEvent is fired when a SimilarityIndex lookup is performed.
+    """
+
+    store: str
+    fetcher: str
+
+    input_value: str
+    output_value: Optional[str] = None
 
 
 @dataclass

@@ -61,9 +61,9 @@ If you have a [collection](../concepts/collections.md) and want to update Simila
 
 ```python
 from db_ally import create_collection
-from db_ally.llm_client.openai_client import OpenAIClient
+from db_ally.llms.litellm import LiteLLM
 
-my_collection = create_collection("collection_name", llm_client=OpenAIClient())
+my_collection = create_collection("collection_name", llm=LiteLLM())
 
 # ... add views to the collection
 

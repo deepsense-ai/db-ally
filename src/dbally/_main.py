@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from .audit.event_handlers.base import EventHandler
 from .collection import Collection
-from .llm_client.base import LLMClient
+from .llms import LLM
 from .nl_responder.nl_responder import NLResponder
 from .view_selection.base import ViewSelector
 from .view_selection.llm_view_selector import LLMViewSelector
@@ -10,7 +10,7 @@ from .view_selection.llm_view_selector import LLMViewSelector
 
 def create_collection(
     name: str,
-    llm_client: LLMClient,
+    llm: LLM,
     event_handlers: Optional[List[EventHandler]] = None,
     view_selector: Optional[ViewSelector] = None,
     nl_responder: Optional[NLResponder] = None,
@@ -27,16 +27,15 @@ def create_collection(
 
     ```python
         from dbally import create_collection
-        from dbally.llm_client.openai_client import OpenAIClient
+        from dbally.llms.litellm import LiteLLM
 
-        collection = create_collection("my_collection", llm_client=OpenAIClient())
+        collection = create_collection("my_collection", llm=LiteLLM())
     ```
 
     Args:
         name: Name of the collection is available for [Event handlers](event_handlers/index.md) and is\
         used to distinguish different db-ally runs.
-        llm_client: LLM client used by the collection to generate views and respond to natural language\
-        queries.
+        llm: LLM used by the collection to generate responses for natural language queries.
         event_handlers: Event handlers used by the collection during query executions. Can be used to\
         log events as [CLIEventHandler](event_handlers/cli_handler.md) or to validate system performance as\
         [LangSmithEventHandler](event_handlers/langsmith_handler.md).
@@ -52,14 +51,14 @@ def create_collection(
     Raises:
         ValueError: if default LLM client is not configured
     """
-    view_selector = view_selector or LLMViewSelector(llm_client=llm_client)
-    nl_responder = nl_responder or NLResponder(llm_client=llm_client)
+    view_selector = view_selector or LLMViewSelector(llm=llm)
+    nl_responder = nl_responder or NLResponder(llm=llm)
     event_handlers = event_handlers or []
 
     return Collection(
         name,
         nl_responder=nl_responder,
         view_selector=view_selector,
-        llm_client=llm_client,
+        llm=llm,
         event_handlers=event_handlers,
     )
