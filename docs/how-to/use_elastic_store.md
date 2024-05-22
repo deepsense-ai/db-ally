@@ -48,8 +48,9 @@ For example, we can use:
 * [OpenAiEmbeddingClient][dbally.embedding_client.OpenAiEmbeddingClient].
 
 ```python
+from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 
-embeddings=OpenAiEmbeddingClient(api_key="your-api-key")
+embeddings=LiteLLMEmbeddingClient((api_key="your-api-key")
 ```
 
 To implement a Similarity Index with elastic store create ElasticStore object and pass it to a store following argument:
@@ -60,8 +61,7 @@ To implement a Similarity Index with elastic store create ElasticStore object an
 * ca_cert_path (str): The path to the CA certificate for SSL/TLS verification.
 
 ```python
-
-embeddings=OpenAiEmbeddingClient(api_key="your-api-key")
+from dbally.similarity.elasticsearch_store import ElasticsearchStore
 
 data_store = ElasticsearchStore(
         index_name="country_similarity",
@@ -77,6 +77,8 @@ data_store = ElasticsearchStore(
 After this setup, you can initialize the SimilarityIndex
 
 ```python
+from dbally.similarity import SimpleSqlAlchemyFetcher, SimilarityIndex
+
 country_similarity = SimilarityIndex(
     fetcher=DummyCountryFetcher(),
     store=data_store
