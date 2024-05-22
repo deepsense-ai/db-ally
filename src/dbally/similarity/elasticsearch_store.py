@@ -1,6 +1,5 @@
 from typing import List, Optional
 
-import numpy as np
 from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
 
@@ -52,7 +51,6 @@ class ElasticsearchStore(SimilarityStore):
             data: The data to store.
         """
 
-        print(data)
         mappings = {
             "properties": {
                 "search_vector": {
@@ -63,15 +61,13 @@ class ElasticsearchStore(SimilarityStore):
             }
         }
 
-        await self.client.indices.delete(index=self.index_name)
+        await self.client.indices.delete(index=self.index_name, ignore_unavailable=True)
         await self.client.indices.create(index=self.index_name, mappings=mappings)
         store_data = [
             {
                 "_index": self.index_name,
                 "column": word,
-                "search_vector": np.array(await self.embedding_client.get_embeddings([word]), dtype=np.float32).reshape(
-                    -1
-                ),
+                "search_vector": (await self.embedding_client.get_embeddings([word]))[0],
             }
             for word in data
         ]
@@ -95,10 +91,15 @@ class ElasticsearchStore(SimilarityStore):
         Returns:
             The most similar text or None if no similar text is found.
         """
-        embedding = np.array(await self.embedding_client.get_embeddings([text]), dtype=np.float32).reshape(-1)
+        query_embedding = (await self.embedding_client.get_embeddings([text]))[0]
 
         search_results = await self.client.search(
-            knn={"field": "search_vector", "k": k_closest, "num_candidates": num_candidates, "query_vector": embedding}
+            knn={
+                "field": "search_vector",
+                "k": k_closest,
+                "num_candidates": num_candidates,
+                "query_vector": query_embedding,
+            }
         )
 
         return (
