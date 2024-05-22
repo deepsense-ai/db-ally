@@ -1,19 +1,19 @@
 # How-To: Use Elastic to Store Similarity Index
 
-ElasticStore[https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-store.html] can be used as a store in [SimilarityIndex](../concepts/similarity_indexes.md). In this guide, we will show you how to execute similarity search by using elastic search.
+[ElasticStore](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-store.html]) can be used as a store in [SimilarityIndex](../concepts/similarity_indexes.md). In this guide, we will show you how to execute similarity search by using elastic search.
 In the example the elastic search engine is provided by official docker image.
-There are two approaches available to perform similarity search Elastic Search Store and Elastic Vector Search.
+There are two approaches available to perform similarity search: Elastic Search Store and Elastic Vector Search.
 Elastic Search Store uses embeddings and kNN search to find similarities while Elastic Vector Search - semantic search - uses ELSER (Elastic Learned Sparse EncodeR) model
 to encode and search the data.
 
 ## Environment setup
 
-* [Download and deploy elastic search docker image](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html).
+* [Download and deploy elastic search docker image](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html). Please note that for elastic vector search elastic docker container required at least 8GB of RAM and activation
 
 ```commandline
 docker network create elastic
 docker pull docker.elastic.co/elasticsearch/elasticsearch:8.13.4
-docker run --name es01 --net elastic -p 9200:9200 -it -m 1GB docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+docker run --name es01 --net elastic -p 9200:9200 -it -m 8GB docker.elastic.co/elasticsearch/elasticsearch:8.13.4
 # Copy the generated elastic password and enrollment token. These credentials are only shown when you start Elasticsearch for the first time. You can regenerate the credentials using the following commands.
 docker cp es01:/usr/share/elasticsearch/config/certs/http_ca.crt .
 curl --cacert http_ca.crt -u elastic:$ELASTIC_PASSWORD https://localhost:9200
