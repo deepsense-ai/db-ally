@@ -27,7 +27,7 @@ docker run --name kib01 --net elastic -p 5601:5601 docker.elastic.co/kibana/kiba
 
 * Install elastic search python client
 ```commandline
-pip install dbally[elasticsearch]
+pip install dbally[elasticsearch,litllm]
 ```
 
 ## Implementing a SimilarityIndex

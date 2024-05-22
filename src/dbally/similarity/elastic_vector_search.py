@@ -40,7 +40,7 @@ class ElasticVectorStore(SimilarityStore):
         self.index_name = index_name
         self.indices = []
 
-    async def deploy_elser_mode(self):
+    async def deploy_elser_model(self):
         """
         Deploys the ELSER model on ElasticSearch:
 
@@ -112,7 +112,7 @@ class ElasticVectorStore(SimilarityStore):
         Args:
             data: The data to store in the Elasticsearch index.
         """
-        await self.deploy_elser_mode()
+        await self.deploy_elser_model()
 
         mappings = {
             "properties": {
