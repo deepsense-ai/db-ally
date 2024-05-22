@@ -3,7 +3,7 @@ from typing import List, Optional
 from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
 
-from dbally.embedding_client.base import EmbeddingClient
+from dbally.embeddings.base import EmbeddingClient
 from dbally.similarity.store import SimilarityStore
 
 
