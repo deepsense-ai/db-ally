@@ -6,8 +6,7 @@ nav:
       - quickstart/index.md
       - quickstart/quickstart2.md
       - quickstart/quickstart3.md
-  - Tutorials:
-      - tutorials.md
+  - Tutorials: tutorials.md
   - Concepts:
       - concepts/views.md
       - concepts/structured_views.md
@@ -21,6 +20,9 @@ nav:
           - how-to/sql_views.md
           - how-to/pandas_views.md
           - how-to/custom_views.md
+      - Using LLMs:
+          - how-to/litellm.md
+          - how-to/custom_llm.md
       - Using similarity indexes:
           - how-to/use_custom_similarity_fetcher.md
           - how-to/use_chromadb_store.md

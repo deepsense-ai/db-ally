@@ -1,4 +1,4 @@
-# db-ally root API
+# dbally
 
 
 ::: dbally.create_collection
