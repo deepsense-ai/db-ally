@@ -12,7 +12,7 @@ from sqlalchemy.ext.automap import automap_base
 import dbally
 from dbally import decorators, SqlAlchemyBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
-from dbally.llm_client.openai_client import OpenAIClient
+from dbally.llms.litellm import LiteLLM
 from dbally.similarity import SimpleSqlAlchemyFetcher, SimilarityIndex
 from dbally.similarity.elastic_vector_search import ElasticVectorStore
 
@@ -83,7 +83,7 @@ class CandidateView(SqlAlchemyBaseView):
 async def main(country="United States", years_of_experience="2"):
     await country_similarity.update()
 
-    llm = OpenAIClient(model_name="gpt-3.5-turbo", api_key=os.environ["OPENAI_API_KEY"])
+    llm = LiteLLM(model_name="gpt-3.5-turbo", api_key=os.environ["OPENAI_API_KEY"])
     collection = dbally.create_collection("recruitment", llm, event_handlers=[CLIEventHandler()])
     collection.add(CandidateView, lambda: CandidateView(engine))
 

@@ -123,7 +123,7 @@ class ElasticVectorStore(SimilarityStore):
             }
         }
 
-        await self.client.indices.delete(index=self.index_name)
+        await self.client.indices.delete(index=self.index_name, ignore_unavailable=True)
         await self.client.indices.create(
             index=self.index_name,
             mappings=mappings,
