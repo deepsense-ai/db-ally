@@ -25,11 +25,11 @@ class ElasticVectorStore(SimilarityStore):
         Initializes the Elastic Vector Store.
 
         Args:
-            index_name (str): The name of the index.
-            host (str): The host address of the Elasticsearch instance.
-            http_user (str): The username used for HTTP authentication.
-            http_password (str): The password used for HTTP authentication.
-            ca_cert_path (str): The path to the CA certificate for SSL/TLS verification.
+            index_name: The name of the index.
+            host: The host address of the Elasticsearch instance.
+            http_user: The username used for HTTP authentication.
+            http_password: The password used for HTTP authentication.
+            ca_cert_path: The path to the CA certificate for SSL/TLS verification.
         """
         super().__init__()
         self.client = AsyncElasticsearch(
@@ -38,7 +38,6 @@ class ElasticVectorStore(SimilarityStore):
             ca_certs=ca_cert_path,
         )
         self.index_name = index_name
-        self.indices = []
 
     async def deploy_elser_model(self):
         """
