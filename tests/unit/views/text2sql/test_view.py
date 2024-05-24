@@ -6,9 +6,26 @@ import sqlalchemy
 from sqlalchemy import Engine, text
 
 import dbally
-from dbally.views.freeform.text2sql import Text2SQLConfig, Text2SQLFreeformView
-from dbally.views.freeform.text2sql._config import Text2SQLTableConfig
+from dbally.views.freeform.text2sql import BaseText2SQLView
+from dbally.views.freeform.text2sql._config import ColumnConfig, TableConfig
 from tests.unit.mocks import MockLLM
+
+
+class SampleText2SQLView(BaseText2SQLView):
+    def get_tables(self):
+        return [
+            TableConfig(
+                name="customers",
+                columns=[
+                    ColumnConfig("id", "SERIAL PRIMARY KEY"),
+                    ColumnConfig("name", "VARCHAR(255)"),
+                    ColumnConfig("city", "VARCHAR(255)"),
+                    ColumnConfig("country", "VARCHAR(255)"),
+                    ColumnConfig("age", "INTEGER"),
+                ],
+                description="Customers table",
+            )
+        ]
 
 
 @pytest.fixture
@@ -40,17 +57,8 @@ async def test_text2sql_view(sample_db: Engine):
     llm = MockLLM()
     llm._client.call = AsyncMock(return_value=json.dumps(llm_response))
 
-    config = Text2SQLConfig(
-        tables={
-            "customers": Text2SQLTableConfig(
-                ddl="CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT, city TEXT)",
-                description="Customers table",
-            )
-        }
-    )
-
     collection = dbally.create_collection(name="test_collection", llm=llm)
-    collection.add(Text2SQLFreeformView, lambda: Text2SQLFreeformView(sample_db, config))
+    collection.add(SampleText2SQLView, lambda: SampleText2SQLView(sample_db))
 
     response = await collection.ask("Show me customers from New York")
 
