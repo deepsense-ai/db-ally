@@ -60,6 +60,7 @@ nav:
               - reference/similarity/similarity_store/index.md
               - reference/similarity/similarity_store/faiss.md
               - reference/similarity/similarity_store/chroma.md
+              - reference/similarity/similarity_store/elastic.md
           - Fetcher:
               - reference/similarity/similarity_fetcher/index.md
               - reference/similarity/similarity_fetcher/sqlalchemy.md

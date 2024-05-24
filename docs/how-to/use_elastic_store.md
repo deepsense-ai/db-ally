@@ -6,28 +6,37 @@ There are two approaches available to perform similarity search: Elastic Search 
 Elastic Search Store uses embeddings and kNN search to find similarities while Elastic Vector Search - semantic search - uses ELSER (Elastic Learned Sparse EncodeR) model
 to encode and search the data.
 
-## Environment setup
 
-* [Download and deploy elastic search docker image](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html). Please note that for elastic vector search elastic docker container required at least 8GB of RAM and activation
+## Prerequisites
+
+* [Download and deploy elastic search docker image](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html). Please note that for elastic vector search elastic docker container required at least 8GB of RAM and 
+license activation (to use Machine Learning capabilities)
 
 ```commandline
 docker network create elastic
 docker pull docker.elastic.co/elasticsearch/elasticsearch:8.13.4
 docker run --name es01 --net elastic -p 9200:9200 -it -m 8GB docker.elastic.co/elasticsearch/elasticsearch:8.13.4
-# Copy the generated elastic password and enrollment token. These credentials are only shown when you start Elasticsearch for the first time. You can regenerate the credentials using the following commands.
-docker cp es01:/usr/share/elasticsearch/config/certs/http_ca.crt .
-curl --cacert http_ca.crt -u elastic:$ELASTIC_PASSWORD https://localhost:9200
-
-# For vector search it is required to enroll to appropiate subscryption level or trial verison which supports machine learning.
-# It is required to download ELSER model for example through kibana
-docker run --name kib01 --net elastic -p 5601:5601 docker.elastic.co/kibana/kibana:8.13.4
-# [Description how to download/enable ELSER model](https://www.elastic.co/guide/en/machine-learning/current/ml-nlp-elser.html)
-
 ```
 
-* Install elastic search python client
+Copy the generated elastic password and enrollment token. These credentials are only shown when you start Elasticsearch for the first time. You can regenerate the credentials using the following commands.
 ```commandline
-pip install dbally[elasticsearch,litllm]
+docker cp es01:/usr/share/elasticsearch/config/certs/http_ca.crt .
+curl --cacert http_ca.crt -u elastic:$ELASTIC_PASSWORD https://localhost:9200
+```
+
+For vector search it is required to enroll to appropriate subscription level or trial version which supports machine learning.
+It is required to download ELSER model for example through kibana
+
+```commandline
+docker run --name kib01 --net elastic -p 5601:5601 docker.elastic.co/kibana/kibana:8.13.4
+```
+
+[Description how to download/enable ELSER model](https://www.elastic.co/guide/en/machine-learning/current/ml-nlp-elser.html)
+
+
+* Install elasticsearch extension
+```commandline
+pip install dbally[elasticsearch]
 ```
 
 ## Implementing a SimilarityIndex
@@ -45,12 +54,12 @@ class DummyCountryFetcher(SimilarityFetcher):
 ### Data store:
 Elastic store similarity search works on embeddings. For create embeddings the embedding client is passed as an argument.
 For example, we can use:
-* [OpenAiEmbeddingClient][dbally.embedding_client.OpenAiEmbeddingClient].
+* [LiteLLMEmbeddingClient][dbally.embeddings.litellm.LiteLLMEmbeddingClient].
 
 ```python
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 
-embeddings=LiteLLMEmbeddingClient((api_key="your-api-key")
+embedding_client=LiteLLMEmbeddingClient(api_key="your-api-key")
 ```
 
 To implement a Similarity Index with elastic store create ElasticStore object and pass it to a store following argument:
@@ -67,9 +76,9 @@ data_store = ElasticsearchStore(
         index_name="country_similarity",
         host="https://localhost:9200",
         ca_cert_path="path_to_cert/http_ca.crt",
-        http_username="elastic",
+        http_user="elastic",
         http_password="password",
-        embedding_client=embeddings,
+        embedding_client=embedding_client,
     ),
 
 ```
@@ -77,7 +86,7 @@ data_store = ElasticsearchStore(
 After this setup, you can initialize the SimilarityIndex
 
 ```python
-from dbally.similarity import SimpleSqlAlchemyFetcher, SimilarityIndex
+from dbally.similarity import SimilarityIndex
 
 country_similarity = SimilarityIndex(
     fetcher=DummyCountryFetcher(),
@@ -91,6 +100,6 @@ You can then use this store to create a similarity index that maps user input to
 Now you can use this index to map user input to the closest matching value. For example, a user may type 'United States' and our index would return 'USA'.```
 
 ## Links
-* [Similarity Indexes](./use_custom_similiarity_store.md)
-* [Example Elastic Search Store](./use_elasticsearch_store_code.py)
-* [Example Elastic Vector Search](./use_elastic_vector_search_code.py)
+* [Similarity Indexes](use_custom_similarity_store.md)
+* [Example Elastic Search Store](use_elasticsearch_store_code.py)
+* [Example Elastic Vector Search](use_elastic_vector_store_code.py)
