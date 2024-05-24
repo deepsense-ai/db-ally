@@ -1,5 +1,6 @@
 import abc
-from typing import List, Optional
+from collections import defaultdict
+from typing import Dict, List, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
@@ -10,7 +11,7 @@ from dbally.llms.clients.base import LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
 
 from ..similarity import AbstractSimilarityIndex
-from .base import BaseView
+from .base import BaseView, IndexLocation
 
 
 class BaseStructuredView(BaseView):
@@ -112,18 +113,17 @@ class BaseStructuredView(BaseView):
             dry_run: if True, should only generate the query without executing it
         """
 
-    def list_similarity_indexes(self) -> List[AbstractSimilarityIndex]:
+    def list_similarity_indexes(self) -> Dict[AbstractSimilarityIndex, List[IndexLocation]]:
         """
         Lists all the similarity indexes used by the view.
 
         Returns:
-            List of similarity indexes.
-
+            Mapping of similarity indexes to their locations in the (view_name, filter_name, argument_name) format.
         """
-        indexes = set()
+        indexes = defaultdict(list)
         filters = self.list_filters()
         for filter_ in filters:
             for param in filter_.parameters:
                 if param.similarity_index:
-                    indexes.add(param.similarity_index)
-        return list(indexes)
+                    indexes[param.similarity_index].append((self.__class__.__name__, filter_.name, param.name))
+        return indexes

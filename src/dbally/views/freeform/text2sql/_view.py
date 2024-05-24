@@ -1,5 +1,6 @@
 import abc
 import json
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Optional, Tuple
 
@@ -12,7 +13,7 @@ from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.prompts import PromptTemplate
 from dbally.similarity import AbstractSimilarityIndex, SimpleSqlAlchemyFetcher
-from dbally.views.base import BaseView
+from dbally.views.base import BaseView, IndexLocation
 
 from ._config import TableConfig
 from ._errors import Text2SQLError
@@ -237,16 +238,16 @@ class BaseText2SQLView(BaseView, abc.ABC):
             table=Table(table, sqlalchemy.MetaData()),
         )
 
-    def list_similarity_indexes(self) -> List[AbstractSimilarityIndex]:
+    def list_similarity_indexes(self) -> Dict[AbstractSimilarityIndex, List[IndexLocation]]:
         """
         List all similarity indexes used by the view.
 
         Returns:
-            List of similarity indexes.
+            Mapping of similarity indexes to their locations in the (view_name, table_name, column_name) format.
         """
-        return [
-            column.similarity_index
-            for table in self.get_tables()
-            for column in table.columns
-            if column.similarity_index
-        ]
+        indexes = defaultdict(list)
+        for table in self.get_tables():
+            for column in table.columns:
+                if column.similarity_index:
+                    indexes[column.similarity_index].append((self.__class__.__name__, table.name, column.name))
+        return indexes

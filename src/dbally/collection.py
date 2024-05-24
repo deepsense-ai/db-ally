@@ -2,6 +2,7 @@ import asyncio
 import inspect
 import textwrap
 import time
+from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Type, TypeVar
 
 from dbally.audit.event_handlers.base import EventHandler
@@ -14,7 +15,7 @@ from dbally.nl_responder.nl_responder import NLResponder
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.utils.errors import NoViewFoundError
 from dbally.view_selection.base import ViewSelector
-from dbally.views.base import BaseView
+from dbally.views.base import BaseView, IndexLocation
 
 
 class IndexUpdateError(Exception):
@@ -247,20 +248,22 @@ class Collection:
 
         return result
 
-    def get_similarity_indexes(self) -> Dict[AbstractSimilarityIndex, List[str]]:
+    def get_similarity_indexes(self) -> Dict[AbstractSimilarityIndex, List[IndexLocation]]:
         """
-        List all similarity indexes from all structured views in the collection.
+        List all similarity indexes from all views in the collection.
 
         Returns:
-            Dictionary with similarity indexes as keys and values containing lists of places where they are used
-            (represented by a tuple containing view name, method name and argument name)
+            Mapping of similarity indexes to their locations, following view format.
+            For:
+                - freeform views, the format is (view_name, table_name, column_name)
+                - structured views, the format is (view_name, filter_name, argument_name)
         """
-        indexes: Dict[AbstractSimilarityIndex, List[str]] = {}
+        indexes = defaultdict(list)
         for view_name in self._views:
             view = self.get(view_name)
-            for index in view.list_similarity_indexes():
-                indexes.setdefault(index, []).append(view_name)
-
+            view_indexes = view.list_similarity_indexes()
+            for index, location in view_indexes.items():
+                indexes[index].extend(location)
         return indexes
 
     async def update_similarity_indexes(self) -> None:
@@ -280,5 +283,5 @@ class Collection:
         }
         if failed_indexes:
             failed_locations = [loc for index in failed_indexes for loc in indexes[index]]
-            description = ", ".join(view_name for view_name in failed_locations)
-            raise IndexUpdateError(f"Failed to update similarity indexes for {description}", failed_indexes)
+            descriptions = ", ".join(".".join(name for name in location) for location in failed_locations)
+            raise IndexUpdateError(f"Failed to update similarity indexes for {descriptions}", failed_indexes)
