@@ -86,7 +86,7 @@ class CandidateView(SqlAlchemyBaseView):
 @click.argument("years_of_experience", type=str, default="2")
 async def main(country="United States", years_of_experience="2"):
     await country_similarity.update()
-
+    await country_similarity.update()
     llm = LiteLLM(model_name="gpt-3.5-turbo", api_key=os.environ["OPENAI_API_KEY"])
     collection = dbally.create_collection("recruitment", llm, event_handlers=[CLIEventHandler()])
     collection.add(CandidateView, lambda: CandidateView(engine))

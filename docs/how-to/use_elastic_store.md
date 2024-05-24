@@ -1,37 +1,40 @@
 # How-To: Use Elastic to Store Similarity Index
 
-[ElasticStore](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-store.html]) can be used as a store in [SimilarityIndex](../concepts/similarity_indexes.md). In this guide, we will show you how to execute similarity search by using elastic search.
-In the example the elastic search engine is provided by official docker image.
-There are two approaches available to perform similarity search: Elastic Search Store and Elastic Vector Search.
-Elastic Search Store uses embeddings and kNN search to find similarities while Elastic Vector Search - semantic search - uses ELSER (Elastic Learned Sparse EncodeR) model
-to encode and search the data.
+[ElasticStore](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-store.html) can be used as a store in SimilarityIndex. In this guide, we will show you how to execute a similarity search using Elasticsearch.
+In the example, the Elasticsearch engine is provided by the official Docker image. There are two approaches available to perform similarity searches: Elastic Search Store and Elastic Vector Search.
+Elastic Search Store uses embeddings and kNN search to find similarities, while Elastic Vector Search, which performs semantic search, uses the ELSER (Elastic Learned Sparse EncodeR) model to encode and search the data.
 
 
 ## Prerequisites
 
-* [Download and deploy elastic search docker image](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html). Please note that for elastic vector search elastic docker container required at least 8GB of RAM and 
-license activation (to use Machine Learning capabilities)
+[Download and deploy the Elasticsearch Docker image](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html). Please note that for Elastic Vector Search, the Elasticsearch Docker container requires at least 8GB of RAM and
+[license activation](https://www.elastic.co/guide/en/kibana/current/managing-licenses.html) to use Machine Learning capabilities.
+
 
 ```commandline
 docker network create elastic
 docker pull docker.elastic.co/elasticsearch/elasticsearch:8.13.4
-docker run --name es01 --net elastic -p 9200:9200 -it -m 8GB docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+docker run --name es01 --net elastic -p 9200:9200 -it -m 2GB docker.elastic.co/elasticsearch/elasticsearch:8.13.4
 ```
 
-Copy the generated elastic password and enrollment token. These credentials are only shown when you start Elasticsearch for the first time. You can regenerate the credentials using the following commands.
+Copy the generated elastic password and enrollment token. These credentials are only shown when you start Elasticsearch for the first time once. You can regenerate the credentials using the following commands.
 ```commandline
 docker cp es01:/usr/share/elasticsearch/config/certs/http_ca.crt .
 curl --cacert http_ca.crt -u elastic:$ELASTIC_PASSWORD https://localhost:9200
 ```
 
-For vector search it is required to enroll to appropriate subscription level or trial version which supports machine learning.
-It is required to download ELSER model for example through kibana
-
+To manage elasticsearch engine create Kibana container.
 ```commandline
 docker run --name kib01 --net elastic -p 5601:5601 docker.elastic.co/kibana/kibana:8.13.4
 ```
 
-[Description how to download/enable ELSER model](https://www.elastic.co/guide/en/machine-learning/current/ml-nlp-elser.html)
+By default, the Kibana management dashboard is deployed at [link](http://localhost:5601/)
+
+
+For vector search, it is necessary to enroll in an [appropriate subscription level](https://www.elastic.co/subscriptions) or trial version that supports machine learning.
+Additionally, the [ELSER model must be downloaded](https://www.elastic.co/guide/en/machine-learning/current/ml-nlp-elser.html), which can be done through Kibana. Instructions can be found in the hosted Kibana instance under tabs:
+<br />**Analytics -> Machine Learning -> Trained Model** and
+<br/>**Search -> Elastic Search -> Vector Search.**
 
 
 * Install elasticsearch extension
@@ -53,8 +56,7 @@ class DummyCountryFetcher(SimilarityFetcher):
 
 ### Data store:
 Elastic store similarity search works on embeddings. For create embeddings the embedding client is passed as an argument.
-For example, we can use:
-* [LiteLLMEmbeddingClient][dbally.embeddings.litellm.LiteLLMEmbeddingClient].
+You can use [one of dbally embedding clients][dbally.embeddings.EmbeddingClient], such as [LiteLLMEmbeddingClient][dbally.embeddings.LiteLLMEmbeddingClient].
 
 ```python
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
@@ -62,12 +64,7 @@ from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 embedding_client=LiteLLMEmbeddingClient(api_key="your-api-key")
 ```
 
-To implement a Similarity Index with elastic store create ElasticStore object and pass it to a store following argument:
-* index_name (str): The name of the index/document.
-* embedding_client (EmbeddingClient): The client to use for creating text embeddings.
-* host (str): The host address of the Elasticsearch instance.
-* http_auth_tuple (Tuple[str, str]): A tuple containing the HTTP authentication credentials (username, password).
-* ca_cert_path (str): The path to the CA certificate for SSL/TLS verification.
+to define your [`ElasticsearchStore`][dbally.similarity.ElasticsearchStore].
 
 ```python
 from dbally.similarity.elasticsearch_store import ElasticsearchStore
@@ -94,9 +91,10 @@ country_similarity = SimilarityIndex(
 )
 ```
 
-and [update it and find the closest matches in the same way as in built-in similarity indices](./use_custom_similarity_store.md/#using-the-similar
+and [update it and find the closest matches in the same way as in built-in similarity indices](use_custom_similarity_store.md/#using-the-similar)
 
 You can then use this store to create a similarity index that maps user input to the closest matching value.
+To use Elastic Vector search download and deploy [ELSER v2](https://www.elastic.co/guide/en/machine-learning/current/ml-nlp-elser.html#elser-v2) model and create [ingest pipeline](https://www.elastic.co/guide/en/machine-learning/current/ml-nlp-elser.html#elasticsearch-ingest-pipeline).
 Now you can use this index to map user input to the closest matching value. For example, a user may type 'United States' and our index would return 'USA'.```
 
 ## Links

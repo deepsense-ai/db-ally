@@ -1,3 +1,4 @@
+from hashlib import sha256
 from typing import List, Optional
 
 from elasticsearch import AsyncElasticsearch
@@ -41,7 +42,6 @@ class ElasticsearchStore(SimilarityStore):
         )
         self.index_name = index_name
         self.embedding_client = embedding_client
-        self.indices = []
 
     async def store(self, data: List[str]) -> None:
         """
@@ -61,15 +61,17 @@ class ElasticsearchStore(SimilarityStore):
             }
         }
 
-        await self.client.indices.delete(index=self.index_name, ignore_unavailable=True)
-        await self.client.indices.create(index=self.index_name, mappings=mappings)
+        if not await self.client.indices.exists(index=self.index_name):
+            await self.client.indices.create(index=self.index_name, mappings=mappings)
+
         store_data = [
             {
                 "_index": self.index_name,
-                "column": word,
-                "search_vector": (await self.embedding_client.get_embeddings([word]))[0],
+                "_id": sha256(column.encode("utf-8")).hexdigest(),
+                "column": column,
+                "search_vector": (await self.embedding_client.get_embeddings([column]))[0],
             }
-            for word in data
+            for column in data
         ]
 
         await async_bulk(self.client, store_data)

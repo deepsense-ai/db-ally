@@ -32,7 +32,7 @@ country_similarity = SimilarityIndex(
         column=Candidate.country,
     ),
     store=ElasticVectorStore(
-        index_name="country_similarity",
+        index_name="country_vector_similarity",
         host=os.environ["ELASTIC_STORE_CONNECTION_STRING"],
         ca_cert_path=os.environ["ELASTIC_CERT_PATH"],
         http_user=os.environ["ELASTIC_AUTH_USER"],

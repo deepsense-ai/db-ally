@@ -1,7 +1,7 @@
-import time
+from hashlib import sha256
 from typing import List, Optional
 
-from elasticsearch import AsyncElasticsearch, exceptions
+from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
 
 from dbally.similarity.store import SimilarityStore
@@ -39,63 +39,6 @@ class ElasticVectorStore(SimilarityStore):
         )
         self.index_name = index_name
 
-    async def deploy_elser_model(self):
-        """
-        Deploys the ELSER model on ElasticSearch:
-
-        This function performs the following actions:
-        - Deletes the existing model `.elser_model_2` if it exists.
-        - Creates a new trained model with the specified model ID.
-        - Polls the model definition status until the model is fully defined.
-        - Starts the deployment of the model with a specified number of allocations.
-        - Polls the deployment status until the model deployment is started.
-        - Sets up an ingest pipeline using the deployed model.
-
-        """
-        try:
-            await self.client.ml.delete_trained_model(model_id=".elser_model_2", force=True)
-            print("Model deleted successfully, We will proceed with creating one")
-        except exceptions.NotFoundError:
-            print("Model doesn't exist, but We will proceed with creating one")
-
-        await self.client.ml.put_trained_model(model_id=".elser_model_2", input={"field_names": ["text_field"]})
-
-        while True:
-            status = await self.client.ml.get_trained_models(model_id=".elser_model_2", include="definition_status")
-
-            if status["trained_model_configs"][0]["fully_defined"]:
-                print("ELSER Model is downloaded and ready to be deployed.")
-                break
-            print("ELSER Model is downloaded but not ready to be deployed.")
-            time.sleep(5)
-
-        await self.client.ml.start_trained_model_deployment(
-            model_id=".elser_model_2", number_of_allocations=1, wait_for="starting"
-        )
-
-        while True:
-            status = await self.client.ml.get_trained_models_stats(
-                model_id=".elser_model_2",
-            )
-            if status["trained_model_stats"][0]["deployment_stats"]["state"] == "started":
-                print("ELSER Model has been successfully deployed.")
-                break
-            print("ELSER Model is currently being deployed.")
-            time.sleep(5)
-
-        await self.client.ingest.put_pipeline(
-            id="elser-ingest-pipeline",
-            description="Ingest pipeline for ELSER",
-            processors=[
-                {
-                    "inference": {
-                        "model_id": ".elser_model_2",
-                        "input_output": [{"input_field": "column", "output_field": "column_embedding"}],
-                    }
-                }
-            ],
-        )
-
     async def store(self, data: List[str]) -> None:
         """
         Stores the given data in an Elasticsearch store.
@@ -111,8 +54,6 @@ class ElasticVectorStore(SimilarityStore):
         Args:
             data: The data to store in the Elasticsearch index.
         """
-        await self.deploy_elser_model()
-
         mappings = {
             "properties": {
                 "column": {
@@ -121,16 +62,16 @@ class ElasticVectorStore(SimilarityStore):
                 "column_embedding": {"type": "sparse_vector"},
             }
         }
-
-        await self.client.indices.delete(index=self.index_name, ignore_unavailable=True)
-        await self.client.indices.create(
-            index=self.index_name,
-            mappings=mappings,
-            settings={"index": {"default_pipeline": "elser-ingest-pipeline"}},
-        )
+        if not await self.client.indices.exists(index=self.index_name):
+            await self.client.indices.create(
+                index=self.index_name,
+                mappings=mappings,
+                settings={"index": {"default_pipeline": "elser-ingest-pipeline"}},
+            )
         store_data = [
             {
                 "_index": self.index_name,
+                "_id": sha256(column.encode("utf-8")).hexdigest(),
                 "column": column,
             }
             for column in data
