@@ -21,8 +21,8 @@ nav:
           - how-to/pandas_views.md
           - how-to/custom_views.md
       - Using LLMs:
-          - how-to/litellm.md
-          - how-to/custom_llm.md
+          - how-to/llms/litellm.md
+          - how-to/llms/custom.md
       - Using similarity indexes:
           - how-to/use_custom_similarity_fetcher.md
           - how-to/use_chromadb_store.md
@@ -103,7 +103,6 @@ markdown_extensions:
       custom_fences:
         - name: mermaid
           class: mermaid
-
   - admonition
   - pymdownx.superfences
   - pymdownx.snippets
@@ -113,6 +112,10 @@ markdown_extensions:
   - def_list
   - pymdownx.tasklist:
       custom_checkbox: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: "#"
 plugins:
   - search
   - autorefs:

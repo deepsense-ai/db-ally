@@ -35,13 +35,16 @@ Below you can find a list of planned integrations.
 - [ ] HTTP REST Endpoints
 - [ ] GraphQL Endpoints
 
-### LLMs
+### LLM Providers
 
-- [x] OpenAI models
-- [x] Claude 3
-- [x] LLama-2
-- [x] Mistral / Mixtral
-- [x] VertexAI Gemini
+- [x] OpenAI
+- [x] Anthropic
+- [x] VertexAI
+- [x] Hugging Face
+- [x] Bedrock
+- [x] Azure
+
+And many more, the full list can be found in the [LiteLLM documentation](https://github.com/BerriAI/litellm?tab=readme-ov-file#supported-providers-docs){:target="_blank"}
 
 ### Vector stores
 
@@ -55,5 +58,5 @@ Below you can find a list of planned integrations.
 
 ### Query tracking
 
-- [x] Langsmith
+- [x] LangSmith
 - [ ] OpenTelemetry
