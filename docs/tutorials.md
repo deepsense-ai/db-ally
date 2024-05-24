@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+---
+
 # Tutorials
 
 All tutorials are opened in Google Colab so that you can easily follow them without any additional setup.

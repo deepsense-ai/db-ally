@@ -1,0 +1,3 @@
+# EmbeddingClient
+
+::: dbally.embeddings.EmbeddingClient

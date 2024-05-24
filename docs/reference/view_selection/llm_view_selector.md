@@ -2,4 +2,4 @@
 
 ::: dbally.view_selection.LLMViewSelector
 
-::: dbally.data_models.prompts.default_view_selector_template
+::: dbally.view_selection.view_selector_prompt_template.default_view_selector_template

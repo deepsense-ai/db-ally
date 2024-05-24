@@ -1,13 +1,12 @@
 site_name: db-ally
 repo_url: https://github.com/deepsense-ai/db-ally
 nav:
-  - db-ally: index.md
+  - Home: index.md
   - Quickstart:
       - quickstart/index.md
       - quickstart/quickstart2.md
       - quickstart/quickstart3.md
-  - Tutorials:
-      - tutorials.md
+  - Tutorials: tutorials.md
   - Concepts:
       - concepts/views.md
       - concepts/structured_views.md
@@ -21,6 +20,9 @@ nav:
           - how-to/sql_views.md
           - how-to/pandas_views.md
           - how-to/custom_views.md
+      - Using LLMs:
+          - how-to/llms/litellm.md
+          - how-to/llms/custom.md
       - Using similarity indexes:
           - how-to/use_custom_similarity_fetcher.md
           - how-to/use_chromadb_store.md
@@ -50,10 +52,8 @@ nav:
           - reference/view_selection/llm_view_selector.md
       - reference/nl_responder.md
       - LLMs:
-          - reference/llm/index.md
-          - reference/llm/llm_options.md
-          - reference/llm/openai.md
-          - reference/llm/prompt_builder.md
+          - reference/llms/index.md
+          - reference/llms/litellm.md
       - Similarity:
           - reference/similarity/index.md
           - Store:
@@ -68,12 +68,13 @@ nav:
           - reference/similarity/detector.md
       - Embeddings:
           - reference/embeddings/index.md
-          - reference/embeddings/openai.md
-  - About:
-      - about/roadmap.md
+          - reference/embeddings/litellm.md
+  - Roadmap: roadmap.md
 
 theme:
   name: material
+  icon:
+    repo: fontawesome/brands/github
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -88,7 +89,9 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
   features:
+    - navigation.footer
     - navigation.tabs
+    - navigation.top
     - content.code.annotate
     - content.code.copy
 extra_css:
@@ -102,7 +105,6 @@ markdown_extensions:
       custom_fences:
         - name: mermaid
           class: mermaid
-
   - admonition
   - pymdownx.superfences
   - pymdownx.snippets
@@ -112,6 +114,10 @@ markdown_extensions:
   - def_list
   - pymdownx.tasklist:
       custom_checkbox: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: "#"
 plugins:
   - search
   - autorefs:
