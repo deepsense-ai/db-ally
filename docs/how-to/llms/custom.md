@@ -10,7 +10,7 @@ Here's a step-by-step guide:
 
 ### Step 1: Define the subclass
 
-First, define your subclass and specify the type of options it will use:
+First, define your subclass and specify the type of options it will use.
 
 ```python
 from dbally.llms.base import LLM
@@ -24,7 +24,7 @@ In this example we will be using [`LiteLLMOptions`](../../reference/llms/litellm
 
 ### Step 2: Create the custom LLM client
 
-The [`client`](../../reference/llms/index.md#dbally.llms.base.LLM.client) property is an abstract method that must be implemented in your subclass. This property should return an instance of [`LLMClient`](../../reference/llms/index.md#dbally.llms.clients.base.LLMClient) that your LLM will use to interact with the model:
+The [`client`](../../reference/llms/index.md#dbally.llms.base.LLM.client) property is an abstract method that must be implemented in your subclass. This property should return an instance of [`LLMClient`](../../reference/llms/index.md#dbally.llms.clients.base.LLMClient) that your LLM will use to interact with the model.
 
 ```python
 class MyLLM(LLM[LiteLLMOptions]):
@@ -65,7 +65,7 @@ class MyLLM(LLM[LiteLLMOptions]):
         # Count tokens in the messages in a custom way
 ```
 !!!warning
-    Incorrect token counting can cause problems in the `NLResponder` and force the use of an explanation prompt template that is more generic and does not include specific rows from the IQL response.
+    Incorrect token counting can cause problems in the [`NLResponder`](../../reference/nl_responder.md#dbally.nl_responder.nl_responder.NLResponder) and force the use of an explanation prompt template that is more generic and does not include specific rows from the IQL response.
 
 ### Step 4: Define custom prompt formatting
 
@@ -78,7 +78,7 @@ class MyLLM(LLM[LiteLLMOptions]):
         # Apply custom formatting to the prompt template
 ```
 !!!note
-    In general, implementation of this method is not required unless the LLM API does not support [OpenAI conversation formatting](https://platform.openai.com/docs/api-reference/chat/create#chat-create-messages){:target="_blank"}. If the model API expects a different format, override this method to avoid issues with inference call.
+    In general, implementation of this method is not required unless the LLM API does not support [OpenAI conversation formatting](https://platform.openai.com/docs/api-reference/chat/create#chat-create-messages){:target="_blank"}. If your model API expects a different format, override this method to avoid issues with inference call.
 
 ## Customising LLM Options
 
@@ -93,7 +93,7 @@ class MyLLMOptions(LLMOptions):
     max_tokens: int = 4096
 ```
 
-Each property should be annotated with its type. You can also provide default values if necessary. Don't forget to update the custom LLM class signatures:
+Each property should be annotated with its type. You can also provide default values if necessary. Don't forget to update the custom LLM class signatures.
 
 ```python
 class MyLLM(LLM[MyLLMOptions]):
@@ -105,7 +105,7 @@ class MyLLMClient(LLMClient[MyLLMOptions]):
 
 ## Using the Custom LLM
 
-Once your subclass is defined, you can instantiate and use it with your collection like this:
+Once your subclass is defined, you can instantiate and use it with your collection like this.
 
 ```python
 import dbally

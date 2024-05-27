@@ -82,7 +82,7 @@ llm = MyLLM("my_model", LiteLLMOptions(temperature=0.5))
 my_collection = dbally.create_collection("my_collection", llm)
 ```
 
-You can also override any default parameter on `ask` call:
+You can also override any default parameter on [`ask`](../../reference/collection.md#dbally.Collection.ask) call.
 
 ```python
 response = await my_collection.ask(
