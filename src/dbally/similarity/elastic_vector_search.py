@@ -43,14 +43,6 @@ class ElasticVectorStore(SimilarityStore):
         """
         Stores the given data in an Elasticsearch store.
 
-        This function performs the following steps:
-
-        1. Deploys the ELSER model by calling `deploy_elser_mode`.
-        2. Defines the mappings for the Elasticsearch index.
-        3. Deletes the existing index if it exists.
-        4. Creates a new index with the specified mappings and settings.
-        5. Stores the provided data in the Elasticsearch index using the default ingest pipeline.
-
         Args:
             data: The data to store in the Elasticsearch index.
         """

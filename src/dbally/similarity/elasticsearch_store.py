@@ -27,12 +27,12 @@ class ElasticsearchStore(SimilarityStore):
         Initializes the ElasticsearchStore.
 
         Args:
-            index_name (str): The name of the index.
-            embedding_client (EmbeddingClient): The client to use for creating text embeddings.
-            host (str): The host address of the Elasticsearch instance.
-            http_user (str): The username used for HTTP authentication.
-            http_password (str): The password used for HTTP authentication.
-            ca_cert_path (str): The path to the CA certificate for SSL/TLS verification.
+            index_name: The name of the index.
+            embedding_client: The client to use for creating text embeddings.
+            host: The host address of the Elasticsearch instance.
+            http_user: The username used for HTTP authentication.
+            http_password: The password used for HTTP authentication.
+            ca_cert_path: The path to the CA certificate for SSL/TLS verification.
         """
         super().__init__()
         self.client = AsyncElasticsearch(

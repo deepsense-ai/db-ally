@@ -33,8 +33,8 @@ By default, the Kibana management dashboard is deployed at [link](http://localho
 
 For vector search, it is necessary to enroll in an [appropriate subscription level](https://www.elastic.co/subscriptions) or trial version that supports machine learning.
 Additionally, the [ELSER model must be downloaded](https://www.elastic.co/guide/en/machine-learning/current/ml-nlp-elser.html), which can be done through Kibana. Instructions can be found in the hosted Kibana instance under tabs:
-<br />**Analytics -> Machine Learning -> Trained Model** and
-<br/>**Search -> Elastic Search -> Vector Search.**
+<br />downloading and deploying model - **Analytics -> Machine Learning -> Trained Model**,
+<br />vector search configuration - **Search -> Elastic Search -> Vector Search.**
 
 
 * Install elasticsearch extension
@@ -95,7 +95,7 @@ and [update it and find the closest matches in the same way as in built-in simil
 
 You can then use this store to create a similarity index that maps user input to the closest matching value.
 To use Elastic Vector search download and deploy [ELSER v2](https://www.elastic.co/guide/en/machine-learning/current/ml-nlp-elser.html#elser-v2) model and create [ingest pipeline](https://www.elastic.co/guide/en/machine-learning/current/ml-nlp-elser.html#elasticsearch-ingest-pipeline).
-Now you can use this index to map user input to the closest matching value. For example, a user may type 'United States' and our index would return 'USA'.```
+Now you can use this index to map user input to the closest matching value. For example, a user may type 'United States' and our index would return 'USA'.
 
 ## Links
 * [Similarity Indexes](use_custom_similarity_store.md)
