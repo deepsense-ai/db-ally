@@ -14,7 +14,7 @@ from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityInd
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 from dbally.llms.litellm import LiteLLM
 
-engine = create_engine('sqlite:///candidates.db')
+engine = create_engine("sqlite:///candidates.db")
 
 Base = automap_base()
 Base.prepare(autoload_with=engine)
@@ -23,7 +23,7 @@ Candidate = Base.classes.candidates
 
 
 country_similarity = SimilarityIndex(
-        fetcher=SimpleSqlAlchemyFetcher(
+    fetcher=SimpleSqlAlchemyFetcher(
         engine,
         table=Candidate,
         column=Candidate.country,
@@ -38,10 +38,12 @@ country_similarity = SimilarityIndex(
     ),
 )
 
+
 class CandidateView(SqlAlchemyBaseView):
     """
     A view for retrieving candidates from the database.
     """
+
     def get_select(self) -> sqlalchemy.Select:
         """
         Creates the initial SqlAlchemy select object, which will be used to build the query.
@@ -73,13 +75,15 @@ class CandidateView(SqlAlchemyBaseView):
         return Candidate.country == country
 
 
-jobs_data = pd.DataFrame.from_records([
-    {"title": "Data Scientist", "company": "Company A", "location": "New York", "salary": 100000},
-    {"title": "Data Engineer", "company": "Company B", "location": "San Francisco", "salary": 120000},
-    {"title": "Machine Learning Engineer", "company": "Company C", "location": "Berlin", "salary": 90000},
-    {"title": "Data Scientist", "company": "Company D", "location": "London", "salary": 110000},
-    {"title": "Data Scientist", "company": "Company E", "location": "Warsaw", "salary": 80000},
-])
+jobs_data = pd.DataFrame.from_records(
+    [
+        {"title": "Data Scientist", "company": "Company A", "location": "New York", "salary": 100000},
+        {"title": "Data Engineer", "company": "Company B", "location": "San Francisco", "salary": 120000},
+        {"title": "Machine Learning Engineer", "company": "Company C", "location": "Berlin", "salary": 90000},
+        {"title": "Data Scientist", "company": "Company D", "location": "London", "salary": 110000},
+        {"title": "Data Scientist", "company": "Company E", "location": "Warsaw", "salary": 80000},
+    ]
+)
 
 
 class JobView(DataFrameBaseView):

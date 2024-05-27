@@ -50,7 +50,7 @@ And many more, the full list can be found in the [LiteLLM documentation](https:/
 
 - [x] FAISS
 - [x] Chroma
-- [ ] Elasticsearch
+- [x] Elasticsearch
 - [ ] Weaviate
 - [ ] Qdrant
 - [ ] VertexAI Vector Search
