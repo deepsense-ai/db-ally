@@ -1,4 +1,4 @@
-# How-To: Use Elastic to Store Similarity Index
+# How-To Use Elastic to Store Similarity Index
 
 [ElasticStore](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-store.html) can be used as a store in SimilarityIndex. In this guide, we will show you how to execute a similarity search using Elasticsearch.
 In the example, the Elasticsearch engine is provided by the official Docker image. There are two approaches available to perform similarity searches: Elastic Search Store and Elastic Vector Search.
@@ -46,7 +46,7 @@ pip install dbally[elasticsearch]
 
 To use similarity search it is required to define data fetcher and data store.
 
-### Data fetcher:
+### Data fetcher
 
 ```python
 class DummyCountryFetcher(SimilarityFetcher):
@@ -54,7 +54,7 @@ class DummyCountryFetcher(SimilarityFetcher):
         return ["United States", "Canada", "Mexico"]
 ```
 
-### Data store:
+### Data store
 Elastic store similarity search works on embeddings. For create embeddings the embedding client is passed as an argument.
 You can use [one of dbally embedding clients][dbally.embeddings.EmbeddingClient], such as [LiteLLMEmbeddingClient][dbally.embeddings.LiteLLMEmbeddingClient].
 

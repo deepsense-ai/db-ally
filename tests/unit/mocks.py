@@ -84,5 +84,5 @@ class MockLLM(LLM[MockLLMOptions]):
         super().__init__("mock-llm", default_options)
 
     @cached_property
-    def _client(self) -> MockLLMClient:
+    def client(self) -> MockLLMClient:
         return MockLLMClient(model_name=self.model_name)

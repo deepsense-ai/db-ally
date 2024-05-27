@@ -1,6 +1,10 @@
 # How-To: Use LiteLLM models
 
+<<<<<<< HEAD
 db-ally comes with ready-to-use LLM implementation called `LiteLLM` that uses the litellm package under the hood, providing access to all major LLM APIs such as OpenAI, Anthropic, VertexAI, Hugging Face and more.
+=======
+db-ally comes with ready-to-use LLM implementation called [`LiteLLM`](../../reference/llms/litellm.md#dbally.llms.litellm.LiteLLM) that uses the litellm package under the hood, providing access to all major LLM APIs such as OpenAI, Anthropic, VertexAI, Hugging Face and more.
+>>>>>>> main
 
 ## Basic Usage
 
@@ -57,7 +61,11 @@ response = await my_collection.ask("Which LLM should I use?")
 
 ## Advanced Usage
 
+<<<<<<< HEAD
 For more advanced users, you may also want to parametrize your LLM using `LiteLLMOptions`. Here is the list of availabe parameters:
+=======
+For more advanced users, you may also want to parametrize your LLM using [`LiteLLMOptions`](../../reference/llms/litellm.md#dbally.llms.clients.litellm.LiteLLMOptions). Here is the list of availabe parameters:
+>>>>>>> main
 
 - `frequency_penalty`: *number or null (optional)* - It is used to penalize new tokens based on their frequency in the text so far.
 
@@ -82,7 +90,11 @@ llm = MyLLM("my_model", LiteLLMOptions(temperature=0.5))
 my_collection = dbally.create_collection("my_collection", llm)
 ```
 
+<<<<<<< HEAD
 You can also override any default parameter on `ask` call:
+=======
+You can also override any default parameter on [`ask`](../../reference/collection.md#dbally.Collection.ask) call.
+>>>>>>> main
 
 ```python
 response = await my_collection.ask(
