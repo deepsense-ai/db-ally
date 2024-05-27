@@ -41,7 +41,7 @@ def view() -> MockView:
 @pytest.fixture
 def llm() -> MockLLM:
     llm = MockLLM()
-    llm._client.call = AsyncMock(return_value="LLM IQL mock answer")
+    llm.client.call = AsyncMock(return_value="LLM IQL mock answer")
     return llm
 
 

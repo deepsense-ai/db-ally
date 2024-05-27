@@ -17,7 +17,7 @@ from tests.unit.test_collection import MockView1, MockView2
 def llm() -> LLM:
     """Return a mock LLM client."""
     llm = MockLLM()
-    llm._client.call = AsyncMock(return_value="MockView1")
+    llm.client.call = AsyncMock(return_value="MockView1")
     return llm
 
 
