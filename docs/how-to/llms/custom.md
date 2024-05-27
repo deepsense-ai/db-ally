@@ -59,7 +59,7 @@ The [`call`](../../reference/llms/index.md#dbally.llms.clients.base.LLMClient.ca
 The [`count_tokens`](../../reference/llms/index.md#dbally.llms.base.LLM.count_tokens) method is used to count the number of tokens in the messages. You can override this method in your custom class to use the tokenizer and count tokens specifically for your model.
 
 ```python
-class MyLLM(LLM[LiteLLMOptions]):  
+class MyLLM(LLM[LiteLLMOptions]):
 
     def count_tokens(self, messages: ChatFormat, fmt: Dict[str, str]) -> int:
         # Count tokens in the messages in a custom way
