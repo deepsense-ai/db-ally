@@ -22,7 +22,7 @@ def llm():
 
 
 def test_default_llm_format_prompt(llm, simple_template):
-    prompt = llm._format_prompt(
+    prompt = llm.format_prompt(
         template=simple_template,
         fmt={"question": "Example user question?"},
     )
@@ -34,7 +34,7 @@ def test_default_llm_format_prompt(llm, simple_template):
 
 def test_missing_format_dict(llm, simple_template):
     with pytest.raises(KeyError):
-        _ = llm._format_prompt(simple_template, fmt={})
+        _ = llm.format_prompt(simple_template, fmt={})
 
 
 @pytest.mark.parametrize(
@@ -66,7 +66,7 @@ def test_chat_order_validation(invalid_chat):
 def test_dynamic_few_shot(llm, simple_template):
     assert (
         len(
-            llm._format_prompt(
+            llm.format_prompt(
                 simple_template.add_assistant_message("assistant message").add_user_message("user message"),
                 fmt={"question": "user question"},
             )

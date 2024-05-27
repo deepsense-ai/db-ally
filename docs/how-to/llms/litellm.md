@@ -1,6 +1,6 @@
 # How-To: Use LiteLLM models
 
-db-ally comes with ready-to-use LLM implementation called `LiteLLM` that uses the litellm package under the hood, providing access to all major LLM APIs such as OpenAI, Anthropic, VertexAI, Hugging Face and more.
+db-ally comes with ready-to-use LLM implementation called [`LiteLLM`](../../reference/llms/litellm.md#dbally.llms.litellm.LiteLLM) that uses the litellm package under the hood, providing access to all major LLM APIs such as OpenAI, Anthropic, VertexAI, Hugging Face and more.
 
 ## Basic Usage
 
@@ -57,7 +57,7 @@ response = await my_collection.ask("Which LLM should I use?")
 
 ## Advanced Usage
 
-For more advanced users, you may also want to parametrize your LLM using `LiteLLMOptions`. Here is the list of availabe parameters:
+For more advanced users, you may also want to parametrize your LLM using [`LiteLLMOptions`](../../reference/llms/litellm.md#dbally.llms.clients.litellm.LiteLLMOptions). Here is the list of availabe parameters:
 
 - `frequency_penalty`: *number or null (optional)* - It is used to penalize new tokens based on their frequency in the text so far.
 

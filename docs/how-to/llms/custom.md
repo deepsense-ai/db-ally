@@ -4,7 +4,7 @@ LLM is one of the main components of the db-ally ecosystem. It handles all inter
 
 ## Implementing a Custom LLM
 
-The `LLM` class is an abstract base class that provides a framework for interacting with a Large Language Model (LLM). To create a custom LLM, you need to create a subclass of `LLM` and implement the required methods and properties.
+The [`LLM`](../../reference/llms/index.md#dbally.llms.base.LLM) class is an abstract base class that provides a framework for interacting with a Large Language Model. To create a custom LLM, you need to create a subclass of [`LLM`](../../reference/llms/index.md#dbally.llms.base.LLM) and implement the required methods and properties.
 
 Here's a step-by-step guide:
 
@@ -20,22 +20,22 @@ class MyLLM(LLM[LiteLLMOptions]):
     _options_cls = LiteLLMOptions
 ```
 
-In this example we will be using `LiteLLMOptions`, which contain all options supported by most popular LLM APIs. If you need a different interface, see [Customising LLM Options](#customising-llm-options) to learn how to implement it.
+In this example we will be using [`LiteLLMOptions`](../../reference/llms/litellm.md#dbally.llms.clients.litellm.LiteLLMOptions), which contain all options supported by most popular LLM APIs. If you need a different interface, see [Customising LLM Options](#customising-llm-options) to learn how to implement it.
 
 ### Step 2: Create the custom LLM client
 
-The `_client` property is an abstract method that must be implemented in your subclass. This property should return an instance of `LLMClient` that your LLM will use to interact with the model:
+The [`client`](../../reference/llms/index.md#dbally.llms.base.LLM.client) property is an abstract method that must be implemented in your subclass. This property should return an instance of [`LLMClient`](../../reference/llms/index.md#dbally.llms.clients.base.LLMClient) that your LLM will use to interact with the model:
 
 ```python
 class MyLLM(LLM[LiteLLMOptions]):
     _options_cls = LiteLLMOptions
 
     @cached_property
-    def _client(self) -> MyLLMClient:
+    def client(self) -> MyLLMClient:
         return MyLLMClient()
 ```
 
-`MyLLMClient` should be a class that implements the `LLMClient` interface.
+`MyLLMClient` should be a class that implements the [`LLMClient`](../../reference/llms/index.md#dbally.llms.clients.base.LLMClient) interface.
 
 ```python
 from dbally.llms.clients.base import LLMClient
@@ -52,11 +52,11 @@ class MyLLMClient(LLMClient[LiteLLMOptions]):
         # Your LLM API call
 ```
 
-The `call` method is an abstract method that must be implemented in your subclass. This method should call the LLM inference API and return the response.
+The [`call`](../../reference/llms/index.md#dbally.llms.clients.base.LLMClient.call) method is an abstract method that must be implemented in your subclass. This method should call the LLM inference API and return the response.
 
 ### Step 3: Use tokenizer to count tokens
 
-The `count_tokens` method is used to count the number of tokens in the messages. You can override this method in your custom class to use the tokenizer and count tokens specifically for your model.
+The [`count_tokens`](../../reference/llms/index.md#dbally.llms.base.LLM.count_tokens) method is used to count the number of tokens in the messages. You can override this method in your custom class to use the tokenizer and count tokens specifically for your model.
 
 ```python
 class MyLLM(LLM[LiteLLMOptions]):
@@ -69,12 +69,12 @@ class MyLLM(LLM[LiteLLMOptions]):
 
 ### Step 4: Define custom prompt formatting
 
-The `_format_prompt` method is used to apply formatting to the prompt template. You can override this method in your custom class to change how the formatting is performed.
+The [`format_prompt`](../../reference/llms/index.md#dbally.llms.base.LLM.format_prompt) method is used to apply formatting to the prompt template. You can override this method in your custom class to change how the formatting is performed.
 
 ```python
 class MyLLM(LLM[LiteLLMOptions]):
 
-    def _format_prompt(self, template: PromptTemplate, fmt: Dict[str, str]) -> ChatFormat:
+    def format_prompt(self, template: PromptTemplate, fmt: Dict[str, str]) -> ChatFormat:
         # Apply custom formatting to the prompt template
 ```
 !!!note
@@ -82,7 +82,7 @@ class MyLLM(LLM[LiteLLMOptions]):
 
 ## Customising LLM Options
 
-`LLMOptions` is a class that defines the options your LLM will use. To create a custom options, you need to create a subclass of `LLMOptions` and define the required properties that will be passed to the `LLMClient`.
+[`LLMOptions`](../../reference/llms/index.md#dbally.llms.clients.base.LLMOptions) is a class that defines the options your LLM will use. To create a custom options, you need to create a subclass of [`LLMOptions`](../../reference/llms/index.md#dbally.llms.clients.base.LLMOptions) and define the required properties that will be passed to the [`LLMClient`](../../reference/llms/index.md#dbally.llms.clients.base.LLMClient).
 
 ```python
 from dbally.llms.base import LLMOptions

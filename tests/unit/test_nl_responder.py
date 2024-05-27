@@ -11,7 +11,7 @@ from tests.unit.mocks import MockLLM
 @pytest.fixture
 def llm() -> MockLLM:
     llm = MockLLM()
-    llm._client.call = AsyncMock(return_value="db-ally is the best")
+    llm.client.call = AsyncMock(return_value="db-ally is the best")
     return llm
 
 

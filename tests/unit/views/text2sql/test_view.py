@@ -33,7 +33,7 @@ def sample_db() -> Engine:
 
 async def test_text2sql_view(sample_db: Engine):
     llm = MockLLM()
-    llm._client.call = AsyncMock(return_value="SELECT * FROM customers WHERE city = 'New York'")
+    llm.client.call = AsyncMock(return_value="SELECT * FROM customers WHERE city = 'New York'")
 
     config = Text2SQLConfig(
         tables={
