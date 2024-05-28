@@ -54,7 +54,7 @@ class LiteLLM(LLM[LiteLLMOptions]):
         self.api_version = api_version
 
     @cached_property
-    def _client(self) -> LiteLLMClient:
+    def client(self) -> LiteLLMClient:
         """
         Client for the LLM.
         """

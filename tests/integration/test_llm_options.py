@@ -14,7 +14,7 @@ async def test_llm_options_propagation():
     expected_options = MockLLMOptions(mock_property1=2, mock_property2="default mock")
 
     llm = MockLLM(default_options=default_options)
-    llm._client.call = AsyncMock(return_value="MockView1")
+    llm.client.call = AsyncMock(return_value="MockView1")
 
     collection = create_collection(
         name="test_collection",
@@ -30,9 +30,9 @@ async def test_llm_options_propagation():
         llm_options=custom_options,
     )
 
-    assert llm._client.call.call_count == 3
+    assert llm.client.call.call_count == 3
 
-    llm._client.call.assert_has_calls(
+    llm.client.call.assert_has_calls(
         [
             call(
                 prompt=ANY,

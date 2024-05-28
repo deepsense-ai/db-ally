@@ -1,4 +1,4 @@
-# LangmisthEventHandler
+# LangSmithEventHandler
 
 ::: dbally.audit.LangSmithEventHandler
 

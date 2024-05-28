@@ -36,12 +36,12 @@ class LLM(Generic[LLMClientOptions], ABC):
 
     @cached_property
     @abstractmethod
-    def _client(self) -> LLMClient:
+    def client(self) -> LLMClient:
         """
         Client for the LLM.
         """
 
-    def _format_prompt(self, template: PromptTemplate, fmt: Dict[str, str]) -> ChatFormat:
+    def format_prompt(self, template: PromptTemplate, fmt: Dict[str, str]) -> ChatFormat:
         """
         Applies formatting to the prompt template.
 
@@ -88,12 +88,12 @@ class LLM(Generic[LLMClientOptions], ABC):
             Text response from LLM.
         """
         options = (self.default_options | options) if options else self.default_options
-        prompt = self._format_prompt(template, fmt)
+        prompt = self.format_prompt(template, fmt)
         event = LLMEvent(prompt=prompt, type=type(template).__name__)
         event_tracker = event_tracker or EventTracker()
 
         async with event_tracker.track_event(event) as span:
-            event.response = await self._client.call(
+            event.response = await self.client.call(
                 prompt=prompt,
                 response_format=template.response_format,
                 options=options,

@@ -1,20 +1,22 @@
 # pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring
-import dbally
 import os
 import asyncio
 from typing_extensions import Annotated
 
+from dotenv import load_dotenv
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 
+import dbally
 from dbally import decorators, SqlAlchemyBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 from dbally.llms.litellm import LiteLLM
 
-engine = create_engine('sqlite:///candidates.db')
+load_dotenv()
+engine = create_engine("sqlite:///candidates.db")
 
 Base = automap_base()
 Base.prepare(autoload_with=engine)
@@ -22,7 +24,7 @@ Base.prepare(autoload_with=engine)
 Candidate = Base.classes.candidates
 
 country_similarity = SimilarityIndex(
-        fetcher=SimpleSqlAlchemyFetcher(
+    fetcher=SimpleSqlAlchemyFetcher(
         engine,
         table=Candidate,
         column=Candidate.country,
@@ -37,10 +39,12 @@ country_similarity = SimilarityIndex(
     ),
 )
 
+
 class CandidateView(SqlAlchemyBaseView):
     """
     A view for retrieving candidates from the database.
     """
+
     def get_select(self) -> sqlalchemy.Select:
         """
         Creates the initial SqlAlchemy select object, which will be used to build the query.
@@ -70,6 +74,7 @@ class CandidateView(SqlAlchemyBaseView):
         Filters candidates from a specific country.
         """
         return Candidate.country == country
+
 
 async def main():
     await country_similarity.update()

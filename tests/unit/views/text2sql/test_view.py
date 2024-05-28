@@ -55,7 +55,7 @@ async def test_text2sql_view(sample_db: Engine):
         "parameters": [{"name": "city", "value": "New York"}],
     }
     llm = MockLLM()
-    llm._client.call = AsyncMock(return_value=json.dumps(llm_response))
+    llm.client.call = AsyncMock(return_value=json.dumps(llm_response))
 
     collection = dbally.create_collection(name="test_collection", llm=llm)
     collection.add(SampleText2SQLView, lambda: SampleText2SQLView(sample_db))
