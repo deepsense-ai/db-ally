@@ -65,7 +65,6 @@ nav:
               - reference/similarity/similarity_fetcher/index.md
               - reference/similarity/similarity_fetcher/sqlalchemy.md
               - reference/similarity/similarity_fetcher/sqlalchemy_simple.md
-          - reference/similarity/detector.md
       - Embeddings:
           - reference/embeddings/index.md
           - reference/embeddings/litellm.md
