@@ -6,8 +6,7 @@ from typing_extensions import Self
 
 from dbally.llms.base import LLM
 from dbally.prompts import PromptTemplate
-
-from ._config import Text2SQLConfig, Text2SQLTableConfig
+from dbally_codegen.config import Text2SQLConfig, Text2SQLTableConfig
 
 
 class _DescriptionExtractionStrategy:

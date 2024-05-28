@@ -1,8 +1,7 @@
 import tempfile
 from pathlib import Path
 
-from dbally.views.freeform.text2sql import Text2SQLConfig
-from dbally.views.freeform.text2sql._config import Text2SQLTableConfig
+from dbally_codegen.config import Text2SQLConfig, Text2SQLTableConfig
 
 
 def test_text2sql_config_persistence():

@@ -4,7 +4,7 @@ import pytest
 import sqlalchemy
 from sqlalchemy import Engine, text
 
-from dbally.views.freeform.text2sql import configure_text2sql_auto_discovery
+from dbally_codegen.autodiscovery import configure_text2sql_auto_discovery
 
 
 @pytest.fixture
