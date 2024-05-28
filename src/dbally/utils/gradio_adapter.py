@@ -9,6 +9,8 @@ from dbally.utils.errors import UnsupportedQueryError
 
 
 class GradioAdapter:
+    """A class to adapt Gradio interface with a similarity store and data operations."""
+
     def __init__(self, similarity_store: SimilarityIndex = None):
         """Initializes the GradioAdapter with an optional similarity store.
 
