@@ -1,4 +1,4 @@
-# Quickstart Guide 1
+# Quickstart: Intro
 
 This guide will help you get started with db-ally. We will use a simple example to demonstrate how to use db-ally to query a database using an AI model. We will use OpenAI's GPT to generate SQL queries based on natural language questions and SqlAlchemy to interact with the database.
 

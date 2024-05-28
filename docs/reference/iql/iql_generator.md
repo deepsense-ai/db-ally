@@ -2,7 +2,6 @@
 
 ::: dbally.iql_generator.iql_generator.IQLGenerator
 
-::: dbally.data_models.prompts.iql_prompt_template.default_iql_template
+::: dbally.iql_generator.iql_prompt_template.IQLPromptTemplate
 
-::: dbally.data_models.prompts.IQLPromptTemplate
-
+::: dbally.iql_generator.iql_prompt_template.default_iql_template

@@ -1,6 +1,6 @@
-# Quickstart Guide 3: Multiple Views
+# Quickstart: Multiple Views
 
-This guide continues from [Quickstart Guide 2](./quickstart2.md). It assumes that you have already set up the views and the collection. If not, please refer to the complete Part 2 code here: [quickstart2_code.py](quickstart2_code.py).
+This guide continues from [Semantic Similarity](./quickstart2.md) guide. It assumes that you have already set up the views and the collection. If not, please refer to the complete Part 2 code here: [quickstart2_code.py](quickstart2_code.py).
 
 The guide illustrates how to use multiple views to handle queries requiring different types of data. `CandidateView` and `JobView` are used as examples.
 

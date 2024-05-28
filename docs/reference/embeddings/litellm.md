@@ -1,0 +1,3 @@
+# LiteLLMEmbeddingClient
+
+::: dbally.embeddings.LiteLLMEmbeddingClient
