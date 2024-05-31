@@ -11,7 +11,7 @@ from dbally.utils.errors import UnsupportedQueryError
 class GradioAdapter:
     """A class to adapt Gradio interface with a similarity store and data operations."""
 
-    def __init__(self, similarity_store: SimilarityIndex = None):
+    def __init__(self, similarity_store: SimilarityIndex = None, engine=None):
         """Initializes the GradioAdapter with an optional similarity store.
 
         Args:
@@ -20,6 +20,8 @@ class GradioAdapter:
         self.collection = None
         self.similarity_store = similarity_store
         self.loaded_dataframe = None
+        self.selected_view_name = None
+        self.engine = engine
 
     async def load_data(self, input_dataframe: pd.DataFrame) -> str:
         """Loads data into the adapter from a given DataFrame.
@@ -30,24 +32,30 @@ class GradioAdapter:
         Returns:
             A message indicating the data has been loaded.
         """
-        if self.similarity_store:
-            await self.similarity_store.update()
         self.loaded_dataframe = input_dataframe
+        # selected_view = self.collection.get(self.selected_view_name)
+        # table_view = selected_view._select.froms[0]
+        # print(type(selected_view))
+        # self.loaded_dataframe.to_sql(name=table_view, con=self.engine, if_exists="replace")
+
         return "Frame data loaded."
 
-    async def load_selected_data(self, selected_view: str) -> Tuple[pd.DataFrame, str]:
+    async def load_selected_data(self, selected_view_name: str) -> Tuple[pd.DataFrame, str]:
         """Loads selected view data into the adapter.
 
         Args:
-            selected_view: The name of the view to load.
+            selected_view_name: The name of the view to load.
 
         Returns:
             A tuple containing the loaded DataFrame and a message indicating the view data has been loaded.
         """
-        if self.similarity_store:
-            await self.similarity_store.update()
-            self.loaded_dataframe = pd.DataFrame.from_records(self.collection.get(selected_view).execute().results)
-        return self.loaded_dataframe, f"{selected_view} data loaded."
+        self.selected_view_name = selected_view_name
+        selected_view = self.collection.get(selected_view_name)
+        selected_view_results = selected_view.execute()
+        self.loaded_dataframe = pd.DataFrame.from_records(selected_view_results.results)
+
+        # self.loaded_dataframe.to_sql(table,   con=selected_view_name._sqlalchemy_engine, if_exists='append')
+        return self.loaded_dataframe, f"{selected_view_name} data loaded."
 
     async def execute_query(self, query: str) -> Tuple[str, Optional[pd.DataFrame]]:
         """Executes a query against the collection.
@@ -60,6 +68,8 @@ class GradioAdapter:
             If the query is unsupported, returns a message indicating this and None.
         """
         try:
+            if self.similarity_store:
+                await self.similarity_store.update()
             execution_result = await self.collection.ask(query)
             result = execution_result.context.get("sql"), pd.DataFrame.from_records(execution_result.results)
         except UnsupportedQueryError:
