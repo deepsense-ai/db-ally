@@ -1,4 +1,5 @@
-from typing import Any, Dict, Iterator, List, Optional, Tuple
+from abc import ABC, abstractmethod
+from typing import Any, Callable, Dict, Iterator, List, Optional
 
 from sqlalchemy import Column, Connection, Engine, MetaData, Table
 from sqlalchemy.sql.ddl import CreateTable
@@ -6,28 +7,233 @@ from typing_extensions import Self
 
 from dbally.llms.base import LLM
 from dbally.prompts import PromptTemplate
-from dbally_codegen.config import Text2SQLConfig, Text2SQLTableConfig
+from dbally.similarity.index import SimilarityIndex
+from dbally.similarity.store import SimilarityStore
+from dbally.views.freeform.text2sql import ColumnConfig, TableConfig
+
+DISCOVERY_TEMPLATE = PromptTemplate(
+    chat=(
+        {
+            "role": "system",
+            "content": (
+                "You are a very smart database programmer. "
+                "You will be provided with {dialect} table definition and example rows from this table.\n"
+                "Create a concise summary of provided table. Do not list the columns."
+            ),
+        },
+        {
+            "role": "user",
+            "content": "DDL:\n {table_ddl}\n" "EXAMPLE ROWS:\n {samples}",
+        },
+    ),
+)
+
+SIMILARITY_TEMPLATE = PromptTemplate(
+    chat=(
+        {
+            "role": "system",
+            "content": (
+                "Determine whether to use semantic search based on the given column.\n"
+                "Return TRUE when values are categorical, or synonyms may be used (for example department names),\n"
+                "or when values are typo-sensitive (for example person or company names).\n"
+                "Return FALSE when a search of the values does not make sense and explicit values should be utilized.\n"
+                "Return only one of the following options: TRUE or FALSE."
+            ),
+        },
+        {
+            "role": "user",
+            "content": "TABLE SUMMARY: {table_summary}\n" "COLUMN NAME: {column_name}\n" "EXAMPLE VALUES: {samples}",
+        },
+    )
+)
 
 
-class _DescriptionExtractionStrategy:
+class DescriptionExtractionStrategy(ABC):
     """
     Base class for strategies of extracting descriptions from the database.
     """
 
+    @abstractmethod
+    async def extract_description(self, table: Table, connection: Connection) -> str:
+        """
+        Extract the description from the table.
 
-class _DBCommentsDescriptionExtraction(_DescriptionExtractionStrategy):
+        Args:
+            table: The table to extract the description from.
+            connection: The connection to the database.
+
+        Returns:
+            The extracted description.
+        """
+
+
+class DBCommentsDescriptionExtraction(DescriptionExtractionStrategy):
     """
     Strategy for extracting descriptions from the database comments.
     """
 
+    async def extract_description(self, table: Table, connection: Connection) -> str:
+        """
+        Extract the description from the table comments.
 
-class _LLMSummaryDescriptionExtraction(_DescriptionExtractionStrategy):
+        Args:
+            table: The table to extract the description from.
+            connection: The connection to the database.
+
+        Returns:
+            The extracted description.
+        """
+        return table.comment or ""
+
+
+class LLMSummaryDescriptionExtraction(DescriptionExtractionStrategy):
     """
     Strategy for extracting descriptions from the database using LLM.
     """
 
-    def __init__(self, example_rows_cnt: int = 5):
-        self.example_rows_cnt = example_rows_cnt
+    def __init__(self, llm: LLM, engine: Engine, samples_count: int = 5) -> None:
+        self.llm = llm
+        self.engine = engine
+        self.samples_count = samples_count
+
+    async def extract_description(self, table: Table, connection: Connection) -> str:
+        """
+        Extract the description from the table using LLM.
+
+        Args:
+            table: The table to extract the description from.
+            connection: The connection to the database.
+
+        Returns:
+            The extracted description.
+        """
+        ddl = self._generate_ddl(table)
+        samples = self._fetch_samples(connection, table)
+        return await self.llm.generate_text(
+            template=DISCOVERY_TEMPLATE,
+            fmt={
+                "dialect": self.engine.dialect.name,
+                "table_ddl": ddl,
+                "samples": samples,
+            },
+        )
+
+    def _fetch_samples(self, connection: Connection, table: Table) -> List[Dict[str, Any]]:
+        rows = connection.execute(table.select().limit(self.samples_count)).fetchall()
+
+        # The underscore is used by sqlalchemy to avoid conflicts with column names
+        # pylint: disable=protected-access
+        return [{str(k): v for k, v in dict(row._mapping).items()} for row in rows]
+
+    def _generate_ddl(self, table: Table) -> str:
+        return str(CreateTable(table).compile(self.engine))
+
+
+class SimilarityIndexSelectionStrategy(ABC):
+    """
+    Base class for strategies of selecting similarity indexes for the columns.
+    """
+
+    @abstractmethod
+    async def select_index(
+        self,
+        table: Table,
+        column: Column,
+        description: str,
+        connection: Connection,
+    ) -> Optional[SimilarityStore]:
+        """
+        Select the similarity index for the column.
+
+        Args:
+            table: The table of the column.
+            column: The column to select the index for.
+            description: The description of the table.
+            connection: The connection to the database.
+
+        Returns:
+            The similarity index to use for the column or None if no index should be used.
+        """
+
+
+class NoSimilarityIndexSelection(SimilarityIndexSelectionStrategy):
+    """
+    Strategy for not suggesting any similarity indexes.
+    """
+
+    async def select_index(
+        self,
+        table: Table,
+        column: Column,
+        description: str,
+        connection: Connection,
+    ) -> Optional[SimilarityStore]:
+        """
+        Select the similarity index for the column.
+
+        Args:
+            table: The table of the column.
+            column: The column to select the index for.
+            description: The description of the table.
+            connection: The connection to the database.
+        """
+        return None
+
+
+class LLMSuggestedSimilarityIndexSelection(SimilarityIndexSelectionStrategy):
+    """
+    Strategy for suggesting similarity indexes for the columns using LLM.
+    """
+
+    def __init__(
+        self,
+        llm: LLM,
+        index_builder: Callable[[Engine, Table, Column], SimilarityIndex],
+        samples_count: int = 5,
+    ) -> None:
+        self.llm = llm
+        self.index_builder = index_builder
+        self.samples_count = samples_count
+
+    async def select_index(
+        self,
+        table: Table,
+        column: Column,
+        description: str,
+        connection: Connection,
+    ) -> Optional[SimilarityStore]:
+        """
+        Select the similarity index for the column using LLM.
+
+        Args:
+            table: The table of the column.
+            column: The column to select the index for.
+            description: The description of the table.
+            connection: The connection to the database.
+
+        Returns:
+            The similarity index to use for the column or None if no index should be used.
+        """
+        samples = self._fetch_samples(
+            connection=connection,
+            table=table,
+            column=column,
+        )
+        use_index = await self.llm.generate_text(
+            template=SIMILARITY_TEMPLATE,
+            fmt={
+                "table_summary": description,
+                "column_name": column.name,
+                "samples": samples,
+            },
+        )
+        return self.index_builder(connection.engine, table, column) if use_index.upper() == "TRUE" else None
+
+    def _fetch_samples(self, connection: Connection, table: Table, column: Column) -> List[Any]:
+        values = connection.execute(
+            table.select().with_only_columns(column).distinct().limit(self.samples_count)
+        ).fetchall()
+        return [value[0] for value in values]
 
 
 class _AutoDiscoveryBuilderBase:
@@ -35,28 +241,21 @@ class _AutoDiscoveryBuilderBase:
     Builder class for configuring the auto-discovery of the database for text2sql freeform view.
     """
 
-    _llm: Optional[LLM]
-    _blacklist: Optional[List[str]]
-    _whitelist: Optional[List[str]]
-    _description_extraction: _DescriptionExtractionStrategy
-    _similarity_enabled: bool
-
     def __init__(
         self,
         engine: Engine,
+        llm: Optional[LLM] = None,
         blacklist: Optional[List[str]] = None,
         whitelist: Optional[List[str]] = None,
-        description_extraction: Optional[_DescriptionExtractionStrategy] = None,
-        similarity_enabled: bool = False,
-        llm: Optional[LLM] = None,
+        description_extraction: Optional[DescriptionExtractionStrategy] = None,
+        similarity_selection: Optional[SimilarityIndexSelectionStrategy] = None,
     ) -> None:
         self._engine = engine
         self._llm = llm
-
         self._blacklist = blacklist
         self._whitelist = whitelist
-        self._description_extraction = description_extraction or _DBCommentsDescriptionExtraction()
-        self._similarity_enabled = similarity_enabled
+        self._description_extraction = description_extraction or DBCommentsDescriptionExtraction()
+        self._similarity_selection = similarity_selection or NoSimilarityIndexSelection()
 
     def with_blacklist(self, blacklist: List[str]) -> Self:
         """
@@ -103,24 +302,61 @@ class _AutoDiscoveryBuilderBase:
         Returns:
            The builder instance.
         """
-        self._description_extraction = _DescriptionExtractionStrategy()
+        self._description_extraction = DBCommentsDescriptionExtraction()
         return self
 
-    async def discover(self) -> Text2SQLConfig:
+    async def discover(self) -> List[TableConfig]:
         """
-        Discover the tables in the database and return the configuration object.
+        Discover tables in the database and return the configuration object.
 
         Returns:
-            Text2SQLConfig: The configuration object for the text2sql freeform view.
+            List of tables with their columns and descriptions.
         """
-        return await _Text2SQLAutoDiscovery(
-            llm=self._llm,
-            engine=self._engine,
-            whitelist=self._whitelist,
-            blacklist=self._blacklist,
-            description_extraction=self._description_extraction,
-            similarity_enabled=self._similarity_enabled,
-        ).discover()
+        with self._engine.connect() as connection:
+            tables = []
+            for table in self._iterate_tables():
+                if self._whitelist is not None and table.name not in self._whitelist:
+                    continue
+
+                if self._blacklist is not None and table.name in self._blacklist:
+                    continue
+
+                description = await self._description_extraction.extract_description(table, connection)
+
+                columns = []
+                for column in self._iterate_columns(table):
+                    similarity_index = await self._similarity_selection.select_index(
+                        table=table,
+                        column=column,
+                        description=description,
+                        connection=connection,
+                    )
+                    columns.append(
+                        ColumnConfig(
+                            name=column.name,
+                            data_type=str(column.type),
+                            similarity_index=similarity_index,
+                        )
+                    )
+                tables.append(
+                    TableConfig(
+                        name=table.name,
+                        description=description,
+                        columns=columns,
+                    )
+                )
+        return tables
+
+    def _iterate_tables(self) -> Iterator[Table]:
+        meta = MetaData()
+        meta.reflect(bind=self._engine)
+        yield from meta.sorted_tables
+
+    @staticmethod
+    def _iterate_columns(table: Table) -> Iterator[Column]:
+        for column in table.columns.values():
+            if column.type.python_type is str:
+                yield column
 
 
 class AutoDiscoveryBuilderWithLLM(_AutoDiscoveryBuilderBase):
@@ -129,29 +365,45 @@ class AutoDiscoveryBuilderWithLLM(_AutoDiscoveryBuilderBase):
     It extends the base builder with the ability to use LLM for extra tasks.
     """
 
-    def generate_description_by_llm(self, example_rows_cnt: int = 5) -> Self:
+    def generate_description_by_llm(self, samples_count: int = 5) -> Self:
         """
         Use LLM to generate descriptions for the tables.
         The descriptions are generated based on the table DDL and a configured count of example rows.
 
         Args:
-            example_rows_cnt: The number of example rows to use for generating the description.
+            samples_count: The number of example rows to use for generating the description.
 
         Returns:
             The builder instance.
         """
-        self._description_extraction = _LLMSummaryDescriptionExtraction(example_rows_cnt)
+        self._description_extraction = LLMSummaryDescriptionExtraction(
+            llm=self._llm,
+            engine=self._engine,
+            samples_count=samples_count,
+        )
         return self
 
-    def suggest_similarity_indexes(self) -> Self:
+    def suggest_similarity_indexes(
+        self,
+        index_builder: Callable[[Engine, Table, Column], SimilarityIndex],
+        samples_count: int = 5,
+    ) -> Self:
         """
         Enable the suggestion of similarity indexes for the columns in the tables.
         The suggestion is based on the generated table descriptions and example values from the column.
 
+        Args:
+            index_builder: The function used to build the similarity index.
+            samples_count: The number of example values to use for generating the suggestion.
+
         Returns:
             The builder instance.
         """
-        self._similarity_enabled = True
+        self._similarity_selection = LLMSuggestedSimilarityIndexSelection(
+            llm=self._llm,
+            index_builder=index_builder,
+            samples_count=samples_count,
+        )
         return self
 
 
@@ -172,18 +424,17 @@ class AutoDiscoveryBuilder(_AutoDiscoveryBuilderBase):
         """
         return AutoDiscoveryBuilderWithLLM(
             engine=self._engine,
-            whitelist=self._whitelist,
-            blacklist=self._blacklist,
-            description_extraction=self._description_extraction,
-            similarity_enabled=self._similarity_enabled,
             llm=llm,
+            blacklist=self._blacklist,
+            whitelist=self._whitelist,
+            description_extraction=self._description_extraction,
+            similarity_selection=self._similarity_selection,
         )
 
 
 def configure_text2sql_auto_discovery(engine: Engine) -> AutoDiscoveryBuilder:
     """
-    This function is used to automatically discover the tables in the database and generate a yaml file with the tables
-    and their columns. The yaml file is used to configure the Text2SQLFreeformView in the dbally library.
+    Create a builder object used to configure the auto-discovery process of the database for text2sql freeform view.
 
     Args:
         engine: The SQLAlchemy engine object used to connect to the database.
@@ -192,160 +443,3 @@ def configure_text2sql_auto_discovery(engine: Engine) -> AutoDiscoveryBuilder:
         The builder object used to configure the auto-discovery process.
     """
     return AutoDiscoveryBuilder(engine)
-
-
-discovery_template = PromptTemplate(
-    chat=(
-        {
-            "role": "system",
-            "content": (
-                "You are a very smart database programmer. "
-                "You will be provided with {dialect} table definition and example rows from this table.\n"
-                "Create a concise summary of provided table. Do not list the columns."
-            ),
-        },
-        {"role": "user", "content": "DDL:\n {table_ddl}\nExample rows:\n {example_rows}"},
-    ),
-)
-
-similarity_template = PromptTemplate(
-    chat=(
-        {
-            "role": "system",
-            "content": (
-                "Determine whether to use SEMANTIC or TRIGRAM search based on the given column.\n"
-                "Use SEMANTIC when values are categorical or synonym may be used (for example department names).\n"
-                "Use TRIGRAM when values are sensitive to typos and synonyms does not make sense "
-                "(for example person or company names).\n"
-                "Use NONE when a search of the values does not make sense and explicit values should be utilized.\n"
-                "Return only one of the following options: SEMANTIC, TRIGRAM, or NONE."
-            ),
-        },
-        {
-            "role": "user",
-            "content": "TABLE SUMMARY: {table_summary}\n" "COLUMN_NAME: {column_name}\n" "EXAMPLE_VALUES: {values}",
-        },
-    )
-)
-
-
-class _Text2SQLAutoDiscovery:
-    """
-    Class for auto-discovery of the database for text2sql freeform view.
-    """
-
-    def __init__(
-        self,
-        engine: Engine,
-        description_extraction: _DescriptionExtractionStrategy,
-        whitelist: Optional[List[str]] = None,
-        llm: Optional[LLM] = None,
-        blacklist: Optional[List[str]] = None,
-        similarity_enabled: bool = False,
-    ) -> None:
-        self._llm = llm
-        self._engine = engine
-        self._whitelist = whitelist
-        self._blacklist = blacklist
-        self._description_extraction = description_extraction
-        self._similarity_enabled = similarity_enabled
-
-    async def discover(self) -> Text2SQLConfig:
-        """
-        Discover tables in the database and return the configuration object.
-
-        Returns:
-            Text2SQLConfig: The configuration object for the text2sql freeform view.
-
-        Raises:
-            ValueError: If the description extraction strategy is invalid.
-        """
-
-        connection = self._engine.connect()
-        tables = {}
-
-        for table_name, table in self._iterate_tables():
-            if self._whitelist is not None and table_name not in self._whitelist:
-                continue
-
-            if self._blacklist is not None and table_name in self._blacklist:
-                continue
-
-            ddl = self._get_table_ddl(table)
-
-            if isinstance(self._description_extraction, _DBCommentsDescriptionExtraction):
-                description = table.comment
-            elif isinstance(self._description_extraction, _LLMSummaryDescriptionExtraction):
-                example_rows = self._get_example_rows(connection, table, self._description_extraction.example_rows_cnt)
-                description = await self._generate_llm_summary(ddl, example_rows)
-            else:
-                raise ValueError(f"Invalid description extraction strategy: {self._description_extraction}")
-
-            if self._similarity_enabled:
-                similarity = await self._suggest_similarity_indexes(connection, description or "", table)
-            else:
-                similarity = None
-
-            tables[table_name] = Text2SQLTableConfig(ddl=ddl, description=description, similarity=similarity)
-
-        connection.close()
-
-        return Text2SQLConfig(tables)
-
-    async def _suggest_similarity_indexes(
-        self, connection: Connection, description: str, table: Table
-    ) -> Dict[str, str]:
-        if self._llm is None:
-            raise ValueError("LLM client is required for suggesting similarity indexes.")
-
-        similarity = {}
-        for column_name, column in self._iterate_str_columns(table):
-            example_values = self._get_column_example_values(connection, table, column)
-            similarity_type = await self._llm.generate_text(
-                template=similarity_template,
-                fmt={"table_summary": description, "column_name": column.name, "values": example_values},
-            )
-
-            similarity_type = similarity_type.upper()
-
-            if similarity_type in ["SEMANTIC", "TRIGRAM"]:
-                similarity[column_name] = similarity_type
-
-        return similarity
-
-    async def _generate_llm_summary(self, ddl: str, example_rows: List[dict]) -> str:
-        if self._llm is None:
-            raise ValueError("LLM client is required for generating descriptions.")
-
-        return await self._llm.generate_text(
-            template=discovery_template,
-            fmt={"dialect": self._engine.dialect.name, "table_ddl": ddl, "example_rows": example_rows},
-        )
-
-    def _iterate_tables(self) -> Iterator[Tuple[str, Table]]:
-        meta = MetaData()
-        meta.reflect(bind=self._engine)
-        for table in meta.sorted_tables:
-            yield str(table.name), table
-
-    @staticmethod
-    def _iterate_str_columns(table: Table) -> Iterator[Tuple[str, Column]]:
-        for column in table.columns.values():
-            if column.type.python_type is str:
-                yield str(column.name), column
-
-    @staticmethod
-    def _get_example_rows(connection: Connection, table: Table, n: int = 5) -> List[Dict[str, Any]]:
-        rows = connection.execute(table.select().limit(n)).fetchall()
-
-        # The underscore is used by sqlalchemy to avoid conflicts with column names
-        # pylint: disable=protected-access
-        return [{str(k): v for k, v in dict(row._mapping).items()} for row in rows]
-
-    @staticmethod
-    def _get_column_example_values(connection: Connection, table: Table, column: Column) -> List[Any]:
-        example_values = connection.execute(table.select().with_only_columns(column).distinct().limit(5)).fetchall()
-        return [x[0] for x in example_values]
-
-    def _get_table_ddl(self, table: Table) -> str:
-        return str(CreateTable(table).compile(self._engine))
