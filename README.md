@@ -60,7 +60,7 @@ my_collection.add(CandidateView, lambda: CandidateView(engine))
 my_collection.ask("Find candidates from United States")
 ```
 
-For a concrete step-by-step example on how to use db-ally, go to [Quickstart](https://db-ally.deepsense.ai/quickstart/) guide. For a more learning-oriented experience, check our db-ally [Tutorial](https://db-ally.deepsense.ai/tutorials/tutorial_1).
+For a concrete step-by-step example on how to use db-ally, go to [Quickstart](https://db-ally.deepsense.ai/quickstart/) guide. For a more learning-oriented experience, check our db-ally [Tutorial](https://db-ally.deepsense.ai/tutorials/).
 
 ## Motivation
 
