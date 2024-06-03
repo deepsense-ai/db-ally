@@ -1,36 +1,33 @@
+from dataclasses import dataclass
 from typing import List, Optional
 
 from dbally.similarity import SimilarityIndex
 
 
+@dataclass
 class ColumnConfig:
     """
     Configuration of a column used in the Text2SQL view.
     """
 
-    def __init__(
-        self,
-        name: str,
-        data_type: str,
-        description: Optional[str] = None,
-        similarity_index: Optional[SimilarityIndex] = None,
-    ):
-        self.name = name
-        self.data_type = data_type
-        self.description = description
-        self.similarity_index = similarity_index
+    name: str
+    data_type: str
+    description: Optional[str] = None
+    similarity_index: Optional[SimilarityIndex] = None
 
 
+@dataclass
 class TableConfig:
     """
     Configuration of a table used in the Text2SQL view.
     """
 
-    def __init__(self, name: str, columns: List[ColumnConfig], description: Optional[str] = None):
-        self.name = name
-        self.columns = columns
-        self.description = description
-        self._column_index = {column.name: column for column in columns}
+    name: str
+    columns: List[ColumnConfig]
+    description: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        self._column_index = {column.name: column for column in self.columns}
 
     @property
     def ddl(self) -> str:

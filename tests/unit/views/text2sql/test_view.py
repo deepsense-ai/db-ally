@@ -6,8 +6,7 @@ import sqlalchemy
 from sqlalchemy import Engine, text
 
 import dbally
-from dbally.views.freeform.text2sql import BaseText2SQLView
-from dbally.views.freeform.text2sql._config import ColumnConfig, TableConfig
+from dbally.views.freeform.text2sql import BaseText2SQLView, ColumnConfig, TableConfig
 from tests.unit.mocks import MockLLM
 
 

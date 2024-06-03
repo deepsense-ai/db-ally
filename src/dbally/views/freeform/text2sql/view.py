@@ -1,11 +1,10 @@
-import abc
 import json
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Optional, Tuple
 
-import sqlalchemy
-from sqlalchemy import ColumnClause, Table, text
+from sqlalchemy import ColumnClause, Engine, MetaData, Table, text
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
@@ -15,8 +14,8 @@ from dbally.prompts import PromptTemplate
 from dbally.similarity import AbstractSimilarityIndex, SimpleSqlAlchemyFetcher
 from dbally.views.base import BaseView, IndexLocation
 
-from ._config import TableConfig
-from ._errors import Text2SQLError
+from .config import TableConfig
+from .errors import Text2SQLError
 
 text2sql_prompt = PromptTemplate(
     chat=(
@@ -95,18 +94,27 @@ class SQLParameterOption:
         return self.value
 
 
-class BaseText2SQLView(BaseView, abc.ABC):
+class BaseText2SQLView(BaseView, ABC):
     """
     Text2SQLFreeformView is a class designed to interact with the database using text2sql queries.
     """
 
     def __init__(
         self,
-        engine: sqlalchemy.engine.Engine,
+        engine: Engine,
     ) -> None:
         super().__init__()
         self._engine = engine
         self._table_index = {table.name: table for table in self.get_tables()}
+
+    @abstractmethod
+    def get_tables(self) -> List[TableConfig]:
+        """
+        Get the tables used by the view.
+
+        Returns:
+            The list of tables used by the view.
+        """
 
     async def ask(
         self,
@@ -219,23 +227,13 @@ class BaseText2SQLView(BaseView, abc.ABC):
         context = ""
         for table in self._table_index.values():
             context += f"{table.ddl}\n"
-
         return context
-
-    @abc.abstractmethod
-    def get_tables(self) -> List[TableConfig]:
-        """
-        Get the tables used by the view.
-
-        Returns:
-            A dictionary of tables.
-        """
 
     def _create_default_fetcher(self, table: str, column: str) -> SimpleSqlAlchemyFetcher:
         return SimpleSqlAlchemyFetcher(
             sqlalchemy_engine=self._engine,
             column=ColumnClause(column),
-            table=Table(table, sqlalchemy.MetaData()),
+            table=Table(table, MetaData()),
         )
 
     def list_similarity_indexes(self) -> Dict[AbstractSimilarityIndex, List[IndexLocation]]:
