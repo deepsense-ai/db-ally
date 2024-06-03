@@ -2,6 +2,75 @@
 
 
 
+## v0.2.0 (2024-06-03)
+
+### Chore
+
+* chore: use variable instead of constant in setup.cfg (#22)
+
+Co-authored-by: ds-sebastian-chwilczynski &lt;sebastian.chwilczynski@gdeepsense.ai&gt; ([`3745054`](https://github.com/deepsense-ai/db-ally/commit/3745054379c322c515a0c4e8a89e41d2bbb38c73))
+
+* chore: cleanup after release process ([`1bf88e9`](https://github.com/deepsense-ai/db-ally/commit/1bf88e9367259802317254c03aff884cd1cfdd27))
+
+### Documentation
+
+* docs: update guides and API refs (#38) ([`bc912c1`](https://github.com/deepsense-ai/db-ally/commit/bc912c11744a6f4c60e87185342ba963a0783369))
+
+* docs: update roadmap ([`adfd479`](https://github.com/deepsense-ai/db-ally/commit/adfd479a6bc47539395ddaaf625d7333488f874b))
+
+### Feature
+
+* feat: freeform text2sql with static configuration (#36)
+
+---------
+
+Co-authored-by: Ludwik Trammer &lt;ludwik.trammer@deepsense.ai&gt;
+Co-authored-by: Michał Pstrąg &lt;michal.pstrag@icloud.com&gt; ([`8f7a166`](https://github.com/deepsense-ai/db-ally/commit/8f7a166693c184631290f51e7906ccfb49acf2c9))
+
+* feat: Add elastic store (#34)
+
+* add elastic search store
+* feat add vector search store
+* update documentation ([`edd6de9`](https://github.com/deepsense-ai/db-ally/commit/edd6de9b4a9ece45514208a0dfde854607023194))
+
+* feat(embedding): add litellm embeddings (#37) ([`2fb275f`](https://github.com/deepsense-ai/db-ally/commit/2fb275f0668fb7f981d21a6eaeae0b5effcb4acd))
+
+* feat(llm): integrate LLMClient with litellm (#35) ([`c06b11d`](https://github.com/deepsense-ai/db-ally/commit/c06b11df1afb0c8f536c06d2f4d3d83cfc53d1d6))
+
+* feat(audit): add audit events for SimilarityIndexes (#33)
+
+* feat(audit): add audit events for SimilarityIndexes
+
+* Apply suggestions from code review
+
+Co-authored-by: Michał Pstrąg &lt;michal.pstrag@icloud.com&gt;
+
+---------
+
+Co-authored-by: Michał Pstrąg &lt;michal.pstrag@icloud.com&gt; ([`59e08ac`](https://github.com/deepsense-ai/db-ally/commit/59e08ac7e72fa4f946c7229872fea70d277ef411))
+
+### Fix
+
+* fix: AttributeError in LangSmithEventHandler (#32) ([`c8cfe97`](https://github.com/deepsense-ai/db-ally/commit/c8cfe9759aa4beb6c3bea4ae519be4b4fd2b105a))
+
+### Refactor
+
+* refactor(views): api for freeform views  (#41) ([`6d6cdcd`](https://github.com/deepsense-ai/db-ally/commit/6d6cdcd7a4dc6d6ea296e4483afe4cb5e24f2613))
+
+* refactor: refactor prompt builder (#30) ([`61f1066`](https://github.com/deepsense-ai/db-ally/commit/61f10669c29575178817cd9766f3e8cc4f16c79f))
+
+* refactor: add LLMOptions merge (#29) ([`7191c3f`](https://github.com/deepsense-ai/db-ally/commit/7191c3fbdeb0e10867e4daeaab27cf45fee28368))
+
+* refactor: refactor LLMOptions (#28) ([`3f5c4bf`](https://github.com/deepsense-ai/db-ally/commit/3f5c4bff2dcb0d354a744f1a7291e0f08a335867))
+
+* refactor: move prompt templates to modules which use them (#26)
+
+* move prompt templates to modules which use them
+* reorganize imports ([`e0f17a7`](https://github.com/deepsense-ai/db-ally/commit/e0f17a79f098549c4d98225101d5aa92733e503e))
+
+* refactor: add monotonic clock (#25) ([`9b31299`](https://github.com/deepsense-ai/db-ally/commit/9b31299c5da9dc563beaff9762f2e85ed7bc1c4e))
+
+
 ## v0.1.0 (2024-04-25)
 
 ### Documentation
