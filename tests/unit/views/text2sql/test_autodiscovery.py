@@ -4,7 +4,7 @@ import pytest
 import sqlalchemy
 from sqlalchemy import Engine, text
 
-from dbally.views.freeform.text2sql import configure_text2sql_auto_discovery
+from dbally_codegen.autodiscovery import configure_text2sql_auto_discovery
 
 
 @pytest.fixture
@@ -39,44 +39,38 @@ def test_builder_cant_set_whitelist_and_blacklist():
 
 
 async def test_autodiscovery_blacklist(sample_db: Engine):
-    config = await configure_text2sql_auto_discovery(sample_db).with_blacklist(["authentication"]).discover()
+    tables = await configure_text2sql_auto_discovery(sample_db).with_blacklist(["authentication"]).discover()
+    table_names = [table.name for table in tables]
 
-    assert len(config.tables) == 2
-
-    tables = config.tables
-
-    assert "customers" in tables
-    assert "orders" in tables
-    assert "authentication" not in tables
+    assert len(table_names) == 2
+    assert "customers" in table_names
+    assert "orders" in table_names
+    assert "authentication" not in table_names
 
 
 async def test_autodiscovery_whitelist(sample_db: Engine):
-    config = await configure_text2sql_auto_discovery(sample_db).with_whitelist(["customers", "orders"]).discover()
+    tables = await configure_text2sql_auto_discovery(sample_db).with_whitelist(["customers", "orders"]).discover()
+    table_names = [table.name for table in tables]
 
-    assert len(config.tables) == 2
-
-    tables = config.tables
-
-    assert "customers" in tables
-    assert "orders" in tables
-    assert "authentication" not in tables
+    assert len(table_names) == 2
+    assert "customers" in table_names
+    assert "orders" in table_names
+    assert "authentication" not in table_names
 
 
 async def test_autodiscovery_llm_descriptions(sample_db: Engine):
     mock_client = Mock()
     mock_client.generate_text = AsyncMock(return_value="LLM mock answer")
 
-    config = await (
+    tables = await (
         configure_text2sql_auto_discovery(sample_db)
         .with_blacklist(["authentication"])
         .use_llm(mock_client)
         .generate_description_by_llm()
         .discover()
     )
+    table_descriptions = [table.description for table in tables]
 
-    assert len(config.tables) == 2
-
-    tables = config.tables
-
-    assert tables["customers"].description == "LLM mock answer"
-    assert tables["orders"].description == "LLM mock answer"
+    assert len(table_descriptions) == 2
+    assert table_descriptions[0] == "LLM mock answer"
+    assert table_descriptions[1] == "LLM mock answer"
