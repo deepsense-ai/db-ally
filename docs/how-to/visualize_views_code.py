@@ -3,6 +3,7 @@ import dotenv
 import os
 
 import sqlalchemy
+from sqlalchemy import text
 
 import dbally
 from dbally.audit import CLIEventHandler
@@ -10,8 +11,8 @@ from dbally.embeddings import LiteLLMEmbeddingClient
 from dbally.similarity import SimilarityIndex, SimpleSqlAlchemyFetcher, FaissStore
 from dbally.llms.litellm import LiteLLM
 from dbally.utils.gradio_adapter import GradioAdapter
-from examples.freeform import MyText2SqlView
 from sandbox.quickstart2 import CandidateView, engine, Candidate
+from tests.unit.views.text2sql.test_view import SampleText2SQLView
 
 dotenv.load_dotenv()
 country_similarity = SimilarityIndex(
@@ -29,21 +30,34 @@ country_similarity = SimilarityIndex(
     ),
 )
 
-freeFormEngine = sqlalchemy.create_engine("sqlite:///:memory:")
+
+def prepare_freeform_enginge():
+    engine = sqlalchemy.create_engine("sqlite:///:memory:")
+
+    statements = [
+        "CREATE TABLE security_specialists (id INTEGER PRIMARY KEY, name TEXT, cypher TEXT)",
+        "INSERT INTO security_specialists (name, cypher) VALUES ('Alice', 'HAMAC')",
+        "INSERT INTO security_specialists (name, cypher) VALUES ('Bob', 'AES')",
+        "INSERT INTO security_specialists (name, cypher) VALUES ('Charlie', 'RSA')",
+        "INSERT INTO security_specialists (name, cypher) VALUES ('David', 'SHA2')",
+    ]
+
+    with engine.connect() as conn:
+        for statement in statements:
+            conn.execute(text(statement))
+
+        conn.commit()
+
+    return engine
 
 
 async def main():
     llm = LiteLLM(model_name="gpt-3.5-turbo")
-
-    with freeFormEngine.connect() as connection:
-        for table_config in MyText2SqlView(engine).get_tables():
-            connection.execute(sqlalchemy.text(table_config.ddl))
-
     collection = dbally.create_collection("recruitment", llm, event_handlers=[CLIEventHandler()])
     collection.add(CandidateView, lambda: CandidateView(engine))
-    collection.add(MyText2SqlView, lambda: MyText2SqlView(engine))
-    gradio_adapter = GradioAdapter(similarity_store=country_similarity, engine=engine)
-    gradio_interface = await gradio_adapter.create_interface(collection)
+    collection.add(SampleText2SQLView, lambda: SampleText2SQLView(prepare_freeform_enginge()))
+    gradio_adapter = GradioAdapter()
+    gradio_interface = await gradio_adapter.create_interface(collection, similarity_store_list=[country_similarity])
     gradio_interface.launch()
 
 
