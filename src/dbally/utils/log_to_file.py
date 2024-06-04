@@ -21,9 +21,7 @@ class FileLogger:
             filename: The name of the file to log messages to.
         """
         self.log_file = None
-        with open(filename, "w", encoding="utf8") as log_file:
-            self.log_file = log_file
-
+        self.log_file = open(filename, "w", encoding="utf8")
         self.console = sys.stdout
 
     def write(self, message: str):
