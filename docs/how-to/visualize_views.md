@@ -1,6 +1,6 @@
 # How-To: Visualize Views
 
-There has been implemented Gradio Adapter class to create simple UI interface. It allows to display Data Preview related to Views
+To create simple UI interface use [GradioAdapter class](../../src/dbally/utils/gradio_adapter.py) It allows to display Data Preview related to Views
 and execute user queries.
 
 ## Installation
@@ -29,7 +29,7 @@ Launch the gradio interface. To publish public interface pass argument `share=Tr
     gradio_interface.launch()
 ```
 
-The endpoint is set by gradio server by triggering python module with Gradio Adapter launch command.
+The endpoint is set by by triggering python module with Gradio Adapter launch command.
 Private endpoint is set to http://127.0.0.1:7860/ by default.
 
 ## Links
