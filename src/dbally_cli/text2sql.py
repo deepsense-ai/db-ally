@@ -9,7 +9,6 @@ import sqlalchemy
 from dbally.llms.base import LLM
 from dbally_codegen.autodiscovery import configure_text2sql_auto_discovery
 from dbally_codegen.generator import Text2SQLViewGenerator
-from examples.recruting.db import fill_candidate_table
 
 
 @click.command(help="Generate a Text2SQL view definition file.")
@@ -71,7 +70,6 @@ def generate_text2sql_view(
     file_path = f"{root}{ext}"
 
     engine = sqlalchemy.create_engine(db_url)
-    fill_candidate_table(engine)
 
     llm = load_object(llm_object) if llm_object else None
     index_builder = load_object(similarity_index_factory) if similarity_index_factory else None
