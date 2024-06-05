@@ -101,7 +101,7 @@ async def test_iql_few_shot_generation(llm: MockLLM, event_tracker: EventTracker
     assert filters_in_prompt == {"filter_by_id(idx: int)", "filter_by_name(city: str)"}
 
     input_formatter = DefaultIQLFewShotInputFormatter(
-        question="Mock_question", filters=view.list_filters(), examples=["example"]
+        question="Mock_question", filters=view.list_filters(), examples={"question": "answer"}
     )
 
     response = await iql_generator.generate_iql(input_formatter, event_tracker, default_iql_template)
