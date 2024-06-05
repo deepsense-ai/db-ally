@@ -8,7 +8,6 @@ from typing_extensions import Self
 from dbally.llms.base import LLM
 from dbally.prompts import PromptTemplate
 from dbally.similarity.index import SimilarityIndex
-from dbally.similarity.store import SimilarityStore
 from dbally.views.freeform.text2sql import ColumnConfig, TableConfig
 
 DISCOVERY_TEMPLATE = PromptTemplate(
@@ -141,7 +140,7 @@ class SimilarityIndexSelectionStrategy(ABC):
         column: Column,
         description: str,
         connection: Connection,
-    ) -> Optional[SimilarityStore]:
+    ) -> Optional[SimilarityIndex]:
         """
         Select the similarity index for the column.
 
@@ -167,7 +166,7 @@ class NoSimilarityIndexSelection(SimilarityIndexSelectionStrategy):
         column: Column,
         description: str,
         connection: Connection,
-    ) -> Optional[SimilarityStore]:
+    ) -> Optional[SimilarityIndex]:
         """
         Select the similarity index for the column.
 
@@ -201,7 +200,7 @@ class LLMSuggestedSimilarityIndexSelection(SimilarityIndexSelectionStrategy):
         column: Column,
         description: str,
         connection: Connection,
-    ) -> Optional[SimilarityStore]:
+    ) -> Optional[SimilarityIndex]:
         """
         Select the similarity index for the column using LLM.
 
