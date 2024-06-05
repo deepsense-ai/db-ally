@@ -5,9 +5,16 @@ from typing import Dict, List, Optional
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.iql import IQLError, IQLQuery
-from dbally.iql_generator.iql_generator import IQLGenerator
+from dbally.iql_generator.iql_generator import (
+    DefaultIQLFewShotInputFormatter,
+    DefaultIQLInputFormatter,
+    IQLGenerator,
+    default_few_shot_iql_template,
+    default_iql_template,
+)
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
+from dbally.prompts import few_shot
 from dbally.views.exposed_functions import ExposedFunction
 
 from ..similarity import AbstractSimilarityIndex
@@ -19,6 +26,13 @@ class BaseStructuredView(BaseView):
     Base class for all structured [Views](../../concepts/views.md). All classes implementing this interface has\
     to be able to list all available filters, apply them and execute queries.
     """
+
+    @property
+    def few_shot_selector(self) -> Optional[few_shot.AbstractFewShotSelector]:
+        """
+        Returns an instance (if provided) of few shot selector
+        """
+        return None
 
     def get_iql_generator(self, llm: LLM) -> IQLGenerator:
         """
@@ -56,14 +70,26 @@ class BaseStructuredView(BaseView):
         Returns:
             The result of the query.
         """
-        iql_generator = self.get_iql_generator(llm)
+
         filter_list = self.list_filters()
+        iql_generator = self.get_iql_generator(llm)
+
+        input_formatter = (
+            DefaultIQLFewShotInputFormatter(
+                question=query, filters=filter_list, examples=self.few_shot_selector.get_examples()
+            )
+            if self.few_shot_selector
+            else DefaultIQLInputFormatter(
+                question=query,
+                filters=filter_list,
+            )
+        )
 
         iql_filters, conversation = await iql_generator.generate_iql(
-            question=query,
-            filters=filter_list,
+            input_formatter=input_formatter,
             event_tracker=event_tracker,
             llm_options=llm_options,
+            conversation=default_iql_template if self.few_shot_selector is None else default_few_shot_iql_template,
         )
 
         for _ in range(n_retries):
@@ -74,8 +100,7 @@ class BaseStructuredView(BaseView):
             except (IQLError, ValueError) as e:
                 conversation = iql_generator.add_error_msg(conversation, [e])
                 iql_filters, conversation = await iql_generator.generate_iql(
-                    question=query,
-                    filters=filter_list,
+                    input_formatter=input_formatter,
                     event_tracker=event_tracker,
                     conversation=conversation,
                     llm_options=llm_options,
