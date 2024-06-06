@@ -21,7 +21,7 @@ Define collection with implemented views
 Create gradio interface
 ```python
     gradio_adapter = GradioAdapter()
-    gradio_interface = await gradio_adapter.create_interface(collection, similarity_store_list=[country_similarity])
+    gradio_interface = await gradio_adapter.create_interface(collection)
 ```
 
 Launch the gradio interface. To publish public interface pass argument `share=True`
