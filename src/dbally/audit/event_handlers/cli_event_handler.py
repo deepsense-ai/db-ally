@@ -37,7 +37,7 @@ class CLIEventHandler(EventHandler):
     ![Example output from CLIEventHandler](../../assets/event_handler_example.png)
     """
 
-    def __init__(self, buffer=None) -> None:
+    def __init__(self, buffer: StringIO = None) -> None:
         super().__init__()
         self.buffer = buffer
         out = self.buffer if buffer else stdout
