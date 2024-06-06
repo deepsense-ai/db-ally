@@ -18,7 +18,7 @@ from dbally.llms.litellm import LiteLLM
 from dbally.similarity.elasticsearch_store import ElasticsearchStore
 
 load_dotenv()
-engine = create_engine("sqlite:///candidates.db")
+engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
 
 
 Base = automap_base()

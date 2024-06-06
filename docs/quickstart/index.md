@@ -37,7 +37,7 @@ To connect to the database using SQLAlchemy, you need an engine and your databas
 ```python
 from sqlalchemy import create_engine
 
-engine = create_engine('sqlite:///candidates.db')
+engine = create_engine('sqlite:///examples/recruiting/data/candidates.db')
 ```
 
 Next, define an SQLAlchemy model for the `candidates` table. You can either declare the `Candidate` model using [declarative mapping](https://docs.sqlalchemy.org/en/20/orm/mapping_styles.html#declarative-mapping) or generate it using [automap](https://docs.sqlalchemy.org/en/20/orm/extensions/automap.html). For simplicity, we'll use automap:

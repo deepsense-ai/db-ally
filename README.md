@@ -52,7 +52,7 @@ class CandidateView(SqlAlchemyBaseView):
         """
         return Candidate.country == country
 
-engine = create_engine('sqlite:///candidates.db')
+engine = create_engine('sqlite:///examples/recruiting/data/candidates.db')
 llm = LiteLLM(model_name="gpt-3.5-turbo")
 my_collection = create_collection("collection_name", llm)
 my_collection.add(CandidateView, lambda: CandidateView(engine))

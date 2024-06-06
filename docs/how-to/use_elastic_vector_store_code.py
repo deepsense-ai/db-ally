@@ -17,7 +17,7 @@ from dbally.similarity import SimpleSqlAlchemyFetcher, SimilarityIndex
 from dbally.similarity.elastic_vector_search import ElasticVectorStore
 
 load_dotenv()
-engine = create_engine("sqlite:///candidates.db")
+engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
 
 
 Base = automap_base()
