@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from textwrap import indent
 from types import FunctionType
-from typing import Any, List, Optional, Type
+from typing import List, Optional, Type
 
 from dbally.views.freeform.text2sql import TableConfig
 from dbally.views.freeform.text2sql.view import BaseText2SQLView
@@ -29,7 +29,7 @@ class CodeGenerator(ABC):
     @abstractmethod
     def generate(self) -> str:
         """
-        Generate the code for the given metadata.
+        Generate the code.
 
         Returns:
             The generated code.
@@ -78,6 +78,51 @@ class CodeGenerator(ABC):
 
         return [group for group in (future_imports, stdlib_imports, thirdparty_imports) if group]
 
+    def collect_imports_for_annotation(self, annotation: Type) -> None:
+        """
+        Recursively import the annotation.
+
+        Args:
+            annotation: The annotation to import.
+        """
+        name = getattr(annotation, "__name__", getattr(annotation, "_name", "Any"))
+        self.add_literal_import(annotation.__module__, name)
+
+        if getattr(annotation, "__args__", None):
+            for arg in annotation.__args__:
+                self.collect_imports_for_annotation(arg)
+
+    def collect_imports_for_class_method(self, method: FunctionType) -> None:
+        """
+        Collect imports for a class method.
+
+        Args:
+            method: The class method.
+        """
+        method_signature = inspect.signature(method)
+        for param in method_signature.parameters.values():
+            if param.annotation is not inspect.Parameter.empty:
+                self.collect_imports_for_annotation(param.annotation)
+            if param.default is not inspect.Parameter.empty:
+                self.collect_imports_for_annotation(type(param.default))
+        self.collect_imports_for_annotation(method_signature.return_annotation)
+
+    def render_annotation(self, annotation: Type) -> str:
+        """
+        Recursively render the annotation.
+
+        Args:
+            annotation: The annotation to render.
+
+        Returns:
+            The rendered annotation.
+        """
+        name = getattr(annotation, "__name__", getattr(annotation, "_name", "Any"))
+
+        if getattr(annotation, "__args__", None):
+            return f"{name}[{', '.join(self.render_annotation(arg) for arg in annotation.__args__)}]"
+        return name
+
     def render_class_declaration(self, name: str, parents: Optional[List[Type]] = None) -> str:
         """
         Render a class declaration.
@@ -108,11 +153,13 @@ class CodeGenerator(ABC):
             The rendered class method.
         """
         method_signature = inspect.signature(method)
-        params_annotations = ", ".join(self._parse_param(param) for param in method_signature.parameters.values())
-        return_annotation = self._import_annotation(method_signature.return_annotation)
+        params_annotations = ", ".join(
+            self.render_class_method_param(param) for param in method_signature.parameters.values()
+        )
+        return_annotation = self.render_annotation(method_signature.return_annotation)
         return f"def {method.__name__}({params_annotations}) -> {return_annotation}:\n{indent(body, self.indentation)}"
 
-    def _parse_param(self, param: inspect.Parameter) -> str:
+    def render_class_method_param(self, param: inspect.Parameter) -> str:
         """
         Parse the signature of a parameter.
 
@@ -124,30 +171,10 @@ class CodeGenerator(ABC):
         """
         param_signature = param.name
         if param.annotation is not inspect.Parameter.empty:
-            param_signature += f": {self._import_annotation(param.annotation)}"
+            param_signature += f": {self.render_annotation(param.annotation)}"
         if param.default is not inspect.Parameter.empty:
             param_signature += f' = "{param.default}"' if isinstance(param.default, str) else f" = {param.default}"
         return param_signature
-
-    def _import_annotation(self, annotation: Type) -> str:
-        """
-        Recursively import the annotation.
-
-        Args:
-            annotation: The annotation to import.
-
-        Returns:
-            The imported annotation.
-        """
-        name = getattr(annotation, "__name__", getattr(annotation, "_name", "Any"))
-        if name == "Any":
-            annotation = Any
-
-        self.add_literal_import(annotation.__module__, name)
-
-        if getattr(annotation, "__args__", None):
-            return f"{name}[{', '.join(self._import_annotation(arg) for arg in annotation.__args__)}]"
-        return name
 
 
 class Text2SQLViewGenerator(CodeGenerator):
@@ -168,6 +195,8 @@ class Text2SQLViewGenerator(CodeGenerator):
             The generated code.
         """
         sections = []
+
+        self.collect_imports_for_view()
 
         if view := self.render_view():
             sections.append(view)
@@ -201,4 +230,27 @@ class Text2SQLViewGenerator(CodeGenerator):
         Returns:
             The rendered tables.
         """
-        return "return []"
+        if not self.tables:
+            return "return []"
+
+        rendered_tables = ",\n".join(indent(self.render_table(table), self.indentation) for table in self.tables)
+        return f"return [\n{rendered_tables},\n]"
+
+    def render_table(self, table: TableConfig) -> str:
+        """
+        Render a table for the Text2SQL view.
+
+        Args:
+            table: The table to render.
+
+        Returns:
+            The rendered table.
+        """
+        return f"{table}"
+
+    def collect_imports_for_view(self) -> None:
+        """
+        Collect imports for the Text2SQL view.
+        """
+        self.collect_imports_for_annotation(BaseText2SQLView)
+        self.collect_imports_for_class_method(BaseText2SQLView.get_tables)
