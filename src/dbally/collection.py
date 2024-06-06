@@ -128,6 +128,15 @@ class Collection:
         self._views[name] = view
         self._builders[name] = builder
 
+    def add_event_handler(self, event_handler: EventHandler):
+        """
+        Adds an event handler to the list of event handlers.
+
+        Args:
+            event_handler: The event handler to be added.
+        """
+        self._event_handlers.append(event_handler)
+
     def get(self, name: str) -> BaseView:
         """
         Returns an instance of the view with the given name

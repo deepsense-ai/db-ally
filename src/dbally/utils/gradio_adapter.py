@@ -1,18 +1,14 @@
-import sys
-from typing import Dict, List, Optional, Tuple
+from io import StringIO
+from typing import Dict, Optional, Tuple
 
 import gradio
 import pandas as pd
 
 from dbally import BaseStructuredView
+from dbally.audit import CLIEventHandler
 from dbally.collection import Collection
 from dbally.prompts import PromptTemplateError
-from dbally.similarity import SimilarityIndex
 from dbally.utils.errors import NoViewFoundError, UnsupportedQueryError
-from dbally.utils.log_to_file import FileLogger
-
-CONSOLE_FILE_NAME = "console.log"
-sys.stdout = FileLogger(CONSOLE_FILE_NAME)
 
 
 class GradioAdapter:
@@ -28,11 +24,10 @@ class GradioAdapter:
             preview_limit: The maximum number of preview data records to display. Default is 20.
         """
         self.preview_limit = preview_limit
-        self.similarity_store_list = []
         self.collection = None
-        sys.stdout.flush()
+        self.log = StringIO()
 
-    async def ui_load_preview_data(self, selected_view_name: str) -> Tuple[pd.DataFrame, str, None, None, None, None]:
+    async def _ui_load_preview_data(self, selected_view_name: str) -> Tuple[pd.DataFrame, str, None, None, None, None]:
         """
         Asynchronously loads preview data for a selected view name.
 
@@ -42,10 +37,10 @@ class GradioAdapter:
         Returns:
             A tuple containing the preview dataframe, load status text, and four None values to clean gradio fields.
         """
-        preview_dataframe, load_status_text = self.load_preview_data(selected_view_name)
+        preview_dataframe, load_status_text = self._load_preview_data(selected_view_name)
         return preview_dataframe, load_status_text, None, None, None, None
 
-    def load_preview_data(self, selected_view_name: str) -> Tuple[pd.DataFrame, str]:
+    def _load_preview_data(self, selected_view_name: str) -> Tuple[pd.DataFrame, str]:
         """
         Loads preview data for a selected view name.
 
@@ -66,7 +61,7 @@ class GradioAdapter:
 
         return preview_dataframe, text_to_display
 
-    async def ui_ask_query(self, question_query: str) -> Tuple[Dict, Optional[pd.DataFrame], str]:
+    async def _ui_ask_query(self, question_query: str) -> Tuple[Dict, Optional[pd.DataFrame], str]:
         """
         Asynchronously processes a query and returns the results.
 
@@ -76,10 +71,9 @@ class GradioAdapter:
         Returns:
             A tuple containing the generated query context, the query results as a dataframe, and the log output.
         """
+        self.log.seek(0)
+        self.log.truncate(0)
         try:
-            for similarity_store in self.similarity_store_list:
-                await similarity_store.update()
-
             execution_result = await self.collection.ask(question=question_query)
             generated_query = str(execution_result.context)
             data = pd.DataFrame.from_records(execution_result.results)
@@ -92,23 +86,17 @@ class GradioAdapter:
         except PromptTemplateError:
             generated_query = {"Query": "No view matched to query"}
             data = pd.DataFrame()
-
         finally:
-            sys.stdout.flush()
-            with open(CONSOLE_FILE_NAME, encoding="utf8") as console_log_file:
-                log = console_log_file.read()
+            self.log.seek(0)
+            log_content = self.log.read()
+        return generated_query, data, log_content
 
-        return generated_query, data, log
-
-    async def create_interface(
-        self, user_collection: Collection, similarity_store_list: Optional[List[SimilarityIndex]] = None
-    ) -> Optional[gradio.Interface]:
+    async def create_interface(self, user_collection: Collection) -> Optional[gradio.Interface]:
         """
         Creates a Gradio interface for interacting with the user collection and similarity stores.
 
         Args:
             user_collection: The user's collection to interact with.
-            similarity_store_list: A list of similarity stores. Default is None.
 
         Returns:
             The created Gradio interface, or None if no data is available to load.
@@ -117,8 +105,7 @@ class GradioAdapter:
              ValueError: occurs when there is no view define in collection.
         """
         self.collection = user_collection
-        if not similarity_store_list:
-            self.similarity_store_list = similarity_store_list
+        self.collection.add_event_handler(CLIEventHandler(self.log))
 
         view_list = [*user_collection.list()]
         if view_list:
@@ -137,7 +124,7 @@ class GradioAdapter:
                         label="Data View preview", choices=view_list, value=default_selected_view_name
                     )
                 with gradio.Column():
-                    data_preview_frame, data_preview_status = self.load_preview_data(view_list[0])
+                    data_preview_frame, data_preview_status = self._load_preview_data(view_list[0])
 
                     data_preview_info = gradio.Text(label="Data preview", value=data_preview_status)
                     if not data_preview_frame.empty:
@@ -152,10 +139,10 @@ class GradioAdapter:
                 query_sql_result = gradio.Text(label="Generated query context")
                 query_result_frame = gradio.Dataframe(interactive=False)
             with gradio.Row():
-                log_console = gradio.Code(label="Logs")
+                log_console = gradio.Code(label="Logs", language="shell")
 
             view_dropdown.change(
-                fn=self.ui_load_preview_data,
+                fn=self._ui_load_preview_data,
                 inputs=view_dropdown,
                 outputs=[
                     loaded_data_frame,
@@ -167,7 +154,7 @@ class GradioAdapter:
                 ],
             )
             query_button.click(
-                fn=self.ui_ask_query, inputs=[query], outputs=[query_sql_result, query_result_frame, log_console]
+                fn=self._ui_ask_query, inputs=[query], outputs=[query_sql_result, query_result_frame, log_console]
             )
 
         return demo

@@ -72,7 +72,7 @@ async def main():
     collection.add(CandidateView, lambda: CandidateView(engine))
     collection.add(SampleText2SQLViewCyphers, lambda: SampleText2SQLViewCyphers(prepare_freeform_enginge()))
     gradio_adapter = GradioAdapter()
-    gradio_interface = await gradio_adapter.create_interface(collection, similarity_store_list=[country_similarity])
+    gradio_interface = await gradio_adapter.create_interface(collection)
     gradio_interface.launch()
 
 
