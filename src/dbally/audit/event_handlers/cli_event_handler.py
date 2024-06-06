@@ -17,6 +17,9 @@ except ImportError:
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
+_RICH_FORMATING_KEYWORD_SET = {"green", "orange", "grey", "bold", "cyan"}
+_RICH_FORMATING_PATTERN = rf"\[.*({'|'.join(_RICH_FORMATING_KEYWORD_SET)}).*\]"
+
 
 class CLIEventHandler(EventHandler):
     """
@@ -39,6 +42,7 @@ class CLIEventHandler(EventHandler):
 
     def __init__(self, buffer: StringIO = None) -> None:
         super().__init__()
+
         self.buffer = buffer
         out = self.buffer if buffer else stdout
         self._console = Console(file=out, record=True) if RICH_OUTPUT else None
@@ -51,9 +55,8 @@ class CLIEventHandler(EventHandler):
                 console_content = Text.from_markup(content)
             self._console.print(console_content)
         else:
-            pattern = re.escape("[") + ".*" + re.escape("]")
-            remove_formatting = re.sub(pattern, "", content)
-            print(remove_formatting)
+            content_without_formatting = re.sub(_RICH_FORMATING_PATTERN, "", content)
+            print(content_without_formatting)
 
     async def request_start(self, user_request: RequestStart) -> None:
         """
