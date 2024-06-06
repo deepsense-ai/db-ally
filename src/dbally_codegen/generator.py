@@ -7,6 +7,7 @@ from types import FunctionType
 from typing import List, Optional, Type
 
 from dbally.views.freeform.text2sql import TableConfig
+from dbally.views.freeform.text2sql.config import ColumnConfig
 from dbally.views.freeform.text2sql.view import BaseText2SQLView
 
 
@@ -206,6 +207,13 @@ class Text2SQLViewGenerator(CodeGenerator):
 
         return "\n\n".join(sections) + "\n"
 
+    def collect_imports_for_view(self) -> None:
+        """
+        Collect imports for the Text2SQL view.
+        """
+        self.collect_imports_for_annotation(BaseText2SQLView)
+        self.collect_imports_for_class_method(BaseText2SQLView.get_tables)
+
     def render_view(self) -> str:
         """
         Render the Text2SQL view.
@@ -215,7 +223,7 @@ class Text2SQLViewGenerator(CodeGenerator):
         """
         sections = []
 
-        tables = self.render_tables()
+        tables = self.render_view_tables()
         get_tables_method = self.render_class_method(BaseText2SQLView.get_tables, tables)
         sections.append(get_tables_method)
 
@@ -223,7 +231,7 @@ class Text2SQLViewGenerator(CodeGenerator):
         declaration = self.render_class_declaration(self.view_name, [BaseText2SQLView])
         return f"{declaration}\n{rendered_sections}"
 
-    def render_tables(self) -> str:
+    def render_view_tables(self) -> str:
         """
         Render the tables for the Text2SQL view.
 
@@ -233,24 +241,31 @@ class Text2SQLViewGenerator(CodeGenerator):
         if not self.tables:
             return "return []"
 
-        rendered_tables = ",\n".join(indent(self.render_table(table), self.indentation) for table in self.tables)
+        rendered_tables = ",\n".join(indent(self.render_view_object(table), self.indentation) for table in self.tables)
         return f"return [\n{rendered_tables},\n]"
 
-    def render_table(self, table: TableConfig) -> str:
+    def render_view_object(self, obj: object) -> str:
         """
-        Render a table for the Text2SQL view.
+        Render an object.
 
         Args:
-            table: The table to render.
+            obj: The object to render.
 
         Returns:
-            The rendered table.
+            The rendered object.
         """
-        return f"{table}"
-
-    def collect_imports_for_view(self) -> None:
-        """
-        Collect imports for the Text2SQL view.
-        """
-        self.collect_imports_for_annotation(BaseText2SQLView)
-        self.collect_imports_for_class_method(BaseText2SQLView.get_tables)
+        if isinstance(obj, str):
+            return f'"{obj}"'
+        if isinstance(obj, list):
+            if not obj:
+                return "[]"
+            params = ",\n".join(indent(self.render_view_object(item), self.indentation) for item in obj)
+            return f"[\n{params}\n]"
+        if isinstance(obj, (TableConfig, ColumnConfig)):
+            method_signature = inspect.signature(obj.__init__)
+            params = ",\n".join(
+                indent(f"{param}={self.render_view_object(getattr(obj, param, None))}", self.indentation)
+                for param in method_signature.parameters
+            )
+            return f"{type(obj).__name__}(\n{params},\n)"
+        return repr(obj)
