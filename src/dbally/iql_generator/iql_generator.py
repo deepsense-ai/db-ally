@@ -9,6 +9,7 @@ from dbally.iql_generator.iql_prompt_template import (  # noqa
 )
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
+from dbally.prompts.few_shot import FewShotExample
 from dbally.views.exposed_functions import ExposedFunction
 
 
@@ -29,18 +30,18 @@ def _promptify_filters(
 
 
 def _promptify_examples(
-    examples: Dict[str, str],
+    examples: List[FewShotExample],
 ) -> str:
     """
     Formats examples for prompt
 
     Args:
-        examples: a dictionary of question: answer pairs
+        examples: a list of questions and answers
 
     Returns:
         examples_for_prompt: examples formatted for prompt
     """
-    examples_for_prompt = "\n".join([f'Question: "{q}"\nAnswer: "{a}"' for q, a in examples.items()])
+    examples_for_prompt = "\n".join([f'Question: "{e.question}"\nAnswer: "{str(e)}"' for e in examples])
     return examples_for_prompt
 
 
@@ -87,7 +88,7 @@ class DefaultIQLFewShotInputFormatter(AbstractIQLInputFormatter):
     def __init__(
         self,
         filters: List[ExposedFunction],
-        examples: List[str],
+        examples: List[FewShotExample],
         question: str,
     ) -> None:
         self.filters = filters
