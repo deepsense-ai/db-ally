@@ -1,6 +1,6 @@
 # How-To: Visualize Views
 
-To create simple UI interface use [GradioAdapter class](../../src/dbally/utils/gradio_adapter.py) It allows to display Data Preview related to Views
+To create simple UI interface use [GradioAdapter class](../../src/dbally/gradio/gradio_interface.py) It allows to display Data Preview related to Views
 and execute user queries.
 
 ## Installation
@@ -20,8 +20,9 @@ Define collection with implemented views
 
 Create gradio interface
 ```python
-    gradio_adapter = GradioAdapter()
-    gradio_interface = await gradio_adapter.create_interface(collection)
+    gradio_interface = await create_gradio_interface(user_collection=collection)
+    if gradio_interface:
+        gradio_interface.launch()
 ```
 
 Launch the gradio interface. To publish public interface pass argument `share=True`

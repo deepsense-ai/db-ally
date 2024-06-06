@@ -11,19 +11,35 @@ from dbally.prompts import PromptTemplateError
 from dbally.utils.errors import NoViewFoundError, UnsupportedQueryError
 
 
-class GradioAdapter:
+async def create_gradio_interface(user_collection: Collection, preview_limit: int = 20) -> Optional[gradio.Interface]:
+    """Adapt and integrate data collection and query execution with Gradio interface components.
+
+    Args:
+        user_collection: The user's collection to interact with.
+        preview_limit: The maximum number of preview data records to display. Default is 20.
+
+    Returns:
+        The created Gradio interface, or None if no data is available to load.
+
+    Raises:
+        ValueError: occurs when there is no view define in collection.
+    """
+    adapter = _GradioAdapter()
+    gradio_interface = await adapter.create_interface(user_collection, preview_limit)
+    return gradio_interface
+
+
+class _GradioAdapter:
     """
     A class to adapt and integrate data collection and query execution with Gradio interface components.
     """
 
-    def __init__(self, preview_limit: int = 20):
+    def __init__(self):
         """
         Initializes the GradioAdapter with a preview limit.
 
-        Args:
-            preview_limit: The maximum number of preview data records to display. Default is 20.
         """
-        self.preview_limit = preview_limit
+        self.preview_limit = None
         self.collection = None
         self.log = StringIO()
 
@@ -91,12 +107,15 @@ class GradioAdapter:
             log_content = self.log.read()
         return generated_query, data, log_content
 
-    async def create_interface(self, user_collection: Collection) -> Optional[gradio.Interface]:
+    async def create_interface(
+        self, user_collection: Collection, preview_limit: int = 20
+    ) -> Optional[gradio.Interface]:
         """
         Creates a Gradio interface for interacting with the user collection and similarity stores.
 
         Args:
             user_collection: The user's collection to interact with.
+            preview_limit: The maximum number of preview data records to display. Default is 20.
 
         Returns:
             The created Gradio interface, or None if no data is available to load.
@@ -104,6 +123,8 @@ class GradioAdapter:
         Raises:
              ValueError: occurs when there is no view define in collection.
         """
+
+        self.preview_limit = preview_limit
         self.collection = user_collection
         self.collection.add_event_handler(CLIEventHandler(self.log))
 
