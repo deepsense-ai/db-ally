@@ -1,5 +1,4 @@
 # pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring
-import os
 
 import sqlalchemy
 from sqlalchemy import create_engine
@@ -28,7 +27,6 @@ country_similarity = SimilarityIndex(
         index_name="country_similarity",
         embedding_client=LiteLLMEmbeddingClient(
             model="text-embedding-3-small",  # to use openai embedding model
-            api_key=os.environ["OPENAI_API_KEY"],
         ),
     ),
 )

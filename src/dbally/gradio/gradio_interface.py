@@ -20,16 +20,13 @@ async def create_gradio_interface(user_collection: Collection, preview_limit: in
 
     Returns:
         The created Gradio interface, or None if no data is available to load.
-
-    Raises:
-        ValueError: occurs when there is no view define in collection.
     """
-    adapter = _GradioAdapter()
+    adapter = GradioAdapter()
     gradio_interface = await adapter.create_interface(user_collection, preview_limit)
     return gradio_interface
 
 
-class _GradioAdapter:
+class GradioAdapter:
     """
     A class to adapt and integrate data collection and query execution with Gradio interface components.
     """
@@ -119,24 +116,22 @@ class _GradioAdapter:
 
         Returns:
             The created Gradio interface, or None if no data is available to load.
-
-        Raises:
-             ValueError: occurs when there is no view define in collection.
         """
 
         self.preview_limit = preview_limit
         self.collection = user_collection
         self.collection.add_event_handler(CLIEventHandler(self.log))
 
+        default_selected_view_name = None
+        data_preview_frame = pd.DataFrame()
+        data_preview_status = "No view available"
+        question_interactive = False
+
         view_list = [*user_collection.list()]
         if view_list:
             default_selected_view_name = view_list[0]
-        else:
-            raise ValueError("No view to display")
-
-        if not view_list:
-            print("There is no data to be loaded")
-            return None
+            data_preview_frame, data_preview_status = self._load_preview_data(view_list[0])
+            question_interactive = True
 
         with gradio.Blocks() as demo:
             with gradio.Row():
@@ -145,8 +140,6 @@ class _GradioAdapter:
                         label="Data View preview", choices=view_list, value=default_selected_view_name
                     )
                 with gradio.Column():
-                    data_preview_frame, data_preview_status = self._load_preview_data(view_list[0])
-
                     data_preview_info = gradio.Text(label="Data preview", value=data_preview_status)
                     if not data_preview_frame.empty:
                         loaded_data_frame = gradio.Dataframe(value=data_preview_frame, interactive=False)
@@ -154,8 +147,8 @@ class _GradioAdapter:
                         loaded_data_frame = gradio.Dataframe(interactive=False)
 
             with gradio.Row():
-                query = gradio.Text(label="Ask question")
-                query_button = gradio.Button("Proceed")
+                query = gradio.Text(label="Ask question", interactive=question_interactive)
+                query_button = gradio.Button("Proceed", interactive=question_interactive)
             with gradio.Row():
                 query_sql_result = gradio.Text(label="Generated query context")
                 query_result_frame = gradio.Dataframe(interactive=False)
