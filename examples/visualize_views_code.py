@@ -5,11 +5,12 @@ import dbally
 from dbally.audit import CLIEventHandler
 from dbally.gradio import create_gradio_interface
 from dbally.llms.litellm import LiteLLM
-from examples.recruting.candidate_view_with_similarity_store import CandidateView, engine
-from examples.recruting.cypher_text2sql_view import SampleText2SQLViewCyphers, create_freeform_memory_engine
+from examples.recruiting.candidate_view_with_similarity_store import CandidateView, country_similarity, engine
+from examples.recruiting.cypher_text2sql_view import SampleText2SQLViewCyphers, create_freeform_memory_engine
 
 
 async def main():
+    await country_similarity.update()
     llm = LiteLLM(model_name="gpt-3.5-turbo")
     collection = dbally.create_collection("candidates", llm, event_handlers=[CLIEventHandler()])
     collection.add(CandidateView, lambda: CandidateView(engine))

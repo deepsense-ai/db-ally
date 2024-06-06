@@ -9,7 +9,7 @@ from dbally import SqlAlchemyBaseView, decorators
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 from dbally.similarity import FaissStore, SimilarityIndex, SimpleSqlAlchemyFetcher
 
-engine = create_engine("sqlite:///examples/recruting/candidates.db")
+engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
 
 Base = automap_base()
 Base.prepare(autoload_with=engine)
