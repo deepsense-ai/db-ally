@@ -9,6 +9,12 @@ class FewShotExample:
     """
 
     def __init__(self, question: str, answer_expr: Union[str, Callable]) -> None:
+        """
+        Args:
+            question: sample question
+            answer_expr: it can be either a stringified expression or a lambda for greater safety and code completions.
+                in lambda case, it should be a single line expression (otherwise output correctness is not guaranteed)
+        """
         self.question = question
         self.answer_expr = answer_expr
 
