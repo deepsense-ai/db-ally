@@ -9,7 +9,6 @@ from dbally.iql_generator.iql_format import DefaultIQLFewShotInputFormatter, Def
 from dbally.iql_generator.iql_generator import IQLGenerator, default_few_shot_iql_template, default_iql_template
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.prompts import few_shot
 from dbally.views.exposed_functions import ExposedFunction
 
 from ..similarity import AbstractSimilarityIndex
@@ -21,13 +20,6 @@ class BaseStructuredView(BaseView):
     Base class for all structured [Views](../../concepts/views.md). All classes implementing this interface has\
     to be able to list all available filters, apply them and execute queries.
     """
-
-    @property
-    def few_shot_selector(self) -> Optional[few_shot.AbstractFewShotSelector]:
-        """
-        Returns an instance (if provided) of few shot selector
-        """
-        return None
 
     def get_iql_generator(self, llm: LLM) -> IQLGenerator:
         """
@@ -67,13 +59,16 @@ class BaseStructuredView(BaseView):
         """
 
         filter_list = self.list_filters()
+        few_shot_list = self.list_few_shot()
         iql_generator = self.get_iql_generator(llm)
 
         input_formatter = (
             DefaultIQLFewShotInputFormatter(
-                question=query, filters=filter_list, examples=self.few_shot_selector.get_examples()
+                question=query,
+                filters=filter_list,
+                examples=[ex for ex_func in few_shot_list for ex in getattr(self, ex_func.name)()],
             )
-            if self.few_shot_selector
+            if few_shot_list
             else DefaultIQLInputFormatter(
                 question=query,
                 filters=filter_list,
@@ -84,7 +79,7 @@ class BaseStructuredView(BaseView):
             input_formatter=input_formatter,
             event_tracker=event_tracker,
             llm_options=llm_options,
-            conversation=default_iql_template if self.few_shot_selector is None else default_few_shot_iql_template,
+            conversation=default_few_shot_iql_template if few_shot_list else default_iql_template,
         )
 
         for _ in range(n_retries):
@@ -113,6 +108,14 @@ class BaseStructuredView(BaseView):
 
         Returns:
             Filters defined inside the View.
+        """
+
+    @abc.abstractmethod
+    def list_few_shot(self) -> List[ExposedFunction]:
+        """
+
+        Returns:
+            Few shot selectors defined inside the View.
         """
 
     @abc.abstractmethod

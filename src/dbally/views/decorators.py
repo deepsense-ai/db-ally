@@ -14,3 +14,18 @@ def view_filter() -> typing.Callable:
         return func
 
     return wrapped
+
+
+def few_shot() -> typing.Callable:
+    """
+    Decorator for marking a method as a few-shot selector
+
+    Returns:
+        Function that returns the decorated method
+    """
+
+    def wrapped(func: typing.Callable) -> typing.Callable:  # pylint: disable=missing-return-doc
+        func._methodDecorator = few_shot  # type:ignore # pylint: disable=protected-access
+        return func
+
+    return wrapped
