@@ -66,7 +66,11 @@ class BaseStructuredView(BaseView):
             DefaultIQLFewShotInputFormatter(
                 question=query,
                 filters=filter_list,
-                examples=[ex for ex_func in few_shot_list for ex in getattr(self, ex_func.name)()],
+                examples=[
+                    ex
+                    for ex_func in few_shot_list
+                    for ex in getattr(self, ex_func.name)(**{ex_func.parameters[0].name: query})
+                ],
             )
             if few_shot_list
             else DefaultIQLInputFormatter(
