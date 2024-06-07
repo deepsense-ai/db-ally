@@ -332,14 +332,14 @@ class _AutoDiscoveryBuilderBase:
                     )
                     columns.append(
                         ColumnConfig(
-                            name=column.name,
+                            name=str(column.name),
                             data_type=str(column.type),
                             similarity_index=similarity_index,
                         )
                     )
                 tables.append(
                     TableConfig(
-                        name=table.name,
+                        name=str(table.name),
                         description=description,
                         columns=columns,
                     )

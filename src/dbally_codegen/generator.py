@@ -1,11 +1,14 @@
 import inspect
 import sys
+import textwrap
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from dataclasses import dataclass
 from textwrap import indent
 from types import FunctionType
-from typing import List, Optional, Type
+from typing import Any, List, Optional, Type
 
+from dbally.similarity.index import SimilarityIndex
 from dbally.views.freeform.text2sql import TableConfig
 from dbally.views.freeform.text2sql.config import ColumnConfig
 from dbally.views.freeform.text2sql.view import BaseText2SQLView
@@ -49,6 +52,16 @@ class CodeGenerator(ABC):
             return
         names = self.imports.setdefault(package, set())
         names.add(name)
+
+    def add_import(self, obj: Any) -> None:
+        """
+        Add an import to the generator.
+
+        Args:
+            obj: The object to import.
+        """
+        type_ = type(obj) if not isinstance(obj, type) else obj
+        self.add_literal_import(type_.__module__, type_.__name__)
 
     def group_imports(self) -> List[List[str]]:
         """
@@ -105,7 +118,7 @@ class CodeGenerator(ABC):
             if param.annotation is not inspect.Parameter.empty:
                 self.collect_imports_for_annotation(param.annotation)
             if param.default is not inspect.Parameter.empty:
-                self.collect_imports_for_annotation(type(param.default))
+                self.add_import(param.default)
         self.collect_imports_for_annotation(method_signature.return_annotation)
 
     def render_annotation(self, annotation: Type) -> str:
@@ -178,6 +191,16 @@ class CodeGenerator(ABC):
         return param_signature
 
 
+@dataclass
+class Text2SQLGeneratorContext:
+    """
+    A class representing the configuration for the Text2SQL view generator.
+    """
+
+    current_table: Optional[str] = None
+    current_column: Optional[str] = None
+
+
 class Text2SQLViewGenerator(CodeGenerator):
     """
     A code generator for Text2SQL views.
@@ -187,6 +210,7 @@ class Text2SQLViewGenerator(CodeGenerator):
         super().__init__()
         self.tables = tables
         self.view_name = view_name
+        self.contex = Text2SQLGeneratorContext()
 
     def generate(self) -> str:
         """
@@ -213,6 +237,36 @@ class Text2SQLViewGenerator(CodeGenerator):
         """
         self.collect_imports_for_annotation(BaseText2SQLView)
         self.collect_imports_for_class_method(BaseText2SQLView.get_tables)
+        self.collect_imports_for_tables()
+
+    def collect_imports_for_tables(self) -> None:
+        """
+        Collect imports for the tables.
+        """
+        for table in self.tables:
+            self.collect_imports_for_view_object(table)
+
+    def collect_imports_for_view_object(self, obj: object) -> None:
+        """
+        Collect imports for an object.
+
+        Args:
+            obj: The object to collect imports for.
+        """
+        if isinstance(obj, SimilarityIndex):
+            self.add_import(obj.store)
+            self.collect_imports_for_view_object(obj.store)
+        else:
+            method_signature = inspect.signature(obj.__init__)
+            for param in method_signature.parameters:
+                param_obj = getattr(obj, param, None)
+                if isinstance(param_obj, list):
+                    for item in param_obj:
+                        self.add_import(item)
+                        self.collect_imports_for_view_object(item)
+                self.add_import(param_obj)
+                if obj.__class__.__module__ != "builtins":
+                    self.collect_imports_for_view_object(param_obj)
 
     def render_view(self) -> str:
         """
@@ -244,7 +298,7 @@ class Text2SQLViewGenerator(CodeGenerator):
         rendered_tables = ",\n".join(indent(self.render_view_object(table), self.indentation) for table in self.tables)
         return f"return [\n{rendered_tables},\n]"
 
-    def render_view_object(self, obj: object) -> str:
+    def render_view_object(self, obj: Any) -> str:
         """
         Render an object.
 
@@ -254,18 +308,93 @@ class Text2SQLViewGenerator(CodeGenerator):
         Returns:
             The rendered object.
         """
-        if isinstance(obj, str):
-            return f'"{obj}"'
-        if isinstance(obj, list):
-            if not obj:
-                return "[]"
-            params = ",\n".join(indent(self.render_view_object(item), self.indentation) for item in obj)
-            return f"[\n{params}\n]"
         if isinstance(obj, (TableConfig, ColumnConfig)):
-            method_signature = inspect.signature(obj.__init__)
-            params = ",\n".join(
-                indent(f"{param}={self.render_view_object(getattr(obj, param, None))}", self.indentation)
-                for param in method_signature.parameters
-            )
+            if isinstance(obj, TableConfig):
+                self.contex.current_table = obj.name
+            if isinstance(obj, ColumnConfig):
+                self.contex.current_column = obj.name
+
+        if isinstance(obj, str):
+            return self.render_string(obj)
+        if isinstance(obj, list):
+            return self.render_list(obj)
+        if isinstance(obj, SimilarityIndex):
+            return self.render_similarity_index(obj)
+        if obj.__class__.__module__ != "builtins":
+            return self.render_object(obj)
+
+        return obj.__name__ if isinstance(obj, type) else repr(obj)
+
+    def render_list(self, items: List[Any]) -> str:
+        """
+        Render a list of items.
+
+        Args:
+            items: The items to render.
+
+        Returns:
+            The rendered list.
+        """
+        params = ",\n".join(indent(self.render_view_object(item), self.indentation) for item in items)
+        if not params:
+            return "[]"
+        return f"[\n{params},\n]"
+
+    def render_string(self, string: str) -> str:
+        """
+        Render a string.
+
+        Args:
+            string: The string to render.
+
+        Returns:
+            The rendered string.
+        """
+        if len(string) > 80:
+            return f'"""{textwrap.fill(string, 80, subsequent_indent=self.indentation)}"""'
+        return f'"{string}"'
+
+    def render_similarity_index(self, index: SimilarityIndex) -> str:
+        """
+        Render the similarity index.
+
+        Args:
+            index: The similarity index to render.
+
+        Returns:
+            The rendered similarity index.
+        """
+        params = ",\n".join(
+            [
+                indent(
+                    (
+                        f"fetcher=self._create_default_fetcher("
+                        f'"{self.contex.current_table}", '
+                        f'"{self.contex.current_column}")'
+                    ),
+                    self.indentation,
+                ),
+                indent(f"store={self.render_view_object(index.store)}", self.indentation),
+            ]
+        )
+        return f"SimilarityIndex(\n" f"{params},\n)"
+
+    def render_object(self, obj: Any) -> str:
+        """
+        Render an object.
+
+        Args:
+            obj: The object to render.
+
+        Returns:
+            The rendered object.
+        """
+        method_signature = inspect.signature(obj.__init__)
+        params = ",\n".join(
+            indent(f"{param}={self.render_view_object(getattr(obj, param, None))}", self.indentation)
+            for param in method_signature.parameters
+            if hasattr(obj, param)
+        )
+        if params:
             return f"{type(obj).__name__}(\n{params},\n)"
-        return repr(obj)
+        return f"{type(obj).__name__}()"
