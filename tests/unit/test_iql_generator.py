@@ -8,12 +8,12 @@ import sqlalchemy
 from dbally import decorators
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql import IQLQuery
-from dbally.iql_generator.iql_generator import (
+from dbally.iql_generator.iql_format import (
     DefaultIQLFewShotInputFormatter,
     DefaultIQLInputFormatter,
-    IQLGenerator,
     _promptify_filters,
 )
+from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.iql_generator.iql_prompt_template import default_few_shot_iql_template, default_iql_template
 from dbally.prompts.few_shot import FewShotExample
 from dbally.views.methods_base import MethodsBaseView

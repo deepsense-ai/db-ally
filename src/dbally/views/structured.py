@@ -5,13 +5,8 @@ from typing import Dict, List, Optional
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.iql import IQLError, IQLQuery
-from dbally.iql_generator.iql_generator import (
-    DefaultIQLFewShotInputFormatter,
-    DefaultIQLInputFormatter,
-    IQLGenerator,
-    default_few_shot_iql_template,
-    default_iql_template,
-)
+from dbally.iql_generator.iql_format import DefaultIQLFewShotInputFormatter, DefaultIQLInputFormatter
+from dbally.iql_generator.iql_generator import IQLGenerator, default_few_shot_iql_template, default_iql_template
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.prompts import few_shot
