@@ -320,10 +320,12 @@ class Text2SQLViewGenerator(CodeGenerator):
             return self.render_list(obj)
         if isinstance(obj, SimilarityIndex):
             return self.render_similarity_index(obj)
-        if obj.__class__.__module__ != "builtins":
-            return self.render_object(obj)
+        if isinstance(obj, type):
+            return obj.__name__
+        if obj.__class__.__module__ == "builtins":
+            return repr(obj)
 
-        return obj.__name__ if isinstance(obj, type) else repr(obj)
+        return self.render_object(obj)
 
     def render_list(self, items: List[Any]) -> str:
         """
