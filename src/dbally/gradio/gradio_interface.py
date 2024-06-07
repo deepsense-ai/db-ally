@@ -109,7 +109,7 @@ class GradioAdapter:
             log_content = self.log.read()
         return generated_query, data, textual_response, log_content
 
-    async def create_interface(self, user_collection: Collection, preview_limit) -> gradio.Interface:
+    async def create_interface(self, user_collection: Collection, preview_limit: int) -> gradio.Interface:
         """
         Creates a Gradio interface for interacting with the user collection and similarity stores.
 

@@ -24,6 +24,9 @@ collection.add(CandidateView, lambda: CandidateView(engine))
 collection.add(SampleText2SQLViewCyphers, lambda: SampleText2SQLViewCyphers(create_freeform_memory_engine()))
 ```
 
+>_**NOTE**_: The following code requires environment variables to proceed with LLM queries. For the example below, set the
+> ```OPENAI_API_KEY``` environment variable.
+
 Create gradio interface
 ```python
 gradio_interface = await create_gradio_interface(user_collection=collection)
