@@ -17,8 +17,7 @@ async def main():
     collection.add(CandidateView, lambda: CandidateView(engine))
     collection.add(SampleText2SQLViewCyphers, lambda: SampleText2SQLViewCyphers(create_freeform_memory_engine()))
     gradio_interface = await create_gradio_interface(user_collection=collection)
-    if gradio_interface:
-        gradio_interface.launch()
+    gradio_interface.launch()
 
 
 if __name__ == "__main__":

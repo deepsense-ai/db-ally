@@ -1,6 +1,6 @@
 # How-To: Visualize Views
 
-To create simple UI interface use [GradioAdapter class](../../src/dbally/gradio/gradio_interface.py) It allows to display Data Preview related to Views
+To create simple UI interface use [create_gradio_interface function](https://github.com/deepsense-ai/db-ally/tree/main/src/dbally/gradio/gradio_interface.py) It allows to display Data Preview related to Views
 and execute user queries.
 
 ## Installation
@@ -31,12 +31,11 @@ gradio_interface = await create_gradio_interface(user_collection=collection)
 
 Launch the gradio interface. To publish public interface pass argument `share=True`
 ```python
-if gradio_interface:
-    gradio_interface.launch()
+gradio_interface.launch()
 ```
 
 The endpoint is set by triggering python module with Gradio Adapter launch command.
 Private endpoint is set to http://127.0.0.1:7860/ by default.
 
 ## Links
-* [Example Gradio Interface](https://github.com/deepsense-ai/db-ally/blob/lk/gradio_adapter/examples/visualize_views_code.py)
+* [Example Gradio Interface](https://github.com/deepsense-ai/db-ally/tree/main/examples/visualize_views_code.py)

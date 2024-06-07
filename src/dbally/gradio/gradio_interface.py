@@ -11,7 +11,7 @@ from dbally.prompts import PromptTemplateError
 from dbally.utils.errors import NoViewFoundError, UnsupportedQueryError
 
 
-async def create_gradio_interface(user_collection: Collection, preview_limit: int = 20) -> Optional[gradio.Interface]:
+async def create_gradio_interface(user_collection: Collection, preview_limit: int = 20) -> gradio.Interface:
     """Adapt and integrate data collection and query execution with Gradio interface components.
 
     Args:
@@ -19,7 +19,7 @@ async def create_gradio_interface(user_collection: Collection, preview_limit: in
         preview_limit: The maximum number of preview data records to display. Default is 20.
 
     Returns:
-        The created Gradio interface, or None if no data is available to load.
+        The created Gradio interface.
     """
     adapter = GradioAdapter()
     gradio_interface = await adapter.create_interface(user_collection, preview_limit)
@@ -104,9 +104,7 @@ class GradioAdapter:
             log_content = self.log.read()
         return generated_query, data, log_content
 
-    async def create_interface(
-        self, user_collection: Collection, preview_limit: int = 20
-    ) -> Optional[gradio.Interface]:
+    async def create_interface(self, user_collection: Collection, preview_limit: int = 20) -> gradio.Interface:
         """
         Creates a Gradio interface for interacting with the user collection and similarity stores.
 
@@ -115,7 +113,7 @@ class GradioAdapter:
             preview_limit: The maximum number of preview data records to display. Default is 20.
 
         Returns:
-            The created Gradio interface, or None if no data is available to load.
+            The created Gradio interface.
         """
 
         self.preview_limit = preview_limit
