@@ -9,10 +9,41 @@ from click import BadParameter, Context, Option
 from sqlalchemy import Column, Engine, Table
 from sqlalchemy.exc import ArgumentError
 
+from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 from dbally.llms.base import LLM
+from dbally.llms.litellm import LiteLLM
+from dbally.similarity.faiss_store import FaissStore
 from dbally.similarity.index import SimilarityIndex
+from dbally.similarity.sqlalchemy_base import SimpleSqlAlchemyFetcher
 from dbally_codegen.autodiscovery import configure_text2sql_auto_discovery
 from dbally_codegen.generator import Text2SQLViewGenerator
+from examples.recruting.db import fill_candidate_table
+
+
+def faiss_builder(engine: sqlalchemy.Engine, table: sqlalchemy.Table, column: sqlalchemy.Column) -> FaissStore:
+    """
+    Build a Faiss store.
+
+    Args:
+        engine: The SQLAlchemy engine.
+        table: The table.
+        column: The column.
+
+    Returns:
+        The Faiss store.
+    """
+    return SimilarityIndex(
+        fetcher=SimpleSqlAlchemyFetcher(
+            sqlalchemy_engine=engine,
+            column=column,
+            table=table,
+        ),
+        store=FaissStore(
+            index_dir=".",
+            index_name=f"{table.name}_{column.name}_index",
+            embedding_client=LiteLLMEmbeddingClient(),
+        ),
+    )
 
 
 def validate_file_path(_ctx: Context, _param: Option, value: str) -> str:
@@ -33,7 +64,7 @@ def validate_file_path(_ctx: Context, _param: Option, value: str) -> str:
     return f"{root}{ext}"
 
 
-def validate_db_url(_ctx: Context, _param: Option, value: Union[str, Engine]) -> str:
+def validate_db_url(_ctx: Context, _param: Option, value: Union[str, Engine]) -> Engine:
     """
     Validate the database connection string.
 
@@ -43,12 +74,15 @@ def validate_db_url(_ctx: Context, _param: Option, value: Union[str, Engine]) ->
     Returns:
         The validated database connection string.
     """
-    if not value:
-        raise BadParameter("database connection string is required.")
     if isinstance(value, Engine):
         return value
+    if not value:
+        raise BadParameter("database connection string is required.")
+
     try:
-        return sqlalchemy.create_engine(value)
+        a = sqlalchemy.create_engine(value)
+        fill_candidate_table(a)
+        return a
     except ArgumentError as exc:
         raise BadParameter("invalid database connection string.") from exc
 
@@ -63,11 +97,14 @@ def validate_llm_object(_ctx: Context, _param: Option, value: Union[str, LLM]) -
     Returns:
         The validated LLM object.
     """
-    if value == "None" or value is None:
-        return None
     if isinstance(value, LLM):
         return value
-    llm = load_object(value) if value else None
+    if value == "None" or value is None:
+        return None
+    if value.startswith("litellm:"):
+        return LiteLLM(value.split(":")[1])
+
+    llm = load_object(value)
     if not isinstance(llm, LLM):
         raise BadParameter("The LLM object must be an instance of the LLM class.")
     return llm
@@ -85,10 +122,13 @@ def validate_similarity_index_factory(
     Returns:
         The validated similarity index factory.
     """
-    if value == "None" or value is None:
-        return None
     if callable(value):
         return value
+    if value == "None" or value is None:
+        return None
+    if value == "faiss":
+        return faiss_builder
+
     index_builder = load_object(value) if value else None
     if not callable(index_builder):
         raise BadParameter("The similarity index factory must be a callable object.")
