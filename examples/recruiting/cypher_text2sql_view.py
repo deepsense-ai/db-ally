@@ -1,4 +1,6 @@
 # pylint: disable=missing-return-doc, missing-function-docstring, missing-class-docstring, missing-return-type-doc
+from typing import List
+
 import sqlalchemy
 from sqlalchemy import text
 
@@ -6,7 +8,7 @@ from dbally.views.freeform.text2sql import BaseText2SQLView, ColumnConfig, Table
 
 
 class SampleText2SQLViewCyphers(BaseText2SQLView):
-    def get_tables(self):
+    def get_tables(self) -> List[TableConfig]:
         return [
             TableConfig(
                 name="security_specialists",
@@ -20,7 +22,7 @@ class SampleText2SQLViewCyphers(BaseText2SQLView):
         ]
 
 
-def create_freeform_memory_engine():
+def create_freeform_memory_engine() -> sqlalchemy.Engine:
     freeform_engine = sqlalchemy.create_engine("sqlite:///:memory:")
 
     statements = [
