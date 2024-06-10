@@ -9,7 +9,7 @@ except ImportError:
 
 from dbally.embeddings.base import EmbeddingClient
 
-from ._exceptions import EmbeddingConnectionError, EmbeddingResponseError, EmbeddingStatusError
+from .exceptions import EmbeddingConnectionError, EmbeddingResponseError, EmbeddingStatusError
 
 
 class LiteLLMEmbeddingClient(EmbeddingClient):

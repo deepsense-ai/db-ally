@@ -11,14 +11,14 @@ from .__version__ import __version__
 from ._main import create_collection
 from ._types import NOT_GIVEN, NotGiven
 from .collection import Collection
-from .embeddings._exceptions import (
+from .embeddings.exceptions import (
     EmbeddingConnectionError,
     EmbeddingError,
     EmbeddingResponseError,
     EmbeddingStatusError,
 )
 from .exceptions import DbAllyError
-from .llms.clients._exceptions import LLMConnectionError, LLMError, LLMResponseError, LLMStatusError
+from .llms.clients.exceptions import LLMConnectionError, LLMError, LLMResponseError, LLMStatusError
 
 __all__ = [
     "__version__",

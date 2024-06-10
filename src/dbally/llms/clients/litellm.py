@@ -14,7 +14,7 @@ from dbally.llms.clients.base import LLMClient, LLMOptions
 from dbally.prompts import ChatFormat
 
 from ..._types import NOT_GIVEN, NotGiven
-from ._exceptions import LLMConnectionError, LLMResponseError, LLMStatusError
+from .exceptions import LLMConnectionError, LLMResponseError, LLMStatusError
 
 
 @dataclass

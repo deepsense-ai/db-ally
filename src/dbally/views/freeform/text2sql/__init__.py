@@ -1,5 +1,5 @@
 from .config import ColumnConfig, TableConfig
-from .errors import Text2SQLError
+from .exceptions import Text2SQLError
 from .view import BaseText2SQLView
 
 __all__ = [

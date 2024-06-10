@@ -15,7 +15,7 @@ from dbally.similarity import AbstractSimilarityIndex, SimpleSqlAlchemyFetcher
 from dbally.views.base import BaseView, IndexLocation
 
 from .config import TableConfig
-from .errors import Text2SQLError
+from .exceptions import Text2SQLError
 
 text2sql_prompt = PromptTemplate(
     chat=(
