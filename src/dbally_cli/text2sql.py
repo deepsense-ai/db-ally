@@ -19,7 +19,7 @@ from dbally_codegen.autodiscovery import configure_text2sql_auto_discovery
 from dbally_codegen.generator import Text2SQLViewGenerator
 
 
-def faiss_builder(engine: sqlalchemy.Engine, table: sqlalchemy.Table, column: sqlalchemy.Column) -> FaissStore:
+def faiss_builder(engine: sqlalchemy.Engine, table: sqlalchemy.Table, column: sqlalchemy.Column) -> SimilarityIndex:
     """
     Build a Faiss store.
 

@@ -2,10 +2,11 @@ from abc import ABC
 from typing import Dict, List, Tuple
 
 import pytest
+from chromadb import PersistentClient
 from sqlalchemy import ColumnClause, MetaData, Table, create_engine
 
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
-from dbally.similarity.faiss_store import FaissStore
+from dbally.similarity.chroma_store import ChromadbStore
 from dbally.similarity.index import SimilarityIndex
 from dbally.similarity.sqlalchemy_base import SimpleSqlAlchemyFetcher
 from dbally.views.freeform.text2sql.config import ColumnConfig, TableConfig
@@ -116,10 +117,10 @@ def test_collect_imports_for_view(text2sql_view_generator: Text2SQLViewGenerator
                             column=ColumnClause("candidate"),
                             table=Table("tags", MetaData()),
                         ),
-                        store=FaissStore(
-                            index_dir=".",
+                        store=ChromadbStore(
                             index_name="candidate_tags_index",
-                            embedding_client=LiteLLMEmbeddingClient(),
+                            chroma_client=PersistentClient(),
+                            embedding_function=LiteLLMEmbeddingClient(),
                         ),
                     ),
                 ),
@@ -129,12 +130,12 @@ def test_collect_imports_for_view(text2sql_view_generator: Text2SQLViewGenerator
     text2sql_view_generator.collect_imports_for_view()
     assert text2sql_view_generator.imports == {
         "typing": {"List"},
-        "dbally.views.freeform.text2sql.config": {"TableConfig", "ColumnConfig"},
         "dbally.views.freeform.text2sql.view": {"BaseText2SQLView"},
-        "dbally.embeddings.litellm": {"LiteLLMEmbeddingClient"},
-        "dbally.similarity.faiss_store": {"FaissStore"},
+        "dbally.views.freeform.text2sql.config": {"TableConfig", "ColumnConfig"},
         "dbally.similarity.index": {"SimilarityIndex"},
-        "faiss.swigfaiss": {"IndexFlatL2"},
+        "dbally.similarity.chroma_store": {"ChromadbStore"},
+        "dbally.embeddings.litellm": {"LiteLLMEmbeddingClient"},
+        "chromadb.api.client": {"Client"},
     }
 
 
@@ -157,10 +158,10 @@ def test_render_view(text2sql_view_generator: Text2SQLViewGenerator) -> None:
                             column=ColumnClause("candidate"),
                             table=Table("tags", MetaData()),
                         ),
-                        store=FaissStore(
-                            index_dir=".",
+                        store=ChromadbStore(
                             index_name="candidate_tags_index",
-                            embedding_client=LiteLLMEmbeddingClient(),
+                            chroma_client=PersistentClient(),
+                            embedding_function=LiteLLMEmbeddingClient(),
                         ),
                     ),
                 ),
@@ -170,12 +171,12 @@ def test_render_view(text2sql_view_generator: Text2SQLViewGenerator) -> None:
     code = text2sql_view_generator.generate()
     assert code == (
         "from dbally.embeddings.litellm import LiteLLMEmbeddingClient\n"
-        "from dbally.similarity.faiss_store import FaissStore\n"
+        "from dbally.similarity.chroma_store import ChromadbStore\n"
         "from dbally.similarity.index import SimilarityIndex\n"
         "from dbally.views.freeform.text2sql.config import ColumnConfig, TableConfig\n"
         "from dbally.views.freeform.text2sql.view import BaseText2SQLView\n"
         "from typing import List\n\n"
-        "from faiss.swigfaiss import IndexFlatL2\n\n"
+        "from chromadb.api.client import Client\n\n"
         "class Text2SQLView(BaseText2SQLView):\n"
         "    def get_tables(self) -> List[TableConfig]:\n"
         "        return [\n"
@@ -194,10 +195,13 @@ def test_render_view(text2sql_view_generator: Text2SQLViewGenerator) -> None:
         "                        description=None,\n"
         "                        similarity_index=SimilarityIndex(\n"
         '                            fetcher=self._create_default_fetcher("candidate", "tags"),\n'
-        "                            store=FaissStore(\n"
-        '                                index_dir=".",\n'
+        "                            store=ChromadbStore(\n"
         '                                index_name="candidate_tags_index",\n'
-        "                                embedding_client=LiteLLMEmbeddingClient(\n"
+        "                                chroma_client=Client(\n"
+        '                                    tenant="default_tenant",\n'
+        '                                    database="default_database",\n'
+        "                                ),\n"
+        "                                embedding_function=LiteLLMEmbeddingClient(\n"
         '                                    model="text-embedding-3-small",\n'
         "                                    options={},\n"
         "                                    api_base=None,\n"
@@ -205,7 +209,6 @@ def test_render_view(text2sql_view_generator: Text2SQLViewGenerator) -> None:
         "                                    api_version=None,\n"
         "                                ),\n"
         "                                max_distance=None,\n"
-        "                                index_type=IndexFlatL2,\n"
         "                            ),\n"
         "                        ),\n"
         "                    ),\n"
