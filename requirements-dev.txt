@@ -1,7 +1,7 @@
 # Requirements as needed for development for this project.
 # ---------------------------------------------------------
 # Install current project
--e.[litellm,chromadb]
+-e.[litellm,faiss,chromadb]
 # developer tools:
 pre-commit
 pytest>=6.2.5

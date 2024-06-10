@@ -17,7 +17,6 @@ from dbally.similarity.index import SimilarityIndex
 from dbally.similarity.sqlalchemy_base import SimpleSqlAlchemyFetcher
 from dbally_codegen.autodiscovery import configure_text2sql_auto_discovery
 from dbally_codegen.generator import Text2SQLViewGenerator
-from examples.recruting.db import fill_candidate_table
 
 
 def faiss_builder(engine: sqlalchemy.Engine, table: sqlalchemy.Table, column: sqlalchemy.Column) -> FaissStore:
@@ -80,9 +79,7 @@ def validate_db_url(_ctx: Context, _param: Option, value: Union[str, Engine]) ->
         raise BadParameter("database connection string is required.")
 
     try:
-        a = sqlalchemy.create_engine(value)
-        fill_candidate_table(a)
-        return a
+        return sqlalchemy.create_engine(value)
     except ArgumentError as exc:
         raise BadParameter("invalid database connection string.") from exc
 
