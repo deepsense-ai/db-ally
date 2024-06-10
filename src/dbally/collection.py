@@ -13,9 +13,14 @@ from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
 from dbally.similarity.index import AbstractSimilarityIndex
-from dbally.utils.errors import NoViewFoundError
 from dbally.view_selection.base import ViewSelector
 from dbally.views.base import BaseView, IndexLocation
+
+
+class NoViewFoundError(Exception):
+    """
+    Error raised when there is no view with the given name.
+    """
 
 
 class IndexUpdateError(Exception):

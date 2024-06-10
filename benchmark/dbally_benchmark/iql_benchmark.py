@@ -21,9 +21,8 @@ from sqlalchemy import create_engine
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.iql_generator.iql_prompt_template import default_iql_template
+from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError, default_iql_template
 from dbally.llms.litellm import LiteLLM
-from dbally.utils.errors import UnsupportedQueryError
 from dbally.views.structured import BaseStructuredView
 
 
