@@ -9,6 +9,7 @@ from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.audit import RequestEnd, RequestStart
 from dbally.data_models.execution_result import ExecutionResult
+from dbally.exceptions import DbAllyError
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
@@ -17,13 +18,13 @@ from dbally.view_selection.base import ViewSelector
 from dbally.views.base import BaseView, IndexLocation
 
 
-class NoViewFoundError(Exception):
+class NoViewFoundError(DbAllyError):
     """
     Error raised when there is no view with the given name.
     """
 
 
-class IndexUpdateError(Exception):
+class IndexUpdateError(DbAllyError):
     """
     Exception for when updating any of the Collection's similarity indexes fails.
 

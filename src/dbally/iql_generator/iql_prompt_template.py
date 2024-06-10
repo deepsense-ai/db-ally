@@ -1,9 +1,10 @@
 from typing import Callable, Dict, Optional
 
+from dbally.exceptions import DbAllyError
 from dbally.prompts import ChatFormat, PromptTemplate, check_prompt_variables
 
 
-class UnsupportedQueryError(Exception):
+class UnsupportedQueryError(DbAllyError):
     """
     Error raised when IQL generator is unable to construct a query
     with given filters.

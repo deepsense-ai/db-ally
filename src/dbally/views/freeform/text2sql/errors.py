@@ -1,7 +1,9 @@
 from typing import List
 
+from dbally.exceptions import DbAllyError
 
-class Text2SQLError(Exception):
+
+class Text2SQLError(DbAllyError):
     """
     Exception raised when text2sql query generation fails.
     """

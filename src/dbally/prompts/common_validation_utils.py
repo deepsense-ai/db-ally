@@ -1,10 +1,12 @@
 import re
 from typing import Dict, List, Set
 
+from dbally.exceptions import DbAllyError
+
 ChatFormat = List[Dict[str, str]]
 
 
-class PromptTemplateError(Exception):
+class PromptTemplateError(DbAllyError):
     """Error raised on incorrect PromptTemplate construction"""
 
 
