@@ -1,5 +1,5 @@
 from io import StringIO
-from typing import Dict, Optional, Tuple
+from typing import Tuple
 
 import gradio
 import pandas as pd
