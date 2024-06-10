@@ -40,7 +40,7 @@ class GradioAdapter:
         self.collection = None
         self.log = StringIO()
 
-    async def _ui_load_preview_data(self, selected_view_name: str) -> Tuple[pd.DataFrame, None, None, None, None]:
+    async def _ui_load_preview_data(self, selected_view_name: str) -> Tuple[gradio.DataFrame, None, None, None]:
         """
         Asynchronously loads preview data for a selected view name.
 
@@ -51,7 +51,7 @@ class GradioAdapter:
             A tuple containing the preview dataframe, load status text, and four None values to clean gradio fields.
         """
         preview_dataframe = self._load_preview_data(selected_view_name)
-        return preview_dataframe, None, None, None, None
+        return gradio.DataFrame(label="Preview", value=preview_dataframe), None, None, None
 
     def _load_preview_data(self, selected_view_name: str) -> pd.DataFrame:
         """
@@ -74,7 +74,7 @@ class GradioAdapter:
 
     async def _ui_ask_query(
         self, question_query: str, natural_language_flag: bool
-    ) -> Tuple[Dict, Optional[pd.DataFrame], str, str]:
+    ) -> Tuple[gradio.Text, gradio.DataFrame, gradio.Text, str]:
         """
         Asynchronously processes a query and returns the results.
 
@@ -107,7 +107,15 @@ class GradioAdapter:
         finally:
             self.log.seek(0)
             log_content = self.log.read()
-        return generated_query, data, textual_response, log_content
+        return (
+            gradio.Text(value=generated_query, visible=True),
+            gradio.DataFrame(label="Results", value=data),
+            gradio.Text(value=textual_response, visible=natural_language_flag),
+            log_content,
+        )
+
+    def _hide_results_fields(self) -> Tuple[gradio.Text, gradio.Text]:
+        return gradio.Text(visible=False), gradio.Text(visible=False)
 
     async def create_interface(self, user_collection: Collection, preview_limit: int) -> gradio.Interface:
         """
@@ -143,23 +151,44 @@ class GradioAdapter:
                     )
                     query = gradio.Text(label="Ask question", interactive=question_interactive)
                     query_button = gradio.Button("Ask db-ally", interactive=question_interactive)
+                    clear_button = gradio.ClearButton(components=[query], interactive=question_interactive)
                     natural_language_response_checkbox = gradio.Checkbox(
                         label="Return natural language answer", interactive=question_interactive
                     )
 
                 with gradio.Column():
-                    gradio.Label(show_label=False, value="PREVIEW")
                     if not data_preview_frame.empty:
-                        loaded_data_frame = gradio.Dataframe(value=data_preview_frame, interactive=False)
+                        loaded_data_frame = gradio.Dataframe(
+                            label="Preview", value=data_preview_frame, interactive=False
+                        )
                     else:
-                        loaded_data_frame = gradio.Dataframe(interactive=False)
-                    gradio.Label(show_label=False, value="RESULT")
-                    query_sql_result = gradio.Text(label="Generated query context")
-                    generated_natural_language_answer = gradio.Text(label="Generated answer in natural language:")
-                    query_result_frame = gradio.Dataframe(interactive=False)
+                        loaded_data_frame = gradio.Dataframe(label="Preview not available", interactive=False)
+                    query_sql_result = gradio.Text(label="Generated query context", visible=False)
+                    generated_natural_language_answer = gradio.Text(
+                        label="Generated answer in natural language:", visible=False
+                    )
 
             with gradio.Row():
                 log_console = gradio.Code(label="Logs", language="shell")
+
+            clear_button.add(
+                [
+                    natural_language_response_checkbox,
+                    loaded_data_frame,
+                    query_sql_result,
+                    generated_natural_language_answer,
+                    log_console,
+                ]
+            )
+
+            clear_button.click(
+                fn=self._hide_results_fields,
+                inputs=[],
+                outputs=[
+                    query_sql_result,
+                    generated_natural_language_answer,
+                ],
+            )
 
             view_dropdown.change(
                 fn=self._ui_load_preview_data,
@@ -168,14 +197,13 @@ class GradioAdapter:
                     loaded_data_frame,
                     query,
                     query_sql_result,
-                    query_result_frame,
                     log_console,
                 ],
             )
             query_button.click(
                 fn=self._ui_ask_query,
                 inputs=[query, natural_language_response_checkbox],
-                outputs=[query_sql_result, query_result_frame, generated_natural_language_answer, log_console],
+                outputs=[query_sql_result, loaded_data_frame, generated_natural_language_answer, log_console],
             )
 
         return demo
