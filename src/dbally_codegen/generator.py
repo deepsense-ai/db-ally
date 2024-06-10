@@ -99,19 +99,22 @@ class CodeGenerator(ABC):
         Args:
             annotation: The annotation to import.
         """
-        name = getattr(annotation, "__name__", getattr(annotation, "_name", "Any"))
+        if annotation is None:
+            return
+
+        name = getattr(annotation, "__name__", getattr(annotation, "_name", ""))
         self.add_literal_import(annotation.__module__, name)
 
         if getattr(annotation, "__args__", None):
             for arg in annotation.__args__:
                 self.collect_imports_for_annotation(arg)
 
-    def collect_imports_for_class_method(self, method: FunctionType) -> None:
+    def collect_imports_for_method(self, method: FunctionType) -> None:
         """
-        Collect imports for a class method.
+        Collect imports for a method.
 
         Args:
-            method: The class method.
+            method: The method.
         """
         method_signature = inspect.signature(method)
         for param in method_signature.parameters.values():
@@ -119,7 +122,8 @@ class CodeGenerator(ABC):
                 self.collect_imports_for_annotation(param.annotation)
             if param.default is not inspect.Parameter.empty:
                 self.add_import(param.default)
-        self.collect_imports_for_annotation(method_signature.return_annotation)
+        if method_signature.return_annotation is not inspect.Parameter.empty:
+            self.collect_imports_for_annotation(method_signature.return_annotation)
 
     def render_annotation(self, annotation: Type) -> str:
         """
@@ -131,7 +135,7 @@ class CodeGenerator(ABC):
         Returns:
             The rendered annotation.
         """
-        name = getattr(annotation, "__name__", getattr(annotation, "_name", "Any"))
+        name = getattr(annotation, "__name__", getattr(annotation, "_name", "None"))
 
         if getattr(annotation, "__args__", None):
             return f"{name}[{', '.join(self.render_annotation(arg) for arg in annotation.__args__)}]"
@@ -155,25 +159,25 @@ class CodeGenerator(ABC):
             return f"class {name}({parent_names}):"
         return f"class {name}:"
 
-    def render_class_method(self, method: FunctionType, body: str = "...") -> str:
+    def render_method(self, method: FunctionType, body: str = "...") -> str:
         """
-        Render a class method.
+        Render a method.
 
         Args:
             method: The method to render.
             body: The body of the method.
 
         Returns:
-            The rendered class method.
+            The rendered method.
         """
         method_signature = inspect.signature(method)
         params_annotations = ", ".join(
-            self.render_class_method_param(param) for param in method_signature.parameters.values()
+            self._render_method_param(param) for param in method_signature.parameters.values()
         )
-        return_annotation = self.render_annotation(method_signature.return_annotation)
-        return f"def {method.__name__}({params_annotations}) -> {return_annotation}:\n{indent(body, self.indentation)}"
+        return_annotation = self._render_method_return(method_signature.return_annotation)
+        return f"def {method.__name__}({params_annotations}){return_annotation}:\n{indent(body, self.indentation)}"
 
-    def render_class_method_param(self, param: inspect.Parameter) -> str:
+    def _render_method_param(self, param: inspect.Parameter) -> str:
         """
         Parse the signature of a parameter.
 
@@ -189,6 +193,20 @@ class CodeGenerator(ABC):
         if param.default is not inspect.Parameter.empty:
             param_signature += f' = "{param.default}"' if isinstance(param.default, str) else f" = {param.default}"
         return param_signature
+
+    def _render_method_return(self, return_annotation: Type) -> str:
+        """
+        Render the return annotation of a method.
+
+        Args:
+            return_annotation: The return annotation.
+
+        Returns:
+            The rendered return annotation.
+        """
+        if return_annotation is not inspect.Parameter.empty:
+            return f" -> {self.render_annotation(return_annotation)}"
+        return ""
 
 
 @dataclass
@@ -236,7 +254,7 @@ class Text2SQLViewGenerator(CodeGenerator):
         Collect imports for the Text2SQL view.
         """
         self.collect_imports_for_annotation(BaseText2SQLView)
-        self.collect_imports_for_class_method(BaseText2SQLView.get_tables)
+        self.collect_imports_for_method(BaseText2SQLView.get_tables)
         self.collect_imports_for_tables()
 
     def collect_imports_for_tables(self) -> None:
@@ -278,7 +296,7 @@ class Text2SQLViewGenerator(CodeGenerator):
         sections = []
 
         tables = self.render_view_tables()
-        get_tables_method = self.render_class_method(BaseText2SQLView.get_tables, tables)
+        get_tables_method = self.render_method(BaseText2SQLView.get_tables, tables)
         sections.append(get_tables_method)
 
         rendered_sections = "\n\n".join(indent(section, self.indentation) for section in sections)
