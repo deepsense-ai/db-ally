@@ -95,7 +95,8 @@ async def test_iql_few_shot_generation(llm: MockLLM, event_tracker: EventTracker
 
     response = await iql_generator.generate_iql(input_formatter, event_tracker, default_iql_template)
 
-    template_after_response = default_iql_template.add_assistant_message(content="LLM IQL mock answer")
+    expected_conversation, _ = input_formatter(default_iql_template)
+    template_after_response = expected_conversation.add_assistant_message(content="LLM IQL mock answer")
     assert response == ("LLM IQL mock answer", template_after_response)
 
     template_after_response = template_after_response.add_user_message(content="Mock_error")
