@@ -11,10 +11,10 @@ except ImportError:
 
 from dbally.data_models.audit import LLMEvent
 from dbally.llms.clients.base import LLMClient, LLMOptions
+from dbally.llms.clients.exceptions import LLMConnectionError, LLMResponseError, LLMStatusError
 from dbally.prompts import ChatFormat
 
 from ..._types import NOT_GIVEN, NotGiven
-from .exceptions import LLMConnectionError, LLMResponseError, LLMStatusError
 
 
 @dataclass

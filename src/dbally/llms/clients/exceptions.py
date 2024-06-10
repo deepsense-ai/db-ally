@@ -1,4 +1,4 @@
-from ...exceptions import DbAllyError
+from dbally.exceptions import DbAllyError
 
 
 class LLMError(DbAllyError):
