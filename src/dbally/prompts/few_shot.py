@@ -23,12 +23,12 @@ class FewShotExample:
         else:
             expr_source = textwrap.dedent(inspect.getsource(self.answer_expr))
             expr_body = expr_source.replace("lambda:", "")
+            expr_body = expr_body.split("#", maxsplit=1)[0]
 
             for m_name in answer_expr.__code__.co_names:
                 expr_body = expr_body.replace(f"{answer_expr.__code__.co_freevars[0]}.{m_name}", m_name)
 
             self.answer = expr_body.strip().rstrip(",")
-            print(self.answer)
 
     def __str__(self) -> str:
         return self.answer
