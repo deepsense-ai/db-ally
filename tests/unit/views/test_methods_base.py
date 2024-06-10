@@ -3,9 +3,11 @@
 
 from typing import List, Literal, Tuple
 
+import pytest
+
 from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.iql import IQLQuery
-from dbally.views.decorators import view_filter
+from dbally.views.decorators import few_shot, view_filter
 from dbally.views.exposed_functions import MethodParamWithTyping
 from dbally.views.methods_base import MethodsBaseView
 
@@ -24,6 +26,14 @@ class MockMethodsBase(MethodsBaseView):
     @view_filter()
     def method_bar(self, cities: List[str], year: Literal["2023", "2024"], pairs: List[Tuple[str, int]]) -> str:
         return f"hello {cities} in {year} of {pairs}"
+
+    @few_shot()
+    def examples(self):
+        return []
+
+    @few_shot()
+    def examples_with_query(self, query: str):
+        return []
 
     async def apply_filters(self, filters: IQLQuery) -> None:
         ...
@@ -52,4 +62,46 @@ def test_list_filters() -> None:
     ]
     assert (
         str(method_bar) == "method_bar(cities: List[str], year: Literal['2023', '2024'], pairs: List[Tuple[str, int]])"
+    )
+
+
+def test_list_few_shot() -> None:
+    """
+    Tests that the list_few_shot method works correctly
+    """
+    mock_view = MockMethodsBase()
+    few_shots = mock_view.list_few_shot()
+    assert len(few_shots) == 2
+    assert any([f for f in few_shots if f.name == "examples" and not f.parameters])
+    assert any(
+        [f for f in few_shots if f.name == "examples_with_query" and f.parameters and f.parameters[0].type == str]
+    )
+
+
+def test_invalid_few_shot() -> None:
+    """
+    Tests that the view cannot be defined when method decorated with few_shot
+    does not comply to signature convention (no args or first str arg)
+    """
+
+    with pytest.raises(TypeError) as e_info:
+
+        class MockMethodsBaseInvalidFewShot(MethodsBaseView):
+            """
+            Mock class for testing the MethodsBaseView
+            """
+
+            @few_shot()
+            def examples_with_query(self, query: int):
+                return []
+
+            async def apply_filters(self, filters: IQLQuery) -> None:
+                ...
+
+            def execute(self, dry_run: bool = False) -> ViewExecutionResult:
+                return ViewExecutionResult(results=[], context={})
+
+    assert (
+        str(e_info.value)
+        == "Function decorated with `few_shot` need to have first argument of `str` type. See `FewShotSelectorFunc` signature."
     )
