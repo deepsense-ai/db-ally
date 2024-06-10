@@ -14,7 +14,7 @@ from dbally.iql_generator.iql_format import (
     _promptify_filters,
 )
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.iql_generator.iql_prompt_template import default_few_shot_iql_template, default_iql_template
+from dbally.iql_generator.iql_prompt_template import default_iql_template
 from dbally.prompts.few_shot import FewShotExample
 from dbally.views.methods_base import MethodsBaseView
 from tests.unit.mocks import MockLLM
@@ -76,20 +76,6 @@ async def test_iql_generation(llm: MockLLM, event_tracker: EventTracker, view: M
     response2 = await iql_generator.generate_iql(input_formatter, event_tracker, template_after_response)
     template_after_2nd_response = template_after_response.add_assistant_message(content="LLM IQL mock answer")
     assert response2 == ("LLM IQL mock answer", template_after_2nd_response)
-
-
-@pytest.mark.asyncio
-async def test_iql_few_shot_generation_with_wrong_template(
-    llm: MockLLM, event_tracker: EventTracker, view: MockView
-) -> None:
-    iql_generator = IQLGenerator(llm)
-
-    input_formatter = DefaultIQLInputFormatter(question="Mock_question", filters=view.list_filters())
-
-    with pytest.raises(KeyError) as exc_info:
-        _ = await iql_generator.generate_iql(input_formatter, event_tracker, default_few_shot_iql_template)
-
-    assert str(exc_info.value) == "'examples'"
 
 
 @pytest.mark.asyncio

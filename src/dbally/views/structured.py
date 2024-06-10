@@ -6,7 +6,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.iql_format import DefaultIQLFewShotInputFormatter, DefaultIQLInputFormatter
-from dbally.iql_generator.iql_generator import IQLGenerator, default_few_shot_iql_template, default_iql_template
+from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
@@ -73,17 +73,11 @@ class BaseStructuredView(BaseView):
                 ],
             )
             if few_shot_list
-            else DefaultIQLInputFormatter(
-                question=query,
-                filters=filter_list,
-            )
+            else DefaultIQLInputFormatter(question=query, filters=filter_list)
         )
 
         iql_filters, conversation = await iql_generator.generate_iql(
-            input_formatter=input_formatter,
-            event_tracker=event_tracker,
-            llm_options=llm_options,
-            conversation=default_few_shot_iql_template if few_shot_list else default_iql_template,
+            input_formatter=input_formatter, event_tracker=event_tracker, llm_options=llm_options
         )
 
         for _ in range(n_retries):

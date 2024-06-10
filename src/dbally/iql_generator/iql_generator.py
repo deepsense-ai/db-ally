@@ -2,11 +2,7 @@ from typing import List, Optional, Tuple, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_format import AbstractIQLInputFormatter
-from dbally.iql_generator.iql_prompt_template import (  # noqa
-    IQLPromptTemplate,
-    default_few_shot_iql_template,
-    default_iql_template,
-)
+from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template  # noqa
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 
@@ -54,9 +50,11 @@ class IQLGenerator:
             IQL - iql generated based on the user question
         """
 
+        conversation, fmt = input_formatter(conversation or default_iql_template)
+
         llm_response = await self._llm.generate_text(
             template=conversation,
-            fmt=input_formatter(),
+            fmt=fmt,
             event_tracker=event_tracker,
             options=llm_options,
         )

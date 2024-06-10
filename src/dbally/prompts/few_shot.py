@@ -19,7 +19,7 @@ class FewShotExample:
         self.answer_expr = answer_expr
 
         if isinstance(self.answer_expr, str):
-            self.parsed = self.answer_expr
+            self.answer = self.answer_expr
         else:
             expr_source = textwrap.dedent(inspect.getsource(self.answer_expr))
             expr_body = expr_source.replace("lambda:", "")
@@ -27,8 +27,8 @@ class FewShotExample:
             for m_name in answer_expr.__code__.co_names:
                 expr_body = expr_body.replace(f"{answer_expr.__code__.co_freevars[0]}.{m_name}", m_name)
 
-            self.parsed = expr_body.strip().rstrip(",")
-            print(self.parsed)
+            self.answer = expr_body.strip().rstrip(",")
+            print(self.answer)
 
     def __str__(self) -> str:
-        return self.parsed
+        return self.answer

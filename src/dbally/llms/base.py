@@ -52,7 +52,7 @@ class LLM(Generic[LLMClientOptions], ABC):
         Returns:
             Prompt in the format of the client.
         """
-        return [{**message, "content": message["content"].format(**fmt)} for message in template.chat]
+        return [{"role": message["role"], "content": message["content"].format(**fmt)} for message in template.chat]
 
     def count_tokens(self, messages: ChatFormat, fmt: Dict[str, str]) -> int:
         """
