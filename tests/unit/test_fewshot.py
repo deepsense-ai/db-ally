@@ -20,24 +20,37 @@ class TestExamples:
 
     def __call__(self) -> List[Tuple[str, Callable]]:  # pylint: disable=W0602, C0116, W9011
         return [
-            # fmt: off
             (
+                # dummy test
                 "None",
-                lambda: None
+                lambda: None,
             ),
             (
+                # test lambda
+                "True and False or data_scientist_position() or (True or True)",
+                lambda: (True and False or self.data_scientist_position() or (True or True)),
+            ),
+            (
+                # test string
                 'studied_at("University of Toronto")',
-                lambda: self.studied_at("University of Toronto")
+                lambda: self.studied_at("University of Toronto"),
             ),
             (
+                # test complex conditions with comments
                 'is_available_within_months(1) and data_scientist_position() and has_seniority("senior")',
-                lambda: self.is_available_within_months(1) and self.data_scientist_position() and self.has_seniority("senior"),  # pylint: disable=line-too-long
+                lambda: (
+                    self.is_available_within_months(1)
+                    and self.data_scientist_position()
+                    and self.has_seniority("senior")
+                ),  # pylint: disable=line-too-long
             ),
             (
+                # test nested conditions with comments
                 'data_scientist_position(1) and (has_seniority("junior") or has_seniority("senior"))',
-                lambda: self.data_scientist_position(1) and (self.has_seniority("junior") or self.has_seniority("senior")),  # pylint: disable=line-too-long, too-many-function-args
+                lambda: (
+                    self.data_scientist_position(1) and (self.has_seniority("junior") or self.has_seniority("senior"))
+                ),  # pylint: disable=line-too-long, too-many-function-args
             ),
-            # fmt: on
         ]
 
 

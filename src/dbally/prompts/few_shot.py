@@ -28,7 +28,9 @@ class FewShotExample:
             for m_name in answer_expr.__code__.co_names:
                 expr_body = expr_body.replace(f"{answer_expr.__code__.co_freevars[0]}.{m_name}", m_name)
 
-            self.answer = expr_body.strip().rstrip(",")
+            self.answer = " ".join(expr_body.split()).strip().rstrip(",").replace("( ", "(").replace(" )", ")")
+            if self.answer.startswith("("):
+                self.answer = self.answer[1:-1]
 
     def __str__(self) -> str:
         return self.answer
