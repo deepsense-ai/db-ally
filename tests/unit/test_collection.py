@@ -439,7 +439,7 @@ async def test_update_similarity_indexes_error(
         await collection.update_similarity_indexes()
     assert (
         str(e.value) == "Failed to update similarity indexes for MockViewWithSimilarity.test_filter.dog, "
-        "MockViewWithSimilarity2.test_filter.monkey"
+        "MockViewWithSimilarity2.test_filter.monkey."
     )
     assert e.value.failed_indexes == {
         foo_index: foo_exception,

@@ -135,7 +135,7 @@ class Collection:
         """
 
         if name not in self._views:
-            raise NoViewFoundError
+            raise NoViewFoundError(name)
 
         return self._builders[name]()
 
@@ -275,5 +275,4 @@ class Collection:
         }
         if failed_indexes:
             failed_locations = [loc for index in failed_indexes for loc in indexes[index]]
-            descriptions = ", ".join(".".join(name for name in location) for location in failed_locations)
-            raise IndexUpdateError(f"Failed to update similarity indexes for {descriptions}", failed_indexes)
+            raise IndexUpdateError(failed_indexes, failed_locations)
