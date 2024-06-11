@@ -78,22 +78,26 @@ class FewShotRecruitmentView(RecruitmentView):
     @decorators.few_shot()
     def get_examples(self, _: str) -> List[FewShotExample]:  # pylint: disable=W0602, C0116, W9011
         return [
-            # fmt: off
             FewShotExample(
                 "Which candidates studied at University of Toronto?",
                 'studied_at("University of Toronto")',
             ),
             FewShotExample(
                 "Do we have any soon available candidate?",
-                lambda : self.is_available_within_months(1),
+                lambda: self.is_available_within_months(1),
             ),
             FewShotExample(
                 "Do we have any soon available perfect fits for senior data scientist positions?",
-                lambda: self.is_available_within_months(1) and self.data_scientist_position() and self.has_seniority("senior"),  # pylint: disable=line-too-long
+                lambda: (
+                    self.is_available_within_months(1)
+                    and self.data_scientist_position()
+                    and self.has_seniority("senior")
+                ),
             ),
             FewShotExample(
                 "List all junior or senior data scientist positions",
-                lambda: self.data_scientist_position(1) and (self.has_seniority("junior") or self.has_seniority("senior")),  # pylint: disable=line-too-long, too-many-function-args
+                lambda: (
+                    self.data_scientist_position() and (self.has_seniority("junior") or self.has_seniority("senior"))
+                ),
             ),
-            # fmt: on
         ]

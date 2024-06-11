@@ -48,8 +48,11 @@ class TestExamples:
                 # test nested conditions with comments
                 'data_scientist_position(1) and (has_seniority("junior") or has_seniority("senior"))',
                 lambda: (
-                    self.data_scientist_position(1) and (self.has_seniority("junior") or self.has_seniority("senior"))
-                ),  # pylint: disable=line-too-long, too-many-function-args
+                    self.data_scientist_position(1)
+                    and (
+                        self.has_seniority("junior") or self.has_seniority("senior")
+                    )  # pylint: disable=too-many-function-args
+                ),
             ),
         ]
 

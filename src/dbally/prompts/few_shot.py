@@ -1,4 +1,5 @@
 import inspect
+import re
 import textwrap
 from typing import Callable, Union
 
@@ -23,7 +24,7 @@ class FewShotExample:
         else:
             expr_source = textwrap.dedent(inspect.getsource(self.answer_expr))
             expr_body = expr_source.replace("lambda:", "")
-            expr_body = expr_body.split("#", maxsplit=1)[0]
+            expr_body = re.sub("\\#.*\n", "\n", expr_body, flags=re.MULTILINE)
 
             for m_name in answer_expr.__code__.co_names:
                 expr_body = expr_body.replace(f"{answer_expr.__code__.co_freevars[0]}.{m_name}", m_name)
