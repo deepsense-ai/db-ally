@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from enum import Enum, auto
 from typing import Any, Dict, List
 
+from dbally.exceptions import DbAllyError
+
 
 class FunctionCallState(Enum):
     """Enum to represent the state of the Assistants function call."""
@@ -23,7 +25,7 @@ class FunctionCallState(Enum):
         }[self]
 
 
-class FunctionCallingError(Exception):
+class FunctionCallingError(DbAllyError):
     """Exception raised when an error occurs during Assistants function call function."""
 
     def __init__(self, state: FunctionCallState, msg: str) -> None:

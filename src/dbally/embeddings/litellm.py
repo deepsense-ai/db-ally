@@ -8,8 +8,7 @@ except ImportError:
     HAVE_LITELLM = False
 
 from dbally.embeddings.base import EmbeddingClient
-
-from ._exceptions import EmbeddingConnectionError, EmbeddingResponseError, EmbeddingStatusError
+from dbally.embeddings.exceptions import EmbeddingConnectionError, EmbeddingResponseError, EmbeddingStatusError
 
 
 class LiteLLMEmbeddingClient(EmbeddingClient):

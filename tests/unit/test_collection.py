@@ -7,10 +7,9 @@ import pytest
 from typing_extensions import Annotated
 
 from dbally._main import create_collection
-from dbally.collection import Collection, IndexUpdateError
+from dbally.collection import Collection, IndexUpdateError, NoViewFoundError
 from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.iql._exceptions import IQLError
-from dbally.utils.errors import NoViewFoundError
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 from dbally.views.structured import BaseStructuredView
 from tests.unit.mocks import MockIQLGenerator, MockLLM, MockSimilarityIndex, MockViewBase, MockViewSelector

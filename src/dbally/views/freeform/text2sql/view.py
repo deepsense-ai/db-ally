@@ -13,9 +13,8 @@ from dbally.llms.clients.base import LLMOptions
 from dbally.prompts import PromptTemplate
 from dbally.similarity import AbstractSimilarityIndex, SimpleSqlAlchemyFetcher
 from dbally.views.base import BaseView, IndexLocation
-
-from .config import TableConfig
-from .errors import Text2SQLError
+from dbally.views.freeform.text2sql.config import TableConfig
+from dbally.views.freeform.text2sql.exceptions import Text2SQLError
 
 text2sql_prompt = PromptTemplate(
     chat=(
