@@ -37,10 +37,25 @@ class GradioAdapter:
 
         """
         self.preview_limit = None
+        self.selected_view_name = None
         self.collection = None
         self.log = StringIO()
 
-    async def _ui_load_preview_data(self, selected_view_name: str) -> Tuple[gradio.DataFrame, None, None, None]:
+    def _load_gradio_data(self, preview_dataframe, label, empty_warning=None) -> Tuple[gradio.DataFrame, gradio.Label]:
+        if not empty_warning:
+            empty_warning = "Preview not available"
+
+        if preview_dataframe.empty:
+            gradio_preview_dataframe = gradio.DataFrame(label=label, value=preview_dataframe, visible=False)
+            empty_frame_label = gradio.Label(value=f"{label} not available", visible=True, show_label=False)
+        else:
+            gradio_preview_dataframe = gradio.DataFrame(label=label, value=preview_dataframe, visible=True)
+            empty_frame_label = gradio.Label(value=f"{label} not available", visible=False, show_label=False)
+        return gradio_preview_dataframe, empty_frame_label
+
+    async def _ui_load_preview_data(
+        self, selected_view_name: str
+    ) -> Tuple[gradio.DataFrame, gradio.Label, None, None, None]:
         """
         Asynchronously loads preview data for a selected view name.
 
@@ -50,8 +65,11 @@ class GradioAdapter:
         Returns:
             A tuple containing the preview dataframe, load status text, and four None values to clean gradio fields.
         """
+        self.selected_view_name = selected_view_name
         preview_dataframe = self._load_preview_data(selected_view_name)
-        return gradio.DataFrame(label="Preview", value=preview_dataframe), None, None, None
+        gradio_preview_dataframe, empty_frame_label = self._load_gradio_data(preview_dataframe, "Preview")
+
+        return gradio_preview_dataframe, empty_frame_label, None, None, None
 
     def _load_preview_data(self, selected_view_name: str) -> pd.DataFrame:
         """
@@ -74,7 +92,7 @@ class GradioAdapter:
 
     async def _ui_ask_query(
         self, question_query: str, natural_language_flag: bool
-    ) -> Tuple[gradio.Text, gradio.DataFrame, gradio.Text, str]:
+    ) -> Tuple[gradio.DataFrame, gradio.Label, gradio.Text, gradio.Text, str]:
         """
         Asynchronously processes a query and returns the results.
 
@@ -107,15 +125,26 @@ class GradioAdapter:
         finally:
             self.log.seek(0)
             log_content = self.log.read()
+
+        gradio_dataframe, empty_dataframe_warning = self._load_gradio_data(data, "Results", "No matching results found")
         return (
+            gradio_dataframe,
+            empty_dataframe_warning,
             gradio.Text(value=generated_query, visible=True),
-            gradio.DataFrame(label="Results", value=data),
             gradio.Text(value=textual_response, visible=natural_language_flag),
             log_content,
         )
 
-    def _hide_results_fields(self) -> Tuple[gradio.Text, gradio.Text]:
-        return gradio.Text(visible=False), gradio.Text(visible=False)
+    def _clear_results(self) -> Tuple[gradio.DataFrame, gradio.Label, gradio.Text, gradio.Text]:
+        preview_dataframe = self._load_preview_data(self.selected_view_name)
+        gradio_preview_dataframe, empty_frame_label = self._load_gradio_data(preview_dataframe, "Preview")
+
+        return (
+            gradio_preview_dataframe,
+            empty_frame_label,
+            gradio.Text(visible=False),
+            gradio.Text(visible=False),
+        )
 
     async def create_interface(self, user_collection: Collection, preview_limit: int) -> gradio.Interface:
         """
@@ -133,21 +162,20 @@ class GradioAdapter:
         self.collection = user_collection
         self.collection.add_event_handler(CLIEventHandler(self.log))
 
-        default_selected_view_name = None
         data_preview_frame = pd.DataFrame()
         question_interactive = False
 
         view_list = [*user_collection.list()]
         if view_list:
-            default_selected_view_name = view_list[0]
-            data_preview_frame = self._load_preview_data(view_list[0])
+            self.selected_view_name = view_list[0]
+            data_preview_frame = self._load_preview_data(self.selected_view_name)
             question_interactive = True
 
         with gradio.Blocks() as demo:
             with gradio.Row():
                 with gradio.Column():
                     view_dropdown = gradio.Dropdown(
-                        label="Data View preview", choices=view_list, value=default_selected_view_name
+                        label="Data View preview", choices=view_list, value=self.selected_view_name
                     )
                     query = gradio.Text(label="Ask question", interactive=question_interactive)
                     query_button = gradio.Button("Ask db-ally", interactive=question_interactive)
@@ -161,8 +189,11 @@ class GradioAdapter:
                         loaded_data_frame = gradio.Dataframe(
                             label="Preview", value=data_preview_frame, interactive=False
                         )
+                        empty_frame_label = gradio.Label(value="Preview not available", visible=False)
                     else:
-                        loaded_data_frame = gradio.Dataframe(label="Preview not available", interactive=False)
+                        loaded_data_frame = gradio.Dataframe(interactive=False, visible=False)
+                        empty_frame_label = gradio.Label(value="Preview not available", visible=True)
+
                     query_sql_result = gradio.Text(label="Generated query context", visible=False)
                     generated_natural_language_answer = gradio.Text(
                         label="Generated answer in natural language:", visible=False
@@ -182,9 +213,11 @@ class GradioAdapter:
             )
 
             clear_button.click(
-                fn=self._hide_results_fields,
+                fn=self._clear_results,
                 inputs=[],
                 outputs=[
+                    loaded_data_frame,
+                    empty_frame_label,
                     query_sql_result,
                     generated_natural_language_answer,
                 ],
@@ -195,6 +228,7 @@ class GradioAdapter:
                 inputs=view_dropdown,
                 outputs=[
                     loaded_data_frame,
+                    empty_frame_label,
                     query,
                     query_sql_result,
                     log_console,
@@ -203,7 +237,13 @@ class GradioAdapter:
             query_button.click(
                 fn=self._ui_ask_query,
                 inputs=[query, natural_language_response_checkbox],
-                outputs=[query_sql_result, loaded_data_frame, generated_natural_language_answer, log_console],
+                outputs=[
+                    loaded_data_frame,
+                    empty_frame_label,
+                    query_sql_result,
+                    generated_natural_language_answer,
+                    log_console,
+                ],
             )
 
         return demo
