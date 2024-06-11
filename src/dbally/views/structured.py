@@ -3,7 +3,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.collections.results import ViewExecutionResult
+from dbally.collection.results import ViewExecutionResult
 from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM

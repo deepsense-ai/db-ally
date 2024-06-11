@@ -1,6 +1,8 @@
 """ dbally """
 
-from dbally.collections import Collection, ExecutionResult
+from dbally.collection.collection import Collection
+from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
+from dbally.collection.results import ExecutionResult
 from dbally.views import decorators
 from dbally.views.methods_base import MethodsBaseView
 from dbally.views.pandas_base import DataFrameBaseView
@@ -38,6 +40,8 @@ __all__ = [
     "LLMConnectionError",
     "LLMResponseError",
     "LLMStatusError",
+    "NoViewFoundError",
+    "IndexUpdateError",
     "NotGiven",
     "NOT_GIVEN",
 ]

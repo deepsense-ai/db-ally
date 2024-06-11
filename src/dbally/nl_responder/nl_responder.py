@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 import pandas as pd
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.collections.results import ViewExecutionResult
+from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder_prompt_template import NLResponderPromptTemplate, default_nl_responder_template

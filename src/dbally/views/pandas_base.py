@@ -3,7 +3,7 @@ from functools import reduce
 
 import pandas as pd
 
-from dbally.collections.results import ViewExecutionResult
+from dbally.collection.results import ViewExecutionResult
 from dbally.iql import IQLQuery, syntax
 from dbally.views.methods_base import MethodsBaseView
 

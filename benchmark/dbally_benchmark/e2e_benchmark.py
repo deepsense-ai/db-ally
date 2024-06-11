@@ -21,7 +21,8 @@ from omegaconf import DictConfig
 from sqlalchemy import create_engine
 
 import dbally
-from dbally.collection import Collection, NoViewFoundError
+from dbally.collection import Collection
+from dbally.collection.exceptions import NoViewFoundError
 from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError, default_iql_template
 from dbally.llms.litellm import LiteLLM
 from dbally.view_selection.view_selector_prompt_template import default_view_selector_template

@@ -8,7 +8,7 @@ The guide illustrates how to use multiple views to handle queries requiring diff
 
 You can register multiple views with a collection. When you run a query, the AI model decides which view to use based on the query. This allows for handling diffrent kinds of queries with different views. Those views can be based on data from the same source (e.g., different tables in the same database), or from different sources (e.g. a database and an API).
 
-Upon selecting the view, the AI model uses it to extract the relevant data from its data source. The query result is an [`ExecutionResult`][dbally.collections.results.ExecutionResult] object. It contains the data extracted by the view, along with other metadata including the name of the view that fetched the data.
+Upon selecting the view, the AI model uses it to extract the relevant data from its data source. The query result is an [`ExecutionResult`][dbally.collection.results.ExecutionResult] object. It contains the data extracted by the view, along with other metadata including the name of the view that fetched the data.
 
 ## Defining the JobView
 

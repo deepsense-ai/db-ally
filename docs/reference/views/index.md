@@ -6,4 +6,4 @@
 
 ::: dbally.views.base.BaseView
 
-::: dbally.collections.results.ViewExecutionResult
+::: dbally.collection.results.ViewExecutionResult
