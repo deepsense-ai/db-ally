@@ -154,7 +154,7 @@ import abc
 from typing import Callable, Any, Iterable
 
 from dbally.iql import IQLQuery
-from dbally.data_models.execution_result import ViewExecutionResult
+from dbally.collections.results import ViewExecutionResult
 
 @abc.abstractmethod
 def get_data(self) -> Iterable:

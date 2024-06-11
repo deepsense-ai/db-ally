@@ -3,7 +3,7 @@ import asyncio
 
 import sqlalchemy
 
-from dbally.data_models.execution_result import ViewExecutionResult
+from dbally.collections.results import ViewExecutionResult
 from dbally.iql import IQLQuery, syntax
 from dbally.views.methods_base import MethodsBaseView
 

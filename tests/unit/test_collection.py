@@ -8,7 +8,7 @@ from typing_extensions import Annotated
 
 from dbally._main import create_collection
 from dbally.collection import Collection, IndexUpdateError, NoViewFoundError
-from dbally.data_models.execution_result import ViewExecutionResult
+from dbally.collections.results import ViewExecutionResult
 from dbally.iql._exceptions import IQLError
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 from dbally.views.structured import BaseStructuredView

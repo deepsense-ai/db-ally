@@ -3,7 +3,7 @@
 
 from typing import List, Literal, Tuple
 
-from dbally.data_models.execution_result import ViewExecutionResult
+from dbally.collections.results import ViewExecutionResult
 from dbally.iql import IQLQuery
 from dbally.views.decorators import view_filter
 from dbally.views.exposed_functions import MethodParamWithTyping

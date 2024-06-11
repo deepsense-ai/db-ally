@@ -1,6 +1,6 @@
 """ dbally """
 
-from dbally.data_models.execution_result import ExecutionResult
+from dbally.collections import Collection, ExecutionResult
 from dbally.views import decorators
 from dbally.views.methods_base import MethodsBaseView
 from dbally.views.pandas_base import DataFrameBaseView
@@ -10,7 +10,6 @@ from dbally.views.structured import BaseStructuredView
 from .__version__ import __version__
 from ._main import create_collection
 from ._types import NOT_GIVEN, NotGiven
-from .collection import Collection
 from .embeddings.exceptions import (
     EmbeddingConnectionError,
     EmbeddingError,

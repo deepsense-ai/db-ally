@@ -7,38 +7,15 @@ from typing import Callable, Dict, List, Optional, Type, TypeVar
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
+from dbally.collections.exceptions import IndexUpdateError, NoViewFoundError
+from dbally.collections.results import ExecutionResult
 from dbally.data_models.audit import RequestEnd, RequestStart
-from dbally.data_models.execution_result import ExecutionResult
-from dbally.exceptions import DbAllyError
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.base import BaseView, IndexLocation
-
-
-class NoViewFoundError(DbAllyError):
-    """
-    Error raised when there is no view with the given name.
-    """
-
-
-class IndexUpdateError(DbAllyError):
-    """
-    Exception for when updating any of the Collection's similarity indexes fails.
-
-    Provides a dictionary mapping failed indexes to their
-    respective exceptions as the `failed_indexes` attribute.
-    """
-
-    def __init__(self, message: str, failed_indexes: Dict[AbstractSimilarityIndex, Exception]) -> None:
-        """
-        Args:
-            failed_indexes: Dictionary mapping failed indexes to their respective exceptions.
-        """
-        self.failed_indexes = failed_indexes
-        super().__init__(message)
 
 
 class Collection:

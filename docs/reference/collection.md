@@ -7,6 +7,6 @@
 
 ::: dbally.Collection
 
-::: dbally.data_models.execution_result.ExecutionResult
+::: dbally.collections.results.ExecutionResult
 
 ::: dbally.collection.IndexUpdateError

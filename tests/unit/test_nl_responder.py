@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.execution_result import ViewExecutionResult
+from dbally.collections.results import ViewExecutionResult
 from dbally.nl_responder.nl_responder import NLResponder
 from tests.unit.mocks import MockLLM
 
