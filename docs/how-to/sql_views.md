@@ -77,7 +77,7 @@ You need to connect to the database using SQLAlchemy before you can use your vie
 ```python
 from sqlalchemy import create_engine
 
-engine = create_engine('sqlite:///candidates.db')
+engine = create_engine('sqlite:///examples/recruiting/data/candidates.db')
 ```
 
 ## Registering the view

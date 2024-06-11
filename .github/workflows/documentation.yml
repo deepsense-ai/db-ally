@@ -1,8 +1,8 @@
 name: Build documentation
 
 on:
-  push:
-    branches: [main, master]
+  release:
+    types: [published]
 
 jobs:
   pages:

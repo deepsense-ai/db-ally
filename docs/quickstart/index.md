@@ -30,14 +30,14 @@ pip install dbally[litellm]
 
 ## Database Configuration
 
-In this guide, we will use an example SQLAlchemy database containing a single table named `candidates`. This table includes columns such as `id`, `name`, `country`, `years_of_experience`, `position`, `university`, `skills`, and `tags`. You can download the example database from [candidates.db](candidates.db). Alternatively, you can use your own database and models.
+In this guide, we will use an example SQLAlchemy database containing a single table named `candidates`. This table includes columns such as `id`, `name`, `country`, `years_of_experience`, `position`, `university`, `skills`, and `tags`. You can download the example database from [candidates.db](https://github.com/deepsense-ai/db-ally/tree/main/examples/recruiting/candidates.db). Alternatively, you can use your own database and models.
 
 To connect to the database using SQLAlchemy, you need an engine and your database models. Start by creating an engine:
 
 ```python
 from sqlalchemy import create_engine
 
-engine = create_engine('sqlite:///candidates.db')
+engine = create_engine('sqlite:///examples/recruiting/data/candidates.db')
 ```
 
 Next, define an SQLAlchemy model for the `candidates` table. You can either declare the `Candidate` model using [declarative mapping](https://docs.sqlalchemy.org/en/20/orm/mapping_styles.html#declarative-mapping) or generate it using [automap](https://docs.sqlalchemy.org/en/20/orm/extensions/automap.html). For simplicity, we'll use automap:

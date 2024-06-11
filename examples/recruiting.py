@@ -2,8 +2,8 @@ import asyncio
 from dataclasses import dataclass
 from typing import List
 
-from recruting.db import ENGINE, fill_candidate_table, get_recruitment_db_description
-from recruting.views import RecruitmentView
+from recruiting.db import ENGINE, fill_candidate_table, get_recruitment_db_description
+from recruiting.views import RecruitmentView
 
 import dbally
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
