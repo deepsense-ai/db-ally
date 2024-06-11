@@ -11,17 +11,19 @@ from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.llms.litellm import LiteLLM
 
 
-engine = create_engine('sqlite:///candidates.db')
+engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
 
 Base = automap_base()
 Base.prepare(autoload_with=engine)
 
 Candidate = Base.classes.candidates
 
+
 class CandidateView(SqlAlchemyBaseView):
     """
     A view for retrieving candidates from the database.
     """
+
     def get_select(self) -> sqlalchemy.Select:
         """
         Creates the initial SqlAlchemy select object, which will be used to build the query.
@@ -51,6 +53,7 @@ class CandidateView(SqlAlchemyBaseView):
         Filters candidates from a specific country.
         """
         return Candidate.country == country
+
 
 async def main():
     llm = LiteLLM(model_name="gpt-3.5-turbo")

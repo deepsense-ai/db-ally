@@ -16,7 +16,7 @@ from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 from dbally.llms.litellm import LiteLLM
 
 load_dotenv()
-engine = create_engine("sqlite:///candidates.db")
+engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
 
 Base = automap_base()
 Base.prepare(autoload_with=engine)

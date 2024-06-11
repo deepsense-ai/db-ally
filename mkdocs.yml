@@ -29,6 +29,7 @@ nav:
           - how-to/use_elastic_store.md
           - how-to/use_custom_similarity_store.md
           - how-to/update_similarity_indexes.md
+      - how-to/visualize_views.md
       - how-to/log_runs_to_langsmith.md
       - how-to/create_custom_event_handler.md
       - how-to/openai_assistants_integration.md

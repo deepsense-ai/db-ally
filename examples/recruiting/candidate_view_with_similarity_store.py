@@ -1,25 +1,15 @@
 # pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring
-import os
-import asyncio
-from typing_extensions import Annotated
 
-import asyncclick as click
-from dotenv import load_dotenv
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
+from typing_extensions import Annotated
 
-import dbally
-from dbally import decorators, SqlAlchemyBaseView
-from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
-from dbally.similarity import SimpleSqlAlchemyFetcher, SimilarityIndex
+from dbally import SqlAlchemyBaseView, decorators
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
-from dbally.llms.litellm import LiteLLM
-from dbally.similarity.elasticsearch_store import ElasticsearchStore
+from dbally.similarity import FaissStore, SimilarityIndex, SimpleSqlAlchemyFetcher
 
-load_dotenv()
 engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
-
 
 Base = automap_base()
 Base.prepare(autoload_with=engine)
@@ -32,14 +22,11 @@ country_similarity = SimilarityIndex(
         table=Candidate,
         column=Candidate.country,
     ),
-    store=ElasticsearchStore(
+    store=FaissStore(
+        index_dir="./similarity_indexes",
         index_name="country_similarity",
-        host=os.environ["ELASTIC_STORE_CONNECTION_STRING"],
-        ca_cert_path=os.environ["ELASTIC_CERT_PATH"],
-        http_user=os.environ["ELASTIC_AUTH_USER"],
-        http_password=os.environ["ELASTIC_USER_PASSWORD"],
         embedding_client=LiteLLMEmbeddingClient(
-            api_key=os.environ["OPENAI_API_KEY"],
+            model="text-embedding-3-small",  # to use openai embedding model
         ),
     ),
 )
@@ -79,28 +66,3 @@ class CandidateView(SqlAlchemyBaseView):
         Filters candidates from a specific country.
         """
         return Candidate.country == country
-
-
-@click.command()
-@click.argument("country", type=str, default="United States")
-@click.argument("years_of_experience", type=str, default="2")
-async def main(country="United States", years_of_experience="2"):
-    await country_similarity.update()
-    await country_similarity.update()
-    llm = LiteLLM(model_name="gpt-3.5-turbo", api_key=os.environ["OPENAI_API_KEY"])
-    collection = dbally.create_collection("recruitment", llm, event_handlers=[CLIEventHandler()])
-    collection.add(CandidateView, lambda: CandidateView(engine))
-
-    result = await collection.ask(
-        f"Find someone from the {country} with more than {years_of_experience} years of experience."
-    )
-
-    print(f"The generated SQL query is: {result.context.get('sql')}")
-    print()
-    print(f"Retrieved {len(result.results)} candidates:")
-    for candidate in result.results:
-        print(candidate)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
