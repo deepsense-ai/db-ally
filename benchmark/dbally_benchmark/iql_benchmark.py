@@ -24,7 +24,6 @@ from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError, default_iql_template
 from dbally.llms.litellm import LiteLLM
 from dbally.prompts.input_format import DefaultInputFormatter
-from dbally.utils.errors import UnsupportedQueryError
 from dbally.views.structured import BaseStructuredView
 
 
