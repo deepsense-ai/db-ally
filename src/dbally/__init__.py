@@ -8,17 +8,17 @@ from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 from dbally.views.structured import BaseStructuredView
 
 from .__version__ import __version__
-from ._exceptions import DbAllyError
 from ._main import create_collection
 from ._types import NOT_GIVEN, NotGiven
 from .collection import Collection
-from .embeddings._exceptions import (
+from .embeddings.exceptions import (
     EmbeddingConnectionError,
     EmbeddingError,
     EmbeddingResponseError,
     EmbeddingStatusError,
 )
-from .llms.clients._exceptions import LLMConnectionError, LLMError, LLMResponseError, LLMStatusError
+from .exceptions import DbAllyError
+from .llms.clients.exceptions import LLMConnectionError, LLMError, LLMResponseError, LLMStatusError
 
 __all__ = [
     "__version__",

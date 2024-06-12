@@ -6,9 +6,9 @@ import pandas as pd
 
 from dbally import BaseStructuredView
 from dbally.audit import CLIEventHandler
-from dbally.collection import Collection
+from dbally.collection import Collection, NoViewFoundError
+from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
 from dbally.prompts import PromptTemplateError
-from dbally.utils.errors import NoViewFoundError, UnsupportedQueryError
 
 
 async def create_gradio_interface(user_collection: Collection, preview_limit: int = 10) -> gradio.Interface:

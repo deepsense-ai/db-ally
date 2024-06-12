@@ -1,8 +1,10 @@
 import ast
 from typing import Optional, Union
 
+from dbally.exceptions import DbAllyError
 
-class IQLError(Exception):
+
+class IQLError(DbAllyError):
     """Base exception for all IQL parsing related exceptions."""
 
     def __init__(self, message: str, node: Union[ast.stmt, ast.expr], source: str) -> None:
