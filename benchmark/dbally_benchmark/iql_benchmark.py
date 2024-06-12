@@ -20,10 +20,10 @@ from omegaconf import DictConfig
 from sqlalchemy import create_engine
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.iql_generator.iql_format import DefaultIQLInputFormatter
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.iql_generator.iql_prompt_template import default_iql_template
 from dbally.llms.litellm import LiteLLM
+from dbally.prompts.input_format import DefaultInputFormatter
 from dbally.utils.errors import UnsupportedQueryError
 from dbally.views.structured import BaseStructuredView
 
@@ -33,7 +33,7 @@ async def _run_iql_for_single_example(
 ) -> IQLResult:
     filter_list = view.list_filters()
     event_tracker = EventTracker()
-    input_formatter = DefaultIQLInputFormatter(question=example.question, filters=filter_list)
+    input_formatter = DefaultInputFormatter(question=example.question, filters=filter_list)
 
     try:
         iql_filters, _ = await iql_generator.generate_iql(input_formatter=input_formatter, event_tracker=event_tracker)

@@ -1,10 +1,10 @@
 from typing import List, Optional, Tuple, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.iql_generator.iql_format import AbstractIQLInputFormatter
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template  # noqa
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
+from dbally.prompts.input_format import AbstractInputFormatter
 
 
 class IQLGenerator:
@@ -32,7 +32,7 @@ class IQLGenerator:
 
     async def generate_iql(
         self,
-        input_formatter: AbstractIQLInputFormatter,
+        input_formatter: AbstractInputFormatter,
         event_tracker: EventTracker,
         conversation: Optional[IQLPromptTemplate] = None,
         llm_options: Optional[LLMOptions] = None,

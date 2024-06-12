@@ -2,8 +2,8 @@ import copy
 from abc import abstractmethod
 from typing import Dict, List, Tuple
 
-from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate
 from dbally.prompts.few_shot import FewShotExample
+from dbally.prompts.prompt_template import PromptTemplate
 from dbally.views.exposed_functions import ExposedFunction
 
 
@@ -23,17 +23,17 @@ def _promptify_filters(
     return filters_for_prompt
 
 
-class AbstractIQLInputFormatter:
+class AbstractInputFormatter:
     """
     Formats provided parameters to a form acceptable by IQL prompt
     """
 
     @abstractmethod
-    def __call__(self, conversation_template: IQLPromptTemplate) -> Dict[str, str]:
+    def __call__(self, conversation_template: PromptTemplate) -> Dict[str, str]:
         pass
 
 
-class DefaultIQLInputFormatter(AbstractIQLInputFormatter):
+class DefaultInputFormatter(AbstractInputFormatter):
     """
     Formats provided parameters to a form acceptable by default IQL prompt
     """
@@ -42,14 +42,14 @@ class DefaultIQLInputFormatter(AbstractIQLInputFormatter):
         self.filters = filters
         self.question = question
 
-    def __call__(self, conversation_template: IQLPromptTemplate) -> Tuple[IQLPromptTemplate, Dict[str, str]]:
+    def __call__(self, conversation_template: PromptTemplate) -> Tuple[PromptTemplate, Dict[str, str]]:
         return conversation_template, {
             "filters": _promptify_filters(self.filters),
             "question": self.question,
         }
 
 
-class DefaultIQLFewShotInputFormatter(AbstractIQLInputFormatter):
+class DefaultFewShotInputFormatter(AbstractInputFormatter):
     """
     Formats provided parameters to a form acceptable by default IQL prompt.
     Calling it will inject `examples` before last message in a conversation.
@@ -65,7 +65,7 @@ class DefaultIQLFewShotInputFormatter(AbstractIQLInputFormatter):
         self.question = question
         self.examples = examples
 
-    def __call__(self, conversation_template: IQLPromptTemplate) -> Tuple[IQLPromptTemplate, Dict[str, str]]:
+    def __call__(self, conversation_template: PromptTemplate) -> Tuple[PromptTemplate, Dict[str, str]]:
         template_copy = copy.deepcopy(conversation_template)
         sys_msg = template_copy.chat[0]
         exisiting_msgs = [c for c in template_copy.chat[1:] if "is_example" not in c]

@@ -5,10 +5,10 @@ from typing import Dict, List, Optional
 from dbally.audit.event_tracker import EventTracker
 from dbally.data_models.execution_result import ViewExecutionResult
 from dbally.iql import IQLError, IQLQuery
-from dbally.iql_generator.iql_format import DefaultIQLFewShotInputFormatter, DefaultIQLInputFormatter
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
+from dbally.prompts.input_format import DefaultFewShotInputFormatter, DefaultInputFormatter
 from dbally.views.exposed_functions import ExposedFunction
 
 from ..similarity import AbstractSimilarityIndex
@@ -63,7 +63,7 @@ class BaseStructuredView(BaseView):
         iql_generator = self.get_iql_generator(llm)
 
         input_formatter = (
-            DefaultIQLFewShotInputFormatter(
+            DefaultFewShotInputFormatter(
                 question=query,
                 filters=filter_list,
                 examples=[
@@ -73,7 +73,7 @@ class BaseStructuredView(BaseView):
                 ],
             )
             if few_shot_list
-            else DefaultIQLInputFormatter(question=query, filters=filter_list)
+            else DefaultInputFormatter(question=query, filters=filter_list)
         )
 
         iql_filters, conversation = await iql_generator.generate_iql(
