@@ -1,4 +1,4 @@
-# Dataframe Base View
+# DataFrameBaseView
 
 
 !!! tip

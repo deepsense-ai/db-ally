@@ -4,7 +4,7 @@ In this guide, you will learn how to write a freeform view that uses a SQL datab
 
 ## Manual setup
 
-Initially, you may want to create your own freeform view manually. To do so, use the `BaseText2SQLView` class provided by db-ally. To define your view, create a class inheriting from `BaseText2SQLView` and implement the `get_tables` method, which returns a list of `TableConfig` objects:
+Initially, you may want to create your own freeform view manually. To do so, use the [`BaseText2SQLView`](../reference/views/text-to-sql.md#dbally.views.freeform.text2sql.view.BaseText2SQLView) class provided by db-ally. To define your view, create a class inheriting from [`BaseText2SQLView`](../reference/views/text-to-sql.md#dbally.views.freeform.text2sql.view.BaseText2SQLView) and implement the [`get_tables`](../reference/views/text-to-sql.md#dbally.views.freeform.text2sql.view.BaseText2SQLView.get_tables) method, which returns a list of [`TableConfig`](../reference/views/text-to-sql.md#dbally.views.freeform.text2sql.config.TableConfig) objects:
 
 ```python
 class CandidateView(BaseText2SQLView):
@@ -35,7 +35,7 @@ class CandidateView(BaseText2SQLView):
         ]
 ```
 
-The returned list contains `TableConfig` objects for each table in the database that the LLM should know about, answering the question. At this point you can decide what kind of data the LLM model should have access to, whether at the table or column level, you can limit the visibility of the data at this point.
+The returned list contains [`TableConfig`](../reference/views/text-to-sql.md#dbally.views.freeform.text2sql.config.TableConfig) objects for each table in the database that the LLM should know about, answering the question. At this point you can decide what kind of data the LLM model should have access to, whether at the table or column level, you can limit the visibility of the data at this point.
 
 !!! note
     As you may notice there is no need to define IQL specific features like filters, filtering and building query will be handled be the LLM in this case.
@@ -72,7 +72,7 @@ Manual configuration does not scale well for large databases, as writing any vie
 dbally generate-txt2sql-view
 ```
 
-When you run this command, you will be asked to enter the configuration settings for the autodiscovery process, which include a selection:
+When you run this command, you will be asked to enter the configuration settings for the autodiscovery process, which include selecting:
 
 - The path to the file where the view will be generated
 - The database connection string
