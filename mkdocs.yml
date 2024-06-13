@@ -38,10 +38,13 @@ nav:
       - reference/index.md
       - reference/collection.md
       - Views:
-          - reference/views/index.md
+        - reference/views/index.md
+        - Structured:
           - reference/views/structured.md
           - reference/views/databases.md
           - reference/views/dataframe.md
+        - Freeform:
+          - reference/views/text-to-sql.md
       - IQL:
           - reference/iql/index.md
           - reference/iql/iql_generator.md
