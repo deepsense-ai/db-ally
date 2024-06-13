@@ -17,10 +17,10 @@ nav:
       - concepts/nl_responder.md
   - How-to:
       - Using data sources:
-          - how-to/sql_views.md
+          - how-to/views/sql.md
           - how-to/views/text-to-sql.md
-          - how-to/pandas_views.md
-          - how-to/custom_views.md
+          - how-to/views/pandas.md
+          - how-to/views/custom.md
       - Using LLMs:
           - how-to/llms/litellm.md
           - how-to/llms/custom.md

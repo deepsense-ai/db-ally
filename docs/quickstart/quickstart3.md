@@ -15,7 +15,7 @@ Upon selecting the view, the AI model uses it to extract the relevant data from 
 Our collection already has a registered `CandidateView` that allows us to extract candidates from the database. Let's now define a `JobView` that can fetch job offers, using a different data source - a Pandas DataFrame.
 
 !!! info
-    For further information on utilizing Pandas DataFrames as a data source, refer to the [How-to: How-To: Use Pandas DataFrames with db-ally](../how-to/pandas_views.md) guide.
+    For further information on utilizing Pandas DataFrames as a data source, refer to the [How-to: How-To: Use Pandas DataFrames with db-ally](../how-to/views/pandas.md) guide.
 
 First, let's define the dataframe that will serve as our data source:
 
