@@ -18,6 +18,7 @@ nav:
   - How-to:
       - Using data sources:
           - how-to/sql_views.md
+          - how-to/custom_freeform_views.md
           - how-to/pandas_views.md
           - how-to/custom_views.md
       - Using LLMs:

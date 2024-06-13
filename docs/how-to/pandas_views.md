@@ -4,7 +4,7 @@ In this guide, you will learn how to write [structured views](../concepts/struct
 
 The example used in this guide is a DataFrame containing information about candidates. The DataFrame includes columns such as `id`, `name`, `country`, `years_of_experience`. This is the same use case as the one in the [Quickstart](../quickstart/index.md) and [Custom Views](./custom_views.md) guides. Please feel free to compare the different approaches.
 
-## The DataFrame
+## Data
 Here is an example of a DataFrame containing information about candidates:
 
 ```python
@@ -19,7 +19,7 @@ CANDIDATE_DATA = pd.DataFrame.from_records([
 ])
 ```
 
-## View Definition
+## View definition
 Views operating on Pandas DataFrames are defined by subclassing the `DataFrameBaseView` class:
 
 ```python
@@ -69,7 +69,7 @@ def senior_data_scientist_position(self) -> pd.Series:
         & (self.df.years_of_experience >= 3)
 ```
 
-# Registering the View
+## Registering the view
 To use the view, you need to create a [Collection](../concepts/collections.md) and register the view with it. This is done in the same manner as registering other types of views, but you need to provide the view with the DataFrame on which it should operate:
 
 ```python
@@ -94,5 +94,5 @@ Retrieved 1 candidates:
 {'id': 2, 'name': 'Jane Doe', 'position': 'Data Engineer', 'years_of_experience': 3, 'country': 'France'}
 ```
 
-## Full Example
+## Full example
 You can access the complete example here: [pandas_views_code.py](pandas_views_code.py)

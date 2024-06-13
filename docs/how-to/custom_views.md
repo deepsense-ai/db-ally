@@ -5,7 +5,7 @@
 
 In this guide, we'll show you how to create [structured views](../concepts/structured_views.md) that connect to custom data sources. This could be useful if you need to retrieve data from a REST API, a NoSQL database, or any other data source not supported by the built-in base views.
 
-# Summary
+## Intro
 Firstly, we will create a custom base view called `FilteredIterableBaseView` that retrieves data from a Python iterable and allows it to be filtered. It forms the base that implements data source-specific logic and lets other views inherit from it in order to define filters for specific use cases (similar to how `SqlAlchemyBaseView` is a base view provided by db-ally).
 
 Then, we will create a view called `CandidatesView` that inherits from `FilteredIterableBaseView` and represents a use case of retrieving a list of job candidates. We will define filters for this view.
@@ -53,7 +53,7 @@ class CandidateView(FilteredIterableBaseView):
 
 Lastly, we will illustrate how to use the `CandidatesView` like any other view in db-ally. We will create an instance of the view, add it to a collection, and start querying it.
 
-## Types of Custom Views
+## Types of custom views
 There are two main ways to create custom structured views:
 
 * By subclassing the `MethodsBaseView`: This is the most common method. These views expect filters to be defined as class methods and help manage them. All the built-in db-ally views use this method.
@@ -64,7 +64,7 @@ If you're not sure which method to choose, we recommend starting with the `Metho
 !!! note
     Both are methods of creating [structured views](../concepts/structured_views.md). If you're looking to create a [freeform view](../concepts/freeform_views.md), refer to the [Freeform Views](custom_freeform_views.md) guide instead.
 
-## The Example
+## Example
 Throughout the guide, we'll use an example of creating a custom base view called `FilteredIterableBaseView`. To keep things simple, the "data source" it uses is a list defined in Python. The goal is to demonstrate how to create a custom view and define filters for it. In most real-world scenarios, data would usually come from an external source, like a REST API or a database.
 
 Next, we are going to create a view that inherits from `FilteredIterableBaseView` and implements a use case of retrieving a list of job candidates. This is the same use case from the [Quickstart](../quickstart/index.md) guide - but this time we'll use a custom view instead of the built-in `SqlAlchemyBaseView`. For comparison, you can refer to the Quickstart guide.
@@ -83,7 +83,7 @@ class Candidate:
     country: str
 ```
 
-## Creating a Custom View
+## Creating a custom view
 In db-ally, the typical approach is to have a base view that inherits from `MethodsBaseView` and implements elements specific to a type of data source (for example, [`SqlAlchemyBaseView`](./sql_views.md) is a base view provided by db-ally). Subsequently, you can create views that inherit from this base view, reflecting business logic specific to given use cases, including defining the filter methods.
 
 For our example, let's create a base class called `FilteredIterableBaseView`:
@@ -170,7 +170,7 @@ def execute(self, dry_run: bool = False) -> ViewExecutionResult:
 
 The `execute` function gets the data (by calling the `get_data` method) and applies the combined filters to it. We're using the [`filter`](https://docs.python.org/3/library/functions.html#filter) function from Python's standard library to accomplish this. The filtered data is then returned as a list.
 
-## Creating a View
+## Creating a view
 Now that `FilteredIterableBaseView` is complete, we can create a view that inherits from it and represents the use case of retrieving a list of job candidates. We'll name this view `CandidatesView`:
 
 ```python
@@ -244,5 +244,5 @@ Retrieved 1 candidates:
 Candidate(id=2, name='Jane Doe', position='Data Engineer', years_of_experience=3, country='France')
 ```
 
-## Full Example
+## Full example
 You can access the complete example here: [custom_views_code.py](custom_views_code.py)
