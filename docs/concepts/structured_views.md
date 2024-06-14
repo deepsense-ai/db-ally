@@ -10,7 +10,7 @@ Given different natural language queries, a db-ally view will produce different 
 Each structured view can contain one or more “filters”, which the LLM may decide to choose and apply to the extracted data so that it meets the criteria specified in the natural language query. Given such a query, LLM chooses which filters to use, provides arguments to the filters, and connects the filters with Boolean operators. The LLM expresses these filter combinations using a special language called [IQL](iql.md), in which the defined view filters provide a layer of abstraction between the LLM and the raw syntax used to query the data source (e.g., SQL).
 
 !!! example
-    For instance, this is a simple [view that uses SQLAlchemy](../how-to/sql_views.md) to select data from specific columns in a SQL database. It contains a single filter, that the LLM may optionally use to control which table rows to fetch:
+    For instance, this is a simple [view that uses SQLAlchemy](../how-to/views/sql.md) to select data from specific columns in a SQL database. It contains a single filter, that the LLM may optionally use to control which table rows to fetch:
 
     ```python
     class CandidateView(SqlAlchemyBaseView):

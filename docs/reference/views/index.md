@@ -1,4 +1,4 @@
-# Base View classes
+# BaseView
 
 !!! tip
     * To understand the general idea better, visit [Concept: Views](../../concepts/views.md) and [Concept: Freeform Views](../../concepts/freeform_views.md)
