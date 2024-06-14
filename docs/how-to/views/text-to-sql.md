@@ -42,7 +42,7 @@ The returned list contains [`TableConfig`](../../reference/views/text-to-sql.md#
 
 ## Autodiscovery
 
-Db-ally allows you to automatically retrieve table configurations from any SQL database. You can also use `LLM` to fill in missing table descriptions, and suggest the use of a similarity index for a given column. To start the autodiscovery process, create an `AutodiscoveryBuilder` instance with the `configure_text2sql_auto_discovery` factory method, and then run the `discover` method to start the process.
+db-ally allows you to automatically retrieve table configurations from any SQL database. You can also use `LLM` to fill in missing table descriptions, and suggest the use of a similarity index for a given column. To start the autodiscovery process, create an `AutodiscoveryBuilder` instance with the `configure_text2sql_auto_discovery` factory method, and then run the `discover` method to start the process.
 
 ```python
 from dbally.llms.litellm import LiteLLM
@@ -106,5 +106,5 @@ llm = LiteLLM("gpt-3.5-turbo")
 collection = dbally.create_collection("text-to-sql", llm=llm)
 collection.add(CandidateView, lambda: CandidateView(db))
 
-response = await collection.ask("What is the meaning of life?")
+response = await collection.ask("Find me French candidates suitable for a senior data scientist position.")
 ```
