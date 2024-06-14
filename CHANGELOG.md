@@ -2,6 +2,39 @@
 
 
 
+## v0.3.0 (2024-06-14)
+
+### Documentation
+
+* docs(views): add docs for freeform views (#45) ([`825b8fe`](https://github.com/deepsense-ai/db-ally/commit/825b8fefd44bf74c80cdbc3eda304edc983fc8e9))
+
+* docs: Trigger the documentation build workflow only on release (#43) ([`6a1bf1d`](https://github.com/deepsense-ai/db-ally/commit/6a1bf1d26f6a874af48ceeb85cf21c7eb8c80e39))
+
+* docs: fix broken link ([`fa6d956`](https://github.com/deepsense-ai/db-ally/commit/fa6d9563974313f0806d52f51399fb346046ce2c))
+
+### Feature
+
+* feat(codegen): add text2sql views code generation (#40) ([`4284344`](https://github.com/deepsense-ai/db-ally/commit/42843443f42209955f7dc2273a3cdafb4a0c44ae))
+
+* feat: Gradio Adater implementation (#39)
+
+* Gradio Adater class implementation
+* Move / add views to example folder
+* Improve rich less CLIEventHandler output ([`83dded0`](https://github.com/deepsense-ai/db-ally/commit/83dded0cd018e9f324e0c9bb2d3954512cffa159))
+
+### Fix
+
+* fix: docs links ([`f5ffb6a`](https://github.com/deepsense-ai/db-ally/commit/f5ffb6af9e9d6f865b02706699bf6da94c3d95c1))
+
+* fix: exceptions imports ([`e0305ff`](https://github.com/deepsense-ai/db-ally/commit/e0305ffc9efaec3c78193f51ef8bf201bdc6adfb))
+
+### Refactor
+
+* refactor: move ExecutionResult to collection (#46) ([`eae24da`](https://github.com/deepsense-ai/db-ally/commit/eae24da3baddce06dbda575b08ef49b748d3af31))
+
+* refactor: exceptions definitions (#44) ([`d920f4b`](https://github.com/deepsense-ai/db-ally/commit/d920f4b4d503968d6b860d0712cbf1625bd0d427))
+
+
 ## v0.2.0 (2024-06-03)
 
 ### Chore
