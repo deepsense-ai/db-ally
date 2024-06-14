@@ -62,7 +62,7 @@ There are two main ways to create custom structured views:
 If you're not sure which method to choose, we recommend starting with the `MethodsBaseView`. It's simpler and easier to use, and you can switch to the `BaseStructuredView` later if you find you need more control over filter management. For this guide, we'll focus on the `MethodsBaseView`.
 
 !!! note
-    Both are methods of creating [structured views](../../concepts/structured_views.md). If you're looking to create a [freeform view](../../concepts/freeform_views.md), refer to the [Freeform Views](custom_freeform_views.md) guide instead.
+    Both are methods of creating [structured views](../../concepts/structured_views.md). If you're looking to create a [freeform view](../../concepts/freeform_views.md), refer to the [Freeform Views](text-to-sql.md) guide instead.
 
 ## Example
 Throughout the guide, we'll use an example of creating a custom base view called `FilteredIterableBaseView`. To keep things simple, the "data source" it uses is a list defined in Python. The goal is to demonstrate how to create a custom view and define filters for it. In most real-world scenarios, data would usually come from an external source, like a REST API or a database.
