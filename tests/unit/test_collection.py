@@ -7,8 +7,9 @@ import pytest
 from typing_extensions import Annotated
 
 from dbally._main import create_collection
-from dbally.collection import Collection, IndexUpdateError, NoViewFoundError
-from dbally.data_models.execution_result import ViewExecutionResult
+from dbally.collection import Collection
+from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
+from dbally.collection.results import ViewExecutionResult
 from dbally.iql._exceptions import IQLError
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 from dbally.views.structured import BaseStructuredView
@@ -438,7 +439,7 @@ async def test_update_similarity_indexes_error(
         await collection.update_similarity_indexes()
     assert (
         str(e.value) == "Failed to update similarity indexes for MockViewWithSimilarity.test_filter.dog, "
-        "MockViewWithSimilarity2.test_filter.monkey"
+        "MockViewWithSimilarity2.test_filter.monkey."
     )
     assert e.value.failed_indexes == {
         foo_index: foo_exception,

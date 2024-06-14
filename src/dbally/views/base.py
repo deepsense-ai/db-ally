@@ -2,7 +2,7 @@ import abc
 from typing import Dict, List, Optional, Tuple
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.execution_result import ViewExecutionResult
+from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.similarity import AbstractSimilarityIndex
