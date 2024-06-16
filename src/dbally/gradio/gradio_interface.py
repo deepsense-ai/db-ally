@@ -1,3 +1,4 @@
+import json
 from io import StringIO
 from typing import Tuple
 
@@ -112,7 +113,10 @@ class GradioAdapter:
                 question=question_query, return_natural_response=natural_language_flag
             )
             generated_query = str(execution_result.context)
-            data = pd.DataFrame.from_records(execution_result.results)
+            data = pd.DataFrame.from_records(
+                # make sure that results are json serializable
+                json.loads(json.dumps(execution_result.results, default=str))
+            )
             textual_response = str(execution_result.textual_response) if natural_language_flag else textual_response
         except UnsupportedQueryError:
             generated_query = {"Query": "unsupported"}
