@@ -29,7 +29,7 @@ class AbstractInputFormatter:
     """
 
     @abstractmethod
-    def __call__(self, conversation_template: PromptTemplate) -> Dict[str, str]:
+    def __call__(self, conversation_template: PromptTemplate) -> Tuple[PromptTemplate, Dict[str, str]]:
         pass
 
 
@@ -66,9 +66,21 @@ class DefaultFewShotInputFormatter(AbstractInputFormatter):
         self.examples = examples
 
     def __call__(self, conversation_template: PromptTemplate) -> Tuple[PromptTemplate, Dict[str, str]]:
+        """
+        Performs a deep copy of provided template and injects examples into chat history.
+        Also prepares filters and question to be included within the prompt.
+
+        Args:
+            conversation_template: a prompt template to use to inject few-shot examples.
+
+        Returns:
+            A tuple with deeply-copied and enriched with examples template
+            and a dictionary with formatted filters and a question.
+        """
+
         template_copy = copy.deepcopy(conversation_template)
         sys_msg = template_copy.chat[0]
-        exisiting_msgs = [c for c in template_copy.chat[1:] if "is_example" not in c]
+        exisiting_msgs = [message for message in template_copy.chat[1:] if "is_example" not in message]
         chat_examples = [
             c
             for e in self.examples
@@ -77,13 +89,12 @@ class DefaultFewShotInputFormatter(AbstractInputFormatter):
                 {"role": "assistant", "content": e.answer, "is_example": True},
             ]
         ]
-        new_chat = (
+
+        template_copy.chat = (
             sys_msg,
             *chat_examples,
             *exisiting_msgs,
         )
-
-        template_copy.chat = new_chat
 
         return template_copy, {
             "filters": _promptify_filters(self.filters),

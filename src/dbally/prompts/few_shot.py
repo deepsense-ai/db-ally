@@ -14,7 +14,6 @@ class FewShotExample:
         Args:
             question: sample question
             answer_expr: it can be either a stringified expression or a lambda for greater safety and code completions.
-                in lambda case, it should be a single line expression (otherwise output correctness is not guaranteed)
         """
         self.question = question
         self.answer_expr = answer_expr
@@ -22,16 +21,36 @@ class FewShotExample:
         if isinstance(self.answer_expr, str):
             self.answer = self.answer_expr
         else:
-            expr_source = textwrap.dedent(inspect.getsource(self.answer_expr))
-            expr_body = expr_source.replace("lambda:", "")
-            expr_body = re.sub("\\#.*\n", "\n", expr_body, flags=re.MULTILINE)
+            self.answer = self._parse_lambda(answer_expr)
 
-            for m_name in answer_expr.__code__.co_names:
-                expr_body = expr_body.replace(f"{answer_expr.__code__.co_freevars[0]}.{m_name}", m_name)
+    def _parse_lambda(self, expr: Callable) -> str:
+        """
+        Parses provided callable in order to extract the lambda code.
+        All comments and references to variables like `self` etc will be removed
+        to form a simple lambda representation.
 
-            self.answer = " ".join(expr_body.split()).strip().rstrip(",").replace("( ", "(").replace(" )", ")")
-            if self.answer.startswith("("):
-                self.answer = self.answer[1:-1]
+        Args:
+            expr: lambda expression to parse
+
+        Returns:
+            Parsed lambda in a form of cleaned up string
+        """
+        # extract lambda from code
+        expr_source = textwrap.dedent(inspect.getsource(expr))
+        expr_body = expr_source.replace("lambda:", "")
+
+        # clean up by removing comments, new lines, free vars (self etc)
+        parsed_expr = re.sub("\\#.*\n", "\n", expr_body, flags=re.MULTILINE)
+
+        for m_name in expr.__code__.co_names:
+            parsed_expr = parsed_expr.replace(f"{expr.__code__.co_freevars[0]}.{m_name}", m_name)
+
+        # clean up any dangling commas or leading and trailing brackets
+        parsed_expr = " ".join(parsed_expr.split()).strip().rstrip(",").replace("( ", "(").replace(" )", ")")
+        if parsed_expr.startswith("("):
+            parsed_expr = parsed_expr[1:-1]
+
+        return parsed_expr
 
     def __str__(self) -> str:
         return self.answer
