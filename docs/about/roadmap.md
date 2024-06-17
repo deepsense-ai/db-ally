@@ -1,8 +1,3 @@
----
-hide:
-  - navigation
----
-
 # Roadmap
 
 db-ally is actively developed and maintained by a core team at [deepsense.ai](https://deepsense.ai) and a community of contributors.
