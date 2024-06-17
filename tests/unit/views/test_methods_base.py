@@ -4,6 +4,7 @@
 from typing import List, Literal, Tuple
 
 import pytest
+
 from dbally.collection.results import ViewExecutionResult
 from dbally.iql import IQLQuery
 from dbally.views.decorators import few_shot, view_filter
