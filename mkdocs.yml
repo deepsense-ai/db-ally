@@ -73,8 +73,11 @@ nav:
       - Embeddings:
           - reference/embeddings/index.md
           - reference/embeddings/litellm.md
-  - Roadmap: roadmap.md
-
+  - About:
+    - about/roadmap.md
+    - about/contributing.md
+    - about/changelog.md
+    - about/contact.md
 theme:
   name: material
   icon:
