@@ -1,5 +1,5 @@
 import copy
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 from typing import Dict, List, Tuple
 
 from dbally.prompts.few_shot import FewShotExample
@@ -23,7 +23,7 @@ def _promptify_filters(
     return filters_for_prompt
 
 
-class AbstractInputFormatter:
+class InputFormatter(metaclass=ABCMeta):
     """
     Formats provided parameters to a form acceptable by IQL prompt
     """
@@ -33,7 +33,7 @@ class AbstractInputFormatter:
         pass
 
 
-class DefaultInputFormatter(AbstractInputFormatter):
+class DefaultInputFormatter(InputFormatter):
     """
     Formats provided parameters to a form acceptable by default IQL prompt
     """
@@ -49,7 +49,7 @@ class DefaultInputFormatter(AbstractInputFormatter):
         }
 
 
-class DefaultFewShotInputFormatter(AbstractInputFormatter):
+class DefaultFewShotInputFormatter(InputFormatter):
     """
     Formats provided parameters to a form acceptable by default IQL prompt.
     Calling it will inject `examples` before last message in a conversation.
