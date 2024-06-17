@@ -1,0 +1,17 @@
+name: 🚀 Feature Request
+description: Submit a proposal/request for a new db-ally feature.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing to db-ally!
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature description
+      description: A clear and concise description of the feature proposal
+      placeholder: Tell us what you want!
+    validations:
+      required: true
