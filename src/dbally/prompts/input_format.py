@@ -30,7 +30,15 @@ class InputFormatter(metaclass=ABCMeta):
 
     @abstractmethod
     def __call__(self, conversation_template: PromptTemplate) -> Tuple[PromptTemplate, Dict[str, str]]:
-        pass
+        """
+        Runs the input formatting for provided prompt template.
+
+        Args:
+            conversation_template: a prompt template to use.
+
+        Returns:
+            A tuple with template and a dictionary with formatted inputs.
+        """
 
 
 class DefaultInputFormatter(InputFormatter):
@@ -43,6 +51,15 @@ class DefaultInputFormatter(InputFormatter):
         self.question = question
 
     def __call__(self, conversation_template: PromptTemplate) -> Tuple[PromptTemplate, Dict[str, str]]:
+        """
+        Runs the input formatting for provided prompt template.
+
+        Args:
+            conversation_template: a prompt template to use.
+
+        Returns:
+            A tuple with template and a dictionary with formatted filters and a question.
+        """
         return conversation_template, {
             "filters": _promptify_filters(self.filters),
             "question": self.question,
