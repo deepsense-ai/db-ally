@@ -4,8 +4,7 @@
 from typing import List, Literal, Tuple
 
 import pytest
-
-from dbally.data_models.execution_result import ViewExecutionResult
+from dbally.collection.results import ViewExecutionResult
 from dbally.iql import IQLQuery
 from dbally.views.decorators import few_shot, view_filter
 from dbally.views.exposed_functions import MethodParamWithTyping

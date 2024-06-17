@@ -1,11 +1,11 @@
 # How-To: Use SQL databases with db-ally
 
-db-ally is a Python library that allows you to use natural language to query various data sources, including SQL databases. This guide will show you how to set up a [structured view](../concepts/structured_views.md) to query a SQL database using SQLAlchemy. The guide will work with [any database that SQLAlchemy supports](https://docs.sqlalchemy.org/en/20/dialects/), including SQLite, PostgreSQL, MySQL, Oracle, MS-SQL, Firebird, Sybase, and others.
+db-ally is a Python library that allows you to use natural language to query various data sources, including SQL databases. This guide will show you how to set up a [structured view](../../concepts/structured.md) to query a SQL database using SQLAlchemy. The guide will work with [any database that SQLAlchemy supports](https://docs.sqlalchemy.org/en/20/dialects/), including SQLite, PostgreSQL, MySQL, Oracle, MS-SQL, Firebird, Sybase, and others.
 
 ## Views
-The majority of the db-ally's codebase is independent of any particular kind of data source. The part that is specific to a data source is the view. A [view](../concepts/views.md) is a class that defines how to interact with a data source. It contains methods that define how to retrieve data from the data source and how to filter the data in response to natural language queries.
+The majority of the db-ally's codebase is independent of any particular kind of data source. The part that is specific to a data source is the view. A [view](../../concepts/views.md) is a class that defines how to interact with a data source. It contains methods that define how to retrieve data from the data source and how to filter the data in response to natural language queries.
 
-There are several methods for creating a view that connects to a SQL database, including [creating a custom view from scratch](./custom_views.md). However, in most cases the easiest will be to use the [`SqlAlchemyBaseView`][dbally.SqlAlchemyBaseView] class provided by db-ally. This tutorial is designed to work with [SQLAlchemy](https://www.sqlalchemy.org/), a popular SQL toolkit and Object-Relational Mapping (ORM) library for Python. To define your view, you will need to produce a class that inherits from `SqlAlchemyBaseView`and implement the `get_select` method, which returns a [SQLAlchemy `Select`](https://docs.sqlalchemy.org/en/20/core/selectable.html#sqlalchemy.sql.expression.Select) object:
+There are several methods for creating a view that connects to a SQL database, including [creating a custom view from scratch](./custom.md). However, in most cases the easiest will be to use the [`SqlAlchemyBaseView`][dbally.SqlAlchemyBaseView] class provided by db-ally. This tutorial is designed to work with [SQLAlchemy](https://www.sqlalchemy.org/), a popular SQL toolkit and Object-Relational Mapping (ORM) library for Python. To define your view, you will need to produce a class that inherits from `SqlAlchemyBaseView`and implement the `get_select` method, which returns a [SQLAlchemy `Select`](https://docs.sqlalchemy.org/en/20/core/selectable.html#sqlalchemy.sql.expression.Select) object:
 
 ```python
 from dbally import SqlAlchemyBaseView
@@ -41,7 +41,7 @@ For example, to only select the `name` and `country` columns, you might return a
         years_of_experience = Column(Integer)
     ```
 
-    Alternatively, you can use [SQLAlchemy's automap feature](https://docs.sqlalchemy.org/en/20/orm/extensions/automap.html) to automatically generate the model from the database schema. See the [Quickstart](../quickstart/index.md) for an example of how this is done.
+    Alternatively, you can use [SQLAlchemy's automap feature](https://docs.sqlalchemy.org/en/20/orm/extensions/automap.html) to automatically generate the model from the database schema. See the [Quickstart](../../quickstart/index.md) for an example of how this is done.
 
 ## Filters
 In addition to the `get_select` method, you can define filter methods in your view. A filter method is a method that takes some parameters and returns a [SQLAlchemy `ColumnElement` object](https://docs.sqlalchemy.org/en/20/core/sqlelement.html#sqlalchemy.sql.expression.ColumnElement). This object represents a condition that can be used to filter the data in the database. See the [SQLAlchemy documentation on `where` clauses](https://docs.sqlalchemy.org/en/20/tutorial/data_select.html#the-where-clause) for more details - any condition that can be used in a `where` clause can be returned from a filter method.
