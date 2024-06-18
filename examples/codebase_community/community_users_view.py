@@ -1,5 +1,5 @@
 import sqlalchemy
-from sqlalchemy import MetaData, create_engine
+from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 
 from dbally import SqlAlchemyBaseView

@@ -1,9 +1,10 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
-from . import ExecutionResult, DbAllyError
-from .audit import EventHandler
-from .collection import Collection, NoViewFoundError
+import dbally
 from dbally.llms.clients.base import LLMOptions
+
+from .audit import EventHandler
+from .collection import Collection
 from .collection.exceptions import NoCollectionFound
 from .views.base import BaseView
 
@@ -27,12 +28,20 @@ class MultiCollection:
         self._collections = {collection.name: collection for collection in collections_list}
         self.name = name
 
-    def add(self, collection: Collection, priority=None) -> None:
+    def add(self, collection: Collection, priority: Optional[int]) -> None:
+        """
+        Add new collection to list
+
+        Args:
+            collection: Collection to add
+            priority: Hierarchy of collection
+
+        """
         index = len(self._collection_order) if not priority else priority
         self._collection_order.insert(index, collection.name)
         self._collections[collection.name] = collection
 
-    def add_event_handler(self, event_handler: EventHandler):
+    def add_event_handler(self, event_handler: EventHandler) -> None:
         """
         Adds an event handler to the list of event handlers.
 
@@ -42,7 +51,7 @@ class MultiCollection:
         for collection in self._collections.values():
             collection.add_event_handler(event_handler)
 
-    def list(self):
+    def list(self) -> Dict[str, str]:
         """
         Lists all registered view names and their descriptions
 
@@ -65,13 +74,13 @@ class MultiCollection:
             Collection
 
         Raises:
-             NoViewFoundError: If there is no view with the given name
+             NoCollectionFound: If there is no view with the given name
         """
 
         collection = self._collections.get(collection_name)
 
         if not collection:
-            raise ValueError
+            raise NoCollectionFound
 
         return collection
 
@@ -89,14 +98,12 @@ class MultiCollection:
              NoCollectionFound: If there is no collection with the given name
         """
 
-        if view_name not in self.list().keys():
-            raise NoCollectionFound
-
         for collection in self._collections.values():
-            collection_found = view_name in collection.list().keys()
-            if collection_found:
-                selected_collection = collection.get(view_name)
+            selected_collection = collection.get(view_name)
+            if selected_collection:
                 return selected_collection
+
+        raise NoCollectionFound
 
     async def ask(
         self,
@@ -104,7 +111,7 @@ class MultiCollection:
         dry_run: bool = False,
         return_natural_response: bool = False,
         llm_options: Optional[LLMOptions] = None,
-    ) -> ExecutionResult:
+    ) -> dbally.ExecutionResult:
         """
         Ask question in a text form and retrieve the answer based on the available views with hierarchical order.
         The order is set by collection place on the collection list.
@@ -122,8 +129,8 @@ class MultiCollection:
                 dry_run: if True, only generate the query without executing it
                 return_natural_response: if True (and dry_run is False as natural response requires query results),
                     the natural response will be included in the answer
-                llm_options: options to use for the LLM client. If provided, these options will be merged with the default
-                    options provided to the LLM client, prioritizing option values other than NOT_GIVEN
+                llm_options: options to use for the LLM client. If provided, these options will be merged with the
+                    default options provided to the LLM client, prioritizing option values other than NOT_GIVEN
 
             Returns:
                 ExecutionResult object representing the result of the query execution.
@@ -144,9 +151,9 @@ class MultiCollection:
                     return_natural_response=return_natural_response,
                     llm_options=llm_options,
                 )
-            except DbAllyError:
+            except dbally.DbAllyError:
                 print("Found exception")
         if not result:
-            raise DbAllyError
+            raise dbally.DbAllyError
 
         return result

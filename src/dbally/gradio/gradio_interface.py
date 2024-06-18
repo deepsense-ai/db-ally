@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from io import StringIO
 import json
-from typing import Any, Dict, List, Tuple
+from io import StringIO
+from typing import Any
 
 import gradio
 import pandas as pd
@@ -47,7 +47,7 @@ class GradioAdapter:
         self.collection = None
         self.log = StringIO()
 
-    def _load_gradio_data(self, preview_dataframe, label, empty_warning=None) -> Tuple[gradio.DataFrame, gradio.Label]:
+    def _load_gradio_data(self, preview_dataframe, label, empty_warning=None) -> tuple[gradio.DataFrame, gradio.Label]:
         if not empty_warning:
             empty_warning = "Preview not available"
 
@@ -61,7 +61,7 @@ class GradioAdapter:
 
     async def _ui_load_preview_data(
         self, selected_view_name: str
-    ) -> Tuple[gradio.DataFrame, gradio.Label, None, None, None]:
+    ) -> tuple[gradio.DataFrame, gradio.Label, None, None, None]:
         """
         Asynchronously loads preview data for a selected view name.
 
@@ -101,7 +101,7 @@ class GradioAdapter:
 
     async def _ui_ask_query(
         self, question_query: str, natural_language_flag: bool
-    ) -> Tuple[gradio.DataFrame, gradio.Label, gradio.Text, gradio.Text, str]:
+    ) -> tuple[gradio.DataFrame, gradio.Label, gradio.Text, gradio.Text, str]:
         """
         Asynchronously processes a query and returns the results.
 
@@ -144,7 +144,7 @@ class GradioAdapter:
             log_content,
         )
 
-    def _clear_results(self) -> Tuple[gradio.DataFrame, gradio.Label, gradio.Text, gradio.Text]:
+    def _clear_results(self) -> tuple[gradio.DataFrame, gradio.Label, gradio.Text, gradio.Text]:
         preview_dataframe = self._load_preview_data(self._load_preview_data)
         gradio_preview_dataframe, empty_frame_label = self._load_gradio_data(preview_dataframe, "Preview")
 
@@ -156,7 +156,7 @@ class GradioAdapter:
         )
 
     @staticmethod
-    def _load_results_into_dataframe(results: List[Dict[str, Any]]) -> pd.DataFrame:
+    def _load_results_into_dataframe(results: list[dict[str, Any]]) -> pd.DataFrame:
         """
         Load the results into a pandas DataFrame. Makes sure that the results are json serializable.
 

@@ -4,13 +4,12 @@ import asyncio
 from codebase_community.community_users_view import CommunityUsersView
 from recruiting.candidate_view_with_similarity_store import CandidateView, country_similarity, engine
 from recruiting.cypher_text2sql_view import SampleText2SQLViewCyphers, create_freeform_memory_engine
+from sqlalchemy import create_engine
 
 import dbally
 from dbally.audit import CLIEventHandler
 from dbally.gradio import create_gradio_interface
 from dbally.llms.litellm import LiteLLM
-
-from sqlalchemy import create_engine
 
 cm_engine = create_engine("postgresql+pg8000://postgres:ikar89pl@localhost:5432/codebase_community")
 

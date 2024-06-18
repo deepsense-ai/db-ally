@@ -66,4 +66,24 @@ def create_collection(
 
 
 def create_multicollection(name: str, collection_list: List[Collection]) -> MultiCollection:
+    """
+    Create a new [Collection](collection.md) that is a container for registering views and the\
+    main entrypoint to db-ally features.
+
+    Unlike instantiating a [Collection][dbally.Collection] directly, this function\
+    provides a set of default values for various dependencies like LLM client, view selector,\
+    IQL generator, and NL responder.
+
+    Args:
+        name: Name of the collection is available for [Event handlers](event_handlers/index.md) and is\
+        used to distinguish different db-ally runs.
+        collection_list: NL responder used by the collection to respond to natural language queries. If None,\
+        a new instance of [NLResponder][dbally.nl_responder.nl_responder.NLResponder] will be used.
+
+    Returns:
+        a new instance of db-ally Collection
+
+    Raises:
+        ValueError: if default LLM client is not configured
+    """
     return MultiCollection(name, collection_list)
