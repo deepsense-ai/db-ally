@@ -1,4 +1,4 @@
-# Structured View classes
+# BaseStructuredView
 
 !!! tip
     * To understand the general idea better, visit [Concept: Structured Views](../../concepts/structured_views.md)

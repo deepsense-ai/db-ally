@@ -5,8 +5,10 @@
 
 ::: dbally.create_collection
 
-::: dbally.Collection
+::: dbally.collection.Collection
 
-::: dbally.data_models.execution_result.ExecutionResult
+::: dbally.collection.results.ExecutionResult
 
-::: dbally.collection.IndexUpdateError
+::: dbally.collection.exceptions.IndexUpdateError
+
+::: dbally.collection.exceptions.NoViewFoundError

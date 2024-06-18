@@ -3,6 +3,8 @@ name: Build documentation
 on:
   release:
     types: [published]
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   pages:

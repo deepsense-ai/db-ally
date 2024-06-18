@@ -1,11 +1,11 @@
 # How-To: Use custom data sources with db-ally
 
 !!! note
-    This is an advanced topic. If you're looking to create a view that retrieves data from an SQL database, please refer to the [SQL Views](sql_views.md) guide instead.
+    This is an advanced topic. If you're looking to create a view that retrieves data from an SQL database, please refer to the [SQL Views](sql.md) guide instead.
 
-In this guide, we'll show you how to create [structured views](../concepts/structured_views.md) that connect to custom data sources. This could be useful if you need to retrieve data from a REST API, a NoSQL database, or any other data source not supported by the built-in base views.
+In this guide, we'll show you how to create [structured views](../../concepts/structured_views.md) that connect to custom data sources. This could be useful if you need to retrieve data from a REST API, a NoSQL database, or any other data source not supported by the built-in base views.
 
-# Summary
+## Intro
 Firstly, we will create a custom base view called `FilteredIterableBaseView` that retrieves data from a Python iterable and allows it to be filtered. It forms the base that implements data source-specific logic and lets other views inherit from it in order to define filters for specific use cases (similar to how `SqlAlchemyBaseView` is a base view provided by db-ally).
 
 Then, we will create a view called `CandidatesView` that inherits from `FilteredIterableBaseView` and represents a use case of retrieving a list of job candidates. We will define filters for this view.
@@ -53,7 +53,7 @@ class CandidateView(FilteredIterableBaseView):
 
 Lastly, we will illustrate how to use the `CandidatesView` like any other view in db-ally. We will create an instance of the view, add it to a collection, and start querying it.
 
-## Types of Custom Views
+## Types of custom views
 There are two main ways to create custom structured views:
 
 * By subclassing the `MethodsBaseView`: This is the most common method. These views expect filters to be defined as class methods and help manage them. All the built-in db-ally views use this method.
@@ -62,12 +62,12 @@ There are two main ways to create custom structured views:
 If you're not sure which method to choose, we recommend starting with the `MethodsBaseView`. It's simpler and easier to use, and you can switch to the `BaseStructuredView` later if you find you need more control over filter management. For this guide, we'll focus on the `MethodsBaseView`.
 
 !!! note
-    Both are methods of creating [structured views](../concepts/structured_views.md). If you're looking to create a [freeform view](../concepts/freeform_views.md), refer to the [Freeform Views](custom_freeform_views.md) guide instead.
+    Both are methods of creating [structured views](../../concepts/structured_views.md). If you're looking to create a [freeform view](../../concepts/freeform_views.md), refer to the [Freeform Views](text-to-sql.md) guide instead.
 
-## The Example
+## Example
 Throughout the guide, we'll use an example of creating a custom base view called `FilteredIterableBaseView`. To keep things simple, the "data source" it uses is a list defined in Python. The goal is to demonstrate how to create a custom view and define filters for it. In most real-world scenarios, data would usually come from an external source, like a REST API or a database.
 
-Next, we are going to create a view that inherits from `FilteredIterableBaseView` and implements a use case of retrieving a list of job candidates. This is the same use case from the [Quickstart](../quickstart/index.md) guide - but this time we'll use a custom view instead of the built-in `SqlAlchemyBaseView`. For comparison, you can refer to the Quickstart guide.
+Next, we are going to create a view that inherits from `FilteredIterableBaseView` and implements a use case of retrieving a list of job candidates. This is the same use case from the [Quickstart](../../quickstart/index.md) guide - but this time we'll use a custom view instead of the built-in `SqlAlchemyBaseView`. For comparison, you can refer to the Quickstart guide.
 
 Before we start, let's define a simple data class to represent a candidate:
 
@@ -83,8 +83,8 @@ class Candidate:
     country: str
 ```
 
-## Creating a Custom View
-In db-ally, the typical approach is to have a base view that inherits from `MethodsBaseView` and implements elements specific to a type of data source (for example, [`SqlAlchemyBaseView`](./sql_views.md) is a base view provided by db-ally). Subsequently, you can create views that inherit from this base view, reflecting business logic specific to given use cases, including defining the filter methods.
+## Creating a custom view
+In db-ally, the typical approach is to have a base view that inherits from `MethodsBaseView` and implements elements specific to a type of data source (for example, [`SqlAlchemyBaseView`](sql.md) is a base view provided by db-ally). Subsequently, you can create views that inherit from this base view, reflecting business logic specific to given use cases, including defining the filter methods.
 
 For our example, let's create a base class called `FilteredIterableBaseView`:
 
@@ -100,7 +100,7 @@ class FilteredIterableBaseView(MethodsBaseView):
 For now, this class is empty, but we'll build upon it in the following sections.
 
 ## Specifying how filters should be applied
-Classes that inherit from `FilteredIterableBaseView` can define filters as methods. The LLM will choose which of these filters to use, feed them with arguments, and determine how to combine them using boolean operators. To achieve this, the LLM uses its own language, [IQL](../concepts/iql.md). db-ally translates the IQL expressions and passes the parsed IQL tree to your view via the `apply_filters` method. This method is responsible for identifying the selected filter methods and applying them to the data (which could vary based on the data source).
+Classes that inherit from `FilteredIterableBaseView` can define filters as methods. The LLM will choose which of these filters to use, feed them with arguments, and determine how to combine them using boolean operators. To achieve this, the LLM uses its own language, [IQL](../../concepts/iql.md). db-ally translates the IQL expressions and passes the parsed IQL tree to your view via the `apply_filters` method. This method is responsible for identifying the selected filter methods and applying them to the data (which could vary based on the data source).
 
 Let's implement the required `apply_filters` method in our `FilteredIterableBaseView`. Additionally, we'll create a helper method, `build_filter_node`, responsible for handling a single node of the IQL tree (either a filter or a logical operator). We'll use recursion to handle these nodes since they can have children (a logical operator can have two children that are filters, for instance).
 
@@ -154,7 +154,7 @@ import abc
 from typing import Callable, Any, Iterable
 
 from dbally.iql import IQLQuery
-from dbally.data_models.execution_result import ViewExecutionResult
+from dbally.collection.results import ViewExecutionResult
 
 @abc.abstractmethod
 def get_data(self) -> Iterable:
@@ -170,7 +170,7 @@ def execute(self, dry_run: bool = False) -> ViewExecutionResult:
 
 The `execute` function gets the data (by calling the `get_data` method) and applies the combined filters to it. We're using the [`filter`](https://docs.python.org/3/library/functions.html#filter) function from Python's standard library to accomplish this. The filtered data is then returned as a list.
 
-## Creating a View
+## Creating a view
 Now that `FilteredIterableBaseView` is complete, we can create a view that inherits from it and represents the use case of retrieving a list of job candidates. We'll name this view `CandidatesView`:
 
 ```python
@@ -244,5 +244,5 @@ Retrieved 1 candidates:
 Candidate(id=2, name='Jane Doe', position='Data Engineer', years_of_experience=3, country='France')
 ```
 
-## Full Example
+## Full example
 You can access the complete example here: [custom_views_code.py](custom_views_code.py)

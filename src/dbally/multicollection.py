@@ -1,24 +1,20 @@
-from functools import reduce
+from typing import List, Optional
 
-import asyncio
-import inspect
-import textwrap
-import time
-from collections import defaultdict
-from typing import Callable, Dict, List, Optional, Type, TypeVar
-
+from . import ExecutionResult, DbAllyError
+from .audit import EventHandler
 from .collection import Collection, NoViewFoundError
-from dbally.data_models.execution_result import ExecutionResult
 from dbally.llms.clients.base import LLMOptions
+from .collection.exceptions import NoCollectionFound
 from .views.base import BaseView
 
 
 class MultiCollection:
     """
-    Collection is a container for a set of views that can be used by db-ally to answer user questions.
+    Multicollection is a container for a set of collections. Collections are accessed hierarchically.
+    They were designed as a fallback mechanism.
 
     Tip:
-        It is recommended to create new collections using the [`dbally.create_colletion`][dbally.create_collection]\
+        It is recommended to create new Multicollection using the [`dbally.create_mulicolletion`]
         function instead of instantiating this class directly.
     """
 
@@ -36,27 +32,47 @@ class MultiCollection:
         self._collection_order.insert(index, collection.name)
         self._collections[collection.name] = collection
 
-    def list_collection_names(self):
-        return [collection_name for collection_name in self._collection_order]
+    def add_event_handler(self, event_handler: EventHandler):
+        """
+        Adds an event handler to the list of event handlers.
+
+        Args:
+            event_handler: The event handler to be added.
+        """
+        for collection in self._collections.values():
+            collection.add_event_handler(event_handler)
+
+    def list(self):
+        """
+        Lists all registered view names and their descriptions
+
+        Returns:
+            Dictionary of view names and descriptions
+        """
+        result_dict = {}
+        for collection in self._collections.values():
+            result_dict.update(collection.list())
+        return result_dict
 
     def get_collection(self, collection_name: str) -> Collection:
         """
-        Returns an instance of the view with the given name
+        Returns an instance of the collection with the given name
 
         Args:
             collection_name: Name of the collection to return
 
         Returns:
-            View instance
+            Collection
 
         Raises:
              NoViewFoundError: If there is no view with the given name
         """
 
-        if collection_name not in self.list_collection_names():
+        collection = self._collections.get(collection_name)
+
+        if not collection:
             raise ValueError
 
-        collection = self._collections[collection_name]
         return collection
 
     def get(self, view_name: str) -> BaseView:
@@ -70,30 +86,17 @@ class MultiCollection:
             View instance
 
         Raises:
-             NoViewFoundError: If there is no view with the given name
+             NoCollectionFound: If there is no collection with the given name
         """
 
-        print(f"looking for {view_name}")
+        if view_name not in self.list().keys():
+            raise NoCollectionFound
+
         for collection in self._collections.values():
             collection_found = view_name in collection.list().keys()
             if collection_found:
                 selected_collection = collection.get(view_name)
-                print(f"found collection {view_name}")
                 return selected_collection
-
-        raise NoViewFoundError
-
-    def get_collections_list(self):
-        return self._collections.values()
-
-    def list(self) -> List[str]:
-        """
-        Lists all registered view names and their descriptions
-
-        Returns:
-            Dictionary of view names and descriptions
-        """
-        return self._collection_order
 
     async def ask(
         self,
@@ -102,8 +105,35 @@ class MultiCollection:
         return_natural_response: bool = False,
         llm_options: Optional[LLMOptions] = None,
     ) -> ExecutionResult:
+        """
+        Ask question in a text form and retrieve the answer based on the available views with hierarchical order.
+        The order is set by collection place on the collection list.
 
-        start_time = time.monotonic()
+            Question answering is composed of following steps:
+                1. View Selection
+                2. IQL Generation
+                3. IQL Parsing
+                4. Query Building
+                5. Query Execution
+
+            Args:
+                question: question posed using natural language representation e.g\
+                "What job offers for Data Scientists do we have?"
+                dry_run: if True, only generate the query without executing it
+                return_natural_response: if True (and dry_run is False as natural response requires query results),
+                    the natural response will be included in the answer
+                llm_options: options to use for the LLM client. If provided, these options will be merged with the default
+                    options provided to the LLM client, prioritizing option values other than NOT_GIVEN
+
+            Returns:
+                ExecutionResult object representing the result of the query execution.
+
+            Raises:
+                ValueError: if collection is empty
+                IQLError: if incorrect IQL was generated `n_retries` amount of times.
+                ValueError: if incorrect IQL was generated `n_retries` amount of times.
+        """
+
         result = None
         for collection_name in self._collection_order:
             try:
@@ -114,9 +144,9 @@ class MultiCollection:
                     return_natural_response=return_natural_response,
                     llm_options=llm_options,
                 )
-            except Exception:
+            except DbAllyError:
                 print("Found exception")
-
-            # if result.results
+        if not result:
+            raise DbAllyError
 
         return result
