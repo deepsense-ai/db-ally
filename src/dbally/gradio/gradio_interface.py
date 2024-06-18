@@ -1,17 +1,21 @@
+from __future__ import annotations
+
 from io import StringIO
 from typing import Tuple
 
 import gradio
 import pandas as pd
 
-from dbally import BaseStructuredView
+from dbally import BaseStructuredView, MultiCollection
 from dbally.audit import CLIEventHandler
 from dbally.collection import Collection, NoViewFoundError
 from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
 from dbally.prompts import PromptTemplateError
 
 
-async def create_gradio_interface(user_collection: Collection, preview_limit: int = 10) -> gradio.Interface:
+async def create_gradio_interface(
+    user_collection: Collection | MultiCollection, preview_limit: int = 10
+) -> gradio.Interface:
     """Adapt and integrate data collection and query execution with Gradio interface components.
 
     Args:
@@ -81,7 +85,11 @@ class GradioAdapter:
         Returns:
             A tuple containing the preview dataframe
         """
-        selected_view = self.collection.get(selected_view_name)
+        if isinstance(self.collection, MultiCollection):
+            selected_view = self.collection.get(selected_view_name)
+        else:
+            selected_view = self.collection.get(selected_view_name)
+
         if issubclass(type(selected_view), BaseStructuredView):
             selected_view_results = selected_view.execute()
             preview_dataframe = pd.DataFrame.from_records(selected_view_results.results).head(self.preview_limit)
@@ -136,7 +144,7 @@ class GradioAdapter:
         )
 
     def _clear_results(self) -> Tuple[gradio.DataFrame, gradio.Label, gradio.Text, gradio.Text]:
-        preview_dataframe = self._load_preview_data(self.selected_view_name)
+        preview_dataframe = self._load_preview_data(self._load_preview_data)
         gradio_preview_dataframe, empty_frame_label = self._load_gradio_data(preview_dataframe, "Preview")
 
         return (
@@ -146,7 +154,9 @@ class GradioAdapter:
             gradio.Text(visible=False),
         )
 
-    async def create_interface(self, user_collection: Collection, preview_limit: int) -> gradio.Interface:
+    async def create_interface(
+        self, user_collection: Collection | MultiCollection, preview_limit: int
+    ) -> gradio.Interface:
         """
         Creates a Gradio interface for interacting with the user collection and similarity stores.
 
@@ -160,12 +170,24 @@ class GradioAdapter:
 
         self.preview_limit = preview_limit
         self.collection = user_collection
-        self.collection.add_event_handler(CLIEventHandler(self.log))
+        if isinstance(self.collection, MultiCollection):
+            for collection in self.collection.get_collections_list():
+                collection.add_event_handler(CLIEventHandler(self.log))
+        else:
+            self.collection.add_event_handler(CLIEventHandler(self.log))
 
         data_preview_frame = pd.DataFrame()
         question_interactive = False
 
-        view_list = [*user_collection.list()]
+        if isinstance(user_collection, MultiCollection):
+            view_list = []
+            for collection_name in user_collection.list():
+                view_list += list(user_collection.get_collection(collection_name).list().keys())
+
+        else:
+            view_list = [*user_collection.list()]
+
+        print(f"view list {view_list[0]}")
         if view_list:
             self.selected_view_name = view_list[0]
             data_preview_frame = self._load_preview_data(self.selected_view_name)

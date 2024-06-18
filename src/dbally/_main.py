@@ -3,6 +3,7 @@ from typing import List, Optional
 from .audit.event_handlers.base import EventHandler
 from .collection import Collection
 from .llms import LLM
+from .multicollection import MultiCollection
 from .nl_responder.nl_responder import NLResponder
 from .view_selection.base import ViewSelector
 from .view_selection.llm_view_selector import LLMViewSelector
@@ -62,3 +63,7 @@ def create_collection(
         llm=llm,
         event_handlers=event_handlers,
     )
+
+
+def create_multicollection(name: str, collection_list: List[Collection]) -> MultiCollection:
+    return MultiCollection(name, collection_list)

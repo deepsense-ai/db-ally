@@ -8,7 +8,7 @@ from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 from dbally.views.structured import BaseStructuredView
 
 from .__version__ import __version__
-from ._main import create_collection
+from ._main import create_collection, create_multicollection
 from ._types import NOT_GIVEN, NotGiven
 from .collection import Collection
 from .embeddings.exceptions import (
@@ -23,10 +23,12 @@ from .llms.clients.exceptions import LLMConnectionError, LLMError, LLMResponseEr
 __all__ = [
     "__version__",
     "create_collection",
+    "create_multicollection",
     "decorators",
     "MethodsBaseView",
     "SqlAlchemyBaseView",
     "Collection",
+    "MultiCollection",
     "BaseStructuredView",
     "DataFrameBaseView",
     "ExecutionResult",
@@ -42,6 +44,8 @@ __all__ = [
     "NotGiven",
     "NOT_GIVEN",
 ]
+
+from .multicollection import MultiCollection
 
 # Update the __module__ attribute for exported symbols so that
 # error messages point to this module instead of the module

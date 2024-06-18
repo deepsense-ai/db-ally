@@ -11,10 +11,9 @@ from dbally.similarity import FaissStore, SimilarityIndex, SimpleSqlAlchemyFetch
 
 engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
 
-Base = automap_base()
-Base.prepare(autoload_with=engine)
-
-Candidate = Base.classes.candidates
+Base1 = automap_base()
+Base1.prepare(autoload_with=engine)
+Candidate = Base1.classes.candidates
 
 country_similarity = SimilarityIndex(
     fetcher=SimpleSqlAlchemyFetcher(
