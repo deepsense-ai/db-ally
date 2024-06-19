@@ -1,3 +1,5 @@
+from typing import Optional
+
 from dbally.audit.events import Event
 
 
@@ -7,7 +9,7 @@ class EventSpan:
     """
 
     def __init__(self) -> None:
-        self.data = None
+        self.data: Optional[Event] = None
 
     def __call__(self, data: Event) -> None:
         """
