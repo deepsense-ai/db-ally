@@ -1,6 +1,6 @@
 from typing import Any, Optional, Union
 
-from dbally.data_models.audit import LLMEvent, SimilarityEvent
+from dbally.audit.events import LLMEvent, SimilarityEvent
 
 
 class EventSpan:

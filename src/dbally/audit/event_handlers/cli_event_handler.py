@@ -15,7 +15,7 @@ except ImportError:
     pprint = print  # type: ignore
 
 from dbally.audit.event_handlers.base import EventHandler
-from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
+from dbally.audit.events import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 _RICH_FORMATING_KEYWORD_SET = {"green", "orange", "grey", "bold", "cyan"}
 _RICH_FORMATING_PATTERN = rf"\[.*({'|'.join(_RICH_FORMATING_KEYWORD_SET)}).*\]"

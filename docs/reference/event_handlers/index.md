@@ -10,10 +10,10 @@ db-ally provides an `EventHandler` abstract class that can be used to log the ru
 Each run of [dbally.Collection.ask][dbally.Collection.ask] will trigger all instances of EventHandler that were passed to the Collection's constructor (or the [dbally.create_collection][dbally.create_collection] function).
 
 
-1. `EventHandler.request_start` is called with [RequestStart][dbally.data_models.audit.RequestStart], it can return a context object that will be passed to next calls.
+1. `EventHandler.request_start` is called with [RequestStart][dbally.audit.events.RequestStart], it can return a context object that will be passed to next calls.
 2. For each event that occurs during the run, `EventHandler.event_start` is called with the context object returned by `EventHandler.request_start` and an Event object. It can return context for the `EventHandler.event_end` method.
 3. When the event ends `EventHandler.event_end` is called with the context object returned by `EventHandler.event_start` and an Event object.
-4. On the end of the run `EventHandler.request_end` is called with the context object returned by `EventHandler.request_start` and the [RequestEnd][dbally.data_models.audit.RequestEnd].
+4. On the end of the run `EventHandler.request_end` is called with the context object returned by `EventHandler.request_start` and the [RequestEnd][dbally.audit.events.RequestEnd].
 
 
 ``` mermaid
@@ -42,8 +42,10 @@ Currently handled events:
 
 ::: dbally.audit.EventHandler
 
-::: dbally.data_models.audit.RequestStart
+::: dbally.audit.events.RequestStart
 
-::: dbally.data_models.audit.RequestEnd
+::: dbally.audit.events.RequestEnd
 
-::: dbally.data_models.audit.LLMEvent
+::: dbally.audit.events.LLMEvent
+
+::: dbally.audit.events.SimilarityEvent

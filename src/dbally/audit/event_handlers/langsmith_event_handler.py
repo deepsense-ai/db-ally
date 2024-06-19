@@ -6,7 +6,7 @@ from langsmith.client import Client
 from langsmith.run_trees import RunTree
 
 from dbally.audit.event_handlers.base import EventHandler
-from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
+from dbally.audit.events import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 
 class LangSmithEventHandler(EventHandler[RunTree, RunTree]):

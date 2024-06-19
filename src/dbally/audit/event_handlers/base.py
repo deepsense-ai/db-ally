@@ -2,7 +2,7 @@ import abc
 from abc import ABC
 from typing import Generic, TypeVar, Union
 
-from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
+from dbally.audit.events import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 RequestCtx = TypeVar("RequestCtx")
 EventCtx = TypeVar("EventCtx")

@@ -7,8 +7,18 @@ try:
 except ImportError:
     pass
 
+from .event_span import EventSpan
+from .event_tracker import EventTracker
+from .events import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
+
 __all__ = [
     "CLIEventHandler",
     "LangSmithEventHandler",
     "EventHandler",
+    "EventTracker",
+    "EventSpan",
+    "LLMEvent",
+    "RequestEnd",
+    "RequestStart",
+    "SimilarityEvent",
 ]
