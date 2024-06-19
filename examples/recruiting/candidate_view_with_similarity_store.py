@@ -11,15 +11,15 @@ from dbally.similarity import FaissStore, SimilarityIndex, SimpleSqlAlchemyFetch
 
 engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
 
-Base1 = automap_base()
-Base1.prepare(autoload_with=engine)
-Candidate = Base1.classes.candidates
+_Base = automap_base()
+_Base.prepare(autoload_with=engine)
+_Candidate = _Base.classes.candidates
 
 country_similarity = SimilarityIndex(
     fetcher=SimpleSqlAlchemyFetcher(
         engine,
-        table=Candidate,
-        column=Candidate.country,
+        table=_Candidate,
+        column=_Candidate.country,
     ),
     store=FaissStore(
         index_dir="./similarity_indexes",
@@ -40,14 +40,14 @@ class CandidateView(SqlAlchemyBaseView):
         """
         Creates the initial SqlAlchemy select object, which will be used to build the query.
         """
-        return sqlalchemy.select(Candidate)
+        return sqlalchemy.select(_Candidate)
 
     @decorators.view_filter()
     def at_least_experience(self, years: int) -> sqlalchemy.ColumnElement:
         """
         Filters candidates with at least `years` of experience.
         """
-        return Candidate.years_of_experience >= years
+        return _Candidate.years_of_experience >= years
 
     @decorators.view_filter()
     def senior_data_scientist_position(self) -> sqlalchemy.ColumnElement:
@@ -55,8 +55,8 @@ class CandidateView(SqlAlchemyBaseView):
         Filters candidates that can be considered for a senior data scientist position.
         """
         return sqlalchemy.and_(
-            Candidate.position.in_(["Data Scientist", "Machine Learning Engineer", "Data Engineer"]),
-            Candidate.years_of_experience >= 3,
+            _Candidate.position.in_(["Data Scientist", "Machine Learning Engineer", "Data Engineer"]),
+            _Candidate.years_of_experience >= 3,
         )
 
     @decorators.view_filter()
@@ -64,4 +64,4 @@ class CandidateView(SqlAlchemyBaseView):
         """
         Filters candidates from a specific country.
         """
-        return Candidate.country == country
+        return _Candidate.country == country

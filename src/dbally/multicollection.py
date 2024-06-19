@@ -144,6 +144,7 @@ class MultiCollection:
         result = None
         for collection_name in self._collection_order:
             try:
+                print(f"Checking {collection_name} collection")
                 collection = self.get_collection(collection_name)
                 result = await collection.ask(
                     question=question,
@@ -152,7 +153,7 @@ class MultiCollection:
                     llm_options=llm_options,
                 )
             except dbally.DbAllyError:
-                print("Found exception")
+                print("Query to selected view did not succeed.")
         if not result:
             raise dbally.DbAllyError
 
