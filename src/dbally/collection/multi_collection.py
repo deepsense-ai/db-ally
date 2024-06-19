@@ -2,9 +2,10 @@ from typing import Dict, List, Optional
 
 from dbally.audit import EventHandler
 from dbally.collection import Collection, ExecutionResult
-from dbally.collection.exceptions import NoCollectionFound
+from dbally.collection.exceptions import NoCollectionFound, NoViewFoundError
 from dbally.collection.single_collection import SingleCollection
 from dbally.exceptions import DbAllyError
+from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
 from dbally.llms.clients.base import LLMOptions
 from dbally.views.base import BaseView
 
@@ -99,9 +100,12 @@ class MultiCollection(Collection):
         """
 
         for collection in self._collections.values():
-            selected_collection = collection.get(view_name)
-            if selected_collection:
-                return selected_collection
+            try:
+                selected_collection = collection.get(view_name)
+                if selected_collection:
+                    return selected_collection
+            except NoViewFoundError:
+                print(f"No view {view_name} found in {collection.name} collection")
 
         raise NoCollectionFound
 
@@ -152,9 +156,9 @@ class MultiCollection(Collection):
                     return_natural_response=return_natural_response,
                     llm_options=llm_options,
                 )
-            except DbAllyError:
-                print("Query to selected view did not succeed.")
-        if not result:
-            result = ExecutionResult
-
+                break
+            except DbAllyError as ex:
+                print(f"Query to selected view did not succeed {ex}.")
+        else:
+            raise UnsupportedQueryError
         return result

@@ -18,8 +18,8 @@ cm_engine = create_engine("postgresql+pg8000://postgres:ikar89pl@localhost:5432/
 async def main():
     await country_similarity.update()
     llm = LiteLLM(model_name="gpt-3.5-turbo")
-    collection1 = dbally.create_collection("candidates", llm, event_handlers=[CLIEventHandler()])
-    collection2 = dbally.create_collection("freeform candidates", llm, event_handlers=[CLIEventHandler()])
+    collection1 = dbally.create_single_collection("candidates", llm, event_handlers=[CLIEventHandler()])
+    collection2 = dbally.create_single_collection("freeform candidates", llm, event_handlers=[CLIEventHandler()])
     collection1.add(CandidateView, lambda: CandidateView(candidate_view_with_similarity_store.engine))
     collection1.add(SampleText2SQLViewCyphers, lambda: SampleText2SQLViewCyphers(create_freeform_memory_engine()))
     collection2.add(CandidateFreeformView, lambda: CandidateFreeformView(candidates_freeform.engine))

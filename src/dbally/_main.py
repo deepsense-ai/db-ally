@@ -104,7 +104,7 @@ def create_single_collection(
     event_handlers = event_handlers or []
 
     return SingleCollection(
-        name,
+        name=name,
         nl_responder=nl_responder,
         view_selector=view_selector,
         llm=llm,
@@ -112,7 +112,7 @@ def create_single_collection(
     )
 
 
-def create_multi_collection(name: str, collection_list: List[Collection]) -> MultiCollection:
+def create_multi_collection(name: str, collection_list: List[SingleCollection]) -> MultiCollection:
     """
     Create a new [Multicollection](multicollection.md) that is a container for registering list of views and the\
     main entrypoint to db-ally features.

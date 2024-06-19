@@ -27,7 +27,7 @@ class CandidateFreeformView(BaseText2SQLView):
         """
         return [
             TableConfig(
-                name="customers",
+                name="candidates",
                 columns=[
                     ColumnConfig("name", "TEXT"),
                     ColumnConfig("country", "TEXT"),
