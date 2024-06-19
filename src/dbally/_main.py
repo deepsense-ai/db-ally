@@ -3,7 +3,6 @@ from typing import List, Optional
 from dbally.collection.multi_collection import MultiCollection
 
 from .audit.event_handlers.base import EventHandler
-from .collection import Collection
 from .collection.single_collection import SingleCollection
 from .llms import LLM
 from .nl_responder.nl_responder import NLResponder
@@ -13,15 +12,14 @@ from .view_selection.llm_view_selector import LLMViewSelector
 
 def create_collection(*args, **kwargs):
     """
-    Create either a single collection or a multicollection based on the provided arguments.
+    Create either a single collection or a multi_collection based on the provided arguments.
 
-    This function acts as a dispatcher to either `create_single_collection` or `create_multicollection`
-    based on the value of the `is_single` parameter. It simplifies the creation process by abstracting
+    This function acts as a dispatcher to either `create_single_collection` or `create_multi_collection`
+    based on the value of the `is_single` kwarg parameter. It simplifies the creation process by abstracting
     the details of each type of collection.
 
     Args:
         *args: Positional arguments to be passed to the respective collection creation function.
-        is_single (bool): If True, a single collection will be created. If False, a multicollection will be created.
         **kwargs: Keyword arguments to be passed to the respective collection creation function.
 
     Returns:
@@ -46,7 +44,7 @@ def create_collection(*args, **kwargs):
 
         collection1 = Collection("collection1")
         collection2 = Collection("collection2")
-        multicollection = create_collection(is_single=False, "my_multicollection", [collection1, collection2])
+        multi_collection = create_collection(is_single=False, "my_multi_collection", [collection1, collection2])
         ```
     """
     is_multi = kwargs.get("is_multi")
@@ -114,15 +112,15 @@ def create_single_collection(
 
 def create_multi_collection(name: str, collection_list: List[SingleCollection]) -> MultiCollection:
     """
-    Create a new [Multicollection](multicollection.md) that is a container for registering list of views and the\
+    Create a new [MultiCollection](multi_collection.md) that is a container for registering list of views and the\
     main entrypoint to db-ally features.
 
     Args:
-        name: Name of the Multicollection
+        name: Name of the MultiCollection
         collection_list: List of registered collections.
 
     Returns:
-        a new instance of db-ally Multicollection
+        a new instance of db-ally MultiCollection
 
     """
     return MultiCollection(name, collection_list)
