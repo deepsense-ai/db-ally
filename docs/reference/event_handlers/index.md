@@ -49,3 +49,5 @@ Currently handled events:
 ::: dbally.audit.events.LLMEvent
 
 ::: dbally.audit.events.SimilarityEvent
+
+::: dbally.audit.spans.EventSpan

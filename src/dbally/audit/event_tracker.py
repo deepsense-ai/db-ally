@@ -2,8 +2,8 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator, Dict, List, Optional, Union
 
 from dbally.audit.event_handlers.base import EventHandler
-from dbally.audit.event_span import EventSpan
 from dbally.audit.events import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
+from dbally.audit.spans import EventSpan
 
 
 class EventTracker:
