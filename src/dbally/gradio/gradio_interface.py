@@ -87,6 +87,7 @@ class GradioAdapter:
         Returns:
             A tuple containing the preview dataframe
         """
+        print(selected_view_name)
         selected_view = self.collection.get(selected_view_name)
 
         if issubclass(type(selected_view), BaseStructuredView):
@@ -145,7 +146,7 @@ class GradioAdapter:
         )
 
     def _clear_results(self) -> tuple[gradio.DataFrame, gradio.Label, gradio.Text, gradio.Text]:
-        preview_dataframe = self._load_preview_data(self._load_preview_data)
+        preview_dataframe = self._load_preview_data(self.selected_view_name)
         gradio_preview_dataframe, empty_frame_label = self._load_gradio_data(preview_dataframe, "Preview")
 
         return (

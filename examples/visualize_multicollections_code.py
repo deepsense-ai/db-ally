@@ -23,8 +23,8 @@ async def main():
     collection1.add(CandidateView, lambda: CandidateView(candidate_view_with_similarity_store.engine))
     collection1.add(SampleText2SQLViewCyphers, lambda: SampleText2SQLViewCyphers(create_freeform_memory_engine()))
     collection2.add(CandidateFreeformView, lambda: CandidateFreeformView(candidates_freeform.engine))
-    multicollection = dbally.create_multicollection("fallback_option", [collection1, collection2])
-    gradio_interface = await create_gradio_interface(user_collection=multicollection)
+    multi_collection = dbally.create_multi_collection("fallback_option", [collection1, collection2])
+    gradio_interface = await create_gradio_interface(user_collection=multi_collection)
     gradio_interface.launch()
 
 

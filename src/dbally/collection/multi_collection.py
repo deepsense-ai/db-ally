@@ -1,15 +1,15 @@
 from typing import Dict, List, Optional
 
-import dbally
+from dbally.audit import EventHandler
+from dbally.collection import Collection, ExecutionResult
+from dbally.collection.exceptions import NoCollectionFound
+from dbally.collection.single_collection import SingleCollection
+from dbally.exceptions import DbAllyError
 from dbally.llms.clients.base import LLMOptions
-
-from .audit import EventHandler
-from .collection import Collection
-from .collection.exceptions import NoCollectionFound
-from .views.base import BaseView
+from dbally.views.base import BaseView
 
 
-class MultiCollection:
+class MultiCollection(Collection):
     """
     Multicollection is a container for a set of collections. Collections are accessed hierarchically.
     They were designed as a fallback mechanism.
@@ -22,13 +22,13 @@ class MultiCollection:
     def __init__(
         self,
         name: str,
-        collections_list: List[Collection],
+        collections_list: List[SingleCollection],
     ) -> None:
         self._collection_order = [collection.name for collection in collections_list]
         self._collections = {collection.name: collection for collection in collections_list}
         self.name = name
 
-    def add(self, collection: Collection, priority: Optional[int]) -> None:
+    def add(self, collection: SingleCollection, priority: Optional[int]) -> None:
         """
         Add new collection to list
 
@@ -63,7 +63,7 @@ class MultiCollection:
             result_dict.update(collection.list())
         return result_dict
 
-    def get_collection(self, collection_name: str) -> Collection:
+    def get_collection(self, collection_name: str) -> SingleCollection:
         """
         Returns an instance of the collection with the given name
 
@@ -111,7 +111,7 @@ class MultiCollection:
         dry_run: bool = False,
         return_natural_response: bool = False,
         llm_options: Optional[LLMOptions] = None,
-    ) -> dbally.ExecutionResult:
+    ) -> ExecutionResult:
         """
         Ask question in a text form and retrieve the answer based on the available views with hierarchical order.
         The order is set by collection place on the collection list.
@@ -152,9 +152,9 @@ class MultiCollection:
                     return_natural_response=return_natural_response,
                     llm_options=llm_options,
                 )
-            except dbally.DbAllyError:
+            except DbAllyError:
                 print("Query to selected view did not succeed.")
         if not result:
-            raise dbally.DbAllyError
+            result = ExecutionResult
 
         return result

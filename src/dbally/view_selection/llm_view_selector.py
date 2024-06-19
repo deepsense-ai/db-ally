@@ -58,7 +58,7 @@ class LLMViewSelector(ViewSelector):
         """
 
         views_for_prompt = self._promptify_views(views)
-
+        print("self.llm", self._llm)
         llm_response = await self._llm.generate_text(
             template=self._prompt_template,
             fmt={"views": views_for_prompt, "question": question},

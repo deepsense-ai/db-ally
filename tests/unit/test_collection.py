@@ -6,10 +6,11 @@ from unittest.mock import AsyncMock, Mock, call, patch
 import pytest
 from typing_extensions import Annotated
 
-from dbally._main import create_collection
+from dbally._main import create_single_collection
 from dbally.collection import Collection
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ViewExecutionResult
+from dbally.collection.single_collection import SingleCollection
 from dbally.iql._exceptions import IQLError
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 from dbally.views.structured import BaseStructuredView
@@ -123,11 +124,11 @@ def mock_similarity_classes() -> (
 
 
 @pytest.fixture(name="collection")
-def mock_collection() -> Collection:
+def mock_collection() -> SingleCollection:
     """
     Returns a collection with two mock views
     """
-    collection = create_collection(
+    collection = create_single_collection(
         "foo",
         llm=MockLLM(),
         view_selector=MockViewSelector("MockView1"),
@@ -270,7 +271,9 @@ def mock_collection_feedback_loop() -> Collection:
         def get_iql_generator(self, *_, **__):
             return iql_generator
 
-    collection = Collection("foo", view_selector=Mock(), llm=MockLLM(), nl_responder=Mock(), event_handlers=[])
+    collection = create_single_collection(
+        "foo", view_selector=Mock(), llm=MockLLM(), nl_responder=Mock(), event_handlers=[]
+    )
     collection.add(ViewWithMockGenerator)
     return collection
 
@@ -315,7 +318,7 @@ async def test_ask_view_selection_single_view() -> None:
     """
     Tests that the ask method select view correctly when there is only one view
     """
-    collection = Collection(
+    collection = create_single_collection(
         "foo",
         view_selector=MockViewSelector(""),
         llm=MockLLM(),
@@ -334,7 +337,7 @@ async def test_ask_view_selection_multiple_views() -> None:
     """
     Tests that the ask method select view correctly when there are multiple views
     """
-    collection = Collection(
+    collection = create_single_collection(
         "foo",
         view_selector=MockViewSelector("MockViewWithResults"),
         llm=MockLLM(),
@@ -355,7 +358,7 @@ async def test_ask_view_selection_no_views() -> None:
     """
     Tests that the ask method raises an exception when there are no views
     """
-    collection = Collection(
+    collection = create_single_collection(
         "foo",
         view_selector=MockViewSelector(""),
         llm=MockLLM(),
@@ -369,7 +372,7 @@ async def test_ask_view_selection_no_views() -> None:
 
 def test_get_similarity_indexes(
     similarity_classes: Tuple[MockSimilarityIndex, MockSimilarityIndex, Type[MockViewBase], Type[MockViewBase]],
-    collection: Collection,
+    collection: SingleCollection,
 ) -> None:
     """
     Tests that the get_similarity_indexes method works correctly
@@ -397,7 +400,7 @@ def test_get_similarity_indexes(
 
 async def test_update_similarity_indexes(
     similarity_classes: Tuple[MockSimilarityIndex, MockSimilarityIndex, Type[MockViewBase], Type[MockViewBase]],
-    collection: Collection,
+    collection: SingleCollection,
 ) -> None:
     """
     Tests that the update_similarity_indexes method triggers the update method of the similarity indexes
@@ -418,7 +421,7 @@ async def test_update_similarity_indexes(
 
 async def test_update_similarity_indexes_error(
     similarity_classes: Tuple[MockSimilarityIndex, MockSimilarityIndex, Type[MockViewBase], Type[MockViewBase]],
-    collection: Collection,
+    collection: SingleCollection,
 ) -> None:
     """
     Tests that the update_similarity_indexes method raises an `IndexUpdateError` exception when

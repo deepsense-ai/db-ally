@@ -2,6 +2,7 @@
 
 from dbally.collection.collection import Collection
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
+from dbally.collection.multi_collection import MultiCollection
 from dbally.collection.results import ExecutionResult
 from dbally.views import decorators
 from dbally.views.methods_base import MethodsBaseView
@@ -10,7 +11,7 @@ from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 from dbally.views.structured import BaseStructuredView
 
 from .__version__ import __version__
-from ._main import create_collection, create_multicollection
+from ._main import create_collection, create_multi_collection, create_single_collection
 from ._types import NOT_GIVEN, NotGiven
 from .embeddings.exceptions import (
     EmbeddingConnectionError,
@@ -24,7 +25,8 @@ from .llms.clients.exceptions import LLMConnectionError, LLMError, LLMResponseEr
 __all__ = [
     "__version__",
     "create_collection",
-    "create_multicollection",
+    "create_single_collection",
+    "create_multi_collection",
     "decorators",
     "MethodsBaseView",
     "SqlAlchemyBaseView",
@@ -48,7 +50,6 @@ __all__ = [
     "NOT_GIVEN",
 ]
 
-from .multicollection import MultiCollection
 
 # Update the __module__ attribute for exported symbols so that
 # error messages point to this module instead of the module
