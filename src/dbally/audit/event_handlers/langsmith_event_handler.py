@@ -1,12 +1,12 @@
 import socket
 from getpass import getuser
-from typing import Optional, Union
+from typing import Optional
 
 from langsmith.client import Client
 from langsmith.run_trees import RunTree
 
 from dbally.audit.event_handlers.base import EventHandler
-from dbally.audit.events import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
+from dbally.audit.events import Event, LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 
 class LangSmithEventHandler(EventHandler[RunTree, RunTree]):
@@ -47,7 +47,7 @@ class LangSmithEventHandler(EventHandler[RunTree, RunTree]):
 
         return run_tree
 
-    async def event_start(self, event: Union[None, LLMEvent, SimilarityEvent], request_context: RunTree) -> RunTree:
+    async def event_start(self, event: Event, request_context: RunTree) -> RunTree:
         """
         Log the start of the event.
 
@@ -79,9 +79,7 @@ class LangSmithEventHandler(EventHandler[RunTree, RunTree]):
 
         raise ValueError("Unsupported event")
 
-    async def event_end(
-        self, event: Union[None, LLMEvent, SimilarityEvent], request_context: RunTree, event_context: RunTree
-    ) -> None:
+    async def event_end(self, event: Optional[Event], request_context: RunTree, event_context: RunTree) -> None:
         """
         Log the end of the event.
 
