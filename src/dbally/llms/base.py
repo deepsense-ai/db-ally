@@ -3,7 +3,7 @@ from functools import cached_property
 from typing import Dict, Generic, Optional, Type
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.audit import LLMEvent
+from dbally.audit.events import LLMEvent
 from dbally.llms.clients.base import LLMClient, LLMClientOptions, LLMOptions
 from dbally.prompts.common_validation_utils import ChatFormat
 from dbally.prompts.prompt_template import PromptTemplate

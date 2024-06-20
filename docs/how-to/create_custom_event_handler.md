@@ -10,8 +10,7 @@ In this guide we will implement a simple [Event Handler](../reference/event_hand
 First, we need to create a new class that inherits from `EventHandler` and implements the all abstract methods.
 
 ```python
-from dbally.audit import EventHandler
-from dbally.data_models.audit import RequestStart, RequestEnd
+from dbally.audit import EventHandler, RequestStart, RequestEnd
 
 class FileEventHandler(EventHandler):
 
