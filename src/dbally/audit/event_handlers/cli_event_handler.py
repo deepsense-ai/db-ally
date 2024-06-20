@@ -98,6 +98,20 @@ class CLIEventHandler(EventHandler):
                 f"[cyan bold]FETCHER: [grey53]{event.fetcher}\n"
             )
 
+    async def log_message(self, message: str, log_level="INFO") -> None:
+        """
+        Displays message logged by user
+
+        Args:
+            message: Message to be sent
+            log_level: Message log level.
+        """
+        self._print_syntax("[grey53]\n=======================================")
+        self._print_syntax("[grey53]=======================================")
+        self._print_syntax(f"[green]{log_level}: {message}")
+        self._print_syntax("[grey53]=======================================")
+        self._print_syntax("[grey53]=======================================\n")
+
     async def event_end(
         self, event: Union[None, LLMEvent, SimilarityEvent], request_context: None, event_context: None
     ) -> None:

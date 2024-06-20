@@ -92,3 +92,15 @@ class EventTracker:
             await handler.event_end(
                 span.data, event_context=contexts[handler], request_context=self._request_contexts[handler]
             )
+
+    async def log_message(self, message, log_level="INFO") -> None:
+        """
+        Send message to the handler
+
+        Args:
+            message: Message to be sent to
+            log_level: Log level.
+        """
+
+        for handler in self._handlers:
+            await handler.log_message(message, log_level)

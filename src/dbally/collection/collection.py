@@ -60,6 +60,7 @@ class Collection:
         self._nl_responder = nl_responder
         self._event_handlers = event_handlers
         self._llm = llm
+        self._fallback_collection: Optional[Collection] = None
 
     T = TypeVar("T", bound=BaseView)
 
@@ -119,6 +120,19 @@ class Collection:
             event_handler: The event handler to be added.
         """
         self._event_handlers.append(event_handler)
+
+    def add_fallback_collection(self, fallback_collection: "Collection"):
+        """
+        Add fallback collection which will be asked if the base collection does not succeed.
+
+        Args:
+            fallback_collection: Collection to be asked in case of base collection failure.
+
+        Returns:
+            The fallback collection to create chains call
+        """
+        self._fallback_collection = fallback_collection
+        return fallback_collection
 
     def get(self, name: str) -> BaseView:
         """
@@ -192,49 +206,61 @@ class Collection:
 
         # select view
         views = self.list()
+        selected_view = None
 
-        if len(views) == 0:
-            raise ValueError("Empty collection")
-        if len(views) == 1:
-            selected_view = next(iter(views))
-        else:
-            selected_view = await self._view_selector.select_view(
-                question=question,
-                views=views,
+        try:
+            if len(views) == 0:
+                raise ValueError("Empty collection")
+            if len(views) == 1:
+                selected_view = next(iter(views))
+            else:
+                selected_view = await self._view_selector.select_view(
+                    question=question,
+                    views=views,
+                    event_tracker=event_tracker,
+                    llm_options=llm_options,
+                )
+
+            view = self.get(selected_view)
+
+            start_time_view = time.monotonic()
+            view_result = await view.ask(
+                query=question,
+                llm=self._llm,
                 event_tracker=event_tracker,
+                n_retries=self.n_retries,
+                dry_run=dry_run,
                 llm_options=llm_options,
             )
+            end_time_view = time.monotonic()
 
-        view = self.get(selected_view)
+            textual_response = None
+            if not dry_run and return_natural_response:
+                textual_response = await self._nl_responder.generate_response(
+                    result=view_result,
+                    question=question,
+                    event_tracker=event_tracker,
+                    llm_options=llm_options,
+                )
 
-        start_time_view = time.monotonic()
-        view_result = await view.ask(
-            query=question,
-            llm=self._llm,
-            event_tracker=event_tracker,
-            n_retries=self.n_retries,
-            dry_run=dry_run,
-            llm_options=llm_options,
-        )
-        end_time_view = time.monotonic()
-
-        textual_response = None
-        if not dry_run and return_natural_response:
-            textual_response = await self._nl_responder.generate_response(
-                result=view_result,
-                question=question,
-                event_tracker=event_tracker,
-                llm_options=llm_options,
+            result = ExecutionResult(
+                results=view_result.results,
+                context=view_result.context,
+                execution_time=time.monotonic() - start_time,
+                execution_time_view=end_time_view - start_time_view,
+                view_name=selected_view,
+                textual_response=textual_response,
             )
+        except Exception as e:
+            await event_tracker.log_message(
+                f"Exception occurred during {selected_view} processing. Executing view from fallback collection",
+                log_level="Warning",
+            )
+            if self._fallback_collection:
+                result = await self._fallback_collection.ask(question, dry_run, return_natural_response, llm_options)
 
-        result = ExecutionResult(
-            results=view_result.results,
-            context=view_result.context,
-            execution_time=time.monotonic() - start_time,
-            execution_time_view=end_time_view - start_time_view,
-            view_name=selected_view,
-            textual_response=textual_response,
-        )
+            else:
+                raise e
 
         await event_tracker.request_end(RequestEnd(result=result))
 

@@ -61,3 +61,12 @@ class EventHandler(Generic[RequestCtx, EventCtx], ABC):
             output: The output of the request.
             request_context: Optional context passed from request_start method
         """
+
+    @abc.abstractmethod
+    async def log_message(self, message: str, log_level: str) -> None:
+        """
+        Displays the response from the LLM.
+
+        Args:
+            message: db-ally event to be logged with all the details.
+        """
