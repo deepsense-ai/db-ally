@@ -5,8 +5,9 @@ import time
 from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Type, TypeVar
 
+import dbally
 from dbally.audit.event_handlers.base import EventHandler
-from dbally.audit.event_tracker import EventTracker
+from dbally.audit.event_tracker import EventTracker, LogLevel
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
 from dbally.data_models.audit import RequestEnd, RequestStart
@@ -124,7 +125,7 @@ class Collection:
         """
         self._event_handlers.append(event_handler)
 
-    def add_fallback(self, fallback_collection: "Collection"):
+    def add_fallback(self, fallback_collection: "Collection") -> "Collection":
         """
         Add fallback collection which will be asked if the ask to base collection does not succeed.
 
@@ -185,7 +186,7 @@ class Collection:
         dry_run: bool = False,
         return_natural_response: bool = False,
         llm_options: Optional[LLMOptions] = None,
-    ) -> ExecutionResult:
+    ) -> Optional[ExecutionResult]:
         """
         Ask question in a text form and retrieve the answer based on the available views.
 
@@ -222,6 +223,7 @@ class Collection:
         # select view
         views = self.list()
         selected_view = None
+        result = None
 
         try:
             if len(views) == 0:
@@ -266,16 +268,16 @@ class Collection:
                 view_name=selected_view,
                 textual_response=textual_response,
             )
-        except Exception as e:
+        except dbally.DbAllyError:
             await event_tracker.log_message(
-                f"Exception occurred during {selected_view} processing. Executing view from fallback collection",
-                log_level="Warning",
+                f"Exception occurred during {selected_view} processing. Executing view from fallback" f"collection.",
+                log_level=LogLevel.INFO,
             )
             if self._fallback_collection:
                 result = await self._fallback_collection.ask(question, dry_run, return_natural_response, llm_options)
-
             else:
-                raise e
+                await event_tracker.log_message(r"No results found", LogLevel.ERROR)
+                return None
 
         await event_tracker.request_end(RequestEnd(result=result))
 

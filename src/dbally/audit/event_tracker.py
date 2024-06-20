@@ -1,17 +1,9 @@
 from contextlib import asynccontextmanager
-from enum import StrEnum
 from typing import AsyncIterator, Dict, List, Optional, Union
 
-from dbally.audit.event_handlers.base import EventHandler
+from dbally.audit.event_handlers.base import EventHandler, LogLevel
 from dbally.audit.event_span import EventSpan
 from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
-
-
-class LogLevel(StrEnum):
-    INFO = "Info"
-    WARNING = "Warning"
-    ERROR = "Error"
-    DEBUG = "Debug"
 
 
 class EventTracker:

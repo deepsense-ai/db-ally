@@ -3,7 +3,9 @@ from io import StringIO
 from sys import stdout
 from typing import Optional, Union
 
+from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import LogLevel
+from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 try:
     from rich import print as pprint
@@ -16,8 +18,6 @@ except ImportError:
     RICH_OUTPUT = False
     pprint = print  # type: ignore
 
-from dbally.audit.event_handlers.base import EventHandler
-from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 _RICH_FORMATING_KEYWORD_SET = {"green", "orange", "grey", "bold", "cyan"}
 _RICH_FORMATING_PATTERN = rf"\[.*({'|'.join(_RICH_FORMATING_KEYWORD_SET)}).*\]"
@@ -152,8 +152,11 @@ class CLIEventHandler(EventHandler):
             output: The output of the request.
             request_context: Optional context passed from request_start method
         """
-        self._print_syntax("[green bold]REQUEST OUTPUT:")
-        self._print_syntax(f"Number of rows: {len(output.result.results)}")
+        if output.result:
+            self._print_syntax("[green bold]REQUEST OUTPUT:")
+            self._print_syntax(f"Number of rows: {len(output.result.results)}")
 
-        if "sql" in output.result.context:
-            self._print_syntax(f"{output.result.context['sql']}", "psql")
+            if "sql" in output.result.context:
+                self._print_syntax(f"{output.result.context['sql']}", "psql")
+        else:
+            self._print_syntax("[red bold]No results found")
