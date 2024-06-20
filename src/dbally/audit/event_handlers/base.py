@@ -1,10 +1,10 @@
 import abc
 from abc import ABC
-from typing import Generic, TypeVar, Union
+from typing import Generic, Optional, TypeVar
 
 from strenum import StrEnum
 
-from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
+from dbally.audit.events import Event, RequestEnd, RequestStart
 
 RequestCtx = TypeVar("RequestCtx")
 EventCtx = TypeVar("EventCtx")
@@ -49,7 +49,7 @@ class EventHandler(Generic[RequestCtx, EventCtx], ABC):
         """
 
     @abc.abstractmethod
-    async def event_start(self, event: Union[LLMEvent, SimilarityEvent], request_context: RequestCtx) -> EventCtx:
+    async def event_start(self, event: Event, request_context: RequestCtx) -> EventCtx:
         """
         Function that is called during every event execution.
 
@@ -63,9 +63,7 @@ class EventHandler(Generic[RequestCtx, EventCtx], ABC):
         """
 
     @abc.abstractmethod
-    async def event_end(
-        self, event: Union[None, LLMEvent, SimilarityEvent], request_context: RequestCtx, event_context: EventCtx
-    ) -> None:
+    async def event_end(self, event: Optional[Event], request_context: RequestCtx, event_context: EventCtx) -> None:
         """
         Function that is called during every event execution.
 

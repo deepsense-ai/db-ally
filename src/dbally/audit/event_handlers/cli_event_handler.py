@@ -1,11 +1,10 @@
 import re
 from io import StringIO
 from sys import stdout
-from typing import Optional, Union
+from typing import Optional
 
-from dbally.audit.event_handlers.base import EventHandler
-from dbally.audit.event_tracker import LogLevel
-from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
+from dbally.audit.event_handlers.base import EventHandler, LogLevel
+from dbally.audit.events import Event, LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 try:
     from rich import print as pprint
@@ -42,14 +41,14 @@ class CLIEventHandler(EventHandler):
     ![Example output from CLIEventHandler](../../assets/event_handler_example.png)
     """
 
-    def __init__(self, buffer: StringIO = None) -> None:
+    def __init__(self, buffer: Optional[StringIO] = None) -> None:
         super().__init__()
 
         self.buffer = buffer
         out = self.buffer if buffer else stdout
         self._console = Console(file=out, record=True) if RICH_OUTPUT else None
 
-    def _print_syntax(self, content: str, lexer: str = None) -> None:
+    def _print_syntax(self, content: str, lexer: Optional[str] = None) -> None:
         if self._console:
             if lexer:
                 console_content = Syntax(content, lexer, word_wrap=True)
@@ -71,7 +70,7 @@ class CLIEventHandler(EventHandler):
         self._print_syntax("[grey53]\n=======================================")
         self._print_syntax("[grey53]=======================================\n")
 
-    async def event_start(self, event: Union[LLMEvent, SimilarityEvent], request_context: None) -> None:
+    async def event_start(self, event: Event, request_context: None) -> None:
         """
         Displays information that event has started, then all messages inside the prompt
 
@@ -124,9 +123,7 @@ class CLIEventHandler(EventHandler):
         self._print_syntax("[grey53]=======================================")
         self._print_syntax("[grey53]=======================================\n")
 
-    async def event_end(
-        self, event: Union[None, LLMEvent, SimilarityEvent], request_context: None, event_context: None
-    ) -> None:
+    async def event_end(self, event: Optional[Event], request_context: None, event_context: None) -> None:
         """
         Displays the response from the LLM.
 

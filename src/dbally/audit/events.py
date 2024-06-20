@@ -1,21 +1,20 @@
+from abc import ABC
 from dataclasses import dataclass
-from enum import Enum
 from typing import Optional, Union
 
 from dbally.collection.results import ExecutionResult
 from dbally.prompts import ChatFormat
 
 
-class EventType(Enum):
+@dataclass
+class Event(ABC):
     """
-    Enum for event types.
+    Base class for all events.
     """
-
-    LLM = "LLM"
 
 
 @dataclass
-class LLMEvent:
+class LLMEvent(Event):
     """
     Class for LLM event.
     """
@@ -30,7 +29,7 @@ class LLMEvent:
 
 
 @dataclass
-class SimilarityEvent:
+class SimilarityEvent(Event):
     """
     SimilarityEvent is fired when a SimilarityIndex lookup is performed.
     """
