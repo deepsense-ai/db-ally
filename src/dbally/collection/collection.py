@@ -5,18 +5,22 @@ import time
 from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Type, TypeVar
 
-from dbally import DbAllyError
+from dbally.assistants.base import FunctionCallingError
 from dbally.audit.event_handlers.base import EventHandler, LogLevel
 from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
+from dbally.iql import IQLError
+from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
+from dbally.prompts import PromptTemplateError
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.base import BaseView, IndexLocation
+from dbally.views.freeform.text2sql import Text2SQLError
 
 
 class Collection:
@@ -268,7 +272,14 @@ class Collection:
                 view_name=selected_view,
                 textual_response=textual_response,
             )
-        except DbAllyError:
+        except (
+            NoViewFoundError,
+            IQLError,
+            FunctionCallingError,
+            UnsupportedQueryError,
+            PromptTemplateError,
+            Text2SQLError,
+        ):
             await event_tracker.log_message(
                 f"Exception occurred during {selected_view} processing. Executing view from fallback" f"collection.",
                 log_level=LogLevel.INFO,
