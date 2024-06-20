@@ -23,7 +23,7 @@ async def main():
     collection1.add(CandidateView, lambda: CandidateView(candidate_view_with_similarity_store.engine))
     collection1.add(SampleText2SQLViewCyphers, lambda: SampleText2SQLViewCyphers(create_freeform_memory_engine()))
     collection2.add(CandidateFreeformView, lambda: CandidateFreeformView(candidates_freeform.engine))
-    collection1.set_fallback_collection(collection2)
+    collection1.add_fallback(collection2)
     gradio_interface = await create_gradio_interface(user_collection=collection1)
     gradio_interface.launch()
 

@@ -2,6 +2,7 @@ import abc
 from abc import ABC
 from typing import Generic, TypeVar, Union
 
+from dbally.audit.event_tracker import LogLevel
 from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 RequestCtx = TypeVar("RequestCtx")
@@ -63,10 +64,11 @@ class EventHandler(Generic[RequestCtx, EventCtx], ABC):
         """
 
     @abc.abstractmethod
-    async def log_message(self, message: str, log_level: str) -> None:
+    async def log_message(self, message: str, log_level: LogLevel = LogLevel.INFO) -> None:
         """
         Displays the response from the LLM.
 
         Args:
             message: db-ally event to be logged with all the details.
+            log_level: log level/importance
         """

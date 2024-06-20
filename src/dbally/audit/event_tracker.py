@@ -1,9 +1,17 @@
 from contextlib import asynccontextmanager
+from enum import StrEnum
 from typing import AsyncIterator, Dict, List, Optional, Union
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_span import EventSpan
 from dbally.data_models.audit import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
+
+
+class LogLevel(StrEnum):
+    INFO = "Info"
+    WARNING = "Warning"
+    ERROR = "Error"
+    DEBUG = "Debug"
 
 
 class EventTracker:
@@ -93,7 +101,7 @@ class EventTracker:
                 span.data, event_context=contexts[handler], request_context=self._request_contexts[handler]
             )
 
-    async def log_message(self, message, log_level="INFO") -> None:
+    async def log_message(self, message: str, log_level: LogLevel = LogLevel.INFO) -> None:
         """
         Send message to the handler
 

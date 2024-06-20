@@ -3,6 +3,8 @@ from io import StringIO
 from sys import stdout
 from typing import Optional, Union
 
+from dbally.audit.event_tracker import LogLevel
+
 try:
     from rich import print as pprint
     from rich.console import Console
@@ -98,7 +100,7 @@ class CLIEventHandler(EventHandler):
                 f"[cyan bold]FETCHER: [grey53]{event.fetcher}\n"
             )
 
-    async def log_message(self, message: str, log_level="INFO") -> None:
+    async def log_message(self, message: str, log_level: LogLevel = LogLevel.INFO) -> None:
         """
         Displays message logged by user
 
@@ -106,9 +108,19 @@ class CLIEventHandler(EventHandler):
             message: Message to be sent
             log_level: Message log level.
         """
+        colour = None
+        if log_level == LogLevel.INFO:
+            colour = "white"
+        elif log_level == LogLevel.WARNING:
+            colour = "orange"
+        elif log_level == LogLevel.ERROR:
+            colour = "red"
+        elif log_level == LogLevel.DEBUG:
+            colour = "blue"
+
         self._print_syntax("[grey53]\n=======================================")
         self._print_syntax("[grey53]=======================================")
-        self._print_syntax(f"[green]{log_level}: {message}")
+        self._print_syntax(f"[{colour}]{log_level}: {message}")
         self._print_syntax("[grey53]=======================================")
         self._print_syntax("[grey53]=======================================\n")
 

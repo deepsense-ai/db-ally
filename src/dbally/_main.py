@@ -14,6 +14,7 @@ def create_collection(
     event_handlers: Optional[List[EventHandler]] = None,
     view_selector: Optional[ViewSelector] = None,
     nl_responder: Optional[NLResponder] = None,
+    fallback_collection: Optional[Collection] = None,
 ) -> Collection:
     """
     Create a new [Collection](collection.md) that is a container for registering views and the\
@@ -44,6 +45,7 @@ def create_collection(
         will be used.
         nl_responder: NL responder used by the collection to respond to natural language queries. If None,\
         a new instance of [NLResponder][dbally.nl_responder.nl_responder.NLResponder] will be used.
+        fallback_collection: Collection to be asked in case of base collection failure.
 
     Returns:
         a new instance of db-ally Collection
@@ -61,4 +63,5 @@ def create_collection(
         view_selector=view_selector,
         llm=llm,
         event_handlers=event_handlers,
+        fallback_collection=fallback_collection,
     )

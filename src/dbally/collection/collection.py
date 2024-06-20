@@ -35,12 +35,13 @@ class Collection:
         event_handlers: List[EventHandler],
         nl_responder: NLResponder,
         n_retries: int = 3,
+        fallback_collection: Optional["Collection"] = None,
     ) -> None:
         """
         Args:
             name: Name of the collection is available for [Event handlers](event_handlers/index.md) and is\
             used to distinguish different db-ally runs.
-            view_selector: As you register more then one [View](views/index.md) within single collection,\
+            view_selector: As you register more than one [View](views/index.md) within single collection,\
             before generating the IQL query, a View that fits query the most is selected by the\
             [ViewSelector](view_selection/index.md).
             llm: LLM used by the collection to generate views and respond to natural language queries.
@@ -51,6 +52,8 @@ class Collection:
             n_retries: IQL generator may produce invalid IQL. If this is the case this argument specifies\
             how many times db-ally will try to regenerate it. Previous try with the error message is\
             appended to the chat history to guide next generations.
+            fallback_collection: collection to be asked when the ask function could not find answer in views registered
+            to this collection
         """
         self.name = name
         self.n_retries = n_retries
@@ -60,7 +63,7 @@ class Collection:
         self._nl_responder = nl_responder
         self._event_handlers = event_handlers
         self._llm = llm
-        self._fallback_collection: Optional[Collection] = None
+        self._fallback_collection: Optional[Collection] = fallback_collection
 
     T = TypeVar("T", bound=BaseView)
 
@@ -73,7 +76,7 @@ class Collection:
             query execution. We expect Class instead of object, as otherwise Views must have been implemented\
             stateless, which would be cumbersome.
             builder: Optional factory function that will be used to create the View instance. Use it when you\
-            need to pass outcome of API call or database connection to the view and it can change over time.
+            need to pass outcome of API call or database connection to the view, and it can change over time.
             name: Custom name of the view (defaults to the name of the class).
 
         Raises:
@@ -121,9 +124,9 @@ class Collection:
         """
         self._event_handlers.append(event_handler)
 
-    def add_fallback_collection(self, fallback_collection: "Collection"):
+    def add_fallback(self, fallback_collection: "Collection"):
         """
-        Add fallback collection which will be asked if the base collection does not succeed.
+        Add fallback collection which will be asked if the ask to base collection does not succeed.
 
         Args:
             fallback_collection: Collection to be asked in case of base collection failure.
@@ -133,6 +136,18 @@ class Collection:
         """
         self._fallback_collection = fallback_collection
         return fallback_collection
+
+    def __rshift__(self, fallback_collection: "Collection"):
+        """
+        Add fallback collection which will be asked if the ask to base collection does not succeed.
+
+        Args:
+            fallback_collection: Collection to be asked in case of base collection failure.
+
+        Returns:
+            The fallback collection to create chains call
+        """
+        return self.add_fallback(fallback_collection)
 
     def get(self, name: str) -> BaseView:
         """
