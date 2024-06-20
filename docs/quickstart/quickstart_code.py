@@ -1,6 +1,4 @@
 # pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring
-from typing import Union, Tuple, Any
-
 import dbally
 import asyncio
 
@@ -56,11 +54,6 @@ class CandidateView(SqlAlchemyBaseView):
         """
         return Candidate.country == country
 
-    @decorators.view_aggregation()
-    def group_by_university(self, aggregation:str): # -> Union[Select[Tuple[Any, Any]], Select]:  # pylint: disable=W0602, C0116, W9011
-        return sqlalchemy.select(Candidate.university, sqlalchemy.func.count(Candidate.university).label("count")) \
-            .group_by(Candidate.university)
-
 
 async def main():
     llm = LiteLLM(model_name="gpt-3.5-turbo")
@@ -68,8 +61,7 @@ async def main():
     collection = dbally.create_collection("recruitment", llm, event_handlers=[CLIEventHandler()])
     collection.add(CandidateView, lambda: CandidateView(engine))
 
-    # result = await collection.ask("Find me French candidates suitable for a senior data scientist position.")
-    result = await collection.ask("Could you count the candidates university-wise and present the rows?")
+    result = await collection.ask("Find me French candidates suitable for a senior data scientist position.")
 
     print(f"The generated SQL query is: {result.context.get('sql')}")
     print()

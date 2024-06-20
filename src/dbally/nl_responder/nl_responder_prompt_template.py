@@ -24,7 +24,7 @@ class NLResponderPromptTemplate(PromptTemplate):
         """
 
         super().__init__(chat, response_format, llm_response_parser)
-        self.chat = check_prompt_variables(chat, {"rows", "question", "aggregation"})
+        self.chat = check_prompt_variables(chat, {"rows", "question"})
 
 
 default_nl_responder_template = NLResponderPromptTemplate(
@@ -34,7 +34,7 @@ default_nl_responder_template = NLResponderPromptTemplate(
             "content": "You are a helpful assistant that helps answer the user's questions "
             "based on the table provided. You MUST use the table to answer the question. "
             "You are very intelligent and obedient.\n"
-            "The table ALWAYS contains full answer to a question including necessary {aggregation}.\n"
+            "The table ALWAYS contains full answer to a question.\n"
             "Answer the question in a way that is easy to understand and informative.\n"
             "DON'T MENTION using a table in your answer.",
         },

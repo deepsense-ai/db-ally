@@ -35,7 +35,7 @@ class LLMViewSelector(ViewSelector):
         """
         self._llm = llm
         self._prompt_template = prompt_template or copy.deepcopy(default_view_selector_template)
-        self._promptify_views = promptify_views or _promptify_views or _promptify_aggregations
+        self._promptify_views = promptify_views or _promptify_views
 
     async def select_view(
         self,
@@ -72,20 +72,6 @@ class LLMViewSelector(ViewSelector):
 def _promptify_views(views: Dict[str, str]) -> str:
     """
     Formats views for prompt
-
-    Args:
-        views: dictionary of available view names with corresponding descriptions.
-
-    Returns:
-        views_for_prompt: views formatted for prompt
-    """
-
-    return "\n".join([f"{name}: {description}" for name, description in views.items()])
-
-
-def _promptify_aggregations(views: Dict[str, str]) -> str:
-    """
-    Formats views for aggregation
 
     Args:
         views: dictionary of available view names with corresponding descriptions.
