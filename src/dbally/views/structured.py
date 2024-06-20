@@ -58,6 +58,7 @@ class BaseStructuredView(BaseView):
         """
         iql_generator = self.get_iql_generator(llm)
         filter_list = self.list_filters()
+        aggregation_list = self.list_aggregations()
 
         iql_filters, conversation = await iql_generator.generate_iql(
             question=query,
@@ -97,6 +98,23 @@ class BaseStructuredView(BaseView):
 
     @abc.abstractmethod
     async def apply_filters(self, filters: IQLQuery) -> None:
+        """
+        Applies the chosen filters to the view.
+
+        Args:
+            filters: [IQLQuery](../../concepts/iql.md) object representing the filters to apply
+        """
+
+    @abc.abstractmethod
+    def list_aggregations(self) -> List[ExposedFunction]:
+        """
+
+        Returns:
+            Aggregations defined inside the View.
+        """
+
+    @abc.abstractmethod
+    async def apply_aggregations(self, filters: IQLQuery) -> None:
         """
         Applies the chosen filters to the view.
 

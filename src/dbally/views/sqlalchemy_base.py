@@ -64,6 +64,26 @@ class SqlAlchemyBaseView(MethodsBaseView):
             return alchemy_op(await self._build_filter_node(bool_op.child))
         raise ValueError(f"BoolOp {bool_op} has no children")
 
+    async def _build_aggregation_node(self, node: syntax.Node) -> sqlalchemy.ColumnElement:
+        """
+        Converts a filter node from the IQLQuery to a SQLAlchemy expression.
+        """
+        if isinstance(node, syntax.BoolOp):
+            return await self._build_filter_bool_op(node)
+        if isinstance(node, syntax.FunctionCall):
+            return await self.call_filter_method(node)
+
+        raise ValueError(f"Unsupported grammar: {node}")
+
+    async def apply_aggregation(self, aggregation: IQLQuery) -> None:
+        """
+        Applies the chosen aggregation to the view.
+
+        Args:
+            aggregation: IQLQuery object representing the aggregation to apply
+        """
+        self._select = self._select.where(await self._build_filter_node(aggregation.root))
+
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         """
         Executes the generated SQL query and returns the results.

@@ -38,11 +38,12 @@ class IQLGenerator:
         """
         self._llm = llm
         self._prompt_template = prompt_template or copy.deepcopy(default_iql_template)
-        self._promptify_view = promptify_view or _promptify_filters
+        self._promptify_view = promptify_view or _promptify_filters or _promptify_aggregations
 
     async def generate_iql(
         self,
         filters: List[ExposedFunction],
+        aggregations: List[ExposedFunction],
         question: str,
         event_tracker: EventTracker,
         conversation: Optional[IQLPromptTemplate] = None,
@@ -62,12 +63,14 @@ class IQLGenerator:
             IQL - iql generated based on the user question
         """
         filters_for_prompt = self._promptify_view(filters)
+        aggregations_for_prompt = self._promptify_view(aggregations)
 
         template = conversation or self._prompt_template
 
         llm_response = await self._llm.generate_text(
             template=template,
-            fmt={"filters": filters_for_prompt, "question": question},
+            fmt={"filters": filters_for_prompt, "question": question,
+                 "aggregation": aggregations_for_prompt},
             event_tracker=event_tracker,
             options=llm_options,
         )
@@ -114,3 +117,19 @@ def _promptify_filters(
     """
     filters_for_prompt = "\n".join([str(filter) for filter in filters])
     return filters_for_prompt
+
+
+def _promptify_aggregations(
+    aggregations: List[ExposedFunction],
+) -> str:
+    """
+    Formats filters for prompt
+
+    Args:
+        filters: list of filters exposed by the view
+
+    Returns:
+        filters_for_prompt: filters formatted for prompt
+    """
+    aggregations_for_prompt = "\n".join([str(aggregation) for aggregation in aggregations])
+    return aggregations_for_prompt
