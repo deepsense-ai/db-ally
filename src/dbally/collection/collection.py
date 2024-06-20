@@ -5,7 +5,7 @@ import time
 from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Type, TypeVar
 
-import dbally
+from dbally import DbAllyError
 from dbally.audit.event_handlers.base import EventHandler, LogLevel
 from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import RequestEnd, RequestStart
@@ -24,7 +24,7 @@ class Collection:
     Collection is a container for a set of views that can be used by db-ally to answer user questions.
 
     Tip:
-        It is recommended to create new collections using the [`dbally.create_colletion`][dbally.create_collection]\
+        It is recommended to create new collections using the [`dbally.create_collection`][dbally.create_collection]\
         function instead of instantiating this class directly.
     """
 
@@ -73,7 +73,7 @@ class Collection:
         Register new [View](views/index.md) that will be available to query via the collection.
 
         Args:
-            view: A class inherithing from BaseView. Object of this type will be initialized during\
+            view: A class inheriting from BaseView. Object of this type will be initialized during\
             query execution. We expect Class instead of object, as otherwise Views must have been implemented\
             stateless, which would be cumbersome.
             builder: Optional factory function that will be used to create the View instance. Use it when you\
@@ -268,7 +268,7 @@ class Collection:
                 view_name=selected_view,
                 textual_response=textual_response,
             )
-        except dbally.DbAllyError:
+        except DbAllyError:
             await event_tracker.log_message(
                 f"Exception occurred during {selected_view} processing. Executing view from fallback" f"collection.",
                 log_level=LogLevel.INFO,
