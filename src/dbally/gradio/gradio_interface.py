@@ -1,5 +1,6 @@
+import json
 from io import StringIO
-from typing import Tuple
+from typing import Any, Dict, List, Tuple
 
 import gradio
 import pandas as pd
@@ -85,7 +86,9 @@ class GradioAdapter:
         selected_view = self.collection.get(selected_view_name)
         if issubclass(type(selected_view), BaseStructuredView):
             selected_view_results = selected_view.execute()
-            preview_dataframe = pd.DataFrame.from_records(selected_view_results.results).head(self.preview_limit)
+            preview_dataframe = self._load_results_into_dataframe(selected_view_results.results).head(
+                self.preview_limit
+            )
         else:
             preview_dataframe = pd.DataFrame()
 
@@ -112,7 +115,7 @@ class GradioAdapter:
                 question=question_query, return_natural_response=natural_language_flag
             )
             generated_query = str(execution_result.context)
-            data = pd.DataFrame.from_records(execution_result.results)
+            data = self._load_results_into_dataframe(execution_result.results)
             textual_response = str(execution_result.textual_response) if natural_language_flag else textual_response
         except UnsupportedQueryError:
             generated_query = {"Query": "unsupported"}
@@ -146,6 +149,19 @@ class GradioAdapter:
             gradio.Text(visible=False),
             gradio.Text(visible=False),
         )
+
+    @staticmethod
+    def _load_results_into_dataframe(results: List[Dict[str, Any]]) -> pd.DataFrame:
+        """
+        Load the results into a pandas DataFrame. Makes sure that the results are json serializable.
+
+        Args:
+            results: The results to load into the DataFrame.
+
+        Returns:
+            The loaded DataFrame.
+        """
+        return pd.DataFrame(json.loads(json.dumps(results, default=str)))
 
     async def create_interface(self, user_collection: Collection, preview_limit: int) -> gradio.Interface:
         """

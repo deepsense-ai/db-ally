@@ -2,7 +2,7 @@ import abc
 from typing import Optional
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.data_models.audit import SimilarityEvent
+from dbally.audit.events import SimilarityEvent
 from dbally.similarity.fetcher import SimilarityFetcher
 from dbally.similarity.store import SimilarityStore
 

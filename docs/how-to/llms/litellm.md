@@ -48,6 +48,24 @@ Integrate db-ally with your LLM vendor.
     llm=LiteLLM(model_name="anyscale/meta-llama/Llama-2-70b-chat-hf")
     ```
 
+=== "Azure OpenAI"
+
+    ```python
+    import os
+    from dbally.llms.litellm import LiteLLM
+
+    ## set ENV variables
+    os.environ["AZURE_API_KEY"] = "your-api-key"
+    os.environ["AZURE_API_BASE"] = "your-api-base-url"
+    os.environ["AZURE_API_VERSION"] = "your-api-version"
+
+    # optional
+    os.environ["AZURE_AD_TOKEN"] = ""
+    os.environ["AZURE_API_TYPE"] = ""
+
+    llm = LiteLLM(model_name="azure/<your_deployment_name>")
+    ```
+
 Use LLM in your collection.
 
 ```python

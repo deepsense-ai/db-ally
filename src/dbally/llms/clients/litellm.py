@@ -9,7 +9,7 @@ except ImportError:
     HAVE_LITELLM = False
 
 
-from dbally.data_models.audit import LLMEvent
+from dbally.audit.events import LLMEvent
 from dbally.llms.clients.base import LLMClient, LLMOptions
 from dbally.llms.clients.exceptions import LLMConnectionError, LLMResponseError, LLMStatusError
 from dbally.prompts import ChatFormat

@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.3.1 (2024-06-17)
+
+### Documentation
+
+* Added about section to documentation (#50) ([`a32b3fe`](https://github.com/deepsense-ai/db-ally/commit/a32b3fe0cee2ee6ab94ceace701c158df5cf2dd4))
+
+### Fix
+
+* Fixed gradio interface crash on types that are not json serializable (#47) ([`f501156`](https://github.com/deepsense-ai/db-ally/commit/f501156ab75783b05a0a54af5c047702a53a0a36))
+
+### Chore
+
+* Added issue templates (#48) ([`fa76702`](https://github.com/deepsense-ai/db-ally/commit/fa767022c5ea5e49816321095fda4a20273995f9))
+
+* Cleaned up changelog (#49) ([`6a3d08f`](https://github.com/deepsense-ai/db-ally/commit/6a3d08fc719e5a912ff3fd7effec732504230a27))
+
 ## v0.3.0 (2024-06-14)
 
 ### Feature
