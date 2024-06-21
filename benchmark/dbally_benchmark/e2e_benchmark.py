@@ -26,6 +26,7 @@ from dbally.collection.exceptions import NoViewFoundError
 from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, UnsupportedQueryError
 from dbally.llms.litellm import LiteLLM
 from dbally.view_selection.prompt import VIEW_SELECTION_TEMPLATE
+from dbally.llms.local_llm import LocalLLM
 
 
 async def _run_dbally_for_single_example(example: BIRDExample, collection: Collection) -> Text2SQLResult:
@@ -82,10 +83,13 @@ async def evaluate(cfg: DictConfig) -> Any:
 
     engine = create_engine(benchmark_cfg.pg_connection_string + f"/{cfg.db_name}")
 
-    llm = LiteLLM(
-        model_name="gpt-4",
-        api_key=benchmark_cfg.openai_api_key,
-    )
+    if "gpt" in cfg.model_name:
+        llm = LiteLLM(
+            api_key=benchmark_cfg.openai_api_key,
+            model_name=cfg.model_name,
+        )
+    else:
+        llm = LocalLLM(model_name=cfg.model_name, api_key=benchmark_cfg.hf_api_key)
 
     db = dbally.create_collection(cfg.db_name, llm)
 

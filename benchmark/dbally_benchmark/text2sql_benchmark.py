@@ -22,6 +22,7 @@ from sqlalchemy import create_engine
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.llms.litellm import LiteLLM
+from dbally.llms.local_llm import LocalLLM
 
 
 def _load_db_schema(db_name: str, encoding: Optional[str] = None) -> str:
@@ -89,6 +90,8 @@ async def evaluate(cfg: DictConfig) -> Any:
             model_name=cfg.model_name,
             api_key=benchmark_cfg.openai_api_key,
         )
+    else:
+        llm = LocalLLM(model_name=cfg.model_name, api_key=benchmark_cfg.hf_api_key)
 
     run = None
     if cfg.neptune.log:
