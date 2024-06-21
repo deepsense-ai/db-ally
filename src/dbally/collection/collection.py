@@ -5,22 +5,19 @@ import time
 from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Type, TypeVar
 
-from dbally.assistants.base import FunctionCallingError
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
-from dbally.audit.events import FallbackEvent, RequestEnd, RequestStart
+from dbally.audit.events import RequestEnd, RequestStart
+from dbally.collection.decorators import handle_exception
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
-from dbally.iql import IQLError
 from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
-from dbally.prompts import PromptTemplateError
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.base import BaseView, IndexLocation
-from dbally.views.freeform.text2sql import Text2SQLError
 
 
 class Collection:
@@ -184,6 +181,57 @@ class Collection:
             name: (textwrap.dedent(view.__doc__).strip() if view.__doc__ else "") for name, view in self._views.items()
         }
 
+    @handle_exception((UnsupportedQueryError, NoViewFoundError))
+    async def _select_view(self, question, event_tracker, llm_options):
+        views = self.list()
+        if len(views) == 0:
+            raise ValueError("Empty collection")
+        if len(views) == 1:
+            selected_view_name = next(iter(views))
+        else:
+            selected_view_name = await self._view_selector.select_view(
+                question=question,
+                views=views,
+                event_tracker=event_tracker,
+                llm_options=llm_options,
+            )
+        return selected_view_name
+
+    @handle_exception((UnsupportedQueryError, NoViewFoundError))
+    async def _ask_view(
+        self, selected_view_name, question, event_tracker, dry_run, llm_options, return_natural_response, start_time
+    ):
+        selected_view = self.get(selected_view_name)
+        start_time_view = time.monotonic()
+        view_result = await selected_view.ask(
+            query=question,
+            llm=self._llm,
+            event_tracker=event_tracker,
+            n_retries=self.n_retries,
+            dry_run=dry_run,
+            llm_options=llm_options,
+        )
+        end_time_view = time.monotonic()
+
+        textual_response = None
+        if not dry_run and return_natural_response:
+            textual_response = await self._nl_responder.generate_response(
+                result=view_result,
+                question=question,
+                event_tracker=event_tracker,
+                llm_options=llm_options,
+            )
+
+        result = ExecutionResult(
+            results=view_result.results,
+            context=view_result.context,
+            execution_time=time.monotonic() - start_time,
+            execution_time_view=end_time_view - start_time_view,
+            view_name=selected_view_name,
+            textual_response=textual_response,
+        )
+        return result
+
     async def ask(
         self,
         question: str,
@@ -224,76 +272,19 @@ class Collection:
 
         await event_tracker.request_start(RequestStart(question=question, collection_name=self.name))
 
-        # select view
-        views = self.list()
-        selected_view = None
-        result = None
+        selected_view_name = await self._select_view(
+            question=question, event_tracker=event_tracker, llm_options=llm_options
+        )
 
-        try:
-            if len(views) == 0:
-                raise ValueError("Empty collection")
-            if len(views) == 1:
-                selected_view = next(iter(views))
-            else:
-                selected_view = await self._view_selector.select_view(
-                    question=question,
-                    views=views,
-                    event_tracker=event_tracker,
-                    llm_options=llm_options,
-                )
-
-            view = self.get(selected_view)
-
-            start_time_view = time.monotonic()
-            view_result = await view.ask(
-                query=question,
-                llm=self._llm,
-                event_tracker=event_tracker,
-                n_retries=self.n_retries,
-                dry_run=dry_run,
-                llm_options=llm_options,
-            )
-            end_time_view = time.monotonic()
-
-            textual_response = None
-            if not dry_run and return_natural_response:
-                textual_response = await self._nl_responder.generate_response(
-                    result=view_result,
-                    question=question,
-                    event_tracker=event_tracker,
-                    llm_options=llm_options,
-                )
-
-            result = ExecutionResult(
-                results=view_result.results,
-                context=view_result.context,
-                execution_time=time.monotonic() - start_time,
-                execution_time_view=end_time_view - start_time_view,
-                view_name=selected_view,
-                textual_response=textual_response,
-            )
-        except (
-            NoViewFoundError,
-            IQLError,
-            FunctionCallingError,
-            UnsupportedQueryError,
-            PromptTemplateError,
-            Text2SQLError,
-        ) as e:
-            if self._fallback_collection:
-                event = FallbackEvent(
-                    triggering_collection_name=self.name,
-                    triggering_view_name=selected_view,
-                    error_description=repr(e),
-                    fallback_collection_name=self._fallback_collection.name,
-                )
-                async with event_tracker.track_event(event) as span:
-                    result = await self._fallback_collection.ask(
-                        question, dry_run, return_natural_response, llm_options
-                    )
-                    span(event)
-            else:
-                return None
+        result = await self._ask_view(
+            selected_view_name=selected_view_name,
+            question=question,
+            event_tracker=event_tracker,
+            dry_run=dry_run,
+            llm_options=llm_options,
+            return_natural_response=return_natural_response,
+            start_time=start_time,
+        )
 
         await event_tracker.request_end(RequestEnd(result=result))
 
