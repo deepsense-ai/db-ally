@@ -3,8 +3,8 @@ from io import StringIO
 from sys import stdout
 from typing import Optional
 
-from dbally.audit.event_handlers.base import EventHandler, LogLevel
-from dbally.audit.events import Event, LLMEvent, RequestEnd, RequestStart, SimilarityEvent
+from dbally.audit.event_handlers.base import EventHandler
+from dbally.audit.events import Event, FallbackEvent, LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 try:
     from rich import print as pprint
@@ -98,30 +98,18 @@ class CLIEventHandler(EventHandler):
                 f"[cyan bold]STORE: [grey53]{event.store}\n"
                 f"[cyan bold]FETCHER: [grey53]{event.fetcher}\n"
             )
-
-    async def log_message(self, message: str, log_level: LogLevel = LogLevel.INFO) -> None:
-        """
-        Displays message logged by user
-
-        Args:
-            message: Message to be sent
-            log_level: Message log level.
-        """
-        colour = None
-        if log_level == LogLevel.INFO:
-            colour = "white"
-        elif log_level == LogLevel.WARNING:
-            colour = "orange"
-        elif log_level == LogLevel.ERROR:
-            colour = "red"
-        elif log_level == LogLevel.DEBUG:
-            colour = "blue"
-
-        self._print_syntax("[grey53]\n=======================================")
-        self._print_syntax("[grey53]=======================================")
-        self._print_syntax(f"[{colour}]{log_level}: {message}")
-        self._print_syntax("[grey53]=======================================")
-        self._print_syntax("[grey53]=======================================\n")
+        elif isinstance(event, FallbackEvent):
+            self._print_syntax(
+                "[grey53]\n=======================================\n"
+                "[grey53]=======================================\n"
+                f"[orange bold]Fallback event starts \n"
+                f"[orange bold]Triggering collection: [grey53]{event.triggering_collection_name}\n"
+                f"[orange bold]Triggering view name: [grey53]{event.triggering_view_name}\n"
+                f"[orange bold]Fallback collection name: [grey53]{event.fallback_collection_name}\n"
+                f"[orange bold]Error description: [grey53]{event.error_description}\n"
+                "[grey53]=======================================\n"
+                "[grey53]=======================================\n"
+            )
 
     async def event_end(self, event: Optional[Event], request_context: None, event_context: None) -> None:
         """

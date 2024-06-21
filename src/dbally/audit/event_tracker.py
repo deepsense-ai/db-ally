@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, Dict, List, Optional
 
-from dbally.audit.event_handlers.base import EventHandler, LogLevel
+from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.events import Event, RequestEnd, RequestStart
 from dbally.audit.spans import EventSpan
 
@@ -92,15 +92,3 @@ class EventTracker:
             await handler.event_end(
                 span.data, event_context=contexts[handler], request_context=self._request_contexts[handler]
             )
-
-    async def log_message(self, message: str, log_level: LogLevel = LogLevel.INFO) -> None:
-        """
-        Send message to the handler
-
-        Args:
-            message: Message to be sent to
-            log_level: Log level.
-        """
-
-        for handler in self._handlers:
-            await handler.log_message(message, log_level)

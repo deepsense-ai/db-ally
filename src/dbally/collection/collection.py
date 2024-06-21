@@ -6,9 +6,9 @@ from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Type, TypeVar
 
 from dbally.assistants.base import FunctionCallingError
-from dbally.audit.event_handlers.base import EventHandler, LogLevel
+from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
-from dbally.audit.events import RequestEnd, RequestStart
+from dbally.audit.events import FallbackEvent, RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
 from dbally.iql import IQLError
@@ -129,9 +129,9 @@ class Collection:
         """
         self._event_handlers.append(event_handler)
 
-    def add_fallback(self, fallback_collection: "Collection") -> "Collection":
+    def set_fallback(self, fallback_collection: "Collection") -> "Collection":
         """
-        Add fallback collection which will be asked if the ask to base collection does not succeed.
+        Set fallback collection which will be asked if the ask to base collection does not succeed.
 
         Args:
             fallback_collection: Collection to be asked in case of base collection failure.
@@ -152,7 +152,7 @@ class Collection:
         Returns:
             The fallback collection to create chains call
         """
-        return self.add_fallback(fallback_collection)
+        return self.set_fallback(fallback_collection)
 
     def get(self, name: str) -> BaseView:
         """
@@ -279,15 +279,20 @@ class Collection:
             UnsupportedQueryError,
             PromptTemplateError,
             Text2SQLError,
-        ):
-            await event_tracker.log_message(
-                f"Exception occurred during {selected_view} processing. Executing view from fallback" f"collection.",
-                log_level=LogLevel.INFO,
-            )
+        ) as e:
             if self._fallback_collection:
-                result = await self._fallback_collection.ask(question, dry_run, return_natural_response, llm_options)
+                event = FallbackEvent(
+                    triggering_collection_name=self.name,
+                    triggering_view_name=selected_view,
+                    error_description=repr(e),
+                    fallback_collection_name=self._fallback_collection.name,
+                )
+                async with event_tracker.track_event(event) as span:
+                    result = await self._fallback_collection.ask(
+                        question, dry_run, return_natural_response, llm_options
+                    )
+                    span(event)
             else:
-                await event_tracker.log_message(r"No results found", LogLevel.ERROR)
                 return None
 
         await event_tracker.request_end(RequestEnd(result=result))

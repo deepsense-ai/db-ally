@@ -2,33 +2,10 @@ import abc
 from abc import ABC
 from typing import Generic, Optional, TypeVar
 
-from strenum import StrEnum
-
 from dbally.audit.events import Event, RequestEnd, RequestStart
 
 RequestCtx = TypeVar("RequestCtx")
 EventCtx = TypeVar("EventCtx")
-
-
-class LogLevel(StrEnum):
-    """
-    An enumeration representing different logging levels.
-
-    This enumeration inherits from `StrEnum`, making each log level a string value.
-    The log levels indicate the severity or type of events that occur within an application,
-    and they are commonly used to filter and categorize log messages.
-
-    Attributes:
-        INFO (str): Represents informational messages that highlight the progress of the application.
-        WARNING (str): Represents potentially harmful situations that require attention.
-        ERROR (str): Represents error events that might still allow the application to continue running.
-        DEBUG (str): Represents detailed debugging messages useful during development and troubleshooting.
-    """
-
-    INFO = "Info"
-    WARNING = "Warning"
-    ERROR = "Error"
-    DEBUG = "Debug"
 
 
 class EventHandler(Generic[RequestCtx, EventCtx], ABC):
@@ -81,14 +58,4 @@ class EventHandler(Generic[RequestCtx, EventCtx], ABC):
         Args:
             output: The output of the request.
             request_context: Optional context passed from request_start method
-        """
-
-    @abc.abstractmethod
-    async def log_message(self, message: str, log_level: LogLevel = LogLevel.INFO) -> None:
-        """
-        Displays the response from the LLM.
-
-        Args:
-            message: db-ally event to be logged with all the details.
-            log_level: log level/importance
         """
