@@ -58,7 +58,6 @@ class BaseStructuredView(BaseView):
         """
         iql_generator = self.get_iql_generator(llm)
         filter_list = self.list_filters()
-        aggregation_list = self.list_aggregations()
 
         iql_filters, conversation = await iql_generator.generate_iql(
             question=query,
