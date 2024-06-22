@@ -30,7 +30,6 @@ def handle_exception(handle_exception_list) -> Callable:
         - dry_run (bool): Whether to perform a dry run.
         - return_natural_response (bool): Whether to return a natural response.
         - llm_options (dict): Options for the language model.
-        - selected_view_name (str): The name of the selected view.
         - event_tracker (EventTracker): An event tracker instance.
 
     If an exception is caught and a fallback collection is available, an event of type
@@ -61,6 +60,10 @@ def handle_exception(handle_exception_list) -> Callable:
                         fallback_collection_name=self._fallback_collection.name,
                         error_description=repr(error),
                     )
+                    if not self.fallback_collection_chain:
+                        self.fallback_collection_chain = []
+                    else:
+                        self._fallback_collection.append(self._fallback_collection)
 
                     async with event_tracker.track_event(event) as span:
                         result = await self._fallback_collection.ask(
