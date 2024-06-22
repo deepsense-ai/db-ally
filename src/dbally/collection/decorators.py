@@ -1,9 +1,49 @@
+from typing import Callable
+
 from dbally.audit.events import FallbackEvent
 
 
-def handle_exception(handle_exception_list):
-    def handle_exception_inner(func):
-        async def wrapper(self, **kwargs):  # pylint: disable=missing-return-doc
+# pylint: disable=protected-access
+def handle_exception(handle_exception_list) -> Callable:
+    """
+    Decorator to handle specified exceptions during the execution of an asynchronous function.
+
+    This decorator is designed to be used with class methods, and it handles exceptions specified
+    in `handle_exception_list`. If an exception occurs and a fallback collection is available,
+    it will attempt to perform the same operation using the fallback collection.
+
+    Args:
+        handle_exception_list (tuple): A tuple of exception classes that should be handled
+                                       by this decorator.
+
+    Returns:
+        function: A wrapper function that handles the specified exceptions and attempts a fallback
+                  operation if applicable.
+
+    Example:
+        @handle_exception((SomeException, AnotherException))
+        async def some_method(self, **kwargs):
+            # method implementation
+
+    The decorated method can expect the following keyword arguments in `kwargs`:
+        - question (str): The question to be asked.
+        - dry_run (bool): Whether to perform a dry run.
+        - return_natural_response (bool): Whether to return a natural response.
+        - llm_options (dict): Options for the language model.
+        - selected_view_name (str): The name of the selected view.
+        - event_tracker (EventTracker): An event tracker instance.
+
+    If an exception is caught and a fallback collection is available, an event of type
+    `FallbackEvent` will be tracked, and the fallback collection's `ask` method will be called
+    with the same arguments.
+
+    Raises:
+        Exception: If an exception in `handle_exception_list` occurs and no fallback collection is
+                   available, the original exception is re-raised.
+    """
+
+    def handle_exception_inner(func: Callable) -> Callable:  # pylint: disable=missing-return-doc
+        async def wrapper(self, **kwargs) -> Callable:  # pylint: disable=missing-return-doc
             try:
                 result = await func(self, **kwargs)
             except handle_exception_list as error:

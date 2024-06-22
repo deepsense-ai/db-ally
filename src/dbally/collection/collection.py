@@ -182,7 +182,25 @@ class Collection:
         }
 
     @handle_exception((UnsupportedQueryError, NoViewFoundError))
-    async def _select_view(self, question, event_tracker, llm_options):
+    async def _select_view(self, question: str, event_tracker: EventTracker, llm_options: Optional[LLMOptions]) -> str:
+        """
+        Selects a view from the collection based on the given question.
+
+        This method retrieves the list of views from the collection and selects one based on the
+        specified `question`. If there is only one view, it selects that one. If there are multiple
+        views, it uses a view selector to determine the most appropriate view.
+
+        Args:
+            question: The question to be asked.
+            event_tracker: An instance of the event tracker to record events.
+            llm_options: Options for the language model.
+
+        Returns:
+            The name of the selected view.
+
+        Raises:
+            ValueError: If the collection of views is empty.
+        """
         views = self.list()
         if len(views) == 0:
             raise ValueError("Empty collection")
@@ -199,8 +217,49 @@ class Collection:
 
     @handle_exception((UnsupportedQueryError, NoViewFoundError))
     async def _ask_view(
-        self, selected_view_name, question, event_tracker, dry_run, llm_options, return_natural_response, start_time
-    ):
+        self,
+        selected_view_name: str,
+        question: str,
+        event_tracker: EventTracker,
+        dry_run: bool,
+        llm_options: Optional[LLMOptions],
+        return_natural_response: bool,
+        start_time: float,
+    ) -> ExecutionResult:
+        """
+        Executes a query on the selected view and processes the result.
+
+        This method performs the query on the selected view and measures the execution time. It also
+        optionally generates a natural language response if `return_natural_response` is True and
+        `dry_run` is False.
+
+        Args:
+            selected_view_name: The name of the selected view.
+            question: The query to be executed.
+            event_tracker: An instance of the event tracker to record events.
+            dry_run: Whether to perform a dry run without executing the actual query.
+            llm_options: Options for the language model.
+            return_natural_response: Whether to return a natural response.
+            start_time: The start time of the execution.
+
+        Returns:
+            ExecutionResult: An object containing the results, context, execution time, view execution
+                             time, view name, and optionally a textual response.
+
+        Example:
+            result = await self._ask_view(
+                selected_view_name="example_view",
+                question="What is the capital of France?",
+                event_tracker=my_event_tracker,
+                dry_run=False,
+                llm_options={"option1": "value1"},
+                return_natural_response=True,
+                start_time=time.monotonic()
+            )
+
+        Raises:
+            KeyError: If the specified view does not exist in the collection.
+        """
         selected_view = self.get(selected_view_name)
         start_time_view = time.monotonic()
         view_result = await selected_view.ask(
