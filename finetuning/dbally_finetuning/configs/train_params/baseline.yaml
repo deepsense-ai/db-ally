@@ -1,0 +1,14 @@
+learning_rate: 2e-05
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 1
+num_train_epochs: 120
+lr_scheduler_type: "cosine"
+logging_steps: 1
+fp16: false
+do_eval: false
+gradient_checkpointing: true
+logging_strategy: "steps"
+max_steps: -1
+output_dir: "output"
+save_strategy: "no"
+seed: 42
