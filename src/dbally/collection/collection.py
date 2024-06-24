@@ -9,7 +9,7 @@ from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import RequestEnd, RequestStart, FallbackEvent
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
-from dbally.collection.results import ExecutionResult
+from dbally.collection.results import ExecutionResult, ViewExecutionResult
 from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
@@ -186,6 +186,23 @@ class Collection:
         event_tracker: EventTracker,
         llm_options: Optional[LLMOptions],
     ) -> str:
+        """
+        Select a view based on the provided question and options.
+
+        If there is only one view available, it selects that view directly. Otherwise, it
+        uses the view selector to choose the most appropriate view.
+
+        Args:
+            question: The question to be answered.
+            event_tracker: The event tracker for logging and tracking events.
+            llm_options: Options for the LLM client.
+
+        Returns:
+            str: The name of the selected view.
+
+        Raises:
+            ValueError: If the collection of views is empty.
+        """
 
         views = self.list()
         if len(views) == 0:
@@ -201,7 +218,27 @@ class Collection:
             )
         return selected_view_name
 
-    async def _ask_view(self, selected_view_name, question, event_tracker, llm_options, dry_run):
+    async def _ask_view(
+        self,
+        selected_view_name: str,
+        question: str,
+        event_tracker: EventTracker,
+        llm_options: Optional[LLMOptions],
+        dry_run: bool,
+    ):
+        """
+        Ask the selected view to provide an answer to the question.
+
+        Args:
+            selected_view_name: The name of the selected view.
+            question: The question to be answered.
+            event_tracker: The event tracker for logging and tracking events.
+            llm_options: Options for the LLM client.
+            dry_run: If True, only generate the query without executing it.
+
+        Returns:
+            Any: The result from the selected view.
+        """
         selected_view = self.get(selected_view_name)
         view_result = await selected_view.ask(
             query=question,
@@ -215,11 +252,23 @@ class Collection:
 
     async def _generate_textual_response(
         self,
-        view_result,
-        question,
-        event_tracker,
-        llm_options,
-    ):
+        view_result: ViewExecutionResult,
+        question: str,
+        event_tracker: EventTracker,
+        llm_options: Optional[LLMOptions],
+    ) -> str:
+        """
+        Generate a textual response from the view result.
+
+        Args:
+            view_result: The result from the view.
+            question: The question to be answered.
+            event_tracker: The event tracker for logging and tracking events.
+            llm_options: Options for the LLM client.
+
+        Returns:
+            The generated textual response.
+        """
         textual_response = await self._nl_responder.generate_response(
             result=view_result,
             question=question,
