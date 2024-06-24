@@ -11,6 +11,7 @@ from dbally.llms.clients.base import LLMOptions
 from dbally.prompts.input_format import DefaultFewShotInputFormatter, DefaultInputFormatter
 from dbally.views.exposed_functions import ExposedFunction
 
+from ..prompts.few_shot import FewShotExample
 from ..similarity import AbstractSimilarityIndex
 from .base import BaseView, IndexLocation
 
@@ -59,20 +60,12 @@ class BaseStructuredView(BaseView):
         """
 
         filter_list = self.list_filters()
-        few_shot_list = self.list_few_shot()
+        examples = self.list_examples(query)
         iql_generator = self.get_iql_generator(llm)
 
         input_formatter = (
-            DefaultFewShotInputFormatter(
-                question=query,
-                filters=filter_list,
-                examples=[
-                    ex
-                    for ex_func in few_shot_list
-                    for ex in getattr(self, ex_func.name)(**{ex_func.parameters[0].name: query})
-                ],
-            )
-            if few_shot_list
+            DefaultFewShotInputFormatter(question=query, filters=filter_list, examples=examples)
+            if examples
             else DefaultInputFormatter(question=query, filters=filter_list)
         )
 
@@ -148,3 +141,18 @@ class BaseStructuredView(BaseView):
                 if param.similarity_index:
                     indexes[param.similarity_index].append((self.__class__.__name__, filter_.name, param.name))
         return indexes
+
+    def list_examples(self, query: str) -> List[FewShotExample]:
+        """
+        List all examples to be injected into few-shot prompt.
+
+        Args:
+            query: a question used in prompt. Can be used to rank examples before they are injected.
+
+        Returns:
+            List of few-shot examples
+        """
+        few_shots = self.list_few_shot()
+        return [
+            ex for ex_func in few_shots for ex in getattr(self, ex_func.name)(**{ex_func.parameters[0].name: query})
+        ]

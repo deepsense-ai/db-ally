@@ -11,7 +11,6 @@ from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.prompts import PromptTemplate
-from dbally.prompts.few_shot import FewShotExample
 from dbally.prompts.input_format import DefaultFewShotInputFormatter, DefaultInputFormatter
 from dbally.similarity import AbstractSimilarityIndex, SimpleSqlAlchemyFetcher
 from dbally.views.base import BaseView, IndexLocation
@@ -145,7 +144,7 @@ class BaseText2SQLView(BaseView, ABC):
             Text2SQLError: If the text2sql query generation fails after n_retries.
         """
 
-        examples = self.examples(query)
+        examples = self.list_examples(query)
         input_formatter = (
             DefaultFewShotInputFormatter(
                 question=query,
@@ -262,15 +261,3 @@ class BaseText2SQLView(BaseView, ABC):
                 if column.similarity_index:
                     indexes[column.similarity_index].append((self.__class__.__name__, table.name, column.name))
         return indexes
-
-    def examples(self, query: str) -> List[FewShotExample]:  # pylint: disable=unused-argument
-        """
-        List all examples to be injected into few-shot prompt.
-
-        Args:
-            query: a question used in prompt. Can be used to rank exmaples before they are injected.
-
-        Returns:
-            List of few-shot examples
-        """
-        return []

@@ -5,6 +5,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
+from dbally.prompts.few_shot import FewShotExample
 from dbally.similarity import AbstractSimilarityIndex
 
 IndexLocation = Tuple[str, str, str]
@@ -49,3 +50,15 @@ class BaseView(metaclass=abc.ABCMeta):
             Mapping of similarity indexes to their locations.
         """
         return {}
+
+    def list_examples(self, query: str) -> List[FewShotExample]:  # pylint: disable=unused-argument
+        """
+        List all examples to be injected into few-shot prompt.
+
+        Args:
+            query: a question used in prompt. Can be used to rank examples before they are injected.
+
+        Returns:
+            List of few-shot examples
+        """
+        return []

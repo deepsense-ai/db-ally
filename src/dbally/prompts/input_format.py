@@ -17,7 +17,7 @@ def _promptify_filters(
         filters: list of filters exposed by the view
 
     Returns:
-        filters_for_prompt: filters formatted for prompt
+        filters formatted for prompt
     """
     filters_for_prompt = "\n".join([str(filter) for filter in filters])
     return filters_for_prompt
@@ -97,20 +97,20 @@ class DefaultFewShotInputFormatter(InputFormatter):
 
         template_copy = copy.deepcopy(conversation_template)
         sys_msg = template_copy.chat[0]
-        exisiting_msgs = [message for message in template_copy.chat[1:] if "is_example" not in message]
+        existing_msgs = [msg for msg in template_copy.chat[1:] if "is_example" not in msg]
         chat_examples = [
-            c
-            for e in self.examples
-            for c in [
-                {"role": "user", "content": e.question, "is_example": True},
-                {"role": "assistant", "content": e.answer, "is_example": True},
+            msg
+            for example in self.examples
+            for msg in [
+                {"role": "user", "content": example.question, "is_example": True},
+                {"role": "assistant", "content": example.answer, "is_example": True},
             ]
         ]
 
         template_copy.chat = (
             sys_msg,
             *chat_examples,
-            *exisiting_msgs,
+            *existing_msgs,
         )
 
         return template_copy, {

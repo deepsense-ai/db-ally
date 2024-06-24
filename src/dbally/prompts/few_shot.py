@@ -14,14 +14,19 @@ class FewShotExample:
         Args:
             question: sample question
             answer_expr: it can be either a stringified expression or a lambda for greater safety and code completions.
+
+        Raises:
+            ValueError: If answer_expr is not a correct type.
         """
         self.question = question
         self.answer_expr = answer_expr
 
         if isinstance(self.answer_expr, str):
             self.answer = self.answer_expr
-        else:
+        elif callable(answer_expr):
             self.answer = self._parse_lambda(answer_expr)
+        else:
+            raise ValueError("Answer expression should be either a string or a lambda")
 
     def _parse_lambda(self, expr: Callable) -> str:
         """
