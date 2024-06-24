@@ -5,6 +5,7 @@ import time
 from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Type, TypeVar
 
+from dbally import DbAllyError
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import RequestEnd, RequestStart, FallbackEvent
@@ -279,14 +280,32 @@ class Collection:
 
     async def _handle_fallback(
         self,
-        question,
-        dry_run,
-        return_natural_response,
-        llm_options,
-        selected_view_name,
-        event_tracker,
-        caught_exception,
+        question: str,
+        dry_run: bool,
+        return_natural_response: bool,
+        llm_options: Optional[LLMOptions],
+        selected_view_name: str,
+        event_tracker: EventTracker,
+        caught_exception: DbAllyError,
     ):
+        """
+        Handle fallback if the main query fails.
+
+        Args:
+            question: The question to be answered.
+            dry_run: If True, only generate the query without executing it.
+            return_natural_response: If True, return the natural language response.
+            llm_options: Options for the LLM client.
+            selected_view_name: The name of the selected view.
+            event_tracker: The event tracker for logging and tracking events.
+            caught_exception: The exception that was caught.
+
+        Returns:
+            Any: The result from the fallback collection.
+
+        Raises:
+            Exception: If there is no fallback collection or if an error occurs in the fallback.
+        """
 
         if self._fallback_collection:
 
