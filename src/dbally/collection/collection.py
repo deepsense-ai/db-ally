@@ -8,7 +8,7 @@ from typing import Callable, Dict, List, Optional, Type, TypeVar
 from dbally import DbAllyError
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
-from dbally.audit.events import RequestEnd, RequestStart, FallbackEvent
+from dbally.audit.events import FallbackEvent, RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult, ViewExecutionResult
 from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
@@ -308,7 +308,6 @@ class Collection:
         """
 
         if self._fallback_collection:
-
             event = FallbackEvent(
                 triggering_collection_name=self.name,
                 triggering_view_name=selected_view_name,
@@ -369,7 +368,6 @@ class Collection:
         selected_view_name = ""
 
         try:
-
             await event_tracker.request_start(RequestStart(question=question, collection_name=self.name))
 
             start_time = time.monotonic()
@@ -392,6 +390,28 @@ class Collection:
                 view_name=selected_view_name,
                 textual_response=natural_response,
             )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
 
         except handle_exceptions as caught_exception:
             result = await self._handle_fallback(
