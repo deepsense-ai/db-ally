@@ -10,7 +10,7 @@ from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 from dbally.views.structured import BaseStructuredView
 
 from .__version__ import __version__
-from ._main import create_collection
+from ._main import add_event_handler, create_collection, event_handlers, set_event_handlers
 from ._types import NOT_GIVEN, NotGiven
 from .embeddings.exceptions import (
     EmbeddingConnectionError,
@@ -23,27 +23,30 @@ from .llms.clients.exceptions import LLMConnectionError, LLMError, LLMResponseEr
 
 __all__ = [
     "__version__",
+    "event_handlers",
+    "add_event_handler",
     "create_collection",
+    "set_event_handlers",
     "decorators",
-    "MethodsBaseView",
-    "SqlAlchemyBaseView",
-    "Collection",
     "BaseStructuredView",
+    "Collection",
     "DataFrameBaseView",
-    "ExecutionResult",
     "DbAllyError",
+    "ExecutionResult",
     "EmbeddingError",
     "EmbeddingConnectionError",
     "EmbeddingResponseError",
     "EmbeddingStatusError",
+    "IndexUpdateError",
     "LLMError",
     "LLMConnectionError",
     "LLMResponseError",
     "LLMStatusError",
-    "NoViewFoundError",
-    "IndexUpdateError",
+    "MethodsBaseView",
     "NotGiven",
     "NOT_GIVEN",
+    "NoViewFoundError",
+    "SqlAlchemyBaseView",
 ]
 
 # Update the __module__ attribute for exported symbols so that

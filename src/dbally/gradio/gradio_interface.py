@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Tuple
 import gradio
 import pandas as pd
 
+import dbally
 from dbally import BaseStructuredView
 from dbally.audit import CLIEventHandler
 from dbally.collection import Collection
@@ -177,7 +178,7 @@ class GradioAdapter:
 
         self.preview_limit = preview_limit
         self.collection = user_collection
-        self.collection.add_event_handler(CLIEventHandler(self.log))
+        dbally.add_event_handler(CLIEventHandler(self.log))
 
         data_preview_frame = pd.DataFrame()
         question_interactive = False

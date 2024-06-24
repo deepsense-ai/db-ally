@@ -32,7 +32,8 @@ class CLIEventHandler(EventHandler):
         import dbally
         from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 
-        my_collection = dbally.create_collection("my_collection", llm, event_handlers=[CLIEventHandler()])
+        dbally.set_event_handlers([CLIEventHandler()])
+        my_collection = dbally.create_collection("my_collection", llm)
     ```
 
     After using `CLIEventHandler`, during every `Collection.ask` execution you will see output similar to the one below:
