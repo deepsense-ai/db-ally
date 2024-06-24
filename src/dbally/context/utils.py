@@ -26,6 +26,9 @@ def _extract_params_and_context(
     context = None
     # TODO confirm whether to use typing.get_type_hints(method) or method.__annotations__
     for name_, type_ in typing.get_type_hints(filter_method_).items():
+        if name_ in hidden_args:
+            continue
+
         if isclass(type_) and issubclass(type_, BaseCallerContext):
             # this is the case when user provides a context but no other type hint for a specifc arg
             # TODO confirm whether this case should be supported
