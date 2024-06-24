@@ -23,7 +23,7 @@ class IQLPromptTemplate(PromptTemplate):
         llm_response_parser: Callable = lambda x: x,
     ):
         super().__init__(chat, response_format, llm_response_parser)
-        self.chat = check_prompt_variables(chat, {"filters", "question"})
+        self.chat = check_prompt_variables(chat, {"filters", "question", "aggregation"})
 
 
 def _validate_iql_response(llm_response: str) -> str:
@@ -51,7 +51,7 @@ default_iql_template = IQLPromptTemplate(
         {
             "role": "system",
             "content": "You have access to API that lets you query a database:\n"
-            "\n{filters}\n"
+            "\n{filters}, {aggregation}\n"
             "Please suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
             "Remember! Don't give any comments, just the function calls.\n"
             "The output will look like this:\n"
