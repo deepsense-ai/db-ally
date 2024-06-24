@@ -10,7 +10,6 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import RequestEnd, RequestStart
 from dbally.collection.decorators import handle_exception
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
-from dbally.collection.fallback_monitor import FallbackMonitor
 from dbally.collection.results import ExecutionResult
 from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
 from dbally.llms.base import LLM
@@ -39,7 +38,6 @@ class Collection:
         nl_responder: NLResponder,
         n_retries: int = 3,
         fallback_collection: Optional["Collection"] = None,
-        fallback_monitor: Optional[FallbackMonitor] = None,
     ) -> None:
         """
         Args:
@@ -68,7 +66,6 @@ class Collection:
         self._event_handlers = event_handlers
         self._llm = llm
         self._fallback_collection: Optional[Collection] = fallback_collection
-        self._fallback_monitor = fallback_monitor
 
     T = TypeVar("T", bound=BaseView)
 

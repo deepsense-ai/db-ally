@@ -2,7 +2,6 @@ from typing import List, Optional
 
 from .audit.event_handlers.base import EventHandler
 from .collection import Collection
-from .collection.fallback_monitor import FallbackMonitor
 from .llms import LLM
 from .nl_responder.nl_responder import NLResponder
 from .view_selection.base import ViewSelector
@@ -16,7 +15,6 @@ def create_collection(
     view_selector: Optional[ViewSelector] = None,
     nl_responder: Optional[NLResponder] = None,
     fallback_collection: Optional[Collection] = None,
-    fallback_monitor: Optional[FallbackMonitor] = None,
 ) -> Collection:
     """
     Create a new [Collection](collection.md) that is a container for registering views and the\
@@ -36,7 +34,6 @@ def create_collection(
     ```
 
     Args:
-        fallback_monitor:
         name: Name of the collection is available for [Event handlers](event_handlers/index.md) and is\
         used to distinguish different db-ally runs.
         llm: LLM used by the collection to generate responses for natural language queries.
@@ -67,5 +64,4 @@ def create_collection(
         llm=llm,
         event_handlers=event_handlers,
         fallback_collection=fallback_collection,
-        fallback_monitor=fallback_monitor,
     )
