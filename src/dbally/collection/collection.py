@@ -7,8 +7,7 @@ from typing import Callable, Dict, List, Optional, Type, TypeVar
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
-from dbally.audit.events import RequestEnd, RequestStart
-from dbally.collection.decorators import handle_exception
+from dbally.audit.events import RequestEnd, RequestStart, FallbackEvent
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
 from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
@@ -181,46 +180,12 @@ class Collection:
             name: (textwrap.dedent(view.__doc__).strip() if view.__doc__ else "") for name, view in self._views.items()
         }
 
-    @handle_exception((UnsupportedQueryError, NoViewFoundError))
-    async def _ask_question(
+    async def _select_view(
         self,
         question: str,
         event_tracker: EventTracker,
-        dry_run: bool,
         llm_options: Optional[LLMOptions],
-        return_natural_response: bool,
-        start_time: float,
-    ) -> ExecutionResult:
-        """
-        Find matching view and executes a query on the view and processes the result.
-
-        This method performs the query on the selected view and measures the execution time. It also
-        optionally generates a natural language response if `return_natural_response` is True and
-        `dry_run` is False.
-
-        Args:
-            question: The query to be executed.
-            event_tracker: An instance of the event tracker to record events.
-            dry_run: Whether to perform a dry run without executing the actual query.
-            llm_options: Options for the language model.
-            return_natural_response: Whether to return a natural response.
-
-        Returns:
-            ExecutionResult: An object containing the results, context, execution time, view execution
-                             time, view name, and optionally a textual response.
-
-        Example:
-            result = await self._ask_view(
-                selected_view_name="example_view",
-                question="What is the capital of France?",
-                event_tracker=my_event_tracker,
-                dry_run=False,
-                llm_options={"option1": "value1"},
-                return_natural_response=True)
-
-        Raises:
-            KeyError: If the specified view does not exist in the collection.
-        """
+    ) -> str:
 
         views = self.list()
         if len(views) == 0:
@@ -234,9 +199,10 @@ class Collection:
                 event_tracker=event_tracker,
                 llm_options=llm_options,
             )
+        return selected_view_name
 
+    async def _ask_view(self, selected_view_name, question, event_tracker, llm_options, dry_run):
         selected_view = self.get(selected_view_name)
-        start_time_view = time.monotonic()
         view_result = await selected_view.ask(
             query=question,
             llm=self._llm,
@@ -245,26 +211,55 @@ class Collection:
             dry_run=dry_run,
             llm_options=llm_options,
         )
-        end_time_view = time.monotonic()
+        return view_result
 
-        textual_response = None
-        if not dry_run and return_natural_response:
-            textual_response = await self._nl_responder.generate_response(
-                result=view_result,
-                question=question,
-                event_tracker=event_tracker,
-                llm_options=llm_options,
+    async def _generate_textual_response(
+        self,
+        view_result,
+        question,
+        event_tracker,
+        llm_options,
+    ):
+        textual_response = await self._nl_responder.generate_response(
+            result=view_result,
+            question=question,
+            event_tracker=event_tracker,
+            llm_options=llm_options,
+        )
+        return textual_response
+
+    async def _handle_fallback(
+        self,
+        question,
+        dry_run,
+        return_natural_response,
+        llm_options,
+        selected_view_name,
+        event_tracker,
+        caught_exception,
+    ):
+
+        if self._fallback_collection:
+
+            event = FallbackEvent(
+                triggering_collection_name=self.name,
+                triggering_view_name=selected_view_name,
+                fallback_collection_name=self._fallback_collection.name,
+                error_description=repr(caught_exception),
             )
 
-        result = ExecutionResult(
-            results=view_result.results,
-            context=view_result.context,
-            execution_time=time.monotonic() - start_time,
-            execution_time_view=end_time_view - start_time_view,
-            view_name=selected_view_name,
-            textual_response=textual_response,
-        )
-        return result
+            async with event_tracker.track_event(event) as span:
+                result = await self._fallback_collection.ask(
+                    question=question,
+                    dry_run=dry_run,
+                    return_natural_response=return_natural_response,
+                    llm_options=llm_options,
+                )
+                span(event)
+            return result
+
+        else:
+            raise caught_exception
 
     async def ask(
         self,
@@ -300,22 +295,47 @@ class Collection:
             IQLError: if incorrect IQL was generated `n_retries` amount of times.
             ValueError: if incorrect IQL was generated `n_retries` amount of times.
         """
-
+        handle_exceptions = (NoViewFoundError, UnsupportedQueryError, IndexUpdateError)
         event_tracker = EventTracker.initialize_with_handlers(self._event_handlers)
 
-        await event_tracker.request_start(RequestStart(question=question, collection_name=self.name))
-        start_time = time.monotonic()
+        selected_view_name = ""
 
-        result = await self._ask_question(
-            question=question,
-            start_time=start_time,
-            event_tracker=event_tracker,
-            dry_run=dry_run,
-            llm_options=llm_options,
-            return_natural_response=return_natural_response,
-        )
+        try:
 
-        await event_tracker.request_end(RequestEnd(result=result))
+            await event_tracker.request_start(RequestStart(question=question, collection_name=self.name))
+
+            start_time = time.monotonic()
+            selected_view_name = await self._select_view(question, event_tracker, llm_options)
+
+            start_time_view = time.monotonic()
+            view_result = await self._ask_view(selected_view_name, question, event_tracker, llm_options, dry_run)
+            end_time_view = time.monotonic()
+
+            natural_response = (
+                self._generate_textual_response(view_result, question, event_tracker, llm_options)
+                if not dry_run and return_natural_response
+                else ""
+            )
+            result = ExecutionResult(
+                results=view_result.results,
+                context=view_result.context,
+                execution_time=time.monotonic() - start_time,
+                execution_time_view=end_time_view - start_time_view,
+                view_name=selected_view_name,
+                textual_response=natural_response,
+            )
+
+        except handle_exceptions as caught_exception:
+            result = await self._handle_fallback(
+                question,
+                dry_run,
+                return_natural_response,
+                llm_options,
+                selected_view_name,
+                event_tracker,
+                caught_exception,
+            )
+            await event_tracker.request_end(RequestEnd(result=result))
 
         return result
 
