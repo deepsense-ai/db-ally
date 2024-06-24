@@ -136,6 +136,8 @@ class GradioAdapter:
             log_content = self.log.read()
 
         gradio_dataframe, empty_dataframe_warning = self._load_gradio_data(data, "Results", "No matching results found")
+        if self.collection._fallback_monitor and self.collection._fallback_monitor.number_of_fallback_queries() > 0:
+            print(self.collection._fallback_monitor)
         return (
             gradio_dataframe,
             empty_dataframe_warning,

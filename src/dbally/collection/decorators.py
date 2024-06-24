@@ -52,6 +52,7 @@ def handle_exception(handle_exception_list) -> Callable:
                 llm_options = kwargs.get("llm_options")
                 selected_view_name = str(kwargs.get("selected_view_name"))
                 event_tracker = kwargs.get("event_tracker")
+                start_time = kwargs.get("start_time")
 
                 if self._fallback_collection:
                     event = FallbackEvent(
@@ -60,10 +61,8 @@ def handle_exception(handle_exception_list) -> Callable:
                         fallback_collection_name=self._fallback_collection.name,
                         error_description=repr(error),
                     )
-                    if not self.fallback_collection_chain:
-                        self.fallback_collection_chain = []
-                    else:
-                        self._fallback_collection.append(self._fallback_collection)
+                    if self._fallback_monitor:
+                        self._fallback_monitor.add_fallback_event(question, start_time, event)
 
                     async with event_tracker.track_event(event) as span:
                         result = await self._fallback_collection.ask(

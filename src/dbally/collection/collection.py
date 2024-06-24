@@ -10,6 +10,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import RequestEnd, RequestStart
 from dbally.collection.decorators import handle_exception
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
+from dbally.collection.fallback_monitor import FallbackMonitor
 from dbally.collection.results import ExecutionResult
 from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
 from dbally.llms.base import LLM
@@ -38,6 +39,7 @@ class Collection:
         nl_responder: NLResponder,
         n_retries: int = 3,
         fallback_collection: Optional["Collection"] = None,
+        fallback_monitor: Optional[FallbackMonitor] = None,
     ) -> None:
         """
         Args:
@@ -66,6 +68,7 @@ class Collection:
         self._event_handlers = event_handlers
         self._llm = llm
         self._fallback_collection: Optional[Collection] = fallback_collection
+        self._fallback_monitor = fallback_monitor
 
     T = TypeVar("T", bound=BaseView)
 
@@ -182,43 +185,8 @@ class Collection:
         }
 
     @handle_exception((UnsupportedQueryError, NoViewFoundError))
-    async def _select_view(self, question: str, event_tracker: EventTracker, llm_options: Optional[LLMOptions]) -> str:
-        """
-        Selects a view from the collection based on the given question.
-
-        This method retrieves the list of views from the collection and selects one based on the
-        specified `question`. If there is only one view, it selects that one. If there are multiple
-        views, it uses a view selector to determine the most appropriate view.
-
-        Args:
-            question: The question to be asked.
-            event_tracker: An instance of the event tracker to record events.
-            llm_options: Options for the language model.
-
-        Returns:
-            The name of the selected view.
-
-        Raises:
-            ValueError: If the collection of views is empty.
-        """
-        views = self.list()
-        if len(views) == 0:
-            raise ValueError("Empty collection")
-        if len(views) == 1:
-            selected_view_name = next(iter(views))
-        else:
-            selected_view_name = await self._view_selector.select_view(
-                question=question,
-                views=views,
-                event_tracker=event_tracker,
-                llm_options=llm_options,
-            )
-        return selected_view_name
-
-    @handle_exception((UnsupportedQueryError, NoViewFoundError))
-    async def _ask_view(
+    async def _ask_question(
         self,
-        selected_view_name: str,
         question: str,
         event_tracker: EventTracker,
         dry_run: bool,
@@ -227,20 +195,18 @@ class Collection:
         start_time: float,
     ) -> ExecutionResult:
         """
-        Executes a query on the selected view and processes the result.
+        Find matching view and executes a query on the view and processes the result.
 
         This method performs the query on the selected view and measures the execution time. It also
         optionally generates a natural language response if `return_natural_response` is True and
         `dry_run` is False.
 
         Args:
-            selected_view_name: The name of the selected view.
             question: The query to be executed.
             event_tracker: An instance of the event tracker to record events.
             dry_run: Whether to perform a dry run without executing the actual query.
             llm_options: Options for the language model.
             return_natural_response: Whether to return a natural response.
-            start_time: The start time of the execution.
 
         Returns:
             ExecutionResult: An object containing the results, context, execution time, view execution
@@ -253,13 +219,25 @@ class Collection:
                 event_tracker=my_event_tracker,
                 dry_run=False,
                 llm_options={"option1": "value1"},
-                return_natural_response=True,
-                start_time=time.monotonic()
-            )
+                return_natural_response=True)
 
         Raises:
             KeyError: If the specified view does not exist in the collection.
         """
+
+        views = self.list()
+        if len(views) == 0:
+            raise ValueError("Empty collection")
+        if len(views) == 1:
+            selected_view_name = next(iter(views))
+        else:
+            selected_view_name = await self._view_selector.select_view(
+                question=question,
+                views=views,
+                event_tracker=event_tracker,
+                llm_options=llm_options,
+            )
+
         selected_view = self.get(selected_view_name)
         start_time_view = time.monotonic()
         view_result = await selected_view.ask(
@@ -325,24 +303,19 @@ class Collection:
             IQLError: if incorrect IQL was generated `n_retries` amount of times.
             ValueError: if incorrect IQL was generated `n_retries` amount of times.
         """
-        start_time = time.monotonic()
 
         event_tracker = EventTracker.initialize_with_handlers(self._event_handlers)
 
         await event_tracker.request_start(RequestStart(question=question, collection_name=self.name))
+        start_time = time.monotonic()
 
-        selected_view_name = await self._select_view(
-            question=question, event_tracker=event_tracker, llm_options=llm_options
-        )
-
-        result = await self._ask_view(
-            selected_view_name=selected_view_name,
+        result = await self._ask_question(
             question=question,
+            start_time=start_time,
             event_tracker=event_tracker,
             dry_run=dry_run,
             llm_options=llm_options,
             return_natural_response=return_natural_response,
-            start_time=start_time,
         )
 
         await event_tracker.request_end(RequestEnd(result=result))
