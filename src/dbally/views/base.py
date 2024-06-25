@@ -5,7 +5,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.prompts.few_shot import FewShotExample
+from dbally.prompts.elements import FewShotExample
 from dbally.similarity import AbstractSimilarityIndex
 
 IndexLocation = Tuple[str, str, str]

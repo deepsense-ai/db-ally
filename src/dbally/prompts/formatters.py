@@ -2,7 +2,7 @@ import copy
 from abc import ABCMeta, abstractmethod
 from typing import Dict, List, Tuple
 
-from dbally.prompts.few_shot import FewShotExample
+from dbally.prompts.elements import FewShotExample
 from dbally.prompts.prompt_template import PromptTemplate
 from dbally.views.exposed_functions import ExposedFunction
 

@@ -3,7 +3,7 @@ from typing import List
 import pytest
 
 from dbally.iql_generator.iql_prompt_template import default_iql_template
-from dbally.prompts.few_shot import FewShotExample
+from dbally.prompts.elements import FewShotExample
 from dbally.prompts.formatters import DefaultFewShotInputFormatter, DefaultInputFormatter
 
 
