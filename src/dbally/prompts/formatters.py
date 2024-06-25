@@ -41,7 +41,7 @@ class InputFormatter(metaclass=ABCMeta):
         """
 
 
-class DefaultInputFormatter(InputFormatter):
+class IQLInputFormatter(InputFormatter):
     """
     Formats provided parameters to a form acceptable by default IQL prompt
     """
@@ -66,7 +66,7 @@ class DefaultInputFormatter(InputFormatter):
         }
 
 
-class DefaultFewShotInputFormatter(InputFormatter):
+class IQLFewShotInputFormatter(InputFormatter):
     """
     Formats provided parameters to a form acceptable by default IQL prompt.
     Calling it will inject `examples` before last message in a conversation.

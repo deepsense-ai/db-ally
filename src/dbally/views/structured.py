@@ -8,7 +8,7 @@ from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.prompts.formatters import DefaultFewShotInputFormatter, DefaultInputFormatter
+from dbally.prompts.formatters import IQLFewShotInputFormatter, IQLInputFormatter
 from dbally.views.exposed_functions import ExposedFunction
 
 from ..similarity import AbstractSimilarityIndex
@@ -63,13 +63,15 @@ class BaseStructuredView(BaseView):
         iql_generator = self.get_iql_generator(llm)
 
         input_formatter = (
-            DefaultFewShotInputFormatter(question=query, filters=filters, examples=examples)
+            IQLFewShotInputFormatter(question=query, filters=filters, examples=examples)
             if examples
-            else DefaultInputFormatter(question=query, filters=filters)
+            else IQLInputFormatter(question=query, filters=filters)
         )
 
         iql_filters, conversation = await iql_generator.generate_iql(
-            input_formatter=input_formatter, event_tracker=event_tracker, llm_options=llm_options
+            input_formatter=input_formatter,
+            event_tracker=event_tracker,
+            llm_options=llm_options,
         )
 
         for _ in range(n_retries):

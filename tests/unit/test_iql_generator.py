@@ -11,7 +11,7 @@ from dbally.iql import IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.iql_generator.iql_prompt_template import default_iql_template
 from dbally.prompts.elements import FewShotExample
-from dbally.prompts.formatters import DefaultFewShotInputFormatter, DefaultInputFormatter
+from dbally.prompts.formatters import IQLFewShotInputFormatter, IQLInputFormatter
 from dbally.views.methods_base import MethodsBaseView
 from tests.unit.mocks import MockLLM
 
@@ -59,7 +59,7 @@ async def test_iql_generation(llm: MockLLM, event_tracker: EventTracker, view: M
     filters = {str(_filter) for _filter in view.list_filters()}
     assert filters == {"filter_by_id(idx: int)", "filter_by_name(city: str)"}
 
-    input_formatter = DefaultInputFormatter(question="Mock_question", filters=view.list_filters())
+    input_formatter = IQLInputFormatter(question="Mock_question", filters=view.list_filters())
 
     response = await iql_generator.generate_iql(input_formatter, event_tracker, default_iql_template)
 
@@ -79,7 +79,7 @@ async def test_iql_few_shot_generation(llm: MockLLM, event_tracker: EventTracker
     filters = {str(_filter) for _filter in view.list_filters()}
     assert filters == {"filter_by_id(idx: int)", "filter_by_name(city: str)"}
 
-    input_formatter = DefaultFewShotInputFormatter(
+    input_formatter = IQLFewShotInputFormatter(
         question="Mock_question",
         filters=view.list_filters(),
         examples=[FewShotExample("question", "filter_by_id(0)")],

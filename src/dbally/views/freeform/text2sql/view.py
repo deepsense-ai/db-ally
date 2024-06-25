@@ -11,7 +11,6 @@ from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.prompts import PromptTemplate
-from dbally.prompts.formatters import DefaultFewShotInputFormatter, DefaultInputFormatter
 from dbally.similarity import AbstractSimilarityIndex, SimpleSqlAlchemyFetcher
 from dbally.views.base import BaseView, IndexLocation
 from dbally.views.freeform.text2sql.config import TableConfig
@@ -143,20 +142,7 @@ class BaseText2SQLView(BaseView, ABC):
         Raises:
             Text2SQLError: If the text2sql query generation fails after n_retries.
         """
-
-        examples = self.list_few_shots()
-        input_formatter = (
-            DefaultFewShotInputFormatter(
-                question=query,
-                filters=[],
-                examples=examples,
-            )
-            if examples
-            else DefaultInputFormatter(question=query, filters=[])
-        )
-
-        conversation, _ = input_formatter(text2sql_prompt)
-
+        conversation = text2sql_prompt
         sql, rows = None, None
         exceptions = []
 

@@ -4,11 +4,11 @@ import pytest
 
 from dbally.iql_generator.iql_prompt_template import default_iql_template
 from dbally.prompts.elements import FewShotExample
-from dbally.prompts.formatters import DefaultFewShotInputFormatter, DefaultInputFormatter
+from dbally.prompts.formatters import IQLFewShotInputFormatter, IQLInputFormatter
 
 
 async def test_iql_input_format_default() -> None:
-    input_fmt = DefaultInputFormatter([], "")
+    input_fmt = IQLInputFormatter([], "")
 
     conversation, format = input_fmt(default_iql_template)
 
@@ -18,7 +18,7 @@ async def test_iql_input_format_default() -> None:
 
 
 async def test_iql_input_format_few_shot_default() -> None:
-    input_fmt = DefaultFewShotInputFormatter([], [], "")
+    input_fmt = IQLFewShotInputFormatter([], [], "")
 
     conversation, format = input_fmt(default_iql_template)
 
@@ -36,7 +36,7 @@ async def test_iql_input_format_few_shot_default() -> None:
 )
 async def test_iql_input_format_few_shot_examples_injected(examples: List[FewShotExample]) -> None:
     examples = [FewShotExample("q1", "a1")]
-    input_fmt = DefaultFewShotInputFormatter([], examples, "")
+    input_fmt = IQLFewShotInputFormatter([], examples, "")
 
     conversation, format = input_fmt(default_iql_template)
 
@@ -47,7 +47,7 @@ async def test_iql_input_format_few_shot_examples_injected(examples: List[FewSho
 
 async def test_iql_input_format_few_shot_examples_repeat_no_example_duplicates() -> None:
     examples = [FewShotExample("q1", "a1")]
-    input_fmt = DefaultFewShotInputFormatter([], examples, "q")
+    input_fmt = IQLFewShotInputFormatter([], examples, "q")
 
     conversation, _ = input_fmt(default_iql_template)
 
