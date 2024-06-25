@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Type
 
 from .audit import CLIEventHandler
 from .audit.event_handlers.base import EventHandler
@@ -50,6 +50,23 @@ def add_event_handler(event_handler: EventHandler) -> None:
     if isinstance(type(event_handler), EventHandler):
         raise ValueError(f"{event_handler} is not an instance of EventHandler")
     event_handlers.append(event_handler)
+
+
+def find_event_handler(object_type: Type):
+    """
+    Finds an event handler of the specified type from a list of event handlers.
+
+    Args:
+        object_type (Type[Any]): The type of the event handler to find.
+
+    Returns:
+        Optional[Any]: The first event handler of the specified type if found,
+                       otherwise None.
+    """
+    for event_handler in event_handlers:
+        if type(event_handler) is object_type:  # pylint disable=unidiomatic-typecheck
+            return event_handler
+    return None
 
 
 def create_collection(

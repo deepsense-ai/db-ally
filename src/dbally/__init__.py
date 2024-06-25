@@ -10,7 +10,7 @@ from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 from dbally.views.structured import BaseStructuredView
 
 from .__version__ import __version__
-from ._main import add_event_handler, create_collection, event_handlers, set_event_handlers
+from ._main import add_event_handler, create_collection, event_handlers, find_event_handler, set_event_handlers
 from ._types import NOT_GIVEN, NotGiven
 from .embeddings.exceptions import (
     EmbeddingConnectionError,
@@ -26,6 +26,7 @@ __all__ = [
     "event_handlers",
     "add_event_handler",
     "create_collection",
+    "find_event_handler",
     "set_event_handlers",
     "decorators",
     "BaseStructuredView",

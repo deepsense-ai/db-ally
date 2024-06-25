@@ -1,6 +1,4 @@
 import re
-from io import StringIO
-from sys import stdout
 from typing import Optional
 
 try:
@@ -24,7 +22,7 @@ _RICH_FORMATING_PATTERN = rf"\[.*({'|'.join(_RICH_FORMATING_KEYWORD_SET)}).*\]"
 class CLIEventHandler(EventHandler):
     """
     This handler displays all interactions between LLM and user happening during `Collection.ask`\
-    execution inside the terminal or store them in the given buffer.
+    execution inside the terminal.
 
     ### Usage
 
@@ -41,12 +39,9 @@ class CLIEventHandler(EventHandler):
     ![Example output from CLIEventHandler](../../assets/event_handler_example.png)
     """
 
-    def __init__(self, buffer: Optional[StringIO] = None) -> None:
+    def __init__(self) -> None:
         super().__init__()
-
-        self.buffer = buffer
-        out = self.buffer if buffer else stdout
-        self._console = Console(file=out, record=True) if RICH_OUTPUT else None
+        self._console = Console(record=True) if RICH_OUTPUT else None
 
     def _print_syntax(self, content: str, lexer: Optional[str] = None) -> None:
         if self._console:

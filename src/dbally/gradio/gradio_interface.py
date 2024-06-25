@@ -1,5 +1,4 @@
 import json
-from io import StringIO
 from typing import Any, Dict, List, Tuple
 
 import gradio
@@ -7,7 +6,7 @@ import pandas as pd
 
 import dbally
 from dbally import BaseStructuredView
-from dbally.audit import CLIEventHandler
+from dbally.audit.event_handlers.buffer_event_handler import BufferEventHandler
 from dbally.collection import Collection
 from dbally.collection.exceptions import NoViewFoundError
 from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
@@ -42,12 +41,15 @@ class GradioAdapter:
         self.preview_limit = None
         self.selected_view_name = None
         self.collection = None
-        self.log = StringIO()
+        buffer_handler = dbally.find_event_handler(BufferEventHandler)
+        if not buffer_handler:
+            raise ValueError(
+                "Could not initialize gradio console. Missing buffer handler.\n"
+                "Add dbally.add_event_handler(BufferEventHandler()) to fix it"
+            )
+        self.log = buffer_handler.buffer
 
-    def _load_gradio_data(self, preview_dataframe, label, empty_warning=None) -> Tuple[gradio.DataFrame, gradio.Label]:
-        if not empty_warning:
-            empty_warning = "Preview not available"
-
+    def _load_gradio_data(self, preview_dataframe, label) -> Tuple[gradio.DataFrame, gradio.Label]:
         if preview_dataframe.empty:
             gradio_preview_dataframe = gradio.DataFrame(label=label, value=preview_dataframe, visible=False)
             empty_frame_label = gradio.Label(value=f"{label} not available", visible=True, show_label=False)
@@ -131,7 +133,7 @@ class GradioAdapter:
             self.log.seek(0)
             log_content = self.log.read()
 
-        gradio_dataframe, empty_dataframe_warning = self._load_gradio_data(data, "Results", "No matching results found")
+        gradio_dataframe, empty_dataframe_warning = self._load_gradio_data(data, "Results")
         return (
             gradio_dataframe,
             empty_dataframe_warning,
@@ -178,7 +180,6 @@ class GradioAdapter:
 
         self.preview_limit = preview_limit
         self.collection = user_collection
-        dbally.add_event_handler(CLIEventHandler(self.log))
 
         data_preview_frame = pd.DataFrame()
         question_interactive = False
