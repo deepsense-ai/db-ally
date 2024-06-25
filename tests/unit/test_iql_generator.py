@@ -11,7 +11,7 @@ from dbally.iql import IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.iql_generator.iql_prompt_template import default_iql_template
 from dbally.prompts.few_shot import FewShotExample
-from dbally.prompts.input_format import DefaultFewShotInputFormatter, DefaultInputFormatter
+from dbally.prompts.formatters import DefaultFewShotInputFormatter, DefaultInputFormatter
 from dbally.views.methods_base import MethodsBaseView
 from tests.unit.mocks import MockLLM
 

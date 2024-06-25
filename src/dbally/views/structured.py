@@ -8,7 +8,7 @@ from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.prompts.input_format import DefaultFewShotInputFormatter, DefaultInputFormatter
+from dbally.prompts.formatters import DefaultFewShotInputFormatter, DefaultInputFormatter
 from dbally.views.exposed_functions import ExposedFunction
 
 from ..similarity import AbstractSimilarityIndex

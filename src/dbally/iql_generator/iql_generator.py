@@ -4,7 +4,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template  # noqa
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.prompts.input_format import InputFormatter
+from dbally.prompts.formatters import InputFormatter
 
 
 class IQLGenerator:

@@ -11,7 +11,7 @@ from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.prompts import PromptTemplate
-from dbally.prompts.input_format import DefaultFewShotInputFormatter, DefaultInputFormatter
+from dbally.prompts.formatters import DefaultFewShotInputFormatter, DefaultInputFormatter
 from dbally.similarity import AbstractSimilarityIndex, SimpleSqlAlchemyFetcher
 from dbally.views.base import BaseView, IndexLocation
 from dbally.views.freeform.text2sql.config import TableConfig
