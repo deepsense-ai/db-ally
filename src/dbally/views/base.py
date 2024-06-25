@@ -51,12 +51,9 @@ class BaseView(metaclass=abc.ABCMeta):
         """
         return {}
 
-    def list_examples(self, query: str) -> List[FewShotExample]:  # pylint: disable=unused-argument
+    def list_few_shots(self) -> List[FewShotExample]:
         """
         List all examples to be injected into few-shot prompt.
-
-        Args:
-            query: a question used in prompt. Can be used to rank examples before they are injected.
 
         Returns:
             List of few-shot examples

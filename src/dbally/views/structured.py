@@ -11,7 +11,6 @@ from dbally.llms.clients.base import LLMOptions
 from dbally.prompts.input_format import DefaultFewShotInputFormatter, DefaultInputFormatter
 from dbally.views.exposed_functions import ExposedFunction
 
-from ..prompts.few_shot import FewShotExample
 from ..similarity import AbstractSimilarityIndex
 from .base import BaseView, IndexLocation
 
@@ -59,14 +58,14 @@ class BaseStructuredView(BaseView):
             The result of the query.
         """
 
-        filter_list = self.list_filters()
-        examples = self.list_examples(query)
+        filters = self.list_filters()
+        examples = self.list_few_shots()
         iql_generator = self.get_iql_generator(llm)
 
         input_formatter = (
-            DefaultFewShotInputFormatter(question=query, filters=filter_list, examples=examples)
+            DefaultFewShotInputFormatter(question=query, filters=filters, examples=examples)
             if examples
-            else DefaultInputFormatter(question=query, filters=filter_list)
+            else DefaultInputFormatter(question=query, filters=filters)
         )
 
         iql_filters, conversation = await iql_generator.generate_iql(
@@ -75,7 +74,7 @@ class BaseStructuredView(BaseView):
 
         for _ in range(n_retries):
             try:
-                filters = await IQLQuery.parse(iql_filters, filter_list, event_tracker=event_tracker)
+                filters = await IQLQuery.parse(iql_filters, filters, event_tracker=event_tracker)
                 await self.apply_filters(filters)
                 break
             except (IQLError, ValueError) as e:
@@ -99,14 +98,6 @@ class BaseStructuredView(BaseView):
 
         Returns:
             Filters defined inside the View.
-        """
-
-    @abc.abstractmethod
-    def list_few_shot(self) -> List[ExposedFunction]:
-        """
-
-        Returns:
-            Few shot selectors defined inside the View.
         """
 
     @abc.abstractmethod
@@ -141,18 +132,3 @@ class BaseStructuredView(BaseView):
                 if param.similarity_index:
                     indexes[param.similarity_index].append((self.__class__.__name__, filter_.name, param.name))
         return indexes
-
-    def list_examples(self, query: str) -> List[FewShotExample]:
-        """
-        List all examples to be injected into few-shot prompt.
-
-        Args:
-            query: a question used in prompt. Can be used to rank examples before they are injected.
-
-        Returns:
-            List of few-shot examples
-        """
-        few_shots = self.list_few_shot()
-        return [
-            ex for ex_func in few_shots for ex in getattr(self, ex_func.name)(**{ex_func.parameters[0].name: query})
-        ]

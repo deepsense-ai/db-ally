@@ -144,7 +144,7 @@ class BaseText2SQLView(BaseView, ABC):
             Text2SQLError: If the text2sql query generation fails after n_retries.
         """
 
-        examples = self.list_examples(query)
+        examples = self.list_few_shots()
         input_formatter = (
             DefaultFewShotInputFormatter(
                 question=query,

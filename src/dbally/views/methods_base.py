@@ -56,15 +56,6 @@ class MethodsBaseView(BaseStructuredView, metaclass=abc.ABCMeta):
         """
         return self.list_methods_by_decorator(decorators.view_filter)
 
-    def list_few_shot(self) -> List[ExposedFunction]:
-        """
-        List few shot selectors in the given view
-
-        Returns:
-            Selectors defined inside the View and decorated with `decorators.few_shot`.
-        """
-        return self.list_methods_by_decorator(decorators.few_shot)
-
     def _method_with_args_from_call(
         self, func: syntax.FunctionCall, method_decorator: Callable
     ) -> Tuple[Callable, list]:
