@@ -5,12 +5,12 @@ import time
 from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Type, TypeVar
 
-import dbally
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
+from dbally.global_handlers import global_event_handlers_list
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
@@ -33,7 +33,7 @@ class Collection:
         name: str,
         view_selector: ViewSelector,
         llm: LLM,
-        collection_event_handlers: List[EventHandler],
+        event_handlers: List[EventHandler],
         nl_responder: NLResponder,
         n_retries: int = 3,
     ) -> None:
@@ -45,7 +45,7 @@ class Collection:
             before generating the IQL query, a View that fits query the most is selected by the\
             [ViewSelector](view_selection/index.md).
             llm: LLM used by the collection to generate views and respond to natural language queries.
-            collection_event_handlers: Event handlers used by the collection during query executions. Can be used\
+            event_handlers: Event handlers used by the collection during query executions. Can be used\
             to log events as [CLIEventHandler](event_handlers/cli_handler.md) or to validate system performance\
             as [LangSmithEventHandler](event_handlers/langsmith_handler.md).
             nl_responder: Object that translates RAW response from db-ally into natural language.
@@ -59,9 +59,9 @@ class Collection:
         self._builders: Dict[str, Callable[[], BaseView]] = {}
         self._view_selector = view_selector
         self._nl_responder = nl_responder
-        if collection_event_handlers != dbally.event_handlers:
+        if event_handlers != global_event_handlers_list:
             print("WARNING Default event handler has been overwritten")
-        self._event_handlers = collection_event_handlers
+        self._event_handlers = event_handlers
         self._llm = llm
 
     T = TypeVar("T", bound=BaseView)

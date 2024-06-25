@@ -4,11 +4,11 @@ from typing import Any, Dict, List, Tuple
 import gradio
 import pandas as pd
 
-import dbally
 from dbally import BaseStructuredView
 from dbally.audit.event_handlers.buffer_event_handler import BufferEventHandler
 from dbally.collection import Collection
 from dbally.collection.exceptions import NoViewFoundError
+from dbally.global_handlers import find_event_handler
 from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
 from dbally.prompts import PromptTemplateError
 
@@ -41,7 +41,7 @@ class GradioAdapter:
         self.preview_limit = None
         self.selected_view_name = None
         self.collection = None
-        buffer_handler = dbally.find_event_handler(BufferEventHandler)
+        buffer_handler = find_event_handler(BufferEventHandler)
         if not buffer_handler:
             raise ValueError(
                 "Could not initialize gradio console. Missing buffer handler.\n"

@@ -1,6 +1,7 @@
-from typing import List, Optional, Type
+from typing import List, Optional
 
-from .audit import CLIEventHandler
+from dbally.global_handlers import global_event_handlers_list
+
 from .audit.event_handlers.base import EventHandler
 from .collection import Collection
 from .llms import LLM
@@ -8,70 +9,11 @@ from .nl_responder.nl_responder import NLResponder
 from .view_selection.base import ViewSelector
 from .view_selection.llm_view_selector import LLMViewSelector
 
-# Global list of event handlers initialized with a default CLIEventHandler.
-event_handlers: List[EventHandler] = [CLIEventHandler()]
-
-
-def set_event_handlers(event_handler_list: List[EventHandler]) -> None:
-    """
-    Set the global list of event handlers.
-
-    This function replaces the current list of event handlers with the provided list.
-    It ensures that each handler in the provided list is an instance of EventHandler.
-    If any handler is not an instance of EventHandler, it raises a ValueError.
-
-    Args:
-        event_handler_list (List[EventHandler]): The list of event handlers to set.
-
-    Raises:
-        ValueError: If any handler in the list is not an instance of EventHandler.
-    """
-    for handler in event_handler_list:
-        if isinstance(type(handler), EventHandler):
-            raise ValueError(f"{handler} is not an instance of EventHandler")
-    global event_handlers  # pylint: disable=global-statement
-    event_handlers = event_handler_list
-
-
-def add_event_handler(event_handler: EventHandler) -> None:
-    """
-    Add an event handler to the global list.
-
-    This function appends the provided event handler to the global list of event handlers.
-    It ensures that the handler is an instance of EventHandler.
-    If the handler is not an instance of EventHandler, it raises a ValueError.
-
-    Args:
-        event_handler (EventHandler): The event handler to add.
-
-    Raises:
-        ValueError: If the handler is not an instance of EventHandler.
-    """
-    if isinstance(type(event_handler), EventHandler):
-        raise ValueError(f"{event_handler} is not an instance of EventHandler")
-    event_handlers.append(event_handler)
-
-
-def find_event_handler(object_type: Type) -> Optional[EventHandler]:
-    """
-    Finds an event handler of the specified type from a list of event handlers.
-
-    Args:
-        object_type: The type of the event handler to find.
-
-    Returns:
-        The first event handler of the specified type if found, otherwise None.
-    """
-    for single_event_handler in event_handlers:
-        if type(single_event_handler) is object_type:  # pylint: disable=unidiomatic-typecheck
-            return single_event_handler
-    return None
-
 
 def create_collection(
     name: str,
     llm: LLM,
-    collection_event_handlers: Optional[List[EventHandler]] = None,
+    event_handlers: Optional[List[EventHandler]] = None,
     view_selector: Optional[ViewSelector] = None,
     nl_responder: Optional[NLResponder] = None,
 ) -> Collection:
@@ -96,7 +38,7 @@ def create_collection(
         name: Name of the collection is available for [Event handlers](event_handlers/index.md) and is\
         used to distinguish different db-ally runs.
         llm: LLM used by the collection to generate responses for natural language queries.
-        collection_event_handlers: Event handlers used by the collection during query executions. Can be used to\
+        event_handlers: Event handlers used by the collection during query executions. Can be used to\
         log events as [CLIEventHandler](event_handlers/cli_handler.md) or to validate system performance as\
         [LangSmithEventHandler](event_handlers/langsmith_handler.md).
         view_selector: View selector used by the collection to select the best view for the given query.\
@@ -114,12 +56,12 @@ def create_collection(
     view_selector = view_selector or LLMViewSelector(llm=llm)
     nl_responder = nl_responder or NLResponder(llm=llm)
 
-    collection_event_handlers = collection_event_handlers or event_handlers
+    event_handlers = event_handlers or global_event_handlers_list
 
     return Collection(
         name,
         nl_responder=nl_responder,
         view_selector=view_selector,
         llm=llm,
-        collection_event_handlers=collection_event_handlers,
+        event_handlers=event_handlers,
     )

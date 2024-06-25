@@ -63,7 +63,7 @@ async def main():
             connection.execute(sqlalchemy.text(table_config.ddl))
 
     llm = LiteLLM()
-    collection = dbally.create_collection("text2sql", llm=llm, collection_event_handlers=[CLIEventHandler()])
+    collection = dbally.create_collection("text2sql", llm=llm, event_handlers=[CLIEventHandler()])
     collection.add(MyText2SqlView, lambda: MyText2SqlView(engine))
 
     await collection.ask("What are the names of products bought by customers from London?")
