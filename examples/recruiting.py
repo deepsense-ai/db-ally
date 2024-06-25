@@ -102,7 +102,7 @@ async def recruiting_example(db_description: str, benchmark: Benchmark = example
     recruitment_db = dbally.create_collection(
         "recruitment",
         llm=LiteLLM(),
-        event_handlers=[CLIEventHandler()],
+        collection_event_handlers=[CLIEventHandler()],
     )
     recruitment_db.add(RecruitmentView, lambda: RecruitmentView(ENGINE))
 

@@ -47,7 +47,7 @@ class GradioAdapter:
                 "Could not initialize gradio console. Missing buffer handler.\n"
                 "Add dbally.add_event_handler(BufferEventHandler()) to fix it"
             )
-        self.log = buffer_handler.buffer
+        self.log: BufferEventHandler = buffer_handler.buffer  # pylint: disable=no-member
 
     def _load_gradio_data(self, preview_dataframe, label) -> Tuple[gradio.DataFrame, gradio.Label]:
         if preview_dataframe.empty:

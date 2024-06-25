@@ -52,20 +52,19 @@ def add_event_handler(event_handler: EventHandler) -> None:
     event_handlers.append(event_handler)
 
 
-def find_event_handler(object_type: Type):
+def find_event_handler(object_type: Type) -> Optional[EventHandler]:
     """
     Finds an event handler of the specified type from a list of event handlers.
 
     Args:
-        object_type (Type[Any]): The type of the event handler to find.
+        object_type: The type of the event handler to find.
 
     Returns:
-        Optional[Any]: The first event handler of the specified type if found,
-                       otherwise None.
+        The first event handler of the specified type if found, otherwise None.
     """
-    for event_handler in event_handlers:
-        if type(event_handler) is object_type:  # pylint disable=unidiomatic-typecheck
-            return event_handler
+    for single_event_handler in event_handlers:
+        if type(single_event_handler) is object_type:  # pylint: disable=unidiomatic-typecheck
+            return single_event_handler
     return None
 
 
