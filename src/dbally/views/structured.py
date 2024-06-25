@@ -8,6 +8,7 @@ from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
+from dbally.prompts.formatters import IQLFewShotInputFormatter, IQLInputFormatter
 from dbally.views.exposed_functions import ExposedFunction
 
 from ..similarity import AbstractSimilarityIndex
@@ -56,26 +57,32 @@ class BaseStructuredView(BaseView):
         Returns:
             The result of the query.
         """
+
+        filters = self.list_filters()
+        examples = self.list_few_shots()
         iql_generator = self.get_iql_generator(llm)
-        filter_list = self.list_filters()
+
+        input_formatter = (
+            IQLFewShotInputFormatter(question=query, filters=filters, examples=examples)
+            if examples
+            else IQLInputFormatter(question=query, filters=filters)
+        )
 
         iql_filters, conversation = await iql_generator.generate_iql(
-            question=query,
-            filters=filter_list,
+            input_formatter=input_formatter,
             event_tracker=event_tracker,
             llm_options=llm_options,
         )
 
         for _ in range(n_retries):
             try:
-                filters = await IQLQuery.parse(iql_filters, filter_list, event_tracker=event_tracker)
+                filters = await IQLQuery.parse(iql_filters, filters, event_tracker=event_tracker)
                 await self.apply_filters(filters)
                 break
             except (IQLError, ValueError) as e:
                 conversation = iql_generator.add_error_msg(conversation, [e])
                 iql_filters, conversation = await iql_generator.generate_iql(
-                    question=query,
-                    filters=filter_list,
+                    input_formatter=input_formatter,
                     event_tracker=event_tracker,
                     conversation=conversation,
                     llm_options=llm_options,

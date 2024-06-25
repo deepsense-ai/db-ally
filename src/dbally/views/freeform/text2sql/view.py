@@ -142,7 +142,6 @@ class BaseText2SQLView(BaseView, ABC):
         Raises:
             Text2SQLError: If the text2sql query generation fails after n_retries.
         """
-
         conversation = text2sql_prompt
         sql, rows = None, None
         exceptions = []
