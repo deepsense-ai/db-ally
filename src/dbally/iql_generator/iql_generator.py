@@ -2,7 +2,8 @@ import copy
 from typing import Callable, List, Optional, Tuple, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template
+from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template, \
+    default_iql_template_aggregation
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
@@ -38,7 +39,8 @@ class IQLGenerator:
         """
         self._llm = llm
         self._prompt_template = prompt_template or copy.deepcopy(default_iql_template)
-        self._promptify_view = promptify_view or _promptify_filters or _promptify_aggregations
+        self._promptify_view = promptify_view or _promptify_filters
+        self._promptify_aggregation = _promptify_aggregations
 
     async def generate_iql(
         self,
@@ -63,9 +65,10 @@ class IQLGenerator:
             IQL - iql generated based on the user question
         """
         filters_for_prompt = self._promptify_view(filters)
-        aggregations_for_prompt = self._promptify_view(aggregations)
+        aggregations_for_prompt = self._promptify_aggregation(aggregations)
 
-        template = conversation or self._prompt_template
+        template = conversation or self._prompt_template \
+            if not aggregations_for_prompt else default_iql_template_aggregation
 
         llm_response = await self._llm.generate_text(
             template=template,

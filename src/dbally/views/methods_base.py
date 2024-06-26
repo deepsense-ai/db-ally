@@ -56,6 +56,15 @@ class MethodsBaseView(BaseStructuredView, metaclass=abc.ABCMeta):
         """
         return self.list_methods_by_decorator(decorators.view_filter)
 
+    def list_aggregations(self) -> List[ExposedFunction]:
+        """
+        List aggregations in the given view
+
+        Returns:
+            Aggregations defined inside the View and decorated with `decorators.view_aggregation`.
+        """
+        return self.list_methods_by_decorator(decorators.view_aggregation)
+
     def _method_with_args_from_call(
         self, func: syntax.FunctionCall, method_decorator: Callable
     ) -> Tuple[Callable, list]:

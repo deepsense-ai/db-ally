@@ -51,7 +51,7 @@ default_iql_template = IQLPromptTemplate(
         {
             "role": "system",
             "content": "You have access to API that lets you query a database:\n"
-            "\n{filters}, {aggregation}\n"
+            "\n{filters}\n"
             "Please suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
             "Remember! Don't give any comments, just the function calls.\n"
             "The output will look like this:\n"
@@ -59,6 +59,32 @@ default_iql_template = IQLPromptTemplate(
             "DO NOT INCLUDE arguments names in your response. Only the values.\n"
             "You MUST use only these methods:\n"
             "\n{filters}\n"
+            "Avoid and ignore existing methods:"
+            "\n{aggregation}\n"
+            "It is VERY IMPORTANT not to use methods other than those listed above."
+            """If you DON'T KNOW HOW TO ANSWER DON'T SAY \"\", SAY: `UNSUPPORTED QUERY` INSTEAD! """
+            "This is CRUCIAL, otherwise the system will crash. ",
+        },
+        {"role": "user", "content": "{question}"},
+    ),
+    llm_response_parser=_validate_iql_response,
+)
+
+default_iql_template_aggregation = IQLPromptTemplate(
+    chat=(
+        {
+            "role": "system",
+            "content": "When prompted for aggregation, use the following method: {aggregation}."
+            "Avoid and ignore existing methods:"
+            "\n{filters}\n"
+            "The goal is to a apply API of single aggregation"
+            "by passing only supported SQL Aggregate Functions (eg. COUNT, MAX, AVG) as string param to that function."
+             "Remember! Don't give any comments, just the function calls.\n"
+            "The output will look like this:\n"
+            'aggregation1("COUNT")\n'
+            "DO NOT INCLUDE arguments names in your response. Only the values.\n"
+            "You MUST use only these methods:\n"
+            "\n{aggregation}\n"
             "It is VERY IMPORTANT not to use methods other than those listed above."
             """If you DON'T KNOW HOW TO ANSWER DON'T SAY \"\", SAY: `UNSUPPORTED QUERY` INSTEAD! """
             "This is CRUCIAL, otherwise the system will crash. ",
