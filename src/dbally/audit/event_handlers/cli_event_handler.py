@@ -3,6 +3,9 @@ from io import StringIO
 from sys import stdout
 from typing import Optional
 
+from dbally.audit.event_handlers.base import EventHandler
+from dbally.audit.events import Event, FallbackEvent, LLMEvent, RequestEnd, RequestStart, SimilarityEvent
+
 try:
     from rich import print as pprint
     from rich.console import Console
@@ -14,8 +17,6 @@ except ImportError:
     RICH_OUTPUT = False
     pprint = print  # type: ignore
 
-from dbally.audit.event_handlers.base import EventHandler
-from dbally.audit.events import Event, LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 _RICH_FORMATING_KEYWORD_SET = {"green", "orange", "grey", "bold", "cyan"}
 _RICH_FORMATING_PATTERN = rf"\[.*({'|'.join(_RICH_FORMATING_KEYWORD_SET)}).*\]"
@@ -97,6 +98,18 @@ class CLIEventHandler(EventHandler):
                 f"[cyan bold]STORE: [grey53]{event.store}\n"
                 f"[cyan bold]FETCHER: [grey53]{event.fetcher}\n"
             )
+        elif isinstance(event, FallbackEvent):
+            self._print_syntax(
+                "[grey53]\n=======================================\n"
+                "[grey53]=======================================\n"
+                f"[orange bold]Fallback event starts \n"
+                f"[orange bold]Triggering collection: [grey53]{event.triggering_collection_name}\n"
+                f"[orange bold]Triggering view name: [grey53]{event.triggering_view_name}\n"
+                f"[orange bold]Fallback collection name: [grey53]{event.fallback_collection_name}\n"
+                f"[orange bold]Error description: [grey53]{event.error_description}\n"
+                "[grey53]=======================================\n"
+                "[grey53]=======================================\n"
+            )
 
     async def event_end(self, event: Optional[Event], request_context: None, event_context: None) -> None:
         """
@@ -124,8 +137,11 @@ class CLIEventHandler(EventHandler):
             output: The output of the request.
             request_context: Optional context passed from request_start method
         """
-        self._print_syntax("[green bold]REQUEST OUTPUT:")
-        self._print_syntax(f"Number of rows: {len(output.result.results)}")
+        if output.result:
+            self._print_syntax("[green bold]REQUEST OUTPUT:")
+            self._print_syntax(f"Number of rows: {len(output.result.results)}")
 
-        if "sql" in output.result.context:
-            self._print_syntax(f"{output.result.context['sql']}", "psql")
+            if "sql" in output.result.context:
+                self._print_syntax(f"{output.result.context['sql']}", "psql")
+        else:
+            self._print_syntax("[red bold]No results found")

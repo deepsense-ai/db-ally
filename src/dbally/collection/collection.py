@@ -5,11 +5,13 @@ import time
 from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Type, TypeVar
 
+from dbally import DbAllyError
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
-from dbally.audit.events import RequestEnd, RequestStart
+from dbally.audit.events import FallbackEvent, RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
-from dbally.collection.results import ExecutionResult
+from dbally.collection.results import ExecutionResult, ViewExecutionResult
+from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
@@ -23,7 +25,7 @@ class Collection:
     Collection is a container for a set of views that can be used by db-ally to answer user questions.
 
     Tip:
-        It is recommended to create new collections using the [`dbally.create_colletion`][dbally.create_collection]\
+        It is recommended to create new collections using the [`dbally.create_collection`][dbally.create_collection]\
         function instead of instantiating this class directly.
     """
 
@@ -35,12 +37,13 @@ class Collection:
         event_handlers: List[EventHandler],
         nl_responder: NLResponder,
         n_retries: int = 3,
+        fallback_collection: Optional["Collection"] = None,
     ) -> None:
         """
         Args:
             name: Name of the collection is available for [Event handlers](event_handlers/index.md) and is\
             used to distinguish different db-ally runs.
-            view_selector: As you register more then one [View](views/index.md) within single collection,\
+            view_selector: As you register more than one [View](views/index.md) within single collection,\
             before generating the IQL query, a View that fits query the most is selected by the\
             [ViewSelector](view_selection/index.md).
             llm: LLM used by the collection to generate views and respond to natural language queries.
@@ -51,6 +54,8 @@ class Collection:
             n_retries: IQL generator may produce invalid IQL. If this is the case this argument specifies\
             how many times db-ally will try to regenerate it. Previous try with the error message is\
             appended to the chat history to guide next generations.
+            fallback_collection: collection to be asked when the ask function could not find answer in views registered
+            to this collection
         """
         self.name = name
         self.n_retries = n_retries
@@ -60,6 +65,7 @@ class Collection:
         self._nl_responder = nl_responder
         self._event_handlers = event_handlers
         self._llm = llm
+        self._fallback_collection: Optional[Collection] = fallback_collection
 
     T = TypeVar("T", bound=BaseView)
 
@@ -68,11 +74,11 @@ class Collection:
         Register new [View](views/index.md) that will be available to query via the collection.
 
         Args:
-            view: A class inherithing from BaseView. Object of this type will be initialized during\
+            view: A class inheriting from BaseView. Object of this type will be initialized during\
             query execution. We expect Class instead of object, as otherwise Views must have been implemented\
             stateless, which would be cumbersome.
             builder: Optional factory function that will be used to create the View instance. Use it when you\
-            need to pass outcome of API call or database connection to the view and it can change over time.
+            need to pass outcome of API call or database connection to the view, and it can change over time.
             name: Custom name of the view (defaults to the name of the class).
 
         Raises:
@@ -120,6 +126,31 @@ class Collection:
         """
         self._event_handlers.append(event_handler)
 
+    def set_fallback(self, fallback_collection: "Collection") -> "Collection":
+        """
+        Set fallback collection which will be asked if the ask to base collection does not succeed.
+
+        Args:
+            fallback_collection: Collection to be asked in case of base collection failure.
+
+        Returns:
+            The fallback collection to create chains call
+        """
+        self._fallback_collection = fallback_collection
+        return fallback_collection
+
+    def __rshift__(self, fallback_collection: "Collection"):
+        """
+        Add fallback collection which will be asked if the ask to base collection does not succeed.
+
+        Args:
+            fallback_collection: Collection to be asked in case of base collection failure.
+
+        Returns:
+            The fallback collection to create chains call
+        """
+        return self.set_fallback(fallback_collection)
+
     def get(self, name: str) -> BaseView:
         """
         Returns an instance of the view with the given name
@@ -150,13 +181,160 @@ class Collection:
             name: (textwrap.dedent(view.__doc__).strip() if view.__doc__ else "") for name, view in self._views.items()
         }
 
+    async def _select_view(
+        self,
+        question: str,
+        event_tracker: EventTracker,
+        llm_options: Optional[LLMOptions],
+    ) -> str:
+        """
+        Select a view based on the provided question and options.
+
+        If there is only one view available, it selects that view directly. Otherwise, it
+        uses the view selector to choose the most appropriate view.
+
+        Args:
+            question: The question to be answered.
+            event_tracker: The event tracker for logging and tracking events.
+            llm_options: Options for the LLM client.
+
+        Returns:
+            str: The name of the selected view.
+
+        Raises:
+            ValueError: If the collection of views is empty.
+        """
+
+        views = self.list()
+        if len(views) == 0:
+            raise ValueError("Empty collection")
+        if len(views) == 1:
+            selected_view_name = next(iter(views))
+        else:
+            selected_view_name = await self._view_selector.select_view(
+                question=question,
+                views=views,
+                event_tracker=event_tracker,
+                llm_options=llm_options,
+            )
+        return selected_view_name
+
+    async def _ask_view(
+        self,
+        selected_view_name: str,
+        question: str,
+        event_tracker: EventTracker,
+        llm_options: Optional[LLMOptions],
+        dry_run: bool,
+    ):
+        """
+        Ask the selected view to provide an answer to the question.
+
+        Args:
+            selected_view_name: The name of the selected view.
+            question: The question to be answered.
+            event_tracker: The event tracker for logging and tracking events.
+            llm_options: Options for the LLM client.
+            dry_run: If True, only generate the query without executing it.
+
+        Returns:
+            Any: The result from the selected view.
+        """
+        selected_view = self.get(selected_view_name)
+        view_result = await selected_view.ask(
+            query=question,
+            llm=self._llm,
+            event_tracker=event_tracker,
+            n_retries=self.n_retries,
+            dry_run=dry_run,
+            llm_options=llm_options,
+        )
+        return view_result
+
+    async def _generate_textual_response(
+        self,
+        view_result: ViewExecutionResult,
+        question: str,
+        event_tracker: EventTracker,
+        llm_options: Optional[LLMOptions],
+    ) -> str:
+        """
+        Generate a textual response from the view result.
+
+        Args:
+            view_result: The result from the view.
+            question: The question to be answered.
+            event_tracker: The event tracker for logging and tracking events.
+            llm_options: Options for the LLM client.
+
+        Returns:
+            The generated textual response.
+        """
+        textual_response = await self._nl_responder.generate_response(
+            result=view_result,
+            question=question,
+            event_tracker=event_tracker,
+            llm_options=llm_options,
+        )
+        return textual_response
+
+    async def _handle_fallback(
+        self,
+        question: str,
+        dry_run: bool,
+        return_natural_response: bool,
+        llm_options: Optional[LLMOptions],
+        selected_view_name: str,
+        event_tracker: EventTracker,
+        caught_exception: DbAllyError,
+    ):
+        """
+        Handle fallback if the main query fails.
+
+        Args:
+            question: The question to be answered.
+            dry_run: If True, only generate the query without executing it.
+            return_natural_response: If True, return the natural language response.
+            llm_options: Options for the LLM client.
+            selected_view_name: The name of the selected view.
+            event_tracker: The event tracker for logging and tracking events.
+            caught_exception: The exception that was caught.
+
+        Returns:
+            Any: The result from the fallback collection.
+
+        Raises:
+            Exception: If there is no fallback collection or if an error occurs in the fallback.
+        """
+
+        if self._fallback_collection:
+            event = FallbackEvent(
+                triggering_collection_name=self.name,
+                triggering_view_name=selected_view_name,
+                fallback_collection_name=self._fallback_collection.name,
+                error_description=repr(caught_exception),
+            )
+
+            async with event_tracker.track_event(event) as span:
+                result = await self._fallback_collection.ask(
+                    question=question,
+                    dry_run=dry_run,
+                    return_natural_response=return_natural_response,
+                    llm_options=llm_options,
+                )
+                span(event)
+            return result
+
+        else:
+            raise caught_exception
+
     async def ask(
         self,
         question: str,
         dry_run: bool = False,
         return_natural_response: bool = False,
         llm_options: Optional[LLMOptions] = None,
-    ) -> ExecutionResult:
+    ) -> Optional[ExecutionResult]:
         """
         Ask question in a text form and retrieve the answer based on the available views.
 
@@ -184,59 +362,68 @@ class Collection:
             IQLError: if incorrect IQL was generated `n_retries` amount of times.
             ValueError: if incorrect IQL was generated `n_retries` amount of times.
         """
-        start_time = time.monotonic()
-
+        handle_exceptions = (NoViewFoundError, UnsupportedQueryError, IndexUpdateError)
         event_tracker = EventTracker.initialize_with_handlers(self._event_handlers)
 
-        await event_tracker.request_start(RequestStart(question=question, collection_name=self.name))
+        selected_view_name = ""
 
-        # select view
-        views = self.list()
+        try:
+            await event_tracker.request_start(RequestStart(question=question, collection_name=self.name))
 
-        if len(views) == 0:
-            raise ValueError("Empty collection")
-        if len(views) == 1:
-            selected_view = next(iter(views))
-        else:
-            selected_view = await self._view_selector.select_view(
-                question=question,
-                views=views,
-                event_tracker=event_tracker,
-                llm_options=llm_options,
+            start_time = time.monotonic()
+            selected_view_name = await self._select_view(question, event_tracker, llm_options)
+
+            start_time_view = time.monotonic()
+            view_result = await self._ask_view(selected_view_name, question, event_tracker, llm_options, dry_run)
+            end_time_view = time.monotonic()
+
+            natural_response = (
+                self._generate_textual_response(view_result, question, event_tracker, llm_options)
+                if not dry_run and return_natural_response
+                else ""
+            )
+            result = ExecutionResult(
+                results=view_result.results,
+                context=view_result.context,
+                execution_time=time.monotonic() - start_time,
+                execution_time_view=end_time_view - start_time_view,
+                view_name=selected_view_name,
+                textual_response=natural_response,
             )
 
-        view = self.get(selected_view)
 
-        start_time_view = time.monotonic()
-        view_result = await view.ask(
-            query=question,
-            llm=self._llm,
-            event_tracker=event_tracker,
-            n_retries=self.n_retries,
-            dry_run=dry_run,
-            llm_options=llm_options,
-        )
-        end_time_view = time.monotonic()
 
-        textual_response = None
-        if not dry_run and return_natural_response:
-            textual_response = await self._nl_responder.generate_response(
-                result=view_result,
-                question=question,
-                event_tracker=event_tracker,
-                llm_options=llm_options,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+
+        except handle_exceptions as caught_exception:
+            result = await self._handle_fallback(
+                question,
+                dry_run,
+                return_natural_response,
+                llm_options,
+                selected_view_name,
+                event_tracker,
+                caught_exception,
             )
-
-        result = ExecutionResult(
-            results=view_result.results,
-            context=view_result.context,
-            execution_time=time.monotonic() - start_time,
-            execution_time_view=end_time_view - start_time_view,
-            view_name=selected_view,
-            textual_response=textual_response,
-        )
-
-        await event_tracker.request_end(RequestEnd(result=result))
+            await event_tracker.request_end(RequestEnd(result=result))
 
         return result
 

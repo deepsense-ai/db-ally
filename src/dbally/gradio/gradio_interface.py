@@ -114,9 +114,14 @@ class GradioAdapter:
             execution_result = await self.collection.ask(
                 question=question_query, return_natural_response=natural_language_flag
             )
-            generated_query = str(execution_result.context)
-            data = self._load_results_into_dataframe(execution_result.results)
-            textual_response = str(execution_result.textual_response) if natural_language_flag else textual_response
+            if execution_result:
+                generated_query = str(execution_result.context)
+                data = self._load_results_into_dataframe(execution_result.results)
+                textual_response = str(execution_result.textual_response) if natural_language_flag else textual_response
+            else:
+                generated_query = "No results generated"
+                data = pd.DataFrame()
+
         except UnsupportedQueryError:
             generated_query = {"Query": "unsupported"}
             data = pd.DataFrame()

@@ -42,6 +42,18 @@ class SimilarityEvent(Event):
 
 
 @dataclass
+class FallbackEvent(Event):
+    """
+    FallbackEvent is fired when a processed view/collection raise an exception.
+    """
+
+    triggering_collection_name: str
+    triggering_view_name: str
+    fallback_collection_name: str
+    error_description: str
+
+
+@dataclass
 class RequestStart:
     """
     Class representing request start data.
