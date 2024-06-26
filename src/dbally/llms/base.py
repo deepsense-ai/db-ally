@@ -95,9 +95,9 @@ class LLM(Generic[LLMClientOptions], ABC):
         async with event_tracker.track_event(event) as span:
             event.response = await self.client.call(
                 prompt=prompt,
-                response_format=template.response_format,
                 options=options,
                 event=event,
+                json_mode=template.json_mode,
             )
             span(event)
 

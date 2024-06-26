@@ -36,19 +36,19 @@ async def test_llm_options_propagation():
         [
             call(
                 prompt=ANY,
-                response_format=ANY,
+                json_mode=ANY,
                 event=ANY,
                 options=expected_options,
             ),
             call(
                 prompt=ANY,
-                response_format=ANY,
+                json_mode=ANY,
                 event=ANY,
                 options=expected_options,
             ),
             call(
                 prompt=ANY,
-                response_format=ANY,
+                json_mode=ANY,
                 event=ANY,
                 options=expected_options,
             ),

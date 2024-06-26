@@ -65,7 +65,7 @@ class LLMViewSelector(ViewSelector):
             event_tracker=event_tracker,
             options=llm_options,
         )
-        selected_view = self._prompt_template.llm_response_parser(llm_response)
+        selected_view = self._prompt_template.response_parser(llm_response)
         return selected_view
 
 

@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Optional
+from typing import Callable
 
 from dbally.exceptions import DbAllyError
 from dbally.prompts import ChatFormat, PromptTemplate, check_prompt_variables
@@ -19,10 +19,11 @@ class IQLPromptTemplate(PromptTemplate):
     def __init__(
         self,
         chat: ChatFormat,
-        response_format: Optional[Dict[str, str]] = None,
-        llm_response_parser: Callable = lambda x: x,
-    ):
-        super().__init__(chat, response_format, llm_response_parser)
+        *,
+        json_mode: bool = False,
+        response_parser: Callable = lambda x: x,
+    ) -> None:
+        super().__init__(chat, json_mode=json_mode, response_parser=response_parser)
         self.chat = check_prompt_variables(chat, {"filters", "question"})
 
 
@@ -65,5 +66,5 @@ default_iql_template = IQLPromptTemplate(
         },
         {"role": "user", "content": "{question}"},
     ),
-    llm_response_parser=_validate_iql_response,
+    response_parser=_validate_iql_response,
 )

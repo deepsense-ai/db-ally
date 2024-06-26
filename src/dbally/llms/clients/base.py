@@ -68,18 +68,18 @@ class LLMClient(Generic[LLMClientOptions], ABC):
     async def call(
         self,
         prompt: ChatFormat,
-        response_format: Optional[Dict[str, str]],
         options: LLMClientOptions,
         event: LLMEvent,
+        json_mode: bool = False,
     ) -> str:
         """
         Calls LLM inference API.
 
         Args:
             prompt: Prompt passed to the LLM.
-            response_format: Optional argument used in the OpenAI API - used to force a json output
             options: Additional settings used by LLM.
             event: LLMEvent instance which fields should be filled during the method execution.
+            json_mode: Force the response to be in JSON format.
 
         Returns:
             Response string from LLM.

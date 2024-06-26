@@ -34,7 +34,7 @@ text2sql_prompt = PromptTemplate(
         },
         {"role": "user", "content": "{question}"},
     ),
-    response_format={"type": "json_object"},
+    json_mode=True,
 )
 
 

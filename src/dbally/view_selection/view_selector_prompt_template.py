@@ -1,5 +1,5 @@
 import json
-from typing import Callable, Dict, Optional
+from typing import Callable
 
 from dbally.prompts import ChatFormat, PromptTemplate, check_prompt_variables
 
@@ -12,10 +12,11 @@ class ViewSelectorPromptTemplate(PromptTemplate):
     def __init__(
         self,
         chat: ChatFormat,
-        response_format: Optional[Dict[str, str]] = None,
-        llm_response_parser: Callable = lambda x: x,
+        *,
+        json_mode: bool = False,
+        response_parser: Callable = lambda x: x,
     ):
-        super().__init__(chat, response_format, llm_response_parser)
+        super().__init__(chat, json_mode=json_mode, response_parser=response_parser)
         self.chat = check_prompt_variables(chat, {"views"})
 
 

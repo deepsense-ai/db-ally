@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Optional
+from typing import Callable
 
 from typing_extensions import Self
 
@@ -41,19 +41,21 @@ class PromptTemplate:
     Class for prompt templates
 
     Attributes:
-        response_format: Optional argument for OpenAI Turbo models - may be used to force json output
-        llm_response_parser: Function parsing the LLM response into IQL
+        chat: Chat-formatted template.
+        json_mode: Whether to enforce JSON response from LLM.
+        response_parser: Function parsing the LLM response into the desired format.
     """
 
     def __init__(
         self,
         chat: ChatFormat,
-        response_format: Optional[Dict[str, str]] = None,
-        llm_response_parser: Callable = lambda x: x,
+        *,
+        json_mode: bool = False,
+        response_parser: Callable = lambda x: x,
     ):
         self.chat: ChatFormat = _check_chat_order(chat)
-        self.response_format = response_format
-        self.llm_response_parser = llm_response_parser
+        self.json_mode = json_mode
+        self.response_parser = response_parser
 
     def __eq__(self, __value: object) -> bool:
         return isinstance(__value, PromptTemplate) and self.chat == __value.chat

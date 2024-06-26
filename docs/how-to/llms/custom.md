@@ -45,9 +45,9 @@ class MyLLMClient(LLMClient[LiteLLMOptions]):
     async def call(
         self,
         prompt: ChatFormat,
-        response_format: Optional[Dict[str, str]],
         options: LiteLLMOptions,
         event: LLMEvent,
+        json_mode: bool = False,
     ) -> str:
         # Your LLM API call
 ```

@@ -59,7 +59,7 @@ class IQLGenerator:
             options=llm_options,
         )
 
-        iql_filters = conversation.llm_response_parser(llm_response)
+        iql_filters = conversation.response_parser(llm_response)
 
         conversation = conversation.add_assistant_message(content=llm_response)
 

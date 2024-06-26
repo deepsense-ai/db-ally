@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 try:
     import litellm
@@ -73,18 +73,18 @@ class LiteLLMClient(LLMClient[LiteLLMOptions]):
     async def call(
         self,
         prompt: ChatFormat,
-        response_format: Optional[Dict[str, str]],
         options: LiteLLMOptions,
         event: LLMEvent,
+        json_mode: bool = False,
     ) -> str:
         """
         Calls the appropriate LLM endpoint with the given prompt and options.
 
         Args:
             prompt: Prompt as an OpenAI client style list.
-            response_format: Optional argument used in the OpenAI API - used to force the json output
             options: Additional settings used by the LLM.
             event: Container with the prompt, LLM response and call metrics.
+            json_mode: Force the response to be in JSON format.
 
         Returns:
             Response string from LLM.
@@ -94,6 +94,8 @@ class LiteLLMClient(LLMClient[LiteLLMOptions]):
             LLMStatusError: If the LLM API returns an error status code.
             LLMResponseError: If the LLM API response is invalid.
         """
+        response_format = {"type": "json_object"} if json_mode else None
+
         try:
             response = await litellm.acompletion(
                 messages=prompt,
