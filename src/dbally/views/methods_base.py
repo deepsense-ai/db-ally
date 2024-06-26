@@ -108,3 +108,19 @@ class MethodsBaseView(BaseStructuredView, metaclass=abc.ABCMeta):
         if inspect.iscoroutinefunction(method):
             return await method(*args)
         return method(*args)
+
+    async def call_aggregation_method(self, func: syntax.FunctionCall) -> Any:
+        """
+        Converts a IQL FunctonCall aggregation to a method call. If the method is a coroutine, it will be awaited.
+
+        Args:
+            func: IQL FunctionCall node
+
+        Returns:
+            The result of the method call
+        """
+        method, args = self._method_with_args_from_call(func, decorators.view_aggregation)
+
+        if inspect.iscoroutinefunction(method):
+            return await method(*args)
+        return method(*args)

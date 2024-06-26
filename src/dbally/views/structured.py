@@ -72,6 +72,10 @@ class BaseStructuredView(BaseView):
             try:
                 filters = await IQLQuery.parse(iql_filters, filter_list, event_tracker=event_tracker)
                 await self.apply_filters(filters)
+
+                if aggregation_list:
+                    aggregations = await IQLQuery.parse(iql_filters, aggregation_list, event_tracker=event_tracker)
+                    await self.apply_filters(aggregations)
                 break
             except (IQLError, ValueError) as e:
                 conversation = iql_generator.add_error_msg(conversation, [e])
@@ -116,12 +120,12 @@ class BaseStructuredView(BaseView):
         """
 
     # @abc.abstractmethod
-    # async def apply_aggregations(self, filters: IQLQuery) -> None:
+    # async def apply_aggregation(self, aggregation: IQLQuery) -> None:
     #     """
-    #     Applies the chosen filters to the view.
+    #     Applies the chosen aggregation to the view.
     #
     #     Args:
-    #         filters: [IQLQuery](../../concepts/iql.md) object representing the filters to apply
+    #         aggregation: [IQLQuery](../../concepts/iql.md) object representing the filters to apply
     #     """
 
     @abc.abstractmethod

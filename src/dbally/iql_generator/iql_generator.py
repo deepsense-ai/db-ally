@@ -129,7 +129,7 @@ def _promptify_aggregations(
     Formats filters for prompt
 
     Args:
-        filters: list of filters exposed by the view
+        aggregations: list of filters exposed by the view
 
     Returns:
         filters_for_prompt: filters formatted for prompt
