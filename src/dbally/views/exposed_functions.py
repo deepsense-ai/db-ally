@@ -1,9 +1,10 @@
 import re
 from dataclasses import dataclass
 from typing import _GenericAlias  # type: ignore
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 
 from dbally.similarity import AbstractSimilarityIndex
+from dbally.context.context import BaseCallerContext
 
 
 def parse_param_type(param_type: Union[type, _GenericAlias]) -> str:
@@ -57,6 +58,7 @@ class ExposedFunction:
     name: str
     description: str
     parameters: List[MethodParamWithTyping]
+    context_class: Optional[Type[BaseCallerContext]] = None
 
     def __str__(self) -> str:
         base_str = f"{self.name}({', '.join(str(param) for param in self.parameters)})"

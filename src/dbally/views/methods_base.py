@@ -7,6 +7,7 @@ from dbally.iql import syntax
 from dbally.views import decorators
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 from dbally.views.structured import BaseStructuredView
+from dbally.context._utils import _extract_params_and_context
 
 
 class MethodsBaseView(BaseStructuredView, metaclass=abc.ABCMeta):
@@ -35,14 +36,14 @@ class MethodsBaseView(BaseStructuredView, metaclass=abc.ABCMeta):
                 hasattr(method, "_methodDecorator")
                 and method._methodDecorator == decorator  # pylint: disable=protected-access
             ):
-                annotations = method.__annotations__.items()
+                params, context_class = _extract_params_and_context(method, cls.HIDDEN_ARGUMENTS)
+
                 methods.append(
                     ExposedFunction(
                         name=method_name,
                         description=textwrap.dedent(method.__doc__).strip() if method.__doc__ else "",
-                        parameters=[
-                            MethodParamWithTyping(n, t) for n, t in annotations if n not in cls.HIDDEN_ARGUMENTS
-                        ],
+                        parameters=params,
+                        context_class=context_class
                     )
                 )
         return methods

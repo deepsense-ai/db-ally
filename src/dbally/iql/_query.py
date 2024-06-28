@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, List, Optional
 from ..audit.event_tracker import EventTracker
 from . import syntax
 from ._processor import IQLProcessor
+from dbally.context.context import BaseCallerContext
 
 if TYPE_CHECKING:
     from dbally.views.structured import ExposedFunction
@@ -20,7 +21,11 @@ class IQLQuery:
 
     @classmethod
     async def parse(
-        cls, source: str, allowed_functions: List["ExposedFunction"], event_tracker: Optional[EventTracker] = None
+        cls,
+        source: str,
+        allowed_functions: List["ExposedFunction"],
+        event_tracker: Optional[EventTracker] = None,
+        context: Optional[List[BaseCallerContext]] = None
     ) -> "IQLQuery":
         """
         Parse IQL string to IQLQuery object.
@@ -32,4 +37,4 @@ class IQLQuery:
         Returns:
              IQLQuery object
         """
-        return cls(await IQLProcessor(source, allowed_functions, event_tracker=event_tracker).process())
+        return cls(await IQLProcessor(source, allowed_functions, context, event_tracker).process())

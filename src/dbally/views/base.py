@@ -6,6 +6,7 @@ from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.similarity import AbstractSimilarityIndex
+from dbally.context.context import BaseCallerContext
 
 IndexLocation = Tuple[str, str, str]
 
@@ -25,6 +26,7 @@ class BaseView(metaclass=abc.ABCMeta):
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
+        context: Optional[List[BaseCallerContext]] = None
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result.

@@ -4,11 +4,13 @@ from typing import Dict, List, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
+from dbally.context.context import BaseCallerContext
 from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
+from dbally.context.context import BaseCallerContext
 
 from ..similarity import AbstractSimilarityIndex
 from .base import BaseView, IndexLocation
@@ -40,6 +42,7 @@ class BaseStructuredView(BaseView):
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
+        context: Optional[List[BaseCallerContext]] = None
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result. It generates the IQL query from the natural language query\
@@ -68,7 +71,7 @@ class BaseStructuredView(BaseView):
 
         for _ in range(n_retries):
             try:
-                filters = await IQLQuery.parse(iql_filters, filter_list, event_tracker=event_tracker)
+                filters = await IQLQuery.parse(iql_filters, filter_list, event_tracker=event_tracker, context=context)
                 await self.apply_filters(filters)
                 break
             except (IQLError, ValueError) as e:
