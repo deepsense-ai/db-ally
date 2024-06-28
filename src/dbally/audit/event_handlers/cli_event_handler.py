@@ -29,8 +29,9 @@ class CLIEventHandler(EventHandler):
     ```python
         import dbally
         from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
+        from dbally.audit.index import set_event_handlers
 
-        dbally.global_handlers.set_event_handlers([CLIEventHandler()])
+        set_event_handlers([CLIEventHandler()])
         my_collection = dbally.create_collection("my_collection", llm)
     ```
 

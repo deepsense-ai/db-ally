@@ -10,7 +10,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
-from dbally.global_handlers import global_event_handlers_list
+from dbally.index import global_event_handlers
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
@@ -59,7 +59,8 @@ class Collection:
         self._builders: Dict[str, Callable[[], BaseView]] = {}
         self._view_selector = view_selector
         self._nl_responder = nl_responder
-        if event_handlers != global_event_handlers_list:
+        if event_handlers != global_event_handlers:
+            # At this moment there are no event tracker initialize to record an event
             print("WARNING Default event handler has been overwritten")
         self._event_handlers = event_handlers
         self._llm = llm
