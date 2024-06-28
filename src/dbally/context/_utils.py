@@ -14,13 +14,16 @@ def _extract_params_and_context(
     typing.Optional[typing.Type[BaseCallerContext]]
 ]:
     """
-    Processes the MethodsBaseView filter method signauture to extract the args and type hints in the desired format. Context claases are getting excluded the returned MethodParamWithTyping list. Only the first BaseCallerContext class is returned.
+    Processes the MethodsBaseView filter method signauture to extract the args and type hints in the desired format.
+    Context claases are getting excluded the returned MethodParamWithTyping list. Only the first BaseCallerContext
+    class is returned.
 
     Args:
         filter_method_: MethodsBaseView filter method (annotated with @decorators.view_filter() decorator)
 
     Returns:
-        A tuple. The first field contains the list of arguments, each encapsulated as MethodParamWithTyping. The 2nd is the BaseCallerContext subclass provided for this filter, or None if no context specified.
+        A tuple. The first field contains the list of arguments, each encapsulated as MethodParamWithTyping.
+        The 2nd is the BaseCallerContext subclass provided for this filter, or None if no context specified.
     """
 
     params = []
@@ -30,14 +33,16 @@ def _extract_params_and_context(
         if name_ in hidden_args:
             continue
 
+        # TODO make ExposedFunction preserve information whether the context was available for a certain argument
+
         if isclass(type_) and issubclass(type_, BaseCallerContext):
             # this is the case when user provides a context but no other type hint for a specifc arg
             # TODO confirm whether this case should be supported
-            context_ = type_
+            context = type_
             type_ = typing.Any
         elif type_ext.get_origin(type_) is typing.Union:
             union_subtypes: typing.List[typing.Type] = []
-            for subtype_ in type_ext.get_args(type_): # type: ignore
+            for subtype_ in type_ext.get_args(type_):  # type: ignore
                 # TODO add custom error for the situation when user provides more than two contexts for a single filter
                 # for now we extract only the first context
                 if isclass(subtype_) and issubclass(subtype_, BaseCallerContext):
@@ -46,10 +51,23 @@ def _extract_params_and_context(
                 else:
                     union_subtypes.append(subtype_)
             if union_subtypes:
-                type_ = typing.Union[tuple(union_subtypes)] # type: ignore
+                type_ = typing.Union[tuple(union_subtypes)]  # type: ignore
             else:
-                type_ = typing.Any  # this ELSE handles the situation when the user provided an typing.Union bare type hint, without specyfing any args. In that case, typing.get_args() returns an empty tuple. Unfortunately, Python does not treat it as an error...
+                type_ = typing.Any  # this ELSE handles the situation when the user provided an typing.Union bare
+                # type hint without specyfing any args. In that case, typing.get_args()
+                # returns an empty tuple. Unfortunately, Python does not treat it as an error...
 
         params.append(MethodParamWithTyping(name_, type_))
 
     return params, context
+
+
+def _does_arg_allow_context(arg: MethodParamWithTyping) -> bool:
+    if not isinstance(arg.type, BaseCallerContext) and type_ext.get_origin(arg.type) is not typing.Union:
+        return False
+
+    for subtype in type_ext.get_args(arg.type):
+        if issubclass(subtype, BaseCallerContext):
+            return True
+
+    return False
