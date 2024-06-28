@@ -10,10 +10,10 @@ from typing import List, Optional, Tuple, Union
 
 from dbally import NOT_GIVEN, NotGiven
 from dbally.iql import IQLQuery
-from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template
+from dbally.iql_generator.iql_generator import IQL_GENERATION_TEMPLATE, IQLGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMClient, LLMOptions
+from dbally.prompts.prompt_template import PromptTemplate
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.structured import BaseStructuredView, ExposedFunction, ViewExecutionResult
@@ -39,8 +39,8 @@ class MockIQLGenerator(IQLGenerator):
         self.iql = iql
         super().__init__(llm=MockLLM())
 
-    async def generate_iql(self, *_, **__) -> Tuple[str, IQLPromptTemplate]:
-        return self.iql, default_iql_template
+    async def generate_iql(self, *_, **__) -> Tuple[str, PromptTemplate]:
+        return self.iql, IQL_GENERATION_TEMPLATE
 
 
 class MockViewSelector(ViewSelector):

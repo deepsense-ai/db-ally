@@ -1,40 +1,6 @@
-import json
-from typing import Callable
+from dbally.prompts import PromptTemplate
 
-from dbally.prompts import ChatFormat, PromptTemplate, check_prompt_variables
-
-
-class ViewSelectorPromptTemplate(PromptTemplate):
-    """
-    Class for prompt templates meant for the ViewSelector
-    """
-
-    def __init__(
-        self,
-        chat: ChatFormat,
-        *,
-        json_mode: bool = False,
-        response_parser: Callable = lambda x: x,
-    ):
-        super().__init__(chat, json_mode=json_mode, response_parser=response_parser)
-        self.chat = check_prompt_variables(chat, {"views"})
-
-
-def _convert_llm_json_response_to_selected_view(llm_response_json: str) -> str:
-    """
-    Converts LLM json response to IQL
-
-    Args:
-        llm_response_json: LLM response in JSON format
-
-    Returns:
-        A string containing selected view
-    """
-    llm_response_dict = json.loads(llm_response_json)
-    return llm_response_dict.get("view")
-
-
-default_view_selector_template = ViewSelectorPromptTemplate(
+VIEW_SELECTION_TEMPLATE = PromptTemplate(
     chat=(
         {
             "role": "system",

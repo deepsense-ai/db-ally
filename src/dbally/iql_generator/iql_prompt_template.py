@@ -1,7 +1,5 @@
-from typing import Callable
-
 from dbally.exceptions import DbAllyError
-from dbally.prompts import ChatFormat, PromptTemplate, check_prompt_variables
+from dbally.prompts import PromptTemplate
 
 
 class UnsupportedQueryError(DbAllyError):
@@ -9,22 +7,6 @@ class UnsupportedQueryError(DbAllyError):
     Error raised when IQL generator is unable to construct a query
     with given filters.
     """
-
-
-class IQLPromptTemplate(PromptTemplate):
-    """
-    Class for prompt templates meant for the IQL
-    """
-
-    def __init__(
-        self,
-        chat: ChatFormat,
-        *,
-        json_mode: bool = False,
-        response_parser: Callable = lambda x: x,
-    ) -> None:
-        super().__init__(chat, json_mode=json_mode, response_parser=response_parser)
-        self.chat = check_prompt_variables(chat, {"filters", "question"})
 
 
 def _validate_iql_response(llm_response: str) -> str:
@@ -41,14 +23,13 @@ def _validate_iql_response(llm_response: str) -> str:
         UnsuppotedQueryError: When IQL generator is unable to construct a query
         with given filters.
     """
-
     if "unsupported query" in llm_response.lower():
         raise UnsupportedQueryError
     return llm_response
 
 
-default_iql_template = IQLPromptTemplate(
-    chat=(
+IQL_GENERATION_TEMPLATE = PromptTemplate(
+    [
         {
             "role": "system",
             "content": "You have access to API that lets you query a database:\n"
@@ -65,6 +46,6 @@ default_iql_template = IQLPromptTemplate(
             "This is CRUCIAL, otherwise the system will crash. ",
         },
         {"role": "user", "content": "{question}"},
-    ),
+    ],
     response_parser=_validate_iql_response,
 )

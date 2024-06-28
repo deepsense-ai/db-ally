@@ -1,6 +1,8 @@
-from typing import Callable
+from typing import Callable, Dict
 
 from typing_extensions import Self
+
+from dbally.prompts.elements import FewShotExample
 
 from .common_validation_utils import ChatFormat, PromptTemplateError
 
@@ -60,26 +62,100 @@ class PromptTemplate:
     def __eq__(self, __value: object) -> bool:
         return isinstance(__value, PromptTemplate) and self.chat == __value.chat
 
-    def add_user_message(self, content: str) -> Self:
+    def format_prompt(self, formatting: Dict[str, str]) -> Self:
         """
-        Add a user message to the template prompt.
+        Applies formatting to the prompt template chat contents.
+
+        Args:
+            formatting: Dictionary with formatting.
+
+        Returns:
+            PromptTemplate with formatted chat contents.
+        """
+        return self.__class__(
+            chat=[
+                {"role": message["role"], "content": message["content"].format(**formatting)} for message in self.chat
+            ],
+            json_mode=self.json_mode,
+            response_parser=self.response_parser,
+        )
+
+    def add_system_message(self, content: str) -> Self:
+        """
+        Add a system message to the template prompt.
 
         Args:
             content: Message to be added
 
         Returns:
-            PromptTemplate with appended user message
+            PromptTemplate with appended system message.
         """
-        return self.__class__((*self.chat, {"role": "user", "content": content}))
+        return self.__class__(
+            chat=[{"role": "system", "content": content}, *self.chat],
+            json_mode=self.json_mode,
+            response_parser=self.response_parser,
+        )
+
+    def add_user_message(self, content: str) -> Self:
+        """
+        Add a user message to the template prompt.
+
+        Args:
+            content: Message to be added.
+
+        Returns:
+            PromptTemplate with appended user message.
+        """
+        return self.__class__(
+            chat=[*self.chat, {"role": "user", "content": content}],
+            json_mode=self.json_mode,
+            response_parser=self.response_parser,
+        )
 
     def add_assistant_message(self, content: str) -> Self:
         """
         Add an assistant message to the template prompt.
 
         Args:
-            content: Message to be added
+            content: Message to be added.
 
         Returns:
-            PromptTemplate with appended assistant message
+            PromptTemplate with appended assistant message.
         """
-        return self.__class__((*self.chat, {"role": "assistant", "content": content}))
+        return self.__class__(
+            chat=[*self.chat, {"role": "assistant", "content": content}],
+            json_mode=self.json_mode,
+            response_parser=self.response_parser,
+        )
+
+    def add_few_shot_message(self, example: FewShotExample) -> Self:
+        """
+        Add a few-shot message to the template prompt.
+
+        Args:
+            example: Few-shot example to be added.
+
+        Returns:
+            PromptTemplate with appended few-shot message.
+
+        Raises:
+            PromptTemplateError: if the template is empty.
+        """
+        if len(self.chat) == 0:
+            raise PromptTemplateError("Cannot add few-shot messages to an empty template.")
+
+        few_shot = [
+            {"role": "user", "content": example.question, "is_example": True},
+            {"role": "assistant", "content": example.answer, "is_example": True},
+        ]
+        few_shot_index = max(
+            (i for i, entry in enumerate(self.chat) if entry.get("is_example") or entry.get("role") == "system"),
+            default=0,
+        )
+        chat = self.chat[: few_shot_index + 1] + few_shot + self.chat[few_shot_index + 1 :]
+
+        return self.__class__(
+            chat=chat,
+            json_mode=self.json_mode,
+            response_parser=self.response_parser,
+        )

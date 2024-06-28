@@ -15,27 +15,7 @@ from dbally.similarity import AbstractSimilarityIndex, SimpleSqlAlchemyFetcher
 from dbally.views.base import BaseView, IndexLocation
 from dbally.views.freeform.text2sql.config import TableConfig
 from dbally.views.freeform.text2sql.exceptions import Text2SQLError
-
-text2sql_prompt = PromptTemplate(
-    chat=(
-        {
-            "role": "system",
-            "content": "You are a very smart database programmer. "
-            "You have access to the following {dialect} tables:\n"
-            "{tables}\n"
-            "Create SQL query to answer user question. Response with JSON containing following keys:\n\n"
-            "- sql: SQL query to answer the question, with parameter :placeholders for user input.\n"
-            "- parameters: a list of parameters to be used in the query, represented by maps with the following keys:\n"
-            "  - name: the name of the parameter\n"
-            "  - value: the value of the parameter\n"
-            "  - table: the table the parameter is used with (if any)\n"
-            "  - column: the column the parameter is compared to (if any)\n\n"
-            "Respond ONLY with the raw JSON response. Don't include any additional text or characters.",
-        },
-        {"role": "user", "content": "{question}"},
-    ),
-    json_mode=True,
-)
+from dbally.views.freeform.text2sql.prompt import Text2SQLInputFormatter, text2sql_prompt
 
 
 @dataclass
@@ -188,9 +168,18 @@ class BaseText2SQLView(BaseView, ABC):
         event_tracker: EventTracker,
         llm_options: Optional[LLMOptions] = None,
     ) -> Tuple[str, List[SQLParameterOption], PromptTemplate]:
+        tables = self.get_tables()
+        examples = self.list_few_shots()
+
+        formatter = Text2SQLInputFormatter(
+            question=query,
+            dialect=self._engine.dialect.name,
+            tables=tables,
+            examples=examples,
+        )
+        formatted_prompt = formatter(conversation)
         response = await llm.generate_text(
-            template=conversation,
-            fmt={"tables": self._get_tables_context(), "dialect": self._engine.dialect.name, "question": query},
+            prompt=formatted_prompt,
             event_tracker=event_tracker,
             options=llm_options,
         )
@@ -220,12 +209,6 @@ class BaseText2SQLView(BaseView, ABC):
 
         with self._engine.connect() as conn:
             return conn.execute(text(sql), param_values).fetchall()
-
-    def _get_tables_context(self) -> str:
-        context = ""
-        for table in self._table_index.values():
-            context += f"{table.ddl}\n"
-        return context
 
     def _create_default_fetcher(self, table: str, column: str) -> SimpleSqlAlchemyFetcher:
         return SimpleSqlAlchemyFetcher(

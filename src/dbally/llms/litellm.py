@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Dict, Optional
+from typing import Optional
 
 try:
     import litellm
@@ -10,7 +10,7 @@ except ImportError:
 
 from dbally.llms.base import LLM
 from dbally.llms.clients.litellm import LiteLLMClient, LiteLLMOptions
-from dbally.prompts import ChatFormat
+from dbally.prompts.prompt_template import PromptTemplate
 
 
 class LiteLLM(LLM[LiteLLMOptions]):
@@ -65,17 +65,14 @@ class LiteLLM(LLM[LiteLLMOptions]):
             api_version=self.api_version,
         )
 
-    def count_tokens(self, messages: ChatFormat, fmt: Dict[str, str]) -> int:
+    def count_tokens(self, prompt: PromptTemplate) -> int:
         """
-        Counts tokens in the messages using a specified model.
+        Counts tokens in the prompt conversation.
 
         Args:
-            messages: Messages to count tokens for.
-            fmt: Arguments to be used with prompt.
+            prompt: Formatted prompt template with conversation and response parsing configuration.
 
         Returns:
-            Number of tokens in the messages.
+            Number of tokens in the prompt conversation.
         """
-        return sum(
-            litellm.token_counter(model=self.model_name, text=message["content"].format(**fmt)) for message in messages
-        )
+        return sum(litellm.token_counter(model=self.model_name, text=message["content"]) for message in prompt.chat)

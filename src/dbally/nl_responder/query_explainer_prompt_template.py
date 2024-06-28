@@ -1,31 +1,6 @@
-from typing import Callable
+from dbally.prompts import PromptTemplate
 
-from dbally.prompts import ChatFormat, PromptTemplate, check_prompt_variables
-
-
-class QueryExplainerPromptTemplate(PromptTemplate):
-    """
-    Class for prompt templates meant to generate explanations for queries
-    (when the data cannot be shown due to token limit).
-
-        Args:
-            chat: chat format
-            response_format: response format
-            response_parser: function to parse llm response
-    """
-
-    def __init__(
-        self,
-        chat: ChatFormat,
-        *,
-        json_mode: bool = False,
-        response_parser: Callable = lambda x: x,
-    ) -> None:
-        super().__init__(chat, json_mode=json_mode, response_parser=response_parser)
-        self.chat = check_prompt_variables(chat, {"question", "query", "number_of_results"})
-
-
-default_query_explainer_template = QueryExplainerPromptTemplate(
+default_query_explainer_template = PromptTemplate(
     chat=(
         {
             "role": "system",

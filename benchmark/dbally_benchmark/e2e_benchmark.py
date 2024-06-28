@@ -23,9 +23,9 @@ from sqlalchemy import create_engine
 import dbally
 from dbally.collection import Collection
 from dbally.collection.exceptions import NoViewFoundError
-from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError, default_iql_template
+from dbally.iql_generator.iql_prompt_template import IQL_GENERATION_TEMPLATE, UnsupportedQueryError
 from dbally.llms.litellm import LiteLLM
-from dbally.view_selection.view_selector_prompt_template import default_view_selector_template
+from dbally.view_selection.view_selector_prompt_template import VIEW_SELECTION_TEMPLATE
 
 
 async def _run_dbally_for_single_example(example: BIRDExample, collection: Collection) -> Text2SQLResult:
@@ -126,9 +126,9 @@ async def evaluate(cfg: DictConfig) -> Any:
     logger.info(f"db-ally predictions saved under directory: {output_dir}")
 
     if run:
-        run["config/iql_prompt_template"] = stringify_unsupported(default_iql_template.chat)
-        run["config/view_selection_prompt_template"] = stringify_unsupported(default_view_selector_template.chat)
-        run["config/iql_prompt_template"] = stringify_unsupported(default_iql_template)
+        run["config/iql_prompt_template"] = stringify_unsupported(IQL_GENERATION_TEMPLATE.chat)
+        run["config/view_selection_prompt_template"] = stringify_unsupported(VIEW_SELECTION_TEMPLATE.chat)
+        run["config/iql_prompt_template"] = stringify_unsupported(IQL_GENERATION_TEMPLATE)
         run[f"evaluation/{metrics_file_name}"].upload((output_dir / metrics_file_name).as_posix())
         run[f"evaluation/{results_file_name}"].upload((output_dir / results_file_name).as_posix())
         run["evaluation/metrics"] = stringify_unsupported(metrics)

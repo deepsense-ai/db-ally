@@ -21,7 +21,7 @@ from sqlalchemy import create_engine
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError, default_iql_template
+from dbally.iql_generator.iql_prompt_template import IQL_GENERATION_TEMPLATE, UnsupportedQueryError
 from dbally.llms.litellm import LiteLLM
 from dbally.prompts.formatters import IQLInputFormatter
 from dbally.views.structured import BaseStructuredView
@@ -139,7 +139,7 @@ async def evaluate(cfg: DictConfig) -> Any:
     logger.info(f"IQL predictions saved under directory: {output_dir}")
 
     if run:
-        run["config/iql_prompt_template"] = stringify_unsupported(default_iql_template.chat)
+        run["config/iql_prompt_template"] = stringify_unsupported(IQL_GENERATION_TEMPLATE.chat)
         run[f"evaluation/{metrics_file_name}"].upload((output_dir / metrics_file_name).as_posix())
         run[f"evaluation/{results_file_name}"].upload((output_dir / results_file_name).as_posix())
         run["evaluation/metrics"] = stringify_unsupported(metrics)

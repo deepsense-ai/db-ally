@@ -67,7 +67,7 @@ class LLMClient(Generic[LLMClientOptions], ABC):
     @abstractmethod
     async def call(
         self,
-        prompt: ChatFormat,
+        conversation: ChatFormat,
         options: LLMClientOptions,
         event: LLMEvent,
         json_mode: bool = False,
@@ -76,7 +76,7 @@ class LLMClient(Generic[LLMClientOptions], ABC):
         Calls LLM inference API.
 
         Args:
-            prompt: Prompt passed to the LLM.
+            conversation: List of dicts with "role" and "content" keys, representing the chat history so far.
             options: Additional settings used by LLM.
             event: LLMEvent instance which fields should be filled during the method execution.
             json_mode: Force the response to be in JSON format.

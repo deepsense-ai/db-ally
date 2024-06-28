@@ -1,119 +1,179 @@
-import copy
-from abc import ABCMeta, abstractmethod
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List
+
+import pandas as pd
 
 from dbally.prompts.elements import FewShotExample
 from dbally.prompts.prompt_template import PromptTemplate
 from dbally.views.exposed_functions import ExposedFunction
 
 
-def _promptify_filters(
-    filters: List[ExposedFunction],
-) -> str:
+def _promptify_filters(filters: List[ExposedFunction]) -> str:
     """
-    Formats filters for prompt
+    Formats filters for prompt.
 
     Args:
-        filters: list of filters exposed by the view
+        filters: List of filters exposed by the view.
 
     Returns:
-        filters formatted for prompt
+        Filters formatted for prompt.
     """
-    filters_for_prompt = "\n".join([str(filter) for filter in filters])
-    return filters_for_prompt
+    return "\n".join([str(filter) for filter in filters])
 
 
-class InputFormatter(metaclass=ABCMeta):
+def _promptify_views(views: Dict[str, str]) -> str:
     """
-    Formats provided parameters to a form acceptable by IQL prompt
+    Formats views for prompt.
+
+    Args:
+        views: Dictionary of available view names with corresponding descriptions.
+
+    Returns:
+        Views formatted for prompt.
+    """
+    return "\n".join([f"{name}: {description}" for name, description in views.items()])
+
+
+def _promptify_results(results: List[Dict]) -> str:
+    """
+    Formats results into a markdown table.
+
+    Args:
+        results: List of results to be formatted.
+
+    Returns:
+        Results formatted as a markdown table.
+    """
+    df = pd.DataFrame.from_records(results)
+    return df.to_markdown(index=False, headers="keys", tablefmt="psql")
+
+
+class InputFormatter:
+    """
+    Generic formatter for prompt allowing to inject few shot examples into the conversation.
     """
 
-    @abstractmethod
-    def __call__(self, conversation_template: PromptTemplate) -> Tuple[PromptTemplate, Dict[str, str]]:
+    def __init__(self, examples: List[FewShotExample] = None) -> None:
         """
-        Runs the input formatting for provided prompt template.
+        Constructs a new InputFormatter instance.
 
         Args:
-            conversation_template: a prompt template to use.
+            examples: List of examples to be injected into the conversation.
+        """
+        self._examples = examples or []
+
+    def __call__(self, template: PromptTemplate) -> PromptTemplate:
+        """
+        Applies formatting to the prompt template and adds few shot examples.
+
+        Args:
+            template: Prompt template with conversation and response parsing configuration.
 
         Returns:
-            A tuple with template and a dictionary with formatted inputs.
+            Formatted prompt template.
         """
+        for example in self._examples:
+            template = template.add_few_shot_message(example)
+        return template.format_prompt({key: value for key, value in self.__dict__.items() if not key.startswith("_")})
 
 
 class IQLInputFormatter(InputFormatter):
     """
-    Formats provided parameters to a form acceptable by default IQL prompt
-    """
-
-    def __init__(self, filters: List[ExposedFunction], question: str) -> None:
-        self.filters = filters
-        self.question = question
-
-    def __call__(self, conversation_template: PromptTemplate) -> Tuple[PromptTemplate, Dict[str, str]]:
-        """
-        Runs the input formatting for provided prompt template.
-
-        Args:
-            conversation_template: a prompt template to use.
-
-        Returns:
-            A tuple with template and a dictionary with formatted filters and a question.
-        """
-        return conversation_template, {
-            "filters": _promptify_filters(self.filters),
-            "question": self.question,
-        }
-
-
-class IQLFewShotInputFormatter(InputFormatter):
-    """
     Formats provided parameters to a form acceptable by default IQL prompt.
-    Calling it will inject `examples` before last message in a conversation.
     """
 
     def __init__(
         self,
-        filters: List[ExposedFunction],
-        examples: List[FewShotExample],
+        *,
         question: str,
+        filters: List[ExposedFunction],
+        examples: List[FewShotExample] = None,
     ) -> None:
-        self.filters = filters
-        self.question = question
-        self.examples = examples
-
-    def __call__(self, conversation_template: PromptTemplate) -> Tuple[PromptTemplate, Dict[str, str]]:
         """
-        Performs a deep copy of provided template and injects examples into chat history.
-        Also prepares filters and question to be included within the prompt.
+        Constructs a new IQLInputFormatter instance.
 
         Args:
-            conversation_template: a prompt template to use to inject few-shot examples.
-
-        Returns:
-            A tuple with deeply-copied and enriched with examples template
-            and a dictionary with formatted filters and a question.
+            question: Question to be asked.
+            filters: List of filters exposed by the view.
+            examples: List of examples to be injected into the conversation.
         """
+        super().__init__(examples)
+        self.question = question
+        self.filters = _promptify_filters(filters)
 
-        template_copy = copy.deepcopy(conversation_template)
-        sys_msg = template_copy.chat[0]
-        existing_msgs = [msg for msg in template_copy.chat[1:] if "is_example" not in msg]
-        chat_examples = [
-            msg
-            for example in self.examples
-            for msg in [
-                {"role": "user", "content": example.question, "is_example": True},
-                {"role": "assistant", "content": example.answer, "is_example": True},
-            ]
-        ]
 
-        template_copy.chat = (
-            sys_msg,
-            *chat_examples,
-            *existing_msgs,
-        )
+class ViewSelectionInputFormatter(InputFormatter):
+    """
+    Formats provided parameters to a form acceptable by default IQL prompt.
+    """
 
-        return template_copy, {
-            "filters": _promptify_filters(self.filters),
-            "question": self.question,
-        }
+    def __init__(
+        self,
+        *,
+        question: str,
+        views: Dict[str, str],
+        examples: List[FewShotExample] = None,
+    ) -> None:
+        """
+        Constructs a new ViewSelectionInputFormatter instance.
+
+        Args:
+            question: Question to be asked.
+            views: Dictionary of available view names with corresponding descriptions.
+            examples: List of examples to be injected into the conversation.
+        """
+        super().__init__(examples)
+        self.question = question
+        self.views = _promptify_views(views)
+
+
+class NLResponderInputFormatter(InputFormatter):
+    """
+    Formats provided parameters to a form acceptable by default IQL prompt.
+    """
+
+    def __init__(
+        self,
+        *,
+        question: str,
+        results: List[Dict[str, Any]],
+        examples: List[FewShotExample] = None,
+    ) -> None:
+        """
+        Constructs a new NLResponderInputFormatter instance.
+
+        Args:
+            question: Question to be asked.
+            results: List of results returned by the query.
+            examples: List of examples to be injected into the conversation.
+        """
+        super().__init__(examples)
+        self.question = question
+        self.results = _promptify_results(results)
+
+
+class QueryExplainerInputFormatter(InputFormatter):
+    """
+    Formats provided parameters to a form acceptable by default IQL prompt.
+    """
+
+    def __init__(
+        self,
+        *,
+        question: str,
+        context: Dict[str, Any],
+        results: List[Dict[str, Any]],
+        examples: List[FewShotExample] = None,
+    ) -> None:
+        """
+        Constructs a new QueryExplainerInputFormatter instance.
+
+        Args:
+            question: Question to be asked.
+            context: Context of the query.
+            results: List of results returned by the query.
+            examples: List of examples to be injected into the conversation.
+        """
+        super().__init__(examples)
+        self.question = question
+        self.query = next((context.get(key) for key in ("iql", "sql", "query") if context.get(key)), question)
+        self.number_of_results = len(results)
