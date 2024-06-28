@@ -1,4 +1,5 @@
 import typing
+import typing_extensions as type_ext
 
 from inspect import isclass
 
@@ -34,9 +35,9 @@ def _extract_params_and_context(
             # TODO confirm whether this case should be supported
             context_ = type_
             type_ = typing.Any
-        elif typing.get_origin(type_) is typing.Union:
+        elif type_ext.get_origin(type_) is typing.Union:
             union_subtypes: typing.List[typing.Type] = []
-            for subtype_ in typing.get_args(type_): # type: ignore
+            for subtype_ in type_ext.get_args(type_): # type: ignore
                 # TODO add custom error for the situation when user provides more than two contexts for a single filter
                 # for now we extract only the first context
                 if isclass(subtype_) and issubclass(subtype_, BaseCallerContext):
