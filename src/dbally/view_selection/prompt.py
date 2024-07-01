@@ -31,7 +31,7 @@ class ViewSelectionPromptFormat(PromptFormat):
 
 
 VIEW_SELECTION_TEMPLATE = PromptTemplate[ViewSelectionPromptFormat](
-    chat=(
+    [
         {
             "role": "system",
             "content": "You are a very smart database programmer. "
@@ -44,5 +44,5 @@ VIEW_SELECTION_TEMPLATE = PromptTemplate[ViewSelectionPromptFormat](
             "If none of the classes listed can be used to answer the user question, say `NoViewFoundError`",
         },
         {"role": "user", "content": "{question}"},
-    ),
+    ],
 )
