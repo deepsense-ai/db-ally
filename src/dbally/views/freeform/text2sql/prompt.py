@@ -1,3 +1,5 @@
+# pylint: disable=C0301
+
 from typing import List
 
 from dbally.prompt.elements import FewShotExample
@@ -36,19 +38,24 @@ SQL_GENERATION_TEMPLATE = PromptTemplate[SQLGenerationPromptFormat](
     [
         {
             "role": "system",
-            "content": "You are a very smart database programmer. "
-            "You have access to the following {dialect} tables:\n"
-            "{tables}\n"
-            "Create SQL query to answer user question. Response with JSON containing following keys:\n\n"
-            "- sql: SQL query to answer the question, with parameter :placeholders for user input.\n"
-            "- parameters: a list of parameters to be used in the query, represented by maps with the following keys:\n"
-            "  - name: the name of the parameter\n"
-            "  - value: the value of the parameter\n"
-            "  - table: the table the parameter is used with (if any)\n"
-            "  - column: the column the parameter is compared to (if any)\n\n"
-            "Respond ONLY with the raw JSON response. Don't include any additional text or characters.",
+            "content": (
+                "You are a very smart database programmer. "
+                "You have access to the following {dialect} tables:\n"
+                "{tables}\n"
+                "Create SQL query to answer user question. Response with JSON containing following keys:\n\n"
+                "- sql: SQL query to answer the question, with parameter :placeholders for user input.\n"
+                "- parameters: a list of parameters to be used in the query, represented by maps with the following keys:\n"
+                "  - name: the name of the parameter\n"
+                "  - value: the value of the parameter\n"
+                "  - table: the table the parameter is used with (if any)\n"
+                "  - column: the column the parameter is compared to (if any)\n\n"
+                "Respond ONLY with the raw JSON response. Don't include any additional text or characters."
+            ),
         },
-        {"role": "user", "content": "{question}"},
+        {
+            "role": "user",
+            "content": "{question}",
+        },
     ],
     json_mode=True,
 )
