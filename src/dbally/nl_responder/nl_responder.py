@@ -9,7 +9,7 @@ from dbally.nl_responder.query_explainer_prompt_template import (
     QueryExplainerPromptFormat,
     default_query_explainer_template,
 )
-from dbally.prompts.prompt_template import PromptTemplate
+from dbally.prompts.template import PromptTemplate
 
 
 class NLResponder:

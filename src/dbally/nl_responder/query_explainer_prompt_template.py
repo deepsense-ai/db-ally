@@ -2,7 +2,7 @@ from typing import Any, Dict, List
 
 from dbally.prompts import PromptTemplate
 from dbally.prompts.elements import FewShotExample
-from dbally.prompts.prompt_template import PromptFormat
+from dbally.prompts.template import PromptFormat
 
 
 class QueryExplainerPromptFormat(PromptFormat):

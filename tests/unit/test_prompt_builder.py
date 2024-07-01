@@ -4,7 +4,7 @@ import pytest
 
 from dbally.prompts import PromptTemplate, PromptTemplateError
 from dbally.prompts.elements import FewShotExample
-from dbally.prompts.prompt_template import ChatFormat, PromptFormat
+from dbally.prompts.template import ChatFormat, PromptFormat
 
 
 class QuestionPromptFormat(PromptFormat):

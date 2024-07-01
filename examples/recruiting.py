@@ -11,7 +11,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.llms.litellm import LiteLLM
 from dbally.prompts import PromptTemplate
 from dbally.prompts.elements import FewShotExample
-from dbally.prompts.prompt_template import PromptFormat
+from dbally.prompts.template import PromptFormat
 
 
 class Text2SQLPromptFormat(PromptFormat):

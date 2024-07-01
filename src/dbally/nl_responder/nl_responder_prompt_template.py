@@ -4,7 +4,7 @@ import pandas as pd
 
 from dbally.prompts import PromptTemplate
 from dbally.prompts.elements import FewShotExample
-from dbally.prompts.prompt_template import PromptFormat
+from dbally.prompts.template import PromptFormat
 
 
 def _promptify_results(results: List[Dict]) -> str:

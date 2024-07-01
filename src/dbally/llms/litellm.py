@@ -10,7 +10,7 @@ except ImportError:
 
 from dbally.llms.base import LLM
 from dbally.llms.clients.litellm import LiteLLMClient, LiteLLMOptions
-from dbally.prompts.prompt_template import PromptTemplate
+from dbally.prompts.template import PromptTemplate
 
 
 class LiteLLM(LLM[LiteLLMOptions]):

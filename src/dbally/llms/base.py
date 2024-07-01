@@ -5,7 +5,7 @@ from typing import Generic, Optional, Type
 from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import LLMEvent
 from dbally.llms.clients.base import LLMClient, LLMClientOptions, LLMOptions
-from dbally.prompts.prompt_template import PromptTemplate
+from dbally.prompts.template import PromptTemplate
 
 
 class LLM(Generic[LLMClientOptions], ABC):
