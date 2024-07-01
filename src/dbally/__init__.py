@@ -1,6 +1,6 @@
 """ dbally """
 
-from typing import List, Callable
+from typing import Callable, List
 
 from dbally.collection.collection import Collection
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
