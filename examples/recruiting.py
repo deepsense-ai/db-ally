@@ -9,9 +9,9 @@ import dbally
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.llms.litellm import LiteLLM
-from dbally.prompts import PromptTemplate
-from dbally.prompts.elements import FewShotExample
-from dbally.prompts.template import PromptFormat
+from dbally.prompt import PromptTemplate
+from dbally.prompt.elements import FewShotExample
+from dbally.prompt.template import PromptFormat
 
 
 class Text2SQLPromptFormat(PromptFormat):

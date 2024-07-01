@@ -2,9 +2,9 @@ from typing import Any, Dict, List
 
 import pandas as pd
 
-from dbally.prompts import PromptTemplate
-from dbally.prompts.elements import FewShotExample
-from dbally.prompts.template import PromptFormat
+from dbally.prompt import PromptTemplate
+from dbally.prompt.elements import FewShotExample
+from dbally.prompt.template import PromptFormat
 
 
 def _promptify_results(results: List[Dict]) -> str:

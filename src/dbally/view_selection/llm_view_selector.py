@@ -3,7 +3,7 @@ from typing import Dict, Optional
 from dbally.audit.event_tracker import EventTracker
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.prompts.template import PromptTemplate
+from dbally.prompt.template import PromptTemplate
 from dbally.view_selection.base import ViewSelector
 from dbally.view_selection.view_selector_prompt_template import VIEW_SELECTION_TEMPLATE, ViewSelectionPromptFormat
 

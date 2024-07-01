@@ -1,5 +1,5 @@
 from dbally.iql_generator.iql_prompt_template import IQL_GENERATION_TEMPLATE, IQLPromptFormat
-from dbally.prompts.elements import FewShotExample
+from dbally.prompt.elements import FewShotExample
 
 
 async def test_iql_prompt_format_default() -> None:

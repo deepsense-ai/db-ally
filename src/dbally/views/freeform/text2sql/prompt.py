@@ -1,7 +1,7 @@
 from typing import List
 
-from dbally.prompts.elements import FewShotExample
-from dbally.prompts.template import PromptFormat, PromptTemplate
+from dbally.prompt.elements import FewShotExample
+from dbally.prompt.template import PromptFormat, PromptTemplate
 from dbally.views.freeform.text2sql.config import TableConfig
 
 

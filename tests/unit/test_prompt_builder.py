@@ -2,9 +2,9 @@ from typing import List
 
 import pytest
 
-from dbally.prompts import PromptTemplate, PromptTemplateError
-from dbally.prompts.elements import FewShotExample
-from dbally.prompts.template import ChatFormat, PromptFormat
+from dbally.prompt import PromptTemplate, PromptTemplateError
+from dbally.prompt.elements import FewShotExample
+from dbally.prompt.template import ChatFormat, PromptFormat
 
 
 class QuestionPromptFormat(PromptFormat):

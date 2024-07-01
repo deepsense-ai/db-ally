@@ -5,7 +5,7 @@ from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.iql_prompt_template import IQL_GENERATION_TEMPLATE, IQLPromptFormat
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.prompts import PromptTemplate
+from dbally.prompt import PromptTemplate
 from dbally.views.exposed_functions import ExposedFunction
 
 

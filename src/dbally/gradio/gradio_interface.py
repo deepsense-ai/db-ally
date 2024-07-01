@@ -10,7 +10,7 @@ from dbally.audit import CLIEventHandler
 from dbally.collection import Collection
 from dbally.collection.exceptions import NoViewFoundError
 from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
-from dbally.prompts import PromptTemplateError
+from dbally.prompt import PromptTemplateError
 
 
 async def create_gradio_interface(user_collection: Collection, preview_limit: int = 10) -> gradio.Interface:

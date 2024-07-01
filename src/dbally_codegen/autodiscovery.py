@@ -6,7 +6,7 @@ from sqlalchemy.sql.ddl import CreateTable
 from typing_extensions import Self
 
 from dbally.llms.base import LLM
-from dbally.prompts import PromptTemplate
+from dbally.prompt import PromptTemplate
 from dbally.similarity.index import SimilarityIndex
 from dbally.views.freeform.text2sql import ColumnConfig, TableConfig
 

@@ -2,7 +2,7 @@ from typing import Callable, List, Tuple
 
 import pytest
 
-from dbally.prompts.elements import FewShotExample
+from dbally.prompt.elements import FewShotExample
 
 
 class TestExamples:

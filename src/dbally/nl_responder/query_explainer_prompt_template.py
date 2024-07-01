@@ -1,8 +1,8 @@
 from typing import Any, Dict, List
 
-from dbally.prompts import PromptTemplate
-from dbally.prompts.elements import FewShotExample
-from dbally.prompts.template import PromptFormat
+from dbally.prompt import PromptTemplate
+from dbally.prompt.elements import FewShotExample
+from dbally.prompt.template import PromptFormat
 
 
 class QueryExplainerPromptFormat(PromptFormat):

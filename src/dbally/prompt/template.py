@@ -5,7 +5,7 @@ from typing import Callable, Dict, Generic, List, TypeVar
 from typing_extensions import Self
 
 from dbally.exceptions import DbAllyError
-from dbally.prompts.elements import FewShotExample
+from dbally.prompt.elements import FewShotExample
 
 ChatFormat = List[Dict[str, str]]
 
