@@ -23,7 +23,7 @@ from sqlalchemy import create_engine
 import dbally
 from dbally.collection import Collection
 from dbally.collection.exceptions import NoViewFoundError
-from dbally.iql_generator.iql_prompt_template import IQL_GENERATION_TEMPLATE, UnsupportedQueryError
+from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, UnsupportedQueryError
 from dbally.llms.litellm import LiteLLM
 from dbally.view_selection.view_selector_prompt_template import VIEW_SELECTION_TEMPLATE
 

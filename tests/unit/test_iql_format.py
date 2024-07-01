@@ -1,9 +1,9 @@
-from dbally.iql_generator.iql_prompt_template import IQL_GENERATION_TEMPLATE, IQLPromptFormat
+from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, IQLGenerationPromptFormat
 from dbally.prompt.elements import FewShotExample
 
 
 async def test_iql_prompt_format_default() -> None:
-    prompt_format = IQLPromptFormat(
+    prompt_format = IQLGenerationPromptFormat(
         question="",
         filters=[],
         examples=[],
@@ -33,7 +33,7 @@ async def test_iql_prompt_format_default() -> None:
 
 async def test_iql_prompt_format_few_shots_injected() -> None:
     examples = [FewShotExample("q1", "a1")]
-    prompt_format = IQLPromptFormat(
+    prompt_format = IQLGenerationPromptFormat(
         question="",
         filters=[],
         examples=examples,
@@ -65,7 +65,7 @@ async def test_iql_prompt_format_few_shots_injected() -> None:
 
 async def test_iql_input_format_few_shot_examples_repeat_no_example_duplicates() -> None:
     examples = [FewShotExample("q1", "a1")]
-    prompt_format = IQLPromptFormat(
+    prompt_format = IQLGenerationPromptFormat(
         question="",
         filters=[],
         examples=examples,

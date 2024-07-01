@@ -33,7 +33,7 @@ def _validate_iql_response(llm_response: str) -> str:
     return llm_response
 
 
-class IQLPromptFormat(PromptFormat):
+class IQLGenerationPromptFormat(PromptFormat):
     """
     IQL prompt format, providing a question and filters to be used in the conversation.
     """
@@ -46,7 +46,7 @@ class IQLPromptFormat(PromptFormat):
         examples: List[FewShotExample] = None,
     ) -> None:
         """
-        Constructs a new IQLPromptFormat instance.
+        Constructs a new IQLGenerationPromptFormat instance.
 
         Args:
             question: Question to be asked.
@@ -58,7 +58,7 @@ class IQLPromptFormat(PromptFormat):
         self.filters = "\n".join([str(filter) for filter in filters])
 
 
-IQL_GENERATION_TEMPLATE = PromptTemplate[IQLPromptFormat](
+IQL_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
     [
         {
             "role": "system",

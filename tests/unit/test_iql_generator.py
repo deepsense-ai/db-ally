@@ -9,7 +9,7 @@ from dbally import decorators
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql import IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.iql_generator.iql_prompt_template import IQL_GENERATION_TEMPLATE, IQLPromptFormat
+from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, IQLGenerationPromptFormat
 from dbally.views.methods_base import MethodsBaseView
 from tests.unit.mocks import MockLLM
 
@@ -58,7 +58,7 @@ def iql_generator(llm: MockLLM) -> IQLGenerator:
 @pytest.mark.asyncio
 async def test_iql_generation(iql_generator: IQLGenerator, event_tracker: EventTracker, view: MockView) -> None:
     filters = view.list_filters()
-    prompt_format = IQLPromptFormat(
+    prompt_format = IQLGenerationPromptFormat(
         question="Mock_question",
         filters=filters,
     )

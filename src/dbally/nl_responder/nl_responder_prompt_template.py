@@ -34,7 +34,7 @@ class NLResponderPromptFormat(PromptFormat):
         examples: List[FewShotExample] = None,
     ) -> None:
         """
-        Constructs a new IQLPromptFormat instance.
+        Constructs a new IQLGenerationPromptFormat instance.
 
         Args:
             question: Question to be asked.

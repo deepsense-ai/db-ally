@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql import IQLError, IQLQuery
-from dbally.iql_generator.iql_prompt_template import IQL_GENERATION_TEMPLATE, IQLPromptFormat
+from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, IQLGenerationPromptFormat
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.prompt import PromptTemplate
@@ -20,7 +20,7 @@ class IQLGenerator:
     It uses LLM to generate text-based responses, passing in the prompt template, formatted filters, and user question.
     """
 
-    def __init__(self, llm: LLM, prompt_template: Optional[PromptTemplate[IQLPromptFormat]] = None) -> None:
+    def __init__(self, llm: LLM, prompt_template: Optional[PromptTemplate[IQLGenerationPromptFormat]] = None) -> None:
         """
         Constructs a new IQLGenerator instance.
 
@@ -53,7 +53,7 @@ class IQLGenerator:
         Returns:
             Generated IQL query.
         """
-        prompt_format = IQLPromptFormat(
+        prompt_format = IQLGenerationPromptFormat(
             question=question,
             filters=filters,
             examples=examples,
