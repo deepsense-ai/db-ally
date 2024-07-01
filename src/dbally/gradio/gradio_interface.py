@@ -4,7 +4,8 @@ from typing import Any, Dict, List, Tuple
 import gradio
 import pandas as pd
 
-from dbally import BaseStructuredView, global_event_handlers
+import dbally
+from dbally import BaseStructuredView
 from dbally.audit.event_handlers.buffer_event_handler import BufferEventHandler
 from dbally.collection import Collection
 from dbally.collection.exceptions import NoViewFoundError
@@ -27,6 +28,23 @@ async def create_gradio_interface(user_collection: Collection, preview_limit: in
     return gradio_interface
 
 
+def find_event_buffer():
+    """
+    Searches through global event handlers to find an instance of BufferEventHandler.
+
+    This function iterates over the list of global event handlers stored in `dbally.global_event_handlers`.
+    It checks the type of each handler, and if it finds one that is an instance of `BufferEventHandler`, it
+    returns that handler. If no such handler is found, the function returns `None`.
+
+    Returns:
+        BufferEventHandler or None: The first instance of `BufferEventHandler` found in the list, or `None` if no such handler is found.
+    """
+    for handler in dbally.global_event_handlers:
+        if type(handler) is BufferEventHandler:
+            return handler
+    return None
+
+
 class GradioAdapter:
     """
     A class to adapt and integrate data collection and query execution with Gradio interface components.
@@ -41,11 +59,16 @@ class GradioAdapter:
         self.selected_view_name = None
         self.collection = None
 
-        buffer_event_handler = global_event_handlers.find_buffer()
+        buffer_event_handler = find_event_buffer()
         if not buffer_event_handler:
+            print("buffer_event_handler not found")
             buffer_event_handler = BufferEventHandler()
-            global_event_handlers.append(buffer_event_handler)
+            dbally.global_event_handlers.append(buffer_event_handler)
+        else:
+            print("buffer_event_handler found")
+        print(dbally.global_event_handlers)
         self.log: BufferEventHandler = buffer_event_handler.buffer  # pylint: disable=no-member
+        print(f" init 1 {self.log}")
 
     def _load_gradio_data(self, preview_dataframe, label) -> Tuple[gradio.DataFrame, gradio.Label]:
         """
@@ -143,10 +166,12 @@ class GradioAdapter:
             generated_query = {"Query": "No view matched to query"}
             data = pd.DataFrame()
         finally:
+            print(f" ask log 1 {self.log}")
             self.log.seek(0)
             log_content = self.log.read()
 
         gradio_dataframe, empty_dataframe_warning = self._load_gradio_data(data, "Results")
+        print(f" ask log 2 {self.log}")
         return (
             gradio_dataframe,
             empty_dataframe_warning,

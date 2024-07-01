@@ -10,7 +10,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
-from dbally.index import GlobalEventHandlerClass, global_event_handlers
+import dbally
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
@@ -33,7 +33,7 @@ class Collection:
         name: str,
         view_selector: ViewSelector,
         llm: LLM,
-        event_handlers: Union[List[EventHandler], GlobalEventHandlerClass],
+        event_handlers: List[EventHandler],
         nl_responder: NLResponder,
         n_retries: int = 3,
     ) -> None:
@@ -62,8 +62,8 @@ class Collection:
         self._llm = llm
 
         if not event_handlers:
-            event_handlers = global_event_handlers
-        elif event_handlers != global_event_handlers:
+            event_handlers = dbally.global_event_handlers
+        elif event_handlers != dbally.global_event_handlers:
             # At this moment, there is no event tracker initialized to record an event
             print(f"WARNING: Default event handler has been overwritten for {self.name}.")
 
@@ -236,7 +236,7 @@ class Collection:
         )
 
         await event_tracker.request_end(RequestEnd(result=result))
-
+        # print(dbally.my_callback)
         return result
 
     def get_similarity_indexes(self) -> Dict[AbstractSimilarityIndex, List[IndexLocation]]:

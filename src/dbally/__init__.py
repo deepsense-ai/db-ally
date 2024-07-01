@@ -19,8 +19,9 @@ from .embeddings.exceptions import (
     EmbeddingStatusError,
 )
 from .exceptions import DbAllyError
-from .index import global_event_handlers
 from .llms.clients.exceptions import LLMConnectionError, LLMError, LLMResponseError, LLMStatusError
+
+global_event_handlers = []
 
 __all__ = [
     "__version__",

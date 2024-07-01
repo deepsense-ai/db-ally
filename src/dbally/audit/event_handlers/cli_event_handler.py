@@ -28,7 +28,7 @@ class CLIEventHandler(EventHandler):
 
     ```python
         from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
-        from dbally.index import global_event_handlers
+        from dbally.index import dbally
 
         dbally.global_event_handlers.append(CLIEventHandler())
         my_collection = dbally.create_collection("my_collection", llm)
@@ -61,6 +61,7 @@ class CLIEventHandler(EventHandler):
         Args:
             user_request: Object containing name of collection and asked query
         """
+        print(f"buffer {self._console.file}")
         self._print_syntax(f"[orange3 bold]Request starts... \n[orange3 bold]MESSAGE: [grey53]{user_request.question}")
         self._print_syntax("[grey53]\n=======================================")
         self._print_syntax("[grey53]=======================================\n")
