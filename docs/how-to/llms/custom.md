@@ -44,7 +44,7 @@ class MyLLMClient(LLMClient[LiteLLMOptions]):
 
     async def call(
         self,
-        prompt: ChatFormat,
+        conversation: ChatFormat,
         options: LiteLLMOptions,
         event: LLMEvent,
         json_mode: bool = False,
@@ -52,33 +52,20 @@ class MyLLMClient(LLMClient[LiteLLMOptions]):
         # Your LLM API call
 ```
 
-The [`call`](../../reference/llms/index.md#dbally.llms.clients.base.LLMClient.call) method is an abstract method that must be implemented in your subclass. This method should call the LLM inference API and return the response.
+The [`call`](../../reference/llms/index.md#dbally.llms.clients.base.LLMClient.call) method is an abstract method that must be implemented in your subclass. This method should call the LLM inference API and return the response in string format.
 
 ### Step 3: Use tokenizer to count tokens
 
-The [`count_tokens`](../../reference/llms/index.md#dbally.llms.base.LLM.count_tokens) method is used to count the number of tokens in the messages. You can override this method in your custom class to use the tokenizer and count tokens specifically for your model.
+The [`count_tokens`](../../reference/llms/index.md#dbally.llms.base.LLM.count_tokens) method is used to count the number of tokens in the prompt conversation. You can override this method in your custom class to use the tokenizer and count tokens specifically for your model.
 
 ```python
 class MyLLM(LLM[LiteLLMOptions]):
 
-    def count_tokens(self, messages: ChatFormat, fmt: Dict[str, str]) -> int:
+    def count_tokens(self, prompt: PromptTemplate) -> int:
         # Count tokens in the messages in a custom way
 ```
 !!!warning
     Incorrect token counting can cause problems in the [`NLResponder`](../../reference/nl_responder.md#dbally.nl_responder.nl_responder.NLResponder) and force the use of an explanation prompt template that is more generic and does not include specific rows from the IQL response.
-
-### Step 4: Define custom prompt formatting
-
-The [`format_prompt`](../../reference/llms/index.md#dbally.llms.base.LLM.format_prompt) method is used to apply formatting to the prompt template. You can override this method in your custom class to change how the formatting is performed.
-
-```python
-class MyLLM(LLM[LiteLLMOptions]):
-
-    def format_prompt(self, template: PromptTemplate, fmt: Dict[str, str]) -> ChatFormat:
-        # Apply custom formatting to the prompt template
-```
-!!!note
-    In general, implementation of this method is not required unless the LLM API does not support [OpenAI conversation formatting](https://platform.openai.com/docs/api-reference/chat/create#chat-create-messages){:target="_blank"}. If your model API expects a different format, override this method to avoid issues with inference call.
 
 ## Customising LLM Options
 
