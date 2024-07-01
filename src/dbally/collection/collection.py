@@ -5,6 +5,7 @@ import time
 from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Type, TypeVar
 
+import dbally
 from dbally import DbAllyError
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
@@ -63,9 +64,16 @@ class Collection:
         self._builders: Dict[str, Callable[[], BaseView]] = {}
         self._view_selector = view_selector
         self._nl_responder = nl_responder
-        self._event_handlers = event_handlers
         self._llm = llm
         self._fallback_collection: Optional[Collection] = fallback_collection
+
+        if not event_handlers:
+            event_handlers = dbally.global_event_handlers
+        elif event_handlers != dbally.global_event_handlers:
+            # At this moment, there is no event tracker initialized to record an event
+            print(f"WARNING: Default event handler has been overwritten for {self.name}.")
+
+        self._event_handlers = event_handlers
 
     T = TypeVar("T", bound=BaseView)
 
@@ -116,15 +124,6 @@ class Collection:
 
         self._views[name] = view
         self._builders[name] = builder
-
-    def add_event_handler(self, event_handler: EventHandler):
-        """
-        Adds an event handler to the list of event handlers.
-
-        Args:
-            event_handler: The event handler to be added.
-        """
-        self._event_handlers.append(event_handler)
 
     def set_fallback(self, fallback_collection: "Collection") -> "Collection":
         """
@@ -334,6 +333,7 @@ class Collection:
         dry_run: bool = False,
         return_natural_response: bool = False,
         llm_options: Optional[LLMOptions] = None,
+        event_tracker: Optional[EventTracker] = None,
     ) -> Optional[ExecutionResult]:
         """
         Ask question in a text form and retrieve the answer based on the available views.
@@ -353,6 +353,7 @@ class Collection:
                 the natural response will be included in the answer
             llm_options: options to use for the LLM client. If provided, these options will be merged with the default
                 options provided to the LLM client, prioritizing option values other than NOT_GIVEN
+            event_tracker: Event tracker object for given ask.
 
         Returns:
             ExecutionResult object representing the result of the query execution.
@@ -363,7 +364,9 @@ class Collection:
             ValueError: if incorrect IQL was generated `n_retries` amount of times.
         """
         handle_exceptions = (NoViewFoundError, UnsupportedQueryError, IndexUpdateError)
-        event_tracker = EventTracker.initialize_with_handlers(self._event_handlers)
+
+        if not event_tracker:
+            event_tracker = EventTracker.initialize_with_handlers(self._event_handlers)
 
         selected_view_name = ""
 
@@ -382,6 +385,7 @@ class Collection:
                 if not dry_run and return_natural_response
                 else ""
             )
+
             result = ExecutionResult(
                 results=view_result.results,
                 context=view_result.context,
@@ -391,38 +395,17 @@ class Collection:
                 textual_response=natural_response,
             )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
-
         except handle_exceptions as caught_exception:
             result = await self._handle_fallback(
-                question,
-                dry_run,
-                return_natural_response,
-                llm_options,
-                selected_view_name,
-                event_tracker,
-                caught_exception,
+                question=question,
+                dry_run=dry_run,
+                return_natural_response=return_natural_response,
+                llm_options=llm_options,
+                selected_view_name=selected_view_name,
+                event_tracker=event_tracker,
+                caught_exception=caught_exception,
             )
+        finally:
             await event_tracker.request_end(RequestEnd(result=result))
 
         return result
