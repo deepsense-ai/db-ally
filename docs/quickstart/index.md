@@ -114,12 +114,15 @@ Replace `...` with your OpenAI API key. Alternatively, you can set the `OPENAI_A
 ## Collection Definition
 
 Next, create a db-ally collection. A [collection](../concepts/collections.md) is an object where you register views and execute queries. It also requires an AI model to use for generating [IQL queries](../concepts/iql.md) (in this case, the GPT model defined above).
+The collection could have its own event handlers which override the globally defined handlers.
 
 ```python
 import dbally
+from dbally.audit import CLIEventHandler
+
 
 async def main():
-    collection = dbally.create_collection("recruitment", llm)
+    collection = dbally.create_collection("recruitment", llm, event_handlers=[CLIEventHandler])
     collection.add(CandidateView, lambda: CandidateView(engine))
 ```
 

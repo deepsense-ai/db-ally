@@ -1,5 +1,7 @@
 """ dbally """
 
+from typing import Callable, List
+
 from dbally.collection.collection import Collection
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
@@ -21,29 +23,32 @@ from .embeddings.exceptions import (
 from .exceptions import DbAllyError
 from .llms.clients.exceptions import LLMConnectionError, LLMError, LLMResponseError, LLMStatusError
 
+global_event_handlers: List[Callable] = []
+
 __all__ = [
     "__version__",
     "create_collection",
     "decorators",
-    "MethodsBaseView",
-    "SqlAlchemyBaseView",
-    "Collection",
+    "global_event_handlers",
     "BaseStructuredView",
+    "Collection",
     "DataFrameBaseView",
-    "ExecutionResult",
     "DbAllyError",
+    "ExecutionResult",
     "EmbeddingError",
     "EmbeddingConnectionError",
     "EmbeddingResponseError",
     "EmbeddingStatusError",
+    "IndexUpdateError",
     "LLMError",
     "LLMConnectionError",
     "LLMResponseError",
     "LLMStatusError",
-    "NoViewFoundError",
-    "IndexUpdateError",
+    "MethodsBaseView",
     "NotGiven",
     "NOT_GIVEN",
+    "NoViewFoundError",
+    "SqlAlchemyBaseView",
 ]
 
 # Update the __module__ attribute for exported symbols so that
