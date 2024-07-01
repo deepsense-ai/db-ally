@@ -122,17 +122,26 @@ class BaseText2SQLView(BaseView, ABC):
         Raises:
             Text2SQLError: If the text2sql query generation fails after n_retries.
         """
-        conversation = SQL_GENERATION_TEMPLATE
         sql, rows = None, None
         exceptions = []
 
-        for _ in range(n_retries):
+        tables = self.get_tables()
+        examples = self.list_few_shots()
+
+        prompt_format = SQLGenerationPromptFormat(
+            question=query,
+            dialect=self._engine.dialect.name,
+            tables=tables,
+            examples=examples,
+        )
+        formatted_prompt = SQL_GENERATION_TEMPLATE.format_prompt(prompt_format)
+
+        for _ in range(n_retries + 1):
             # We want to catch all exceptions to retry the process.
             # pylint: disable=broad-except
             try:
-                sql, parameters, conversation = await self._generate_sql(
-                    query=query,
-                    conversation=conversation,
+                sql, parameters, formatted_prompt = await self._generate_sql(
+                    conversation=formatted_prompt,
                     llm=llm,
                     event_tracker=event_tracker,
                     llm_options=llm_options,
@@ -144,7 +153,7 @@ class BaseText2SQLView(BaseView, ABC):
                 rows = await self._execute_sql(sql, parameters, event_tracker=event_tracker)
                 break
             except Exception as e:
-                conversation = conversation.add_user_message(f"Response is invalid! Error: {e}")
+                formatted_prompt = formatted_prompt.add_user_message(f"Response is invalid! Error: {e}")
                 exceptions.append(e)
                 continue
 
@@ -162,29 +171,18 @@ class BaseText2SQLView(BaseView, ABC):
 
     async def _generate_sql(
         self,
-        query: str,
         conversation: PromptTemplate,
         llm: LLM,
         event_tracker: EventTracker,
         llm_options: Optional[LLMOptions] = None,
     ) -> Tuple[str, List[SQLParameterOption], PromptTemplate]:
-        tables = self.get_tables()
-        examples = self.list_few_shots()
-
-        prompt_format = SQLGenerationPromptFormat(
-            question=query,
-            dialect=self._engine.dialect.name,
-            tables=tables,
-            examples=examples,
-        )
-        formatted_prompt = conversation.format_prompt(prompt_format)
         response = await llm.generate_text(
-            prompt=formatted_prompt,
+            prompt=conversation,
             event_tracker=event_tracker,
             options=llm_options,
         )
 
-        formatted_prompt = formatted_prompt.add_assistant_message(response)
+        conversation = conversation.add_assistant_message(response)
         data = json.loads(response)
         sql = data["sql"]
         parameters = data.get("parameters", [])
@@ -193,7 +191,7 @@ class BaseText2SQLView(BaseView, ABC):
             raise ValueError("Parameters should be a list of dictionaries")
         param_objs = [SQLParameterOption.from_dict(param) for param in parameters]
 
-        return sql, param_objs, formatted_prompt
+        return sql, param_objs, conversation
 
     async def _execute_sql(
         self, sql: str, parameters: List[SQLParameterOption], event_tracker: EventTracker
