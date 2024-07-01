@@ -1,9 +1,8 @@
 from typing import List
 
 from dbally.exceptions import DbAllyError
-from dbally.prompt import PromptTemplate
 from dbally.prompt.elements import FewShotExample
-from dbally.prompt.template import PromptFormat
+from dbally.prompt.template import PromptFormat, PromptTemplate
 from dbally.views.exposed_functions import ExposedFunction
 
 

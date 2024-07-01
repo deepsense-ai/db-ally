@@ -2,23 +2,8 @@ from typing import Any, Dict, List
 
 import pandas as pd
 
-from dbally.prompt import PromptTemplate
 from dbally.prompt.elements import FewShotExample
-from dbally.prompt.template import PromptFormat
-
-
-def _promptify_results(results: List[Dict]) -> str:
-    """
-    Formats results into a markdown table.
-
-    Args:
-        results: List of results to be formatted.
-
-    Returns:
-        Results formatted as a markdown table.
-    """
-    df = pd.DataFrame.from_records(results)
-    return df.to_markdown(index=False, headers="keys", tablefmt="psql")
+from dbally.prompt.template import PromptFormat, PromptTemplate
 
 
 class NLResponsePromptFormat(PromptFormat):
@@ -43,7 +28,7 @@ class NLResponsePromptFormat(PromptFormat):
         """
         super().__init__(examples)
         self.question = question
-        self.results = _promptify_results(results)
+        self.results = pd.DataFrame.from_records(results).to_markdown(index=False, headers="keys", tablefmt="psql")
 
 
 class QueryExplanationPromptFormat(PromptFormat):

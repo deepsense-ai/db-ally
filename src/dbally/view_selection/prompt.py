@@ -1,8 +1,7 @@
 from typing import Dict, List
 
-from dbally.prompt import PromptTemplate
 from dbally.prompt.elements import FewShotExample
-from dbally.prompt.template import PromptFormat
+from dbally.prompt.template import PromptFormat, PromptTemplate
 
 
 class ViewSelectionPromptFormat(PromptFormat):
