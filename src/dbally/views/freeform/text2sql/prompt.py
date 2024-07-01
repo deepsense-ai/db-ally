@@ -19,7 +19,7 @@ class SQLGenerationPromptFormat(PromptFormat):
         examples: List[FewShotExample] = None,
     ) -> None:
         """
-        Constructs a new Text2SQLInputFormatter instance.
+        Constructs a new SQLGenerationPromptFormat instance.
 
         Args:
             question: Question to be asked.
