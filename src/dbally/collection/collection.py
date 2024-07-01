@@ -3,14 +3,14 @@ import inspect
 import textwrap
 import time
 from collections import defaultdict
-from typing import Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Callable, Dict, List, Optional, Type, TypeVar
 
+import dbally
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
-import dbally
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
@@ -236,7 +236,6 @@ class Collection:
         )
 
         await event_tracker.request_end(RequestEnd(result=result))
-        # print(dbally.my_callback)
         return result
 
     def get_similarity_indexes(self) -> Dict[AbstractSimilarityIndex, List[IndexLocation]]:

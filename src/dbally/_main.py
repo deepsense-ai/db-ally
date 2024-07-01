@@ -1,8 +1,9 @@
 from typing import List, Optional
 
+import dbally
+
 from .audit.event_handlers.base import EventHandler
 from .collection import Collection
-import dbally
 from .llms import LLM
 from .nl_responder.nl_responder import NLResponder
 from .view_selection.base import ViewSelector

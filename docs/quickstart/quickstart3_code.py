@@ -1,5 +1,4 @@
 # pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring
-import dbally
 import os
 import asyncio
 from typing_extensions import Annotated
@@ -9,7 +8,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 import pandas as pd
 
-from dbally import decorators, SqlAlchemyBaseView, DataFrameBaseView, ExecutionResult, global_event_handlers
+import dbally
+from dbally import decorators, SqlAlchemyBaseView, DataFrameBaseView, ExecutionResult
 from dbally.audit import CLIEventHandler
 from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
@@ -126,7 +126,7 @@ def display_results(result: ExecutionResult):
 
 
 async def main():
-    global_event_handlers.append(CLIEventHandler())
+    dbally.global_event_handlers.append(CLIEventHandler())
     await country_similarity.update()
 
     llm = LiteLLM(model_name="gpt-3.5-turbo")

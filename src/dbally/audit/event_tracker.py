@@ -35,7 +35,6 @@ class EventTracker:
         instance = cls()
 
         for handler in event_handlers:
-
             if not isinstance(handler, EventHandler):
                 raise ValueError(f"Could not register {handler}. Handler must be instance of EvenHandler type")
             instance.subscribe(handler)

@@ -1,12 +1,12 @@
 # pylint: disable=missing-function-docstring
 import asyncio
 
-import dbally
-from dbally.audit import CLIEventHandler
-from dbally.audit.event_handlers.buffer_event_handler import BufferEventHandler
 from recruiting.candidate_view_with_similarity_store import CandidateView, country_similarity, engine
 from recruiting.cypher_text2sql_view import SampleText2SQLViewCyphers, create_freeform_memory_engine
 
+import dbally
+from dbally.audit import CLIEventHandler
+from dbally.audit.event_handlers.buffer_event_handler import BufferEventHandler
 from dbally.gradio import create_gradio_interface
 from dbally.llms.litellm import LiteLLM
 

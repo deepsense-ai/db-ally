@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import gradio
 import pandas as pd
@@ -28,7 +28,7 @@ async def create_gradio_interface(user_collection: Collection, preview_limit: in
     return gradio_interface
 
 
-def find_event_buffer():
+def find_event_buffer() -> Optional[BufferEventHandler]:
     """
     Searches through global event handlers to find an instance of BufferEventHandler.
 
@@ -37,10 +37,10 @@ def find_event_buffer():
     returns that handler. If no such handler is found, the function returns `None`.
 
     Returns:
-        BufferEventHandler or None: The first instance of `BufferEventHandler` found in the list, or `None` if no such handler is found.
+        The first instance of `BufferEventHandler` found in the list, or `None` if no such handler is found.
     """
     for handler in dbally.global_event_handlers:
-        if type(handler) is BufferEventHandler:
+        if type(handler) is BufferEventHandler:  # pylint: disable=C0123
             return handler
     return None
 
@@ -61,14 +61,10 @@ class GradioAdapter:
 
         buffer_event_handler = find_event_buffer()
         if not buffer_event_handler:
-            print("buffer_event_handler not found")
             buffer_event_handler = BufferEventHandler()
             dbally.global_event_handlers.append(buffer_event_handler)
-        else:
-            print("buffer_event_handler found")
-        print(dbally.global_event_handlers)
+
         self.log: BufferEventHandler = buffer_event_handler.buffer  # pylint: disable=no-member
-        print(f" init 1 {self.log}")
 
     def _load_gradio_data(self, preview_dataframe, label) -> Tuple[gradio.DataFrame, gradio.Label]:
         """

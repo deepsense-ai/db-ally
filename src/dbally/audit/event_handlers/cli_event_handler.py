@@ -61,7 +61,6 @@ class CLIEventHandler(EventHandler):
         Args:
             user_request: Object containing name of collection and asked query
         """
-        print(f"buffer {self._console.file}")
         self._print_syntax(f"[orange3 bold]Request starts... \n[orange3 bold]MESSAGE: [grey53]{user_request.question}")
         self._print_syntax("[grey53]\n=======================================")
         self._print_syntax("[grey53]=======================================\n")
