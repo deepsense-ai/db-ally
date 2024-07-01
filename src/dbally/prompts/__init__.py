@@ -1,4 +1,3 @@
-from .common_validation_utils import ChatFormat, PromptTemplateError, check_prompt_variables
-from .prompt_template import PromptTemplate
+from .prompt_template import ChatFormat, PromptTemplate, PromptTemplateError
 
-__all__ = ["PromptTemplate", "PromptTemplateError", "check_prompt_variables", "ChatFormat"]
+__all__ = ["PromptTemplate", "PromptTemplateError", "ChatFormat"]

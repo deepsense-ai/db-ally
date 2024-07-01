@@ -3,9 +3,8 @@ from typing import List
 import pytest
 
 from dbally.prompts import PromptTemplate, PromptTemplateError
-from dbally.prompts.common_validation_utils import ChatFormat
 from dbally.prompts.elements import FewShotExample
-from dbally.prompts.prompt_template import PromptFormat
+from dbally.prompts.prompt_template import ChatFormat, PromptFormat
 
 
 class QuestionPromptFormat(PromptFormat):

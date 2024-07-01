@@ -1,12 +1,19 @@
 import copy
 import re
-from typing import Callable, Generic, List, TypeVar
+from typing import Callable, Dict, Generic, List, TypeVar
 
 from typing_extensions import Self
 
+from dbally.exceptions import DbAllyError
 from dbally.prompts.elements import FewShotExample
 
-from .common_validation_utils import ChatFormat, PromptTemplateError
+ChatFormat = List[Dict[str, str]]
+
+
+class PromptTemplateError(DbAllyError):
+    """
+    Error raised on incorrect PromptTemplate construction.
+    """
 
 
 def _check_chat_order(chat: ChatFormat) -> ChatFormat:
