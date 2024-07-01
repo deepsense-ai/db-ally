@@ -40,15 +40,29 @@ class GradioAdapter:
         self.preview_limit = None
         self.selected_view_name = None
         self.collection = None
-        if buffer_event_handler := global_event_handlers.find_buffer():
-            pass
-        else:
+
+        buffer_event_handler = global_event_handlers.find_buffer()
+        if not buffer_event_handler:
             buffer_event_handler = BufferEventHandler()
             global_event_handlers.append(buffer_event_handler)
-
         self.log: BufferEventHandler = buffer_event_handler.buffer  # pylint: disable=no-member
 
     def _load_gradio_data(self, preview_dataframe, label) -> Tuple[gradio.DataFrame, gradio.Label]:
+        """
+        Load data into Gradio components for preview.
+
+        This function takes a DataFrame and a label, and returns a tuple containing a Gradio DataFrame
+        and a Gradio Label. The visibility of these components is determined by whether the input
+        DataFrame is empty.
+
+        Args:
+            preview_dataframe: The DataFrame to be loaded into the Gradio DataFrame component.
+            label: The label to be associated with the Gradio components.
+
+        Returns:
+            A tuple containing the Gradio DataFrame component with the provided data and label and A Gradio Label
+            indicating the availability of data.
+        """
         if preview_dataframe.empty:
             gradio_preview_dataframe = gradio.DataFrame(label=label, value=preview_dataframe, visible=False)
             empty_frame_label = gradio.Label(value=f"{label} not available", visible=True, show_label=False)

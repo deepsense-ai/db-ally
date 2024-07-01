@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 
 import dbally
-from dbally import decorators, SqlAlchemyBaseView
+from dbally import decorators, SqlAlchemyBaseView, global_event_handlers
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
@@ -77,10 +77,11 @@ class CandidateView(SqlAlchemyBaseView):
 
 
 async def main():
+    global_event_handlers.append(CLIEventHandler())
     await country_similarity.update()
 
     llm = LiteLLM(model_name="gpt-3.5-turbo")
-    collection = dbally.create_collection("recruitment", llm, event_handlers=[CLIEventHandler()])
+    collection = dbally.create_collection("recruitment", llm)
     collection.add(CandidateView, lambda: CandidateView(engine))
 
     result = await collection.ask("Find someone from the United States with more than 2 years of experience.")

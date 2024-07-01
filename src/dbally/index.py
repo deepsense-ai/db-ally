@@ -127,6 +127,56 @@ class GlobalEventHandlerClass:
         """
         return len(self._list)
 
+    def __eq__(self, other):
+        """
+        Determine if this instance is equal to another object.
+
+        The comparison is based on the equality of the `_list` attribute.
+        If the other object is an instance of `GlobalEventHandlerClass`,
+        their `_list` attributes are compared. If the other object is a list,
+        it is compared directly to this instance's `_list` attribute.
+
+        Args:
+            other (object): The object to compare with this instance.
+
+        Returns:
+            bool: True if the objects are considered equal, False otherwise.
+
+        Raises:
+            NotImplemented: If the `other` object is neither a `GlobalEventHandlerClass`
+                            instance nor a list.
+        """
+        if isinstance(other, type(self)):
+            return self._list == other._list
+        if isinstance(other, list):
+            return self._list == other
+        return NotImplemented
+
+    def __ne__(self, other):
+        """
+        Determine if this instance is not equal to another object.
+
+        The comparison is based on the inequality of the `_list` attribute.
+        If the other object is an instance of `GlobalEventHandlerClass`,
+        their `_list` attributes are compared. If the other object is a list,
+        it is compared directly to this instance's `_list` attribute.
+
+        Args:
+            other (object): The object to compare with this instance.
+
+        Returns:
+            bool: True if the objects are considered not equal, False otherwise.
+
+        Raises:
+            NotImplemented: If the `other` object is neither a `GlobalEventHandlerClass`
+                            instance nor a list.
+        """
+        if isinstance(other, type(self)):
+            return self._list != other._list
+        if isinstance(other, list):
+            return self._list != other
+        return NotImplemented
+
     def append(self, value):
         """
         Appends an event handler to the list.

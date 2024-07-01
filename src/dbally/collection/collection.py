@@ -3,14 +3,14 @@ import inspect
 import textwrap
 import time
 from collections import defaultdict
-from typing import Callable, Dict, List, Optional, Type, TypeVar
+from typing import Callable, Dict, List, Optional, Type, TypeVar, Union
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
-from dbally.index import global_event_handlers
+from dbally.index import GlobalEventHandlerClass, global_event_handlers
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
@@ -33,7 +33,7 @@ class Collection:
         name: str,
         view_selector: ViewSelector,
         llm: LLM,
-        event_handlers: List[EventHandler],
+        event_handlers: Union[List[EventHandler], GlobalEventHandlerClass],
         nl_responder: NLResponder,
         n_retries: int = 3,
     ) -> None:
@@ -59,11 +59,15 @@ class Collection:
         self._builders: Dict[str, Callable[[], BaseView]] = {}
         self._view_selector = view_selector
         self._nl_responder = nl_responder
-        if event_handlers != global_event_handlers:
-            # At this moment there are no event tracker initialize to record an event
-            print("WARNING Default event handler has been overwritten")
-        self._event_handlers = event_handlers
         self._llm = llm
+
+        if not event_handlers:
+            event_handlers = global_event_handlers
+        elif event_handlers != global_event_handlers:
+            # At this moment, there is no event tracker initialized to record an event
+            print(f"WARNING: Default event handler has been overwritten for {self.name}.")
+
+        self._event_handlers = event_handlers
 
     T = TypeVar("T", bound=BaseView)
 
