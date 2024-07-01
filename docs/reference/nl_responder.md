@@ -26,7 +26,3 @@ Otherwise, a response is generated using a `nl_responder_prompt_template`.
     To understand general idea better, visit the [NL Responder concept page](../concepts/nl_responder.md).
 
 ::: dbally.nl_responder.nl_responder.NLResponder
-
-::: dbally.nl_responder.query_explainer_prompt_template
-
-::: dbally.nl_responder.nl_responder_prompt_template.NL_RESPONSE_TEMPLATE
