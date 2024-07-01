@@ -15,7 +15,7 @@ from dbally.similarity import AbstractSimilarityIndex, SimpleSqlAlchemyFetcher
 from dbally.views.base import BaseView, IndexLocation
 from dbally.views.freeform.text2sql.config import TableConfig
 from dbally.views.freeform.text2sql.exceptions import Text2SQLError
-from dbally.views.freeform.text2sql.prompt import SQLGenerationPromptFormat, text2sql_prompt
+from dbally.views.freeform.text2sql.prompt import SQL_GENERATION_TEMPLATE, SQLGenerationPromptFormat
 
 
 @dataclass
@@ -122,7 +122,7 @@ class BaseText2SQLView(BaseView, ABC):
         Raises:
             Text2SQLError: If the text2sql query generation fails after n_retries.
         """
-        conversation = text2sql_prompt
+        conversation = SQL_GENERATION_TEMPLATE
         sql, rows = None, None
         exceptions = []
 

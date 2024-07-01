@@ -32,7 +32,7 @@ class SQLGenerationPromptFormat(PromptFormat):
         self.tables = "\n".join(table.ddl for table in tables)
 
 
-text2sql_prompt = PromptTemplate[SQLGenerationPromptFormat](
+SQL_GENERATION_TEMPLATE = PromptTemplate[SQLGenerationPromptFormat](
     [
         {
             "role": "system",
