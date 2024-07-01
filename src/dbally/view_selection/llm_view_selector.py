@@ -3,10 +3,9 @@ from typing import Dict, Optional
 from dbally.audit.event_tracker import EventTracker
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.prompts.formatters import ViewSelectionInputFormatter
 from dbally.prompts.prompt_template import PromptTemplate
 from dbally.view_selection.base import ViewSelector
-from dbally.view_selection.view_selector_prompt_template import VIEW_SELECTION_TEMPLATE
+from dbally.view_selection.view_selector_prompt_template import VIEW_SELECTION_TEMPLATE, ViewSelectionPromptFormat
 
 
 class LLMViewSelector(ViewSelector):
@@ -20,7 +19,7 @@ class LLMViewSelector(ViewSelector):
     ultimately returning the name of the most suitable view.
     """
 
-    def __init__(self, llm: LLM, prompt_template: Optional[PromptTemplate] = None) -> None:
+    def __init__(self, llm: LLM, prompt_template: Optional[PromptTemplate[ViewSelectionPromptFormat]] = None) -> None:
         """
         Constructs a new LLMViewSelector instance.
 
@@ -50,8 +49,8 @@ class LLMViewSelector(ViewSelector):
         Returns:
             The most relevant view name.
         """
-        formatter = ViewSelectionInputFormatter(question=question, views=views)
-        formatted_prompt = formatter(self._prompt_template)
+        prompt_format = ViewSelectionPromptFormat(question=question, views=views)
+        formatted_prompt = self._prompt_template.format_prompt(prompt_format)
 
         llm_response = await self._llm.generate_text(
             prompt=formatted_prompt,

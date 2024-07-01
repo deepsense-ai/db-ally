@@ -1,4 +1,6 @@
-from typing import Callable, Dict
+import copy
+import re
+from typing import Callable, Generic, List, TypeVar
 
 from typing_extensions import Self
 
@@ -20,6 +22,9 @@ def _check_chat_order(chat: ChatFormat) -> ChatFormat:
     Returns:
         Chat template
     """
+    if len(chat) == 0:
+        raise PromptTemplateError("Template should not be empty")
+
     expected_order = ["user", "assistant"]
     for i, message in enumerate(chat):
         role = message["role"]
@@ -38,9 +43,27 @@ def _check_chat_order(chat: ChatFormat) -> ChatFormat:
     return chat
 
 
-class PromptTemplate:
+class PromptFormat:
     """
-    Class for prompt templates
+    Generic format for prompts allowing to inject few shot examples into the conversation.
+    """
+
+    def __init__(self, examples: List[FewShotExample] = None) -> None:
+        """
+        Constructs a new PromptFormat instance.
+
+        Args:
+            examples: List of examples to be injected into the conversation.
+        """
+        self.examples = examples or []
+
+
+PromptFormatT = TypeVar("PromptFormatT", bound=PromptFormat)
+
+
+class PromptTemplate(Generic[PromptFormatT]):
+    """
+    Class for prompt templates.
 
     Attributes:
         chat: Chat-formatted template.
@@ -62,30 +85,57 @@ class PromptTemplate:
     def __eq__(self, __value: object) -> bool:
         return isinstance(__value, PromptTemplate) and self.chat == __value.chat
 
-    def format_prompt(self, formatting: Dict[str, str]) -> Self:
+    def _has_variable(self, variable: str) -> bool:
+        """
+        Validates a given chat to make sure it contains variables required.
+
+        Args:
+            variable: Variable to check.
+
+        Returns:
+            True if the variable is present in the chat.
+        """
+        for message in self.chat:
+            if re.match(rf"{{{variable}}}", message["content"]):
+                return True
+        return False
+
+    def format_prompt(self, prompt_format: PromptFormatT) -> Self:
         """
         Applies formatting to the prompt template chat contents.
 
         Args:
-            formatting: Dictionary with formatting.
+            prompt_format: Format to be applied to the prompt.
 
         Returns:
             PromptTemplate with formatted chat contents.
         """
-        return self.__class__(
-            chat=[
-                {"role": message["role"], "content": message["content"].format(**formatting)} for message in self.chat
-            ],
-            json_mode=self.json_mode,
-            response_parser=self.response_parser,
-        )
+        formatted_prompt = copy.deepcopy(self)
+        formatting = dict(prompt_format.__dict__)
 
-    def add_system_message(self, content: str) -> Self:
+        if self._has_variable("examples"):
+            formatting["examples"] = "\n".join(prompt_format.examples)
+        else:
+            formatted_prompt = formatted_prompt.clear_few_shot_messages()
+            for example in prompt_format.examples:
+                formatted_prompt = formatted_prompt.add_few_shot_message(example)
+
+        formatted_prompt.chat = [
+            {
+                "role": message.get("role"),
+                "content": message.get("content").format(**formatting),
+                "is_example": message.get("is_example", False),
+            }
+            for message in formatted_prompt.chat
+        ]
+        return formatted_prompt
+
+    def set_system_message(self, content: str) -> Self:
         """
-        Add a system message to the template prompt.
+        Sets a system message to the template prompt.
 
         Args:
-            content: Message to be added
+            content: Message to be added.
 
         Returns:
             PromptTemplate with appended system message.
@@ -156,6 +206,19 @@ class PromptTemplate:
 
         return self.__class__(
             chat=chat,
+            json_mode=self.json_mode,
+            response_parser=self.response_parser,
+        )
+
+    def clear_few_shot_messages(self) -> Self:
+        """
+        Removes all few-shot messages from the template prompt.
+
+        Returns:
+            PromptTemplate with few-shot messages removed.
+        """
+        return self.__class__(
+            chat=[message for message in self.chat if not message.get("is_example")],
             json_mode=self.json_mode,
             response_parser=self.response_parser,
         )

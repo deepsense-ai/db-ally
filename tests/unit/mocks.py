@@ -6,14 +6,13 @@ Collection of mock objects for unit tests.
 
 from dataclasses import dataclass
 from functools import cached_property
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 from dbally import NOT_GIVEN, NotGiven
 from dbally.iql import IQLQuery
-from dbally.iql_generator.iql_generator import IQL_GENERATION_TEMPLATE, IQLGenerator
+from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMClient, LLMOptions
-from dbally.prompts.prompt_template import PromptTemplate
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.structured import BaseStructuredView, ExposedFunction, ViewExecutionResult
@@ -35,12 +34,12 @@ class MockViewBase(BaseStructuredView):
 
 
 class MockIQLGenerator(IQLGenerator):
-    def __init__(self, iql: str) -> None:
+    def __init__(self, iql: IQLQuery) -> None:
         self.iql = iql
         super().__init__(llm=MockLLM())
 
-    async def generate_iql(self, *_, **__) -> Tuple[str, PromptTemplate]:
-        return self.iql, IQL_GENERATION_TEMPLATE
+    async def generate_iql(self, *_, **__) -> IQLQuery:
+        return self.iql
 
 
 class MockViewSelector(ViewSelector):

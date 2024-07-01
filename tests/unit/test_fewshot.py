@@ -6,16 +6,16 @@ from dbally.prompts.elements import FewShotExample
 
 
 class TestExamples:
-    def studied_at(self, _: str):
+    def studied_at(self, _: str) -> bool:
         return False
 
-    def is_available_within_months(self, _: int):
+    def is_available_within_months(self, _: int) -> bool:
         return False
 
-    def data_scientist_position(self):
+    def data_scientist_position(self) -> bool:
         return False
 
-    def has_seniority(self, _: str):
+    def has_seniority(self, _: str) -> bool:
         return False
 
     def __call__(self) -> List[Tuple[str, Callable]]:  # pylint: disable=W0602, C0116, W9011
@@ -57,16 +57,17 @@ class TestExamples:
         ]
 
 
-def test_fewshot_string():
-    result = FewShotExample("question", "answer")
-    assert result.answer == "answer"
-    assert str(result) == "answer"
-
-
 @pytest.mark.parametrize(
     "repr_lambda",
     TestExamples()(),
 )
-def test_fewshot_lambda(repr_lambda: Tuple[str, Callable]):
+def test_fewshot_lambda(repr_lambda: Tuple[str, Callable]) -> None:
     result = FewShotExample("question", repr_lambda[1])
-    assert str(result) == repr_lambda[0]
+    assert result.answer == repr_lambda[0]
+    assert str(result) == f"question -> {repr_lambda[0]}"
+
+
+def test_fewshot_string() -> None:
+    result = FewShotExample("question", "answer")
+    assert result.answer == "answer"
+    assert str(result) == "question -> answer"

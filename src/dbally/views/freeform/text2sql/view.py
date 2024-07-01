@@ -15,7 +15,7 @@ from dbally.similarity import AbstractSimilarityIndex, SimpleSqlAlchemyFetcher
 from dbally.views.base import BaseView, IndexLocation
 from dbally.views.freeform.text2sql.config import TableConfig
 from dbally.views.freeform.text2sql.exceptions import Text2SQLError
-from dbally.views.freeform.text2sql.prompt import Text2SQLInputFormatter, text2sql_prompt
+from dbally.views.freeform.text2sql.prompt import SQLGenerationPromptFormat, text2sql_prompt
 
 
 @dataclass
@@ -171,20 +171,20 @@ class BaseText2SQLView(BaseView, ABC):
         tables = self.get_tables()
         examples = self.list_few_shots()
 
-        formatter = Text2SQLInputFormatter(
+        prompt_format = SQLGenerationPromptFormat(
             question=query,
             dialect=self._engine.dialect.name,
             tables=tables,
             examples=examples,
         )
-        formatted_prompt = formatter(conversation)
+        formatted_prompt = conversation.format_prompt(prompt_format)
         response = await llm.generate_text(
             prompt=formatted_prompt,
             event_tracker=event_tracker,
             options=llm_options,
         )
 
-        conversation = conversation.add_assistant_message(response)
+        formatted_prompt = formatted_prompt.add_assistant_message(response)
         data = json.loads(response)
         sql = data["sql"]
         parameters = data.get("parameters", [])
@@ -193,7 +193,7 @@ class BaseText2SQLView(BaseView, ABC):
             raise ValueError("Parameters should be a list of dictionaries")
         param_objs = [SQLParameterOption.from_dict(param) for param in parameters]
 
-        return sql, param_objs, conversation
+        return sql, param_objs, formatted_prompt
 
     async def _execute_sql(
         self, sql: str, parameters: List[SQLParameterOption], event_tracker: EventTracker

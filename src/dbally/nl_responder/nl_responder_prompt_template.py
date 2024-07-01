@@ -1,6 +1,52 @@
-from dbally.prompts import PromptTemplate
+from typing import Any, Dict, List
 
-default_nl_responder_template = PromptTemplate(
+import pandas as pd
+
+from dbally.prompts import PromptTemplate
+from dbally.prompts.elements import FewShotExample
+from dbally.prompts.prompt_template import PromptFormat
+
+
+def _promptify_results(results: List[Dict]) -> str:
+    """
+    Formats results into a markdown table.
+
+    Args:
+        results: List of results to be formatted.
+
+    Returns:
+        Results formatted as a markdown table.
+    """
+    df = pd.DataFrame.from_records(results)
+    return df.to_markdown(index=False, headers="keys", tablefmt="psql")
+
+
+class NLResponderPromptFormat(PromptFormat):
+    """
+    IQL prompt format, providing a question and filters to be used in the conversation.
+    """
+
+    def __init__(
+        self,
+        *,
+        question: str,
+        results: List[Dict[str, Any]],
+        examples: List[FewShotExample] = None,
+    ) -> None:
+        """
+        Constructs a new IQLPromptFormat instance.
+
+        Args:
+            question: Question to be asked.
+            filters: List of filters exposed by the view.
+            examples: List of examples to be injected into the conversation.
+        """
+        super().__init__(examples)
+        self.question = question
+        self.results = _promptify_results(results)
+
+
+default_nl_responder_template = PromptTemplate[NLResponderPromptFormat](
     chat=(
         {
             "role": "system",

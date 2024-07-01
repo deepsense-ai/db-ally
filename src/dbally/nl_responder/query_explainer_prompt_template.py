@@ -1,6 +1,39 @@
-from dbally.prompts import PromptTemplate
+from typing import Any, Dict, List
 
-default_query_explainer_template = PromptTemplate(
+from dbally.prompts import PromptTemplate
+from dbally.prompts.elements import FewShotExample
+from dbally.prompts.prompt_template import PromptFormat
+
+
+class QueryExplainerPromptFormat(PromptFormat):
+    """
+    Formats provided parameters to a form acceptable by default IQL prompt.
+    """
+
+    def __init__(
+        self,
+        *,
+        question: str,
+        context: Dict[str, Any],
+        results: List[Dict[str, Any]],
+        examples: List[FewShotExample] = None,
+    ) -> None:
+        """
+        Constructs a new QueryExplainerPromptFormat instance.
+
+        Args:
+            question: Question to be asked.
+            context: Context of the query.
+            results: List of results returned by the query.
+            examples: List of examples to be injected into the conversation.
+        """
+        super().__init__(examples)
+        self.question = question
+        self.query = next((context.get(key) for key in ("iql", "sql", "query") if context.get(key)), question)
+        self.number_of_results = len(results)
+
+
+default_query_explainer_template = PromptTemplate[QueryExplainerPromptFormat](
     chat=(
         {
             "role": "system",

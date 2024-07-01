@@ -1,13 +1,14 @@
-import copy
 from typing import Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.nl_responder.nl_responder_prompt_template import default_nl_responder_template
-from dbally.nl_responder.query_explainer_prompt_template import default_query_explainer_template
-from dbally.prompts.formatters import NLResponderInputFormatter, QueryExplainerInputFormatter
+from dbally.nl_responder.nl_responder_prompt_template import NLResponderPromptFormat, default_nl_responder_template
+from dbally.nl_responder.query_explainer_prompt_template import (
+    QueryExplainerPromptFormat,
+    default_query_explainer_template,
+)
 from dbally.prompts.prompt_template import PromptTemplate
 
 
@@ -19,8 +20,8 @@ class NLResponder:
     def __init__(
         self,
         llm: LLM,
-        query_explainer_prompt_template: Optional[PromptTemplate] = None,
-        nl_responder_prompt_template: Optional[PromptTemplate] = None,
+        prompt_template: Optional[PromptTemplate[NLResponderPromptFormat]] = None,
+        explainer_prompt_template: Optional[PromptTemplate[QueryExplainerPromptFormat]] = None,
         max_tokens_count: int = 4096,
     ) -> None:
         """
@@ -28,19 +29,15 @@ class NLResponder:
 
         Args:
             llm: LLM used to generate natural language response.
-            query_explainer_prompt_template: Template for the prompt used to generate the iql explanation
-                if not set defaults to `default_query_explainer_template`.
-            nl_responder_prompt_template: Template for the prompt used to generate the NL response
+            prompt_template: Template for the prompt used to generate the NL response
                 if not set defaults to `nl_responder_prompt_template`.
+             explainer_prompt_template: Template for the prompt used to generate the iql explanation
+                if not set defaults to `default_query_explainer_template`.
             max_tokens_count: Maximum number of tokens that can be used in the prompt.
         """
         self._llm = llm
-        self._nl_responder_prompt_template = nl_responder_prompt_template or copy.deepcopy(
-            default_nl_responder_template
-        )
-        self._query_explainer_prompt_template = query_explainer_prompt_template or copy.deepcopy(
-            default_query_explainer_template
-        )
+        self._prompt_template = prompt_template or default_nl_responder_template
+        self._explainer_prompt_template = explainer_prompt_template or default_query_explainer_template
         self._max_tokens_count = max_tokens_count
 
     async def generate_response(
@@ -62,20 +59,20 @@ class NLResponder:
         Returns:
             Natural language response to the user question.
         """
-        formatter = NLResponderInputFormatter(
+        prompt_format = NLResponderPromptFormat(
             question=question,
             results=result.results,
         )
-        formatted_prompt = formatter(self._nl_responder_prompt_template)
+        formatted_prompt = self._prompt_template.format_prompt(prompt_format)
         tokens_count = self._llm.count_tokens(formatted_prompt)
 
         if tokens_count > self._max_tokens_count:
-            formatter = QueryExplainerInputFormatter(
+            prompt_format = QueryExplainerPromptFormat(
                 question=question,
                 context=result.context,
                 results=result.results,
             )
-            formatted_prompt = formatter(self._query_explainer_prompt_template)
+            formatted_prompt = self._explainer_prompt_template.format_prompt(prompt_format)
             llm_response = await self._llm.generate_text(
                 prompt=formatted_prompt,
                 event_tracker=event_tracker,

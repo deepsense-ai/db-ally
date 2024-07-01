@@ -1,5 +1,10 @@
+from typing import List
+
 from dbally.exceptions import DbAllyError
 from dbally.prompts import PromptTemplate
+from dbally.prompts.elements import FewShotExample
+from dbally.prompts.prompt_template import PromptFormat
+from dbally.views.exposed_functions import ExposedFunction
 
 
 class UnsupportedQueryError(DbAllyError):
@@ -28,7 +33,32 @@ def _validate_iql_response(llm_response: str) -> str:
     return llm_response
 
 
-IQL_GENERATION_TEMPLATE = PromptTemplate(
+class IQLPromptFormat(PromptFormat):
+    """
+    IQL prompt format, providing a question and filters to be used in the conversation.
+    """
+
+    def __init__(
+        self,
+        *,
+        question: str,
+        filters: List[ExposedFunction],
+        examples: List[FewShotExample] = None,
+    ) -> None:
+        """
+        Constructs a new IQLPromptFormat instance.
+
+        Args:
+            question: Question to be asked.
+            filters: List of filters exposed by the view.
+            examples: List of examples to be injected into the conversation.
+        """
+        super().__init__(examples)
+        self.question = question
+        self.filters = "\n".join([str(filter) for filter in filters])
+
+
+IQL_GENERATION_TEMPLATE = PromptTemplate[IQLPromptFormat](
     [
         {
             "role": "system",

@@ -1,6 +1,36 @@
-from dbally.prompts import PromptTemplate
+from typing import Dict, List
 
-VIEW_SELECTION_TEMPLATE = PromptTemplate(
+from dbally.prompts import PromptTemplate
+from dbally.prompts.elements import FewShotExample
+from dbally.prompts.prompt_template import PromptFormat
+
+
+class ViewSelectionPromptFormat(PromptFormat):
+    """
+    Formats provided parameters to a form acceptable by default IQL prompt.
+    """
+
+    def __init__(
+        self,
+        *,
+        question: str,
+        views: Dict[str, str],
+        examples: List[FewShotExample] = None,
+    ) -> None:
+        """
+        Constructs a new ViewSelectionPromptFormat instance.
+
+        Args:
+            question: Question to be asked.
+            views: Dictionary of available view names with corresponding descriptions.
+            examples: List of examples to be injected into the conversation.
+        """
+        super().__init__(examples)
+        self.question = question
+        self.views = "\n".join([f"{name}: {description}" for name, description in views.items()])
+
+
+VIEW_SELECTION_TEMPLATE = PromptTemplate[ViewSelectionPromptFormat](
     chat=(
         {
             "role": "system",
