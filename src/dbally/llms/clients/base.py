@@ -3,7 +3,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, ClassVar, Dict, Generic, Optional, TypeVar
 
 from dbally.audit.events import LLMEvent
-from dbally.prompt import ChatFormat
+from dbally.prompt.template import ChatFormat
 
 from ..._types import NotGiven
 

@@ -10,7 +10,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.prompt import PromptTemplate
+from dbally.prompt.template import PromptTemplate
 from dbally.similarity import AbstractSimilarityIndex, SimpleSqlAlchemyFetcher
 from dbally.views.base import BaseView, IndexLocation
 from dbally.views.freeform.text2sql.config import TableConfig

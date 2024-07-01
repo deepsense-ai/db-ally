@@ -12,7 +12,7 @@ except ImportError:
 from dbally.audit.events import LLMEvent
 from dbally.llms.clients.base import LLMClient, LLMOptions
 from dbally.llms.clients.exceptions import LLMConnectionError, LLMResponseError, LLMStatusError
-from dbally.prompt import ChatFormat
+from dbally.prompt.template import ChatFormat
 
 from ..._types import NOT_GIVEN, NotGiven
 
