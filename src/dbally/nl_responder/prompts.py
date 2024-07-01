@@ -21,9 +21,9 @@ def _promptify_results(results: List[Dict]) -> str:
     return df.to_markdown(index=False, headers="keys", tablefmt="psql")
 
 
-class NLRespondPromptFormat(PromptFormat):
+class NLResponsePromptFormat(PromptFormat):
     """
-    IQL prompt format, providing a question and filters to be used in the conversation.
+    Formats provided parameters to a form acceptable by default NL response prompt.
     """
 
     def __init__(
@@ -46,9 +46,9 @@ class NLRespondPromptFormat(PromptFormat):
         self.results = _promptify_results(results)
 
 
-class QueryExplainPromptFormat(PromptFormat):
+class QueryExplanationPromptFormat(PromptFormat):
     """
-    Formats provided parameters to a form acceptable by default IQL prompt.
+    Formats provided parameters to a form acceptable by default query explanation prompt.
     """
 
     def __init__(
@@ -60,7 +60,7 @@ class QueryExplainPromptFormat(PromptFormat):
         examples: List[FewShotExample] = None,
     ) -> None:
         """
-        Constructs a new QueryExplainPromptFormat instance.
+        Constructs a new QueryExplanationPromptFormat instance.
 
         Args:
             question: Question to be asked.
@@ -74,7 +74,26 @@ class QueryExplainPromptFormat(PromptFormat):
         self.number_of_results = len(results)
 
 
-default_query_explainer_template = PromptTemplate[QueryExplainPromptFormat](
+NL_RESPONSE_TEMPLATE = PromptTemplate[NLResponsePromptFormat](
+    chat=(
+        {
+            "role": "system",
+            "content": "You are a helpful assistant that helps answer the user's questions "
+            "based on the table provided. You MUST use the table to answer the question. "
+            "You are very intelligent and obedient.\n"
+            "The table ALWAYS contains full answer to a question.\n"
+            "Answer the question in a way that is easy to understand and informative.\n"
+            "DON'T MENTION using a table in your answer.",
+        },
+        {
+            "role": "user",
+            "content": "The table below represents the answer to a question: {question}.\n"
+            "{results}\nAnswer the question: {question}.",
+        },
+    )
+)
+
+QUERY_EXPLANATION_TEMPLATE = PromptTemplate[QueryExplanationPromptFormat](
     chat=(
         {
             "role": "system",
@@ -93,25 +112,6 @@ default_query_explainer_template = PromptTemplate[QueryExplainPromptFormat](
             "content": "The query below represents the answer to a question: {question}.\n"
             "Describe the table generated using this query: {query}.\n"
             "Number of results to this query: {number_of_results}.\n",
-        },
-    )
-)
-
-default_nl_responder_template = PromptTemplate[NLRespondPromptFormat](
-    chat=(
-        {
-            "role": "system",
-            "content": "You are a helpful assistant that helps answer the user's questions "
-            "based on the table provided. You MUST use the table to answer the question. "
-            "You are very intelligent and obedient.\n"
-            "The table ALWAYS contains full answer to a question.\n"
-            "Answer the question in a way that is easy to understand and informative.\n"
-            "DON'T MENTION using a table in your answer.",
-        },
-        {
-            "role": "user",
-            "content": "The table below represents the answer to a question: {question}.\n"
-            "{results}\nAnswer the question: {question}.",
         },
     )
 )

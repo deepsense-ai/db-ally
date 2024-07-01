@@ -29,4 +29,4 @@ Otherwise, a response is generated using a `nl_responder_prompt_template`.
 
 ::: dbally.nl_responder.query_explainer_prompt_template
 
-::: dbally.nl_responder.nl_responder_prompt_template.default_nl_responder_template
+::: dbally.nl_responder.nl_responder_prompt_template.NL_RESPONSE_TEMPLATE
