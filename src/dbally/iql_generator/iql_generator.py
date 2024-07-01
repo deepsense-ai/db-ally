@@ -1,11 +1,10 @@
-import copy
-from typing import Callable, List, Optional, Tuple, TypeVar
+from typing import List, Optional, Tuple, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template
+from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate, default_iql_template  # noqa
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.views.exposed_functions import ExposedFunction
+from dbally.prompts.formatters import IQLInputFormatter
 
 
 class IQLGenerator:
@@ -24,26 +23,16 @@ class IQLGenerator:
 
     TException = TypeVar("TException", bound=Exception)
 
-    def __init__(
-        self,
-        llm: LLM,
-        prompt_template: Optional[IQLPromptTemplate] = None,
-        promptify_view: Optional[Callable] = None,
-    ) -> None:
+    def __init__(self, llm: LLM) -> None:
         """
         Args:
             llm: LLM used to generate IQL
-            prompt_template: If not provided by the users is set to `default_iql_template`
-            promptify_view: Function formatting filters for prompt
         """
         self._llm = llm
-        self._prompt_template = prompt_template or copy.deepcopy(default_iql_template)
-        self._promptify_view = promptify_view or _promptify_filters
 
     async def generate_iql(
         self,
-        filters: List[ExposedFunction],
-        question: str,
+        input_formatter: IQLInputFormatter,
         event_tracker: EventTracker,
         conversation: Optional[IQLPromptTemplate] = None,
         llm_options: Optional[LLMOptions] = None,
@@ -52,8 +41,7 @@ class IQLGenerator:
         Uses LLM to generate IQL in text form
 
         Args:
-            question: user question
-            filters: list of filters exposed by the view
+            input_formatter: formatter used to prepare prompt arguments dictionary
             event_tracker: event store used to audit the generation process
             conversation: conversation to be continued
             llm_options: options to use for the LLM client
@@ -61,21 +49,17 @@ class IQLGenerator:
         Returns:
             IQL - iql generated based on the user question
         """
-        filters_for_prompt = self._promptify_view(filters)
 
-        template = conversation or self._prompt_template
+        conversation, fmt = input_formatter(conversation or default_iql_template)
 
         llm_response = await self._llm.generate_text(
-            template=template,
-            fmt={"filters": filters_for_prompt, "question": question},
+            template=conversation,
+            fmt=fmt,
             event_tracker=event_tracker,
             options=llm_options,
         )
 
-        iql_filters = self._prompt_template.llm_response_parser(llm_response)
-
-        if conversation is None:
-            conversation = self._prompt_template
+        iql_filters = conversation.llm_response_parser(llm_response)
 
         conversation = conversation.add_assistant_message(content=llm_response)
 
@@ -98,19 +82,3 @@ class IQLGenerator:
             msg += str(error) + "\n"
 
         return conversation.add_user_message(content=msg)
-
-
-def _promptify_filters(
-    filters: List[ExposedFunction],
-) -> str:
-    """
-    Formats filters for prompt
-
-    Args:
-        filters: list of filters exposed by the view
-
-    Returns:
-        filters_for_prompt: filters formatted for prompt
-    """
-    filters_for_prompt = "\n".join([str(filter) for filter in filters])
-    return filters_for_prompt

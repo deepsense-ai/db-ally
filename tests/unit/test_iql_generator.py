@@ -10,6 +10,8 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.iql import IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.iql_generator.iql_prompt_template import default_iql_template
+from dbally.prompts.elements import FewShotExample
+from dbally.prompts.formatters import IQLFewShotInputFormatter, IQLInputFormatter
 from dbally.views.methods_base import MethodsBaseView
 from tests.unit.mocks import MockLLM
 
@@ -52,28 +54,51 @@ def event_tracker() -> EventTracker:
 
 @pytest.mark.asyncio
 async def test_iql_generation(llm: MockLLM, event_tracker: EventTracker, view: MockView) -> None:
-    iql_generator = IQLGenerator(llm, default_iql_template)
+    iql_generator = IQLGenerator(llm)
 
-    filters_for_prompt = iql_generator._promptify_view(view.list_filters())
-    filters_in_prompt = set(filters_for_prompt.split("\n"))
+    filters = {str(_filter) for _filter in view.list_filters()}
+    assert filters == {"filter_by_id(idx: int)", "filter_by_name(city: str)"}
 
-    assert filters_in_prompt == {"filter_by_id(idx: int)", "filter_by_name(city: str)"}
+    input_formatter = IQLInputFormatter(question="Mock_question", filters=view.list_filters())
 
-    response = await iql_generator.generate_iql(view.list_filters(), "Mock_question", event_tracker)
+    response = await iql_generator.generate_iql(input_formatter, event_tracker, default_iql_template)
 
     template_after_response = default_iql_template.add_assistant_message(content="LLM IQL mock answer")
     assert response == ("LLM IQL mock answer", template_after_response)
 
     template_after_response = template_after_response.add_user_message(content="Mock_error")
-    response2 = await iql_generator.generate_iql(
-        view.list_filters(), "Mock_question", event_tracker, template_after_response
+    response2 = await iql_generator.generate_iql(input_formatter, event_tracker, template_after_response)
+    template_after_2nd_response = template_after_response.add_assistant_message(content="LLM IQL mock answer")
+    assert response2 == ("LLM IQL mock answer", template_after_2nd_response)
+
+
+@pytest.mark.asyncio
+async def test_iql_few_shot_generation(llm: MockLLM, event_tracker: EventTracker, view: MockView) -> None:
+    iql_generator = IQLGenerator(llm)
+
+    filters = {str(_filter) for _filter in view.list_filters()}
+    assert filters == {"filter_by_id(idx: int)", "filter_by_name(city: str)"}
+
+    input_formatter = IQLFewShotInputFormatter(
+        question="Mock_question",
+        filters=view.list_filters(),
+        examples=[FewShotExample("question", "filter_by_id(0)")],
     )
+
+    response = await iql_generator.generate_iql(input_formatter, event_tracker, default_iql_template)
+
+    expected_conversation, _ = input_formatter(default_iql_template)
+    template_after_response = expected_conversation.add_assistant_message(content="LLM IQL mock answer")
+    assert response == ("LLM IQL mock answer", template_after_response)
+
+    template_after_response = template_after_response.add_user_message(content="Mock_error")
+    response2 = await iql_generator.generate_iql(input_formatter, event_tracker, template_after_response)
     template_after_2nd_response = template_after_response.add_assistant_message(content="LLM IQL mock answer")
     assert response2 == ("LLM IQL mock answer", template_after_2nd_response)
 
 
 def test_add_error_msg(llm: MockLLM) -> None:
-    iql_generator = IQLGenerator(llm, default_iql_template)
+    iql_generator = IQLGenerator(llm)
     errors = [ValueError("Mock_error")]
 
     conversation = default_iql_template.add_assistant_message(content="Assistant")
