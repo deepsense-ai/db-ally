@@ -21,7 +21,7 @@ def _promptify_results(results: List[Dict]) -> str:
     return df.to_markdown(index=False, headers="keys", tablefmt="psql")
 
 
-class NLResponderPromptFormat(PromptFormat):
+class NLRespondPromptFormat(PromptFormat):
     """
     IQL prompt format, providing a question and filters to be used in the conversation.
     """
@@ -46,7 +46,7 @@ class NLResponderPromptFormat(PromptFormat):
         self.results = _promptify_results(results)
 
 
-default_nl_responder_template = PromptTemplate[NLResponderPromptFormat](
+default_nl_responder_template = PromptTemplate[NLRespondPromptFormat](
     chat=(
         {
             "role": "system",

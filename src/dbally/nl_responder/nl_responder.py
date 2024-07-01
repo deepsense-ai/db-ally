@@ -4,7 +4,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.nl_responder.nl_responder_prompt_template import NLResponderPromptFormat, default_nl_responder_template
+from dbally.nl_responder.prompts import NLRespondPromptFormat, default_nl_responder_template
 from dbally.nl_responder.query_explainer_prompt_template import (
     QueryExplainerPromptFormat,
     default_query_explainer_template,
@@ -20,7 +20,7 @@ class NLResponder:
     def __init__(
         self,
         llm: LLM,
-        prompt_template: Optional[PromptTemplate[NLResponderPromptFormat]] = None,
+        prompt_template: Optional[PromptTemplate[NLRespondPromptFormat]] = None,
         explainer_prompt_template: Optional[PromptTemplate[QueryExplainerPromptFormat]] = None,
         max_tokens_count: int = 4096,
     ) -> None:
@@ -59,7 +59,7 @@ class NLResponder:
         Returns:
             Natural language response to the user question.
         """
-        prompt_format = NLResponderPromptFormat(
+        prompt_format = NLRespondPromptFormat(
             question=question,
             results=result.results,
         )
