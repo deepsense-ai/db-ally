@@ -4,9 +4,10 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.nl_responder.prompts import NLRespondPromptFormat, default_nl_responder_template
-from dbally.nl_responder.query_explainer_prompt_template import (
-    QueryExplainerPromptFormat,
+from dbally.nl_responder.prompts import (
+    NLRespondPromptFormat,
+    QueryExplainPromptFormat,
+    default_nl_responder_template,
     default_query_explainer_template,
 )
 from dbally.prompt.template import PromptTemplate
@@ -21,7 +22,7 @@ class NLResponder:
         self,
         llm: LLM,
         prompt_template: Optional[PromptTemplate[NLRespondPromptFormat]] = None,
-        explainer_prompt_template: Optional[PromptTemplate[QueryExplainerPromptFormat]] = None,
+        explainer_prompt_template: Optional[PromptTemplate[QueryExplainPromptFormat]] = None,
         max_tokens_count: int = 4096,
     ) -> None:
         """
@@ -67,7 +68,7 @@ class NLResponder:
         tokens_count = self._llm.count_tokens(formatted_prompt)
 
         if tokens_count > self._max_tokens_count:
-            prompt_format = QueryExplainerPromptFormat(
+            prompt_format = QueryExplainPromptFormat(
                 question=question,
                 context=result.context,
                 results=result.results,
