@@ -71,11 +71,6 @@ PromptFormatT = TypeVar("PromptFormatT", bound=PromptFormat)
 class PromptTemplate(Generic[PromptFormatT]):
     """
     Class for prompt templates.
-
-    Attributes:
-        chat: Chat-formatted template.
-        json_mode: Whether to enforce JSON response from LLM.
-        response_parser: Function parsing the LLM response into the desired format.
     """
 
     def __init__(
@@ -84,13 +79,21 @@ class PromptTemplate(Generic[PromptFormatT]):
         *,
         json_mode: bool = False,
         response_parser: Callable = lambda x: x,
-    ):
+    ) -> None:
+        """
+        Constructs a new PromptTemplate instance.
+
+        Args:
+            chat: Chat-formatted conversation template.
+            json_mode: Whether to enforce JSON response from LLM.
+            response_parser: Function parsing the LLM response into the desired format.
+        """
         self.chat: ChatFormat = _check_chat_order(chat)
         self.json_mode = json_mode
         self.response_parser = response_parser
 
-    def __eq__(self, __value: object) -> bool:
-        return isinstance(__value, PromptTemplate) and self.chat == __value.chat
+    def __eq__(self, other: "PromptTemplate") -> bool:
+        return isinstance(other, PromptTemplate) and self.chat == other.chat
 
     def _has_variable(self, variable: str) -> bool:
         """
