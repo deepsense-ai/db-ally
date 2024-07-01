@@ -1,5 +1,7 @@
 """ dbally """
 
+from typing import List, Callable
+
 from dbally.collection.collection import Collection
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
@@ -21,7 +23,7 @@ from .embeddings.exceptions import (
 from .exceptions import DbAllyError
 from .llms.clients.exceptions import LLMConnectionError, LLMError, LLMResponseError, LLMStatusError
 
-global_event_handlers = []
+global_event_handlers: List[Callable] = []
 
 __all__ = [
     "__version__",

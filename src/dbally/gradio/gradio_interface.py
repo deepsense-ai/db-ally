@@ -162,12 +162,10 @@ class GradioAdapter:
             generated_query = {"Query": "No view matched to query"}
             data = pd.DataFrame()
         finally:
-            print(f" ask log 1 {self.log}")
             self.log.seek(0)
             log_content = self.log.read()
 
         gradio_dataframe, empty_dataframe_warning = self._load_gradio_data(data, "Results")
-        print(f" ask log 2 {self.log}")
         return (
             gradio_dataframe,
             empty_dataframe_warning,
