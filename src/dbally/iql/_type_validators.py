@@ -1,3 +1,5 @@
+import typing_extensions as type_ext
+
 from dataclasses import dataclass
 from typing import _GenericAlias  # type: ignore
 from typing import Any, Callable, Dict, Literal, Optional, Type, Union
@@ -46,7 +48,7 @@ def _check_bool(required_type: Type[bool], value: Any) -> _ValidationResult:
     return _ValidationResult(False, reason=f"{repr(value)} is not of type {required_type.__name__}")
 
 
-TYPE_VALIDATOR: Dict[Any, Callable[[Any, Any], _ValidationResult]] = {
+TYPE_VALIDATOR: Dict[Any, Callable[[Type, Any], _ValidationResult]] = {
     Literal: _check_literal,
     float: _check_float,
     int: _check_int,
@@ -65,7 +67,17 @@ def validate_arg_type(required_type: Union[Type, _GenericAlias], value: Any) -> 
     Returns:
         _ValidationResult instance
     """
-    actual_type = required_type.__origin__ if isinstance(required_type, _GenericAlias) else required_type
+    actual_type = type_ext.get_origin(required_type) if isinstance(required_type, _GenericAlias) else required_type  # typing.Union is an instance of _GenericAlias
+    if actual_type is None:  # workaround to prevent type warning in line `if isisntanc(value, actual_type):`, TODO check whether necessary
+        actual_type = required_type.__origin__
+
+    if actual_type is Union:
+        for subtype in type_ext.get_args(required_type):
+            res = validate_arg_type(subtype, value)
+            if res.valid:
+                return _ValidationResult(True)
+
+        return _ValidationResult(False, f"{repr(value)} is not of type {repr(required_type)}")  # typing.Union does not have __name__ property
 
     custom_type_checker = TYPE_VALIDATOR.get(actual_type)
 
