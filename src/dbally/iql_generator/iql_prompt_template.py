@@ -68,6 +68,6 @@ default_iql_template = IQLPromptTemplate(
             "This is CRUCIAL, otherwise the system will crash. ",
         },
         {"role": "user", "content": "{question}"},
-    ),  # type: ignore # TODO fix it
+    ),
     llm_response_parser=_validate_iql_response,
 )

@@ -30,11 +30,8 @@ def _extract_params_and_context(
         if name_ in hidden_args:
             continue
 
-        # TODO make ExposedFunction preserve information whether the context was available for a certain argument
-
         if isclass(type_) and issubclass(type_, BaseCallerContext):
             # this is the case when user provides a context but no other type hint for a specifc arg
-            # TODO confirm whether this case should be supported
             context = type_
             type_ = Any
         elif type_ext.get_origin(type_) is Union:
