@@ -6,8 +6,7 @@ from unittest.mock import AsyncMock, Mock, call, patch
 import pytest
 from typing_extensions import Annotated
 
-from dbally._main import create_collection
-from dbally.collection import Collection
+from dbally.collection import Collection, create_collection
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ViewExecutionResult
 from dbally.iql._exceptions import IQLError

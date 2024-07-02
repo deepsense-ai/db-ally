@@ -2,7 +2,7 @@
 
 from typing import Callable, List
 
-from dbally.collection.collection import Collection
+from dbally.collection.collection import Collection, create_collection
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
 from dbally.views import decorators
@@ -12,7 +12,6 @@ from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 from dbally.views.structured import BaseStructuredView
 
 from .__version__ import __version__
-from ._main import create_collection
 from ._types import NOT_GIVEN, NotGiven
 from .embeddings.exceptions import (
     EmbeddingConnectionError,
