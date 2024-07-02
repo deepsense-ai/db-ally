@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 import dbally
 
@@ -9,11 +9,13 @@ from .nl_responder.nl_responder import NLResponder
 from .view_selection.base import ViewSelector
 from .view_selection.llm_view_selector import LLMViewSelector
 
+event_handlers: List[Callable] = []
+
 
 def create_collection(
     name: str,
     llm: LLM,
-    event_handlers: Optional[List[EventHandler]] = None,
+    event_handlers: Optional[List[EventHandler]] = None,  # pylint: disable=redefined-outer-name
     view_selector: Optional[ViewSelector] = None,
     nl_responder: Optional[NLResponder] = None,
 ) -> Collection:
