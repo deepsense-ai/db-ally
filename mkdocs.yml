@@ -80,6 +80,8 @@ nav:
     - about/contact.md
 theme:
   name: material
+  logo: assets/guide_dog_lg.png
+  favicon: assets/guide_dog_sm.png
   icon:
     repo: fontawesome/brands/github
   palette:
