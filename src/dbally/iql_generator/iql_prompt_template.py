@@ -60,10 +60,14 @@ default_iql_template = IQLPromptTemplate(
             "You MUST use only these methods:\n"
             "\n{filters}\n"
             "It is VERY IMPORTANT not to use methods other than those listed above."
+            "If a called function argument value is not directly specified in the query but instead requires knowledge of some additional context, than substitute that argument value by: BaseCallerContext()."
+            'The typical input phrase referencing some additional context contains the word "my" or similar phrasing, e.g. "my position name", "my company valuation".'
+            "In that case, the part of the output will look like this:"
+            "filter4(BaseCallerContext())"
             """If you DON'T KNOW HOW TO ANSWER DON'T SAY \"\", SAY: `UNSUPPORTED QUERY` INSTEAD! """
             "This is CRUCIAL, otherwise the system will crash. ",
         },
         {"role": "user", "content": "{question}"},
-    ),
+    ),  # type: ignore # TODO fix it
     llm_response_parser=_validate_iql_response,
 )
