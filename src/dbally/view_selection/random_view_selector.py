@@ -11,12 +11,13 @@ class RandomViewSelector(ViewSelector):
     Mock View Selector selecting a random view.
     """
 
+    # pylint: disable=unused-argument
     async def select_view(
         self,
         question: str,
         views: Dict[str, str],
-        event_tracker: EventTracker,  # pylint: disable=unused-argument
-        llm_options: Optional[LLMOptions] = None,  # pylint: disable=unused-argument
+        event_tracker: EventTracker,
+        llm_options: Optional[LLMOptions] = None,
     ) -> str:
         """
         Dummy implementation returning random view.
