@@ -63,8 +63,8 @@ class Collection:
         self._llm = llm
 
         if not event_handlers:
-            event_handlers = dbally.event_handlers_list
-        elif event_handlers != dbally.event_handlers_list:
+            event_handlers = dbally.event_handlers
+        elif event_handlers != dbally.event_handlers:
             # At this moment, there is no event tracker initialized to record an event
             warnings.warn("Default event handler has been overwritten for {self.name}.")
 

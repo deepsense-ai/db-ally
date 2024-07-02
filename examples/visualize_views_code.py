@@ -14,7 +14,7 @@ from dbally.llms.litellm import LiteLLM
 async def main():
     await country_similarity.update()
     llm = LiteLLM(model_name="gpt-3.5-turbo")
-    dbally.event_handlers_list = [CLIEventHandler(), BufferEventHandler()]
+    dbally.event_handlers = [CLIEventHandler(), BufferEventHandler()]
     collection = dbally.create_collection("candidates", llm)
     collection.add(CandidateView, lambda: CandidateView(engine))
     collection.add(SampleText2SQLViewCyphers, lambda: SampleText2SQLViewCyphers(create_freeform_memory_engine()))
