@@ -6,7 +6,6 @@ from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Type, TypeVar
 
 import dbally
-from dbally import DbAllyError
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import FallbackEvent, RequestEnd, RequestStart
@@ -19,6 +18,8 @@ from dbally.nl_responder.nl_responder import NLResponder
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.base import BaseView, IndexLocation
+
+HANDLED_EXCEPTION_TYPES = (NoViewFoundError, UnsupportedQueryError, IndexUpdateError)
 
 
 class Collection:
@@ -285,7 +286,7 @@ class Collection:
         llm_options: Optional[LLMOptions],
         selected_view_name: str,
         event_tracker: EventTracker,
-        caught_exception: DbAllyError,
+        caught_exception: HANDLED_EXCEPTION_TYPES,
     ):
         """
         Handle fallback if the main query fails.
@@ -324,8 +325,7 @@ class Collection:
                 span(event)
             return result
 
-        else:
-            raise caught_exception
+        raise caught_exception
 
     async def ask(
         self,
@@ -363,7 +363,6 @@ class Collection:
             IQLError: if incorrect IQL was generated `n_retries` amount of times.
             ValueError: if incorrect IQL was generated `n_retries` amount of times.
         """
-        handle_exceptions = (NoViewFoundError, UnsupportedQueryError, IndexUpdateError)
 
         if not event_tracker:
             event_tracker = EventTracker.initialize_with_handlers(self._event_handlers)
@@ -395,7 +394,7 @@ class Collection:
                 textual_response=natural_response,
             )
 
-        except handle_exceptions as caught_exception:
+        except HANDLED_EXCEPTION_TYPES as caught_exception:
             result = await self._handle_fallback(
                 question=question,
                 dry_run=dry_run,
@@ -405,8 +404,7 @@ class Collection:
                 event_tracker=event_tracker,
                 caught_exception=caught_exception,
             )
-        finally:
-            await event_tracker.request_end(RequestEnd(result=result))
+        await event_tracker.request_end(RequestEnd(result=result))
 
         return result
 
