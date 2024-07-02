@@ -1,14 +1,13 @@
 import ast
 
-from typing import List, Optional, Type, TypeVar
+from typing import Optional, Type, Sequence
 from typing_extensions import Self
 from pydantic import BaseModel
 
 from dbally.context.exceptions import ContextNotAvailableError
 
 
-T = TypeVar('T', bound='BaseCallerContext')
-AllCallerContexts = Optional[List[T]]  # TODO confirm the naming
+CustomContextsList = Sequence[Type['BaseCallerContext']]  # TODO confirm the naming
 
 
 class BaseCallerContext(BaseModel):
@@ -18,7 +17,7 @@ class BaseCallerContext(BaseModel):
     """
 
     @classmethod
-    def select_context(cls, contexts: List[T]) -> T:
+    def select_context(cls, contexts: Sequence[Type[Self]]) -> Type[Self]:
         if not contexts:
             raise ContextNotAvailableError("The LLM detected that the context is required to execute the query and the filter signature allows contextualization while the context was not provided.")
 

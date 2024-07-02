@@ -16,7 +16,7 @@ from dbally.nl_responder.nl_responder import NLResponder
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.base import BaseView, IndexLocation
-from dbally.context.context import BaseCallerContext
+from dbally.context.context import BaseCallerContext, CustomContextsList
 
 
 class Collection:
@@ -157,7 +157,7 @@ class Collection:
         dry_run: bool = False,
         return_natural_response: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        context: Optional[List[BaseCallerContext]] = None
+        context: Optional[CustomContextsList] = None
     ) -> ExecutionResult:
         """
         Ask question in a text form and retrieve the answer based on the available views.

@@ -1,12 +1,12 @@
 import abc
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Type
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.similarity import AbstractSimilarityIndex
-from dbally.context.context import BaseCallerContext
+from dbally.context.context import BaseCallerContext, CustomContextsList
 
 IndexLocation = Tuple[str, str, str]
 
@@ -26,7 +26,7 @@ class BaseView(metaclass=abc.ABCMeta):
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        context: Optional[List[BaseCallerContext]] = None
+        context: Optional[CustomContextsList] = None
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result.

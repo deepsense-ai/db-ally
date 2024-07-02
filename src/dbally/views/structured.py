@@ -1,6 +1,6 @@
 import abc
 from collections import defaultdict
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Type
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
@@ -10,7 +10,7 @@ from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
-from dbally.context.context import BaseCallerContext
+from dbally.context.context import BaseCallerContext, CustomContextsList
 
 from ..similarity import AbstractSimilarityIndex
 from .base import BaseView, IndexLocation
@@ -42,7 +42,7 @@ class BaseStructuredView(BaseView):
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        context: Optional[List[BaseCallerContext]] = None
+        context: Optional[CustomContextsList] = None
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result. It generates the IQL query from the natural language query\

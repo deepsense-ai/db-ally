@@ -1,7 +1,6 @@
 import ast
 
-from typing import TYPE_CHECKING, Any, List, Optional, Union, Mapping, Dict
-from typing_extensions import Callable
+from typing import TYPE_CHECKING, Any, List, Optional, Union, Mapping, Type
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql import syntax
@@ -13,7 +12,7 @@ from dbally.iql._exceptions import (
     IQLUnsupportedSyntaxError,
 )
 from dbally.iql._type_validators import validate_arg_type
-from dbally.context.context import BaseCallerContext
+from dbally.context.context import BaseCallerContext, CustomContextsList
 from dbally.context.exceptions import ContextNotAvailableError, ContextualisationNotAllowed
 from dbally.context._utils import _extract_params_and_context, _does_arg_allow_context
 from dbally.views.exposed_functions import MethodParamWithTyping, ExposedFunction
@@ -25,7 +24,7 @@ class IQLProcessor:
     """
     source: str
     allowed_functions: Mapping[str, "ExposedFunction"]
-    contexts: List[BaseCallerContext]
+    contexts: CustomContextsList
     _event_tracker: EventTracker
 
 
@@ -33,7 +32,7 @@ class IQLProcessor:
         self,
         source: str,
         allowed_functions: List["ExposedFunction"],
-        contexts: Optional[List[BaseCallerContext]] = None,
+        contexts: Optional[CustomContextsList] = None,
         event_tracker: Optional[EventTracker] = None
     ) -> None:
         self.source = source
@@ -52,7 +51,7 @@ class IQLProcessor:
         Raises:
              IQLError: if parsing fails.
         """
-        # TODO adjust this method to prevent making context class constructor calls lowercase
+
         self.source = self._to_lower_except_in_quotes(self.source, ["AND", "OR", "NOT"])
 
         ast_tree = ast.parse(self.source)
@@ -132,15 +131,11 @@ class IQLProcessor:
             if parent_func_def.context_class is None:
                 raise ContextualisationNotAllowed("The LLM detected that the context is required to execute the query while the filter signature does not allow it at all.")
 
-            if _does_arg_allow_context(arg_spec):
+            if not _does_arg_allow_context(arg_spec):
+                print(arg_spec)
                 raise ContextualisationNotAllowed(f"The LLM detected that the context is required to execute the query while the filter signature does allow it for `{arg_spec.name}` argument.")
 
-            context = parent_func_def.context_class.select_context(self.contexts)
-
-            try:
-                return getattr(context, arg_spec.name)
-            except AttributeError:
-                raise ContextNotAvailableError(f"The LLM detected that the context is required to execute the query and the context object was provided but it is missing the `{arg_spec.name}` field.")
+            return parent_func_def.context_class.select_context(self.contexts)
 
         if not isinstance(arg, ast.Constant):
             raise IQLArgumentParsingError(arg, self.source)
