@@ -92,13 +92,6 @@ class NLResponder:
         return llm_response
 
 
-_no_data_in_table_prompt = (
-    "The query returned 0 rows. The table has no data. Don't halucinate responses. "
-    "Make sure to inform the user, that there are no data points, that satisfy their question."
-    "Be brief in your response and remember to answer the question correctly."
-)
-
-
 def _promptify_rows(rows: List[Dict]) -> str:
     """
     Formats rows into a markdown table.
@@ -113,5 +106,9 @@ def _promptify_rows(rows: List[Dict]) -> str:
     if rows:
         df = pd.DataFrame.from_records(rows)
         return df.to_markdown(index=False, headers="keys", tablefmt="psql")
-    else:
-        return _no_data_in_table_prompt
+
+    return (
+        "The query returned 0 rows. The table has no data. Don't halucinate responses. "
+        "Make sure to inform the user, that there are no data points, that satisfy their question."
+        "Be brief in your response and remember to answer the question correctly."
+    )
