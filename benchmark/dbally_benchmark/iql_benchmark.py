@@ -23,7 +23,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, UnsupportedQueryError
 from dbally.llms.litellm import LiteLLM
-from dbally.llms.local_llm import LocalLLM
+from dbally.llms.local import LocalLLM
 from dbally.views.structured import BaseStructuredView
 
 
