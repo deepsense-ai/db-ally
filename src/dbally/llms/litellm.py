@@ -10,10 +10,15 @@ except ImportError:
 
 from dbally.llms.base import LLM
 from dbally.llms.clients.litellm import LiteLLMClient, LiteLLMOptions
+<<<<<<< HEAD
 from dbally.prompt.template import PromptTemplate
+=======
+from dbally.prompts import ChatFormat
+from dbally.prompts.prompt_template import PromptTemplate
+>>>>>>> Initial changes after comments
 
 
-class LiteLLM(LLM[LiteLLMOptions]):
+class LiteLLM(LLM[LiteLLMOptions, ChatFormat]):
     """
     Class for interaction with any LLM supported by LiteLLM API.
     """

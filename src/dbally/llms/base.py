@@ -1,14 +1,16 @@
 from abc import ABC, abstractmethod
 from functools import cached_property
-from typing import Generic, Optional, Type
+from typing import Generic, Optional, Type, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import LLMEvent
 from dbally.llms.clients.base import LLMClient, LLMClientOptions, LLMOptions
 from dbally.prompt.template import PromptTemplate
 
+T = TypeVar("T")
 
-class LLM(Generic[LLMClientOptions], ABC):
+
+class LLM(Generic[LLMClientOptions, T], ABC):
     """
     Abstract class for interaction with Large Language Model.
     """

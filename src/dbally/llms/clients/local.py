@@ -7,7 +7,6 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from dbally.audit.events import LLMEvent
 from dbally.llms.clients.base import LLMClient, LLMOptions
-from dbally.prompts import ChatFormat
 
 from ..._types import NOT_GIVEN, NotGiven
 
@@ -23,7 +22,7 @@ class LocalLLMOptions(LLMOptions):
     repetition_penalty: Union[Optional[float], NotGiven] = NOT_GIVEN
     do_sample: Union[Optional[bool], NotGiven] = NOT_GIVEN
     best_of: Union[Optional[int], NotGiven] = NOT_GIVEN
-    max_new_tokens: Union[Optional[int], NotGiven] = NOT_GIVEN
+    max_new_tokens: Union[Optional[int], NotGiven] = 12
     top_k: Union[Optional[int], NotGiven] = NOT_GIVEN
     top_p: Union[Optional[float], NotGiven] = NOT_GIVEN
     seed: Union[Optional[int], NotGiven] = NOT_GIVEN
@@ -57,12 +56,12 @@ class LocalLLMClient(LLMClient[LocalLLMOptions]):
         if hf_api_key:
             login(hf_api_key)
 
-        self._tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self._model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", torch_dtype=torch.bfloat16)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", torch_dtype=torch.bfloat16)
 
     async def call(
         self,
-        prompt: ChatFormat,
+        prompt: torch.tensor,
         response_format: Optional[Dict[str, str]],
         options: LocalLLMOptions,
         event: LLMEvent,
@@ -71,7 +70,7 @@ class LocalLLMClient(LLMClient[LocalLLMOptions]):
         Makes a call to the local LLM with the provided prompt and options.
 
         Args:
-            prompt: Prompt as an OpenAI client style list.
+            prompt: Tokenized prompt.
             response_format: Optional argument used in the OpenAI API - used to force the json output.
             options: Additional settings used by the LLM.
             event: Container with the prompt, LLM response, and call metrics.
@@ -80,22 +79,18 @@ class LocalLLMClient(LLMClient[LocalLLMOptions]):
             Response string from LLM.
         """
 
-        input_ids = self._tokenizer.apply_chat_template(prompt, add_generation_prompt=True, return_tensors="pt").to(
-            self._model.device
-        )
-
-        outputs = self._model.generate(
-            input_ids,
-            eos_token_id=self._tokenizer.eos_token_id,
+        outputs = self.model.generate(
+            prompt,
+            eos_token_id=self.tokenizer.eos_token_id,
             **options.dict(),
         )
 
-        response = outputs[0][input_ids.shape[-1] :]
+        response = outputs[0][prompt.shape[-1] :]
 
-        event.completion_tokens = len(outputs[0][input_ids.shape[-1] :])
-        event.prompt_tokens = len(outputs[0][: input_ids.shape[-1]])
-        event.total_tokens = input_ids.shape[-1]
+        event.completion_tokens = len(outputs[0][prompt.shape[-1] :])
+        event.prompt_tokens = len(outputs[0][: prompt.shape[-1]])
+        event.total_tokens = prompt.shape[-1]
 
-        decoded_response = self._tokenizer.decode(response, skip_special_tokens=True)
+        decoded_response = self.tokenizer.decode(response, skip_special_tokens=True)
 
         return decoded_response
