@@ -1,3 +1,5 @@
+import warnings
+
 import asyncio
 import inspect
 import textwrap
@@ -66,7 +68,7 @@ class Collection:
             event_handlers = dbally.event_handlers
         elif override_event_handlers != dbally.event_handlers:
             # At this moment, there is no event tracker initialized to record an event
-            print(f"WARNING: Default event handler has been overwritten for {self.name}.")
+            warnings.warn("Default event handler has been overwritten for {self.name}.")
 
         self._event_handlers = event_handlers
 
