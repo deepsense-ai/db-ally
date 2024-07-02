@@ -6,7 +6,7 @@ Collection of mock objects for unit tests.
 
 from dataclasses import dataclass
 from functools import cached_property
-from typing import List, Optional, Union
+from typing import List, Optional, TypeVar, Union
 
 from dbally import NOT_GIVEN, NotGiven
 from dbally.iql import IQLQuery
@@ -16,6 +16,8 @@ from dbally.llms.clients.base import LLMClient, LLMOptions
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.structured import BaseStructuredView, ExposedFunction, ViewExecutionResult
+
+T = TypeVar("T")
 
 
 class MockViewBase(BaseStructuredView):
@@ -76,7 +78,7 @@ class MockLLMClient(LLMClient[MockLLMOptions]):
         return "mock response"
 
 
-class MockLLM(LLM[MockLLMOptions]):
+class MockLLM(LLM[MockLLMOptions, T]):
     _options_cls = MockLLMOptions
 
     def __init__(self, default_options: Optional[MockLLMOptions] = None) -> None:
