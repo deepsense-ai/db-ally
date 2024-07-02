@@ -31,17 +31,10 @@ class LocalLLM(LLM[LocalLLMOptions, torch.tensor]):
             model_name: Name of the model to use. This should be a model from the CausalLM class.
             default_options: Default options for the LLM.
             api_key: The API key for Hugging Face authentication.
-
-        Raises:
-            ValueError: When the given model does not belong to the CausalLM class.
         """
 
         hf_model_name = model_name.split("/", 1)[1]
-        config = AutoConfig.from_pretrained(hf_model_name)
-
-        if "AutoModelForCausalLM" not in config["auto_map"]:
-            raise ValueError("Only CausalLM models are supported.")
-
+        
         super().__init__(hf_model_name, default_options)
         self.api_key = api_key
 

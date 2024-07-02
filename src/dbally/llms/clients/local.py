@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Union
 
 import torch
-from huggingface_hub import login
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from dbally.audit.events import LLMEvent
@@ -22,7 +21,7 @@ class LocalLLMOptions(LLMOptions):
     repetition_penalty: Union[Optional[float], NotGiven] = NOT_GIVEN
     do_sample: Union[Optional[bool], NotGiven] = NOT_GIVEN
     best_of: Union[Optional[int], NotGiven] = NOT_GIVEN
-    max_new_tokens: Union[Optional[int], NotGiven] = 12
+    max_new_tokens: Union[Optional[int], NotGiven] = NOT_GIVEN
     top_k: Union[Optional[int], NotGiven] = NOT_GIVEN
     top_p: Union[Optional[float], NotGiven] = NOT_GIVEN
     seed: Union[Optional[int], NotGiven] = NOT_GIVEN
@@ -53,11 +52,8 @@ class LocalLLMClient(LLMClient[LocalLLMOptions]):
 
         super().__init__(model_name)
 
-        if hf_api_key:
-            login(hf_api_key)
-
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", torch_dtype=torch.bfloat16)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_api_key)
+        self.model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", torch_dtype=torch.bfloat16, token=hf_api_key)
 
     async def call(
         self,
