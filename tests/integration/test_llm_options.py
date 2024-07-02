@@ -35,20 +35,20 @@ async def test_llm_options_propagation():
     llm.client.call.assert_has_calls(
         [
             call(
-                prompt=ANY,
-                response_format=ANY,
+                conversation=ANY,
+                json_mode=ANY,
                 event=ANY,
                 options=expected_options,
             ),
             call(
-                prompt=ANY,
-                response_format=ANY,
+                conversation=ANY,
+                json_mode=ANY,
                 event=ANY,
                 options=expected_options,
             ),
             call(
-                prompt=ANY,
-                response_format=ANY,
+                conversation=ANY,
+                json_mode=ANY,
                 event=ANY,
                 options=expected_options,
             ),

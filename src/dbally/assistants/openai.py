@@ -6,7 +6,7 @@ from openai.types.beta.threads import RequiredActionFunctionToolCall
 
 from dbally.assistants.base import AssistantAdapter, FunctionCallingError, FunctionCallState
 from dbally.collection import Collection
-from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
+from dbally.iql_generator.prompt import UnsupportedQueryError
 
 _DBALLY_INFO = "Dbally has access to the following database views: "
 
