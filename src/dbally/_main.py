@@ -13,7 +13,7 @@ from .view_selection.llm_view_selector import LLMViewSelector
 def create_collection(
     name: str,
     llm: LLM,
-    event_handlers: Optional[List[EventHandler]] = None,
+    override_event_handlers: Optional[List[EventHandler]] = None,
     view_selector: Optional[ViewSelector] = None,
     nl_responder: Optional[NLResponder] = None,
 ) -> Collection:
@@ -38,7 +38,7 @@ def create_collection(
         name: Name of the collection is available for [Event handlers](event_handlers/index.md) and is\
         used to distinguish different db-ally runs.
         llm: LLM used by the collection to generate responses for natural language queries.
-        event_handlers: Event handlers used by the collection during query executions. Can be used to\
+        override_event_handlers: Event handlers used by the collection during query executions. Can be used to\
         log events as [CLIEventHandler](event_handlers/cli_handler.md) or to validate system performance as\
         [LangSmithEventHandler](event_handlers/langsmith_handler.md).
         view_selector: View selector used by the collection to select the best view for the given query.\
@@ -55,12 +55,12 @@ def create_collection(
     """
     view_selector = view_selector or LLMViewSelector(llm=llm)
     nl_responder = nl_responder or NLResponder(llm=llm)
-    event_handlers = event_handlers or dbally.global_event_handlers
+    event_handlers = override_event_handlers or dbally.event_handlers
 
     return Collection(
         name,
         nl_responder=nl_responder,
         view_selector=view_selector,
         llm=llm,
-        event_handlers=event_handlers,
+        override_event_handlers=event_handlers,
     )

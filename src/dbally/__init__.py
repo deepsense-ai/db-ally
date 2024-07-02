@@ -23,13 +23,13 @@ from .embeddings.exceptions import (
 from .exceptions import DbAllyError
 from .llms.clients.exceptions import LLMConnectionError, LLMError, LLMResponseError, LLMStatusError
 
-global_event_handlers: List[Callable] = []
+event_handlers: List[Callable] = []
 
 __all__ = [
     "__version__",
     "create_collection",
     "decorators",
-    "global_event_handlers",
+    "event_handlers",
     "BaseStructuredView",
     "Collection",
     "DataFrameBaseView",

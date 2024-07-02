@@ -270,7 +270,7 @@ def mock_collection_feedback_loop() -> Collection:
         def get_iql_generator(self, *_, **__):
             return iql_generator
 
-    collection = Collection("foo", view_selector=Mock(), llm=MockLLM(), nl_responder=Mock(), event_handlers=[])
+    collection = Collection("foo", view_selector=Mock(), llm=MockLLM(), nl_responder=Mock(), override_event_handlers=[])
     collection.add(ViewWithMockGenerator)
     return collection
 
@@ -320,7 +320,7 @@ async def test_ask_view_selection_single_view() -> None:
         view_selector=MockViewSelector(""),
         llm=MockLLM(),
         nl_responder=AsyncMock(),
-        event_handlers=[],
+        override_event_handlers=[],
     )
     collection.add(MockViewWithResults)
 
@@ -339,7 +339,7 @@ async def test_ask_view_selection_multiple_views() -> None:
         view_selector=MockViewSelector("MockViewWithResults"),
         llm=MockLLM(),
         nl_responder=AsyncMock(),
-        event_handlers=[],
+        override_event_handlers=[],
     )
     collection.add(MockView1)
     collection.add(MockViewWithResults)
@@ -360,7 +360,7 @@ async def test_ask_view_selection_no_views() -> None:
         view_selector=MockViewSelector(""),
         llm=MockLLM(),
         nl_responder=AsyncMock(),
-        event_handlers=[],
+        override_event_handlers=[],
     )
 
     with pytest.raises(ValueError):
