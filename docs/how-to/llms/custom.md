@@ -56,13 +56,13 @@ The [`call`](../../reference/llms/index.md#dbally.llms.clients.base.LLMClient.ca
 
 ### Step 3: Use tokenizer to count tokens
 
-The [`count_tokens`](../../reference/llms/index.md#dbally.llms.base.LLM.count_tokens) method is used to count the number of tokens in the prompt conversation. You can override this method in your custom class to use the tokenizer and count tokens specifically for your model.
+The [`count_tokens`](../../reference/llms/index.md#dbally.llms.base.LLM.count_tokens) method is used to count the number of tokens in the prompt. You can override this method in your custom class to use the tokenizer and count tokens specifically for your model.
 
 ```python
 class MyLLM(LLM[LiteLLMOptions]):
 
     def count_tokens(self, prompt: PromptTemplate) -> int:
-        # Count tokens in the messages in a custom way
+        # Count tokens in the prompt in a custom way
 ```
 !!!warning
     Incorrect token counting can cause problems in the [`NLResponder`](../../reference/nl_responder.md#dbally.nl_responder.nl_responder.NLResponder) and force the use of an explanation prompt template that is more generic and does not include specific rows from the IQL response.

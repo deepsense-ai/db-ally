@@ -67,12 +67,12 @@ class LiteLLM(LLM[LiteLLMOptions]):
 
     def count_tokens(self, prompt: PromptTemplate) -> int:
         """
-        Counts tokens in the prompt conversation.
+        Counts tokens in the prompt.
 
         Args:
             prompt: Formatted prompt template with conversation and response parsing configuration.
 
         Returns:
-            Number of tokens in the prompt conversation.
+            Number of tokens in the prompt.
         """
         return sum(litellm.token_counter(model=self.model_name, text=message["content"]) for message in prompt.chat)

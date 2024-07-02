@@ -42,13 +42,13 @@ class LLM(Generic[LLMClientOptions], ABC):
 
     def count_tokens(self, prompt: PromptTemplate) -> int:
         """
-        Counts tokens in the prompt conversation.
+        Counts tokens in the prompt.
 
         Args:
             prompt: Formatted prompt template with conversation and response parsing configuration.
 
         Returns:
-            Number of tokens in the prompt conversation.
+            Number of tokens in the prompt.
         """
         return sum(len(message["content"]) for message in prompt.chat)
 
