@@ -65,6 +65,7 @@ class CLIEventHandler(EventHandler):
         self._print_syntax("[grey53]\n=======================================")
         self._print_syntax("[grey53]=======================================\n")
 
+    # pylint: disable=unused-argument
     async def event_start(self, event: Event, request_context: None) -> None:
         """
         Displays information that event has started, then all messages inside the prompt
@@ -94,6 +95,7 @@ class CLIEventHandler(EventHandler):
                 f"[cyan bold]FETCHER: [grey53]{event.fetcher}\n"
             )
 
+    # pylint: disable=unused-argument
     async def event_end(self, event: Optional[Event], request_context: None, event_context: None) -> None:
         """
         Displays the response from the LLM.
@@ -112,6 +114,7 @@ class CLIEventHandler(EventHandler):
             self._print_syntax("[grey53]\n=======================================")
             self._print_syntax("[grey53]=======================================\n")
 
+    # pylint: disable=unused-argument
     async def request_end(self, output: RequestEnd, request_context: Optional[dict] = None) -> None:
         """
         Displays the output of the request, namely the `results` and the `context`

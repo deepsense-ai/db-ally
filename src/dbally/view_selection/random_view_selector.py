@@ -15,8 +15,8 @@ class RandomViewSelector(ViewSelector):
         self,
         question: str,
         views: Dict[str, str],
-        event_tracker: EventTracker,
-        llm_options: Optional[LLMOptions] = None,
+        event_tracker: EventTracker,  # pylint: disable=unused-argument
+        llm_options: Optional[LLMOptions] = None,  # pylint: disable=unused-argument
     ) -> str:
         """
         Dummy implementation returning random view.

@@ -1,6 +1,6 @@
-from typing import Callable, List, Optional
+from typing import List, Optional
 
-import dbally
+from dbally import event_handlers as global_event_handlers
 
 from .audit.event_handlers.base import EventHandler
 from .collection import Collection
@@ -8,8 +8,6 @@ from .llms import LLM
 from .nl_responder.nl_responder import NLResponder
 from .view_selection.base import ViewSelector
 from .view_selection.llm_view_selector import LLMViewSelector
-
-event_handlers: List[Callable] = []
 
 
 def create_collection(
@@ -58,7 +56,7 @@ def create_collection(
     """
     view_selector = view_selector or LLMViewSelector(llm=llm)
     nl_responder = nl_responder or NLResponder(llm=llm)
-    event_handlers = event_handlers or dbally.event_handlers
+    event_handlers = event_handlers or global_event_handlers
 
     return Collection(
         name,
