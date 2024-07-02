@@ -58,4 +58,4 @@ class FewShotExample:
         return parsed_expr
 
     def __str__(self) -> str:
-        return self.answer
+        return f"{self.question} -> {self.answer}"

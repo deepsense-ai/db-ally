@@ -10,32 +10,12 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.prompts import PromptTemplate
+from dbally.prompt.template import PromptTemplate
 from dbally.similarity import AbstractSimilarityIndex, SimpleSqlAlchemyFetcher
 from dbally.views.base import BaseView, IndexLocation
 from dbally.views.freeform.text2sql.config import TableConfig
 from dbally.views.freeform.text2sql.exceptions import Text2SQLError
-
-text2sql_prompt = PromptTemplate(
-    chat=(
-        {
-            "role": "system",
-            "content": "You are a very smart database programmer. "
-            "You have access to the following {dialect} tables:\n"
-            "{tables}\n"
-            "Create SQL query to answer user question. Response with JSON containing following keys:\n\n"
-            "- sql: SQL query to answer the question, with parameter :placeholders for user input.\n"
-            "- parameters: a list of parameters to be used in the query, represented by maps with the following keys:\n"
-            "  - name: the name of the parameter\n"
-            "  - value: the value of the parameter\n"
-            "  - table: the table the parameter is used with (if any)\n"
-            "  - column: the column the parameter is compared to (if any)\n\n"
-            "Respond ONLY with the raw JSON response. Don't include any additional text or characters.",
-        },
-        {"role": "user", "content": "{question}"},
-    ),
-    response_format={"type": "json_object"},
-)
+from dbally.views.freeform.text2sql.prompt import SQL_GENERATION_TEMPLATE, SQLGenerationPromptFormat
 
 
 @dataclass
@@ -142,17 +122,26 @@ class BaseText2SQLView(BaseView, ABC):
         Raises:
             Text2SQLError: If the text2sql query generation fails after n_retries.
         """
-        conversation = text2sql_prompt
         sql, rows = None, None
         exceptions = []
 
-        for _ in range(n_retries):
+        tables = self.get_tables()
+        examples = self.list_few_shots()
+
+        prompt_format = SQLGenerationPromptFormat(
+            question=query,
+            dialect=self._engine.dialect.name,
+            tables=tables,
+            examples=examples,
+        )
+        formatted_prompt = SQL_GENERATION_TEMPLATE.format_prompt(prompt_format)
+
+        for _ in range(n_retries + 1):
             # We want to catch all exceptions to retry the process.
             # pylint: disable=broad-except
             try:
-                sql, parameters, conversation = await self._generate_sql(
-                    query=query,
-                    conversation=conversation,
+                sql, parameters, formatted_prompt = await self._generate_sql(
+                    conversation=formatted_prompt,
                     llm=llm,
                     event_tracker=event_tracker,
                     llm_options=llm_options,
@@ -164,7 +153,7 @@ class BaseText2SQLView(BaseView, ABC):
                 rows = await self._execute_sql(sql, parameters, event_tracker=event_tracker)
                 break
             except Exception as e:
-                conversation = conversation.add_user_message(f"Response is invalid! Error: {e}")
+                formatted_prompt = formatted_prompt.add_user_message(f"Response is invalid! Error: {e}")
                 exceptions.append(e)
                 continue
 
@@ -182,15 +171,13 @@ class BaseText2SQLView(BaseView, ABC):
 
     async def _generate_sql(
         self,
-        query: str,
         conversation: PromptTemplate,
         llm: LLM,
         event_tracker: EventTracker,
         llm_options: Optional[LLMOptions] = None,
     ) -> Tuple[str, List[SQLParameterOption], PromptTemplate]:
         response = await llm.generate_text(
-            template=conversation,
-            fmt={"tables": self._get_tables_context(), "dialect": self._engine.dialect.name, "question": query},
+            prompt=conversation,
             event_tracker=event_tracker,
             options=llm_options,
         )
@@ -220,12 +207,6 @@ class BaseText2SQLView(BaseView, ABC):
 
         with self._engine.connect() as conn:
             return conn.execute(text(sql), param_values).fetchall()
-
-    def _get_tables_context(self) -> str:
-        context = ""
-        for table in self._table_index.values():
-            context += f"{table.ddl}\n"
-        return context
 
     def _create_default_fetcher(self, table: str, column: str) -> SimpleSqlAlchemyFetcher:
         return SimpleSqlAlchemyFetcher(

@@ -59,6 +59,7 @@ nav:
       - LLMs:
           - reference/llms/index.md
           - reference/llms/litellm.md
+      - reference/prompt.md
       - Similarity:
           - reference/similarity/index.md
           - Store:

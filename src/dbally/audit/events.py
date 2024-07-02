@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Optional, Union
 
 from dbally.collection.results import ExecutionResult
-from dbally.prompts import ChatFormat
+from dbally.prompt.template import ChatFormat
 
 
 @dataclass

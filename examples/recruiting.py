@@ -9,9 +9,37 @@ import dbally
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.llms.litellm import LiteLLM
-from dbally.prompts import PromptTemplate
+from dbally.prompt import PromptTemplate
+from dbally.prompt.elements import FewShotExample
+from dbally.prompt.template import PromptFormat
 
-TEXT2SQL_PROMPT_TEMPLATE = PromptTemplate(
+
+class Text2SQLPromptFormat(PromptFormat):
+    """
+    Formats provided parameters to a form acceptable by SQL prompt.
+    """
+
+    def __init__(
+        self,
+        *,
+        question: str,
+        schema: str,
+        examples: List[FewShotExample] = None,
+    ) -> None:
+        """
+        Constructs a new Text2SQLInputFormat instance.
+
+        Args:
+            question: Question to be asked.
+            schema: SQL schema description.
+            examples: List of examples to be injected into the conversation.
+        """
+        super().__init__(examples)
+        self.question = question
+        self.schema = schema
+
+
+TEXT2SQL_PROMPT_TEMPLATE = PromptTemplate[Text2SQLPromptFormat](
     (
         {
             "role": "system",
@@ -112,9 +140,10 @@ async def recruiting_example(db_description: str, benchmark: Benchmark = example
     for question in benchmark.questions:
         await recruitment_db.ask(question.dbally_question, return_natural_response=True)
         gpt_question = question.gpt_question if question.gpt_question else question.dbally_question
-        gpt_response = await llm.generate_text(
-            TEXT2SQL_PROMPT_TEMPLATE, {"schema": db_description, "question": gpt_question}, event_tracker=event_tracker
-        )
+
+        prompt_format = Text2SQLPromptFormat(question=gpt_question, schema=db_description)
+        formatted_prompt = TEXT2SQL_PROMPT_TEMPLATE.format_prompt(prompt_format)
+        gpt_response = await llm.generate_text(formatted_prompt, event_tracker=event_tracker)
 
         print(f"GPT response: {gpt_response}")
 

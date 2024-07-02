@@ -1,4 +1,4 @@
-from dbally.prompts import PromptTemplate
+from dbally.prompt import PromptTemplate
 
 TEXT2SQL_PROMPT_TEMPLATE = PromptTemplate(
     (

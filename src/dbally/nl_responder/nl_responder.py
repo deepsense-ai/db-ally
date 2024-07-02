@@ -1,48 +1,44 @@
-import copy
-from typing import Dict, List, Optional
-
-import pandas as pd
+from typing import Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.nl_responder.nl_responder_prompt_template import NLResponderPromptTemplate, default_nl_responder_template
-from dbally.nl_responder.query_explainer_prompt_template import (
-    QueryExplainerPromptTemplate,
-    default_query_explainer_template,
+from dbally.nl_responder.prompts import (
+    NL_RESPONSE_TEMPLATE,
+    QUERY_EXPLANATION_TEMPLATE,
+    NLResponsePromptFormat,
+    QueryExplanationPromptFormat,
 )
+from dbally.prompt.template import PromptTemplate
 
 
 class NLResponder:
-    """Class used to generate natural language response from the database output."""
-
-    # Keys used to extract the query from the context (ordered by priority)
-    QUERY_KEYS = ["iql", "sql", "query"]
+    """
+    Class used to generate natural language response from the database output.
+    """
 
     def __init__(
         self,
         llm: LLM,
-        query_explainer_prompt_template: Optional[QueryExplainerPromptTemplate] = None,
-        nl_responder_prompt_template: Optional[NLResponderPromptTemplate] = None,
+        prompt_template: Optional[PromptTemplate[NLResponsePromptFormat]] = None,
+        explainer_prompt_template: Optional[PromptTemplate[QueryExplanationPromptFormat]] = None,
         max_tokens_count: int = 4096,
     ) -> None:
         """
+        Constructs a new NLResponder instance.
+
         Args:
-            llm: LLM used to generate natural language response
-            query_explainer_prompt_template: template for the prompt used to generate the iql explanation
-                if not set defaults to `default_query_explainer_template`
-            nl_responder_prompt_template: template for the prompt used to generate the NL response
-                if not set defaults to `nl_responder_prompt_template`
-            max_tokens_count: maximum number of tokens that can be used in the prompt
+            llm: LLM used to generate natural language response.
+            prompt_template: Template for the prompt used to generate the NL response
+                if not set defaults to `NL_RESPONSE_TEMPLATE`.
+             explainer_prompt_template: Template for the prompt used to generate the iql explanation
+                if not set defaults to `QUERY_EXPLANATION_TEMPLATE`.
+            max_tokens_count: Maximum number of tokens that can be used in the prompt.
         """
         self._llm = llm
-        self._nl_responder_prompt_template = nl_responder_prompt_template or copy.deepcopy(
-            default_nl_responder_template
-        )
-        self._query_explainer_prompt_template = query_explainer_prompt_template or copy.deepcopy(
-            default_query_explainer_template
-        )
+        self._prompt_template = prompt_template or NL_RESPONSE_TEMPLATE
+        self._explainer_prompt_template = explainer_prompt_template or QUERY_EXPLANATION_TEMPLATE
         self._max_tokens_count = max_tokens_count
 
     async def generate_response(
@@ -56,53 +52,38 @@ class NLResponder:
         Uses LLM to generate a response in natural language form.
 
         Args:
-            result: object representing the result of the query execution
-            question: user question
-            event_tracker: event store used to audit the generation process
-            llm_options: options to use for the LLM client.
+            result: Object representing the result of the query execution.
+            question: User question.
+            event_tracker: Event store used to audit the generation process.
+            llm_options: Options to use for the LLM client.
 
         Returns:
             Natural language response to the user question.
         """
-        rows = _promptify_rows(result.results)
-
-        tokens_count = self._llm.count_tokens(
-            messages=self._nl_responder_prompt_template.chat,
-            fmt={"rows": rows, "question": question},
+        prompt_format = NLResponsePromptFormat(
+            question=question,
+            results=result.results,
         )
+        formatted_prompt = self._prompt_template.format_prompt(prompt_format)
+        tokens_count = self._llm.count_tokens(formatted_prompt)
 
         if tokens_count > self._max_tokens_count:
-            context = result.context
-            query = next((context.get(key) for key in self.QUERY_KEYS if context.get(key)), question)
+            prompt_format = QueryExplanationPromptFormat(
+                question=question,
+                context=result.context,
+                results=result.results,
+            )
+            formatted_prompt = self._explainer_prompt_template.format_prompt(prompt_format)
             llm_response = await self._llm.generate_text(
-                template=self._query_explainer_prompt_template,
-                fmt={"question": question, "query": query, "number_of_results": len(result.results)},
+                prompt=formatted_prompt,
                 event_tracker=event_tracker,
                 options=llm_options,
             )
-
             return llm_response
 
         llm_response = await self._llm.generate_text(
-            template=self._nl_responder_prompt_template,
-            fmt={"rows": _promptify_rows(result.results), "question": question},
+            prompt=formatted_prompt,
             event_tracker=event_tracker,
             options=llm_options,
         )
         return llm_response
-
-
-def _promptify_rows(rows: List[Dict]) -> str:
-    """
-    Formats rows into a markdown table.
-
-    Args:
-        rows: list of rows to be formatted
-
-    Returns:
-        str: formatted rows
-    """
-
-    df = pd.DataFrame.from_records(rows)
-
-    return df.to_markdown(index=False, headers="keys", tablefmt="psql")

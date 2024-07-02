@@ -4,11 +4,10 @@ from typing import Dict, List, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
-from dbally.iql import IQLError, IQLQuery
+from dbally.iql import IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.prompts.formatters import IQLFewShotInputFormatter, IQLInputFormatter
 from dbally.views.exposed_functions import ExposedFunction
 
 from ..similarity import AbstractSimilarityIndex
@@ -26,10 +25,10 @@ class BaseStructuredView(BaseView):
         Returns the IQL generator for the view.
 
         Args:
-            llm: LLM used to generate the IQL queries
+            llm: LLM used to generate the IQL queries.
 
         Returns:
-            IQLGenerator: IQL generator for the view
+            IQL generator for the view.
         """
         return IQLGenerator(llm=llm)
 
@@ -57,46 +56,30 @@ class BaseStructuredView(BaseView):
         Returns:
             The result of the query.
         """
+        iql_generator = self.get_iql_generator(llm)
 
         filters = self.list_filters()
         examples = self.list_few_shots()
-        iql_generator = self.get_iql_generator(llm)
 
-        input_formatter = (
-            IQLFewShotInputFormatter(question=query, filters=filters, examples=examples)
-            if examples
-            else IQLInputFormatter(question=query, filters=filters)
-        )
-
-        iql_filters, conversation = await iql_generator.generate_iql(
-            input_formatter=input_formatter,
+        iql = await iql_generator.generate_iql(
+            question=query,
+            filters=filters,
+            examples=examples,
             event_tracker=event_tracker,
             llm_options=llm_options,
+            n_retries=n_retries,
         )
-
-        for _ in range(n_retries):
-            try:
-                filters = await IQLQuery.parse(iql_filters, filters, event_tracker=event_tracker)
-                await self.apply_filters(filters)
-                break
-            except (IQLError, ValueError) as e:
-                conversation = iql_generator.add_error_msg(conversation, [e])
-                iql_filters, conversation = await iql_generator.generate_iql(
-                    input_formatter=input_formatter,
-                    event_tracker=event_tracker,
-                    conversation=conversation,
-                    llm_options=llm_options,
-                )
-                continue
+        await self.apply_filters(iql)
 
         result = self.execute(dry_run=dry_run)
-        result.context["iql"] = iql_filters
+        result.context["iql"] = f"{iql}"
 
         return result
 
     @abc.abstractmethod
     def list_filters(self) -> List[ExposedFunction]:
         """
+        Lists all available filters for the View.
 
         Returns:
             Filters defined inside the View.

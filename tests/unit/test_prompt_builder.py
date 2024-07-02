@@ -1,116 +1,99 @@
+from typing import List
+
 import pytest
 
-from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate
-from dbally.prompts import ChatFormat, PromptTemplate, PromptTemplateError
-from tests.unit.mocks import MockLLM
+from dbally.prompt.elements import FewShotExample
+from dbally.prompt.template import ChatFormat, PromptFormat, PromptTemplate, PromptTemplateError
+
+
+class QuestionPromptFormat(PromptFormat):
+    """
+    Generic format for prompts allowing to inject few shot examples into the conversation.
+    """
+
+    def __init__(self, question: str, examples: List[FewShotExample] = None) -> None:
+        """
+        Constructs a new PromptFormat instance.
+
+        Args:
+            question: Question to be asked.
+            examples: List of examples to be injected into the conversation.
+        """
+        super().__init__(examples)
+        self.question = question
 
 
 @pytest.fixture()
-def simple_template():
-    simple_template = PromptTemplate(
-        chat=(
+def template() -> PromptTemplate[QuestionPromptFormat]:
+    return PromptTemplate[QuestionPromptFormat](
+        [
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": "{question}"},
-        )
+        ]
     )
-    return simple_template
 
 
-@pytest.fixture()
-def llm():
-    return MockLLM()
-
-
-def test_default_llm_format_prompt(llm, simple_template):
-    prompt = llm.format_prompt(
-        template=simple_template,
-        fmt={"question": "Example user question?"},
-    )
-    assert prompt == [
-        {"content": "You are a helpful assistant.", "role": "system"},
-        {"content": "Example user question?", "role": "user"},
+def test_prompt_template_formatting(template: PromptTemplate[QuestionPromptFormat]) -> None:
+    prompt_format = QuestionPromptFormat(question="Example user question?")
+    formatted_prompt = template.format_prompt(prompt_format)
+    assert formatted_prompt.chat == [
+        {"content": "You are a helpful assistant.", "role": "system", "is_example": False},
+        {"content": "Example user question?", "role": "user", "is_example": False},
     ]
 
 
-def test_missing_format_dict(llm, simple_template):
+def test_missing_prompt_template_formatting(template: PromptTemplate[QuestionPromptFormat]) -> None:
+    prompt_format = PromptFormat()
     with pytest.raises(KeyError):
-        _ = llm.format_prompt(simple_template, fmt={})
+        template.format_prompt(prompt_format)
+
+
+def test_add_few_shots(template: PromptTemplate[QuestionPromptFormat]) -> None:
+    examples = [
+        FewShotExample(
+            question="What is the capital of France?",
+            answer_expr="Paris",
+        ),
+        FewShotExample(
+            question="What is the capital of Germany?",
+            answer_expr="Berlin",
+        ),
+    ]
+
+    for example in examples:
+        template = template.add_few_shot_message(example)
+
+    assert template.chat == [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "What is the capital of France?", "is_example": True},
+        {"role": "assistant", "content": "Paris", "is_example": True},
+        {"role": "user", "content": "What is the capital of Germany?", "is_example": True},
+        {"role": "assistant", "content": "Berlin", "is_example": True},
+        {"role": "user", "content": "{question}"},
+    ]
 
 
 @pytest.mark.parametrize(
     "invalid_chat",
     [
-        (
+        [
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": "{question}"},
             {"role": "user", "content": "{question}"},
-        ),
-        (
+        ],
+        [
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "assistant", "content": "{question}"},
             {"role": "assistant", "content": "{question}"},
-        ),
-        (
+        ],
+        [
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": "{question}"},
             {"role": "assistant", "content": "{question}"},
             {"role": "system", "content": "{question}"},
-        ),
+        ],
     ],
 )
-def test_chat_order_validation(invalid_chat):
+def test_chat_order_validation(invalid_chat: ChatFormat) -> None:
     with pytest.raises(PromptTemplateError):
-        _ = PromptTemplate(chat=invalid_chat)
-
-
-def test_dynamic_few_shot(llm, simple_template):
-    assert (
-        len(
-            llm.format_prompt(
-                simple_template.add_assistant_message("assistant message").add_user_message("user message"),
-                fmt={"question": "user question"},
-            )
-        )
-        == 4
-    )
-
-
-@pytest.mark.parametrize(
-    "invalid_chat",
-    [
-        (
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": "{question}"},
-        ),
-        (
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": "Hello"},
-        ),
-        (
-            {"role": "system", "content": "You are a helpful assistant. {filters}}"},
-            {"role": "user", "content": "Hello"},
-        ),
-    ],
-    ids=["Missing filters", "Missing filters, question", "Missing question"],
-)
-def test_bad_iql_prompt_template(invalid_chat: ChatFormat):
-    with pytest.raises(PromptTemplateError):
-        _ = IQLPromptTemplate(invalid_chat)
-
-
-@pytest.mark.parametrize(
-    "chat",
-    [
-        (
-            {"role": "system", "content": "You are a helpful assistant.{filters}"},
-            {"role": "user", "content": "{question}"},
-        ),
-        (
-            {"role": "system", "content": "{filters}{filters}{filters}}}"},
-            {"role": "user", "content": "{question}"},
-        ),
-    ],
-    ids=["Good template", "Good template with repeating variables"],
-)
-def test_good_iql_prompt_template(chat: ChatFormat):
-    _ = IQLPromptTemplate(chat)
+        PromptTemplate[QuestionPromptFormat](invalid_chat)

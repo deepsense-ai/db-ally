@@ -21,9 +21,8 @@ from sqlalchemy import create_engine
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError, default_iql_template
+from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, UnsupportedQueryError
 from dbally.llms.litellm import LiteLLM
-from dbally.prompts.formatters import IQLInputFormatter
 from dbally.views.structured import BaseStructuredView
 
 
@@ -32,14 +31,17 @@ async def _run_iql_for_single_example(
 ) -> IQLResult:
     filter_list = view.list_filters()
     event_tracker = EventTracker()
-    input_formatter = IQLInputFormatter(question=example.question, filters=filter_list)
 
     try:
-        iql_filters, _ = await iql_generator.generate_iql(input_formatter=input_formatter, event_tracker=event_tracker)
+        iql_filters = await iql_generator.generate_iql(
+            question=example.question,
+            filters=filter_list,
+            event_tracker=event_tracker,
+        )
     except UnsupportedQueryError:
         return IQLResult(question=example.question, iql_filters="UNSUPPORTED_QUERY", exception_raised=True)
 
-    return IQLResult(question=example.question, iql_filters=iql_filters, exception_raised=False)
+    return IQLResult(question=example.question, iql_filters=str(iql_filters), exception_raised=False)
 
 
 async def run_iql_for_dataset(
@@ -139,7 +141,7 @@ async def evaluate(cfg: DictConfig) -> Any:
     logger.info(f"IQL predictions saved under directory: {output_dir}")
 
     if run:
-        run["config/iql_prompt_template"] = stringify_unsupported(default_iql_template.chat)
+        run["config/iql_prompt_template"] = stringify_unsupported(IQL_GENERATION_TEMPLATE.chat)
         run[f"evaluation/{metrics_file_name}"].upload((output_dir / metrics_file_name).as_posix())
         run[f"evaluation/{results_file_name}"].upload((output_dir / results_file_name).as_posix())
         run["evaluation/metrics"] = stringify_unsupported(metrics)

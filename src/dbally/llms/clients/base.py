@@ -3,7 +3,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, ClassVar, Dict, Generic, Optional, TypeVar
 
 from dbally.audit.events import LLMEvent
-from dbally.prompts import ChatFormat
+from dbally.prompt.template import ChatFormat
 
 from ..._types import NotGiven
 
@@ -67,19 +67,19 @@ class LLMClient(Generic[LLMClientOptions], ABC):
     @abstractmethod
     async def call(
         self,
-        prompt: ChatFormat,
-        response_format: Optional[Dict[str, str]],
+        conversation: ChatFormat,
         options: LLMClientOptions,
         event: LLMEvent,
+        json_mode: bool = False,
     ) -> str:
         """
         Calls LLM inference API.
 
         Args:
-            prompt: Prompt passed to the LLM.
-            response_format: Optional argument used in the OpenAI API - used to force a json output
+            conversation: List of dicts with "role" and "content" keys, representing the chat history so far.
             options: Additional settings used by LLM.
             event: LLMEvent instance which fields should be filled during the method execution.
+            json_mode: Force the response to be in JSON format.
 
         Returns:
             Response string from LLM.
