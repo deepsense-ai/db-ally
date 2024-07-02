@@ -2,7 +2,6 @@ from functools import cached_property
 from typing import Dict, Optional
 
 import torch
-from transformers import AutoConfig
 
 from dbally.llms.base import LLM
 from dbally.llms.clients.local import LocalLLMClient, LocalLLMOptions
@@ -34,7 +33,7 @@ class LocalLLM(LLM[LocalLLMOptions, torch.tensor]):
         """
 
         hf_model_name = model_name.split("/", 1)[1]
-        
+
         super().__init__(hf_model_name, default_options)
         self.api_key = api_key
 

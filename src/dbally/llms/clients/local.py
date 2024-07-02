@@ -53,7 +53,9 @@ class LocalLLMClient(LLMClient[LocalLLMOptions]):
         super().__init__(model_name)
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_api_key)
-        self.model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", torch_dtype=torch.bfloat16, token=hf_api_key)
+        self.model = AutoModelForCausalLM.from_pretrained(
+            model_name, device_map="auto", torch_dtype=torch.bfloat16, token=hf_api_key
+        )
 
     async def call(
         self,
