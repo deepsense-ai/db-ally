@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from dbally import event_handlers as global_event_handlers
+import dbally
 
 from .audit.event_handlers.base import EventHandler
 from .collection import Collection
@@ -56,7 +56,7 @@ def create_collection(
     """
     view_selector = view_selector or LLMViewSelector(llm=llm)
     nl_responder = nl_responder or NLResponder(llm=llm)
-    event_handlers = event_handlers or global_event_handlers
+    event_handlers = event_handlers or dbally.event_handlers_list
 
     return Collection(
         name,

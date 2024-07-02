@@ -39,7 +39,7 @@ def find_event_buffer() -> Optional[BufferEventHandler]:
     Returns:
         The first instance of `BufferEventHandler` found in the list, or `None` if no such handler is found.
     """
-    for handler in dbally.event_handlers:
+    for handler in dbally.event_handlers_list:
         if isinstance(handler, BufferEventHandler):
             return handler
     return None
@@ -62,7 +62,7 @@ class GradioAdapter:
         buffer_event_handler = find_event_buffer()
         if not buffer_event_handler:
             buffer_event_handler = BufferEventHandler()
-            dbally.event_handlers.append(buffer_event_handler)
+            dbally.event_handlers_list.append(buffer_event_handler)
 
         self.log: BufferEventHandler = buffer_event_handler.buffer  # pylint: disable=no-member
 
