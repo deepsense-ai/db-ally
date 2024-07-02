@@ -1,21 +1,24 @@
 import ast
 
-from typing import List, Optional
+from typing import List, Optional, Type, TypeVar
 from typing_extensions import Self
-from dataclasses import dataclass
+from pydantic import BaseModel
 
 from dbally.context.exceptions import ContextNotAvailableError
 
 
-@dataclass
-class BaseCallerContext:
+T = TypeVar('T', bound='BaseCallerContext')
+AllCallerContexts = Optional[List[T]]  # TODO confirm the naming
+
+
+class BaseCallerContext(BaseModel):
     """
     Base class for contexts that are used to pass additional knowledge about the caller environment to the filters. It is not made abstract for the convinience of IQL parsing.
     LLM will always return `BaseCallerContext()` when the context is required and this call will be later substitue by a proper subclass instance selected based on the filter method signature (type hints).
     """
 
     @classmethod
-    def select_context(cls, contexts: List[Self]) -> Self:
+    def select_context(cls, contexts: List[T]) -> T:
         if not contexts:
             raise ContextNotAvailableError("The LLM detected that the context is required to execute the query and the filter signature allows contextualization while the context was not provided.")
 
