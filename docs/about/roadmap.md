@@ -10,13 +10,12 @@ Below you can find a list of planned features and integrations.
 ## Planned Features
 
 - [ ] **Support analytical queries**: support for exposing operations beyond filtering.
-- [ ] **Few-shot prompting configuration**: allow users to configure the few-shot prompting in View definition to
+- [x] **Few-shot prompting configuration**: allow users to configure the few-shot prompting in View definition to
     improve IQL generation accuracy.
 - [ ] **Request contextualization**: allow to provide extra context for db-ally runs, such as user asking the question.
 - [X] **OpenAI Assistants API adapter**: allow to embed db-ally into OpenAI's Assistants API to easily extend the
     capabilities of the assistant.
 - [ ] **Langchain adapter**: allow to embed db-ally into Langchain applications.
-
 
 ## Integrations
 
