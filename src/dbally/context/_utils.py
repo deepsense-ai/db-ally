@@ -58,7 +58,7 @@ def _extract_params_and_context(
 
 
 def _does_arg_allow_context(arg: MethodParamWithTyping) -> bool:
-    if not isinstance(arg.type, BaseCallerContext) and type_ext.get_origin(arg.type) is not typing.Union:
+    if type_ext.get_origin(arg.type) is not typing.Union and not issubclass(arg.type, BaseCallerContext):
         return False
 
     for subtype in type_ext.get_args(arg.type):
