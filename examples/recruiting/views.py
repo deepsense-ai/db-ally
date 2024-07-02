@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy import and_, select
 
 from dbally import SqlAlchemyBaseView, decorators
-from dbally.prompts.elements import FewShotExample
+from dbally.prompt.elements import FewShotExample
 
 from .db import Candidate
 
