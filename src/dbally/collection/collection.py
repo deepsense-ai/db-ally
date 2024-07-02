@@ -34,7 +34,7 @@ class Collection:
         name: str,
         view_selector: ViewSelector,
         llm: LLM,
-        override_event_handlers: List[EventHandler],
+        event_handlers: List[EventHandler],
         nl_responder: NLResponder,
         n_retries: int = 3,
     ) -> None:
@@ -46,7 +46,7 @@ class Collection:
             before generating the IQL query, a View that fits query the most is selected by the\
             [ViewSelector](view_selection/index.md).
             llm: LLM used by the collection to generate views and respond to natural language queries.
-            override_event_handlers: Event handlers used by the collection during query executions. Can be used\
+            event_handlers: Event handlers used by the collection during query executions. Can be used\
             to log events as [CLIEventHandler](event_handlers/cli_handler.md) or to validate system performance\
             as [LangSmithEventHandler](event_handlers/langsmith_handler.md).
             nl_responder: Object that translates RAW response from db-ally into natural language.
@@ -61,11 +61,10 @@ class Collection:
         self._view_selector = view_selector
         self._nl_responder = nl_responder
         self._llm = llm
-        event_handlers = override_event_handlers
 
-        if not override_event_handlers:
+        if not event_handlers:
             event_handlers = dbally.event_handlers
-        elif override_event_handlers != dbally.event_handlers:
+        elif event_handlers != dbally.event_handlers:
             # At this moment, there is no event tracker initialized to record an event
             warnings.warn("Default event handler has been overwritten for {self.name}.")
 
