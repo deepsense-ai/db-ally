@@ -24,6 +24,7 @@ nav:
           - how-to/views/few-shots.md
       - Using LLMs:
           - how-to/llms/litellm.md
+          - how-to/llms/local.md
           - how-to/llms/custom.md
       - Using similarity indexes:
           - how-to/use_custom_similarity_fetcher.md
@@ -60,6 +61,7 @@ nav:
       - LLMs:
           - reference/llms/index.md
           - reference/llms/litellm.md
+          - reference/llms/local.md
       - reference/prompt.md
       - Similarity:
           - reference/similarity/index.md

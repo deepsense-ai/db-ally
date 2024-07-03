@@ -23,6 +23,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, UnsupportedQueryError
 from dbally.llms.litellm import LiteLLM
+from dbally.llms.local import LocalLLM
 from dbally.views.structured import BaseStructuredView
 
 
@@ -96,13 +97,11 @@ async def evaluate(cfg: DictConfig) -> Any:
     engine = create_engine(benchmark_cfg.pg_connection_string + f"/{cfg.db_name}")
     view = VIEW_REGISTRY[ViewName(view_name)](engine)
 
-    if "gpt" in cfg.model_name:
-        llm = LiteLLM(
-            model_name=cfg.model_name,
-            api_key=benchmark_cfg.openai_api_key,
-        )
+    if cfg.model_name.startswith("local/"):
+        llm = LocalLLM(model_name=cfg.model_name.split("/", 1)[1], api_key=benchmark_cfg.hf_api_key)
     else:
-        raise ValueError("Only OpenAI's GPT models are supported for now.")
+        llm = LiteLLM(api_key=benchmark_cfg.openai_api_key, model_name=cfg.model_name)
+
     iql_generator = IQLGenerator(llm=llm)
 
     run = None
