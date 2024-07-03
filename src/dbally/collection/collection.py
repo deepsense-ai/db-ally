@@ -7,9 +7,9 @@ from typing import Callable, Dict, List, Optional, Type, TypeVar
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
+from dbally.audit.events import RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
-from dbally.data_models.audit import RequestEnd, RequestStart
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder

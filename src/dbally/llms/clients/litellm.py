@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 try:
     import litellm
@@ -9,10 +9,10 @@ except ImportError:
     HAVE_LITELLM = False
 
 
-from dbally.data_models.audit import LLMEvent
+from dbally.audit.events import LLMEvent
 from dbally.llms.clients.base import LLMClient, LLMOptions
 from dbally.llms.clients.exceptions import LLMConnectionError, LLMResponseError, LLMStatusError
-from dbally.prompts import ChatFormat
+from dbally.prompt.template import ChatFormat
 
 from ..._types import NOT_GIVEN, NotGiven
 
@@ -72,19 +72,19 @@ class LiteLLMClient(LLMClient[LiteLLMOptions]):
 
     async def call(
         self,
-        prompt: ChatFormat,
-        response_format: Optional[Dict[str, str]],
+        conversation: ChatFormat,
         options: LiteLLMOptions,
         event: LLMEvent,
+        json_mode: bool = False,
     ) -> str:
         """
         Calls the appropriate LLM endpoint with the given prompt and options.
 
         Args:
-            prompt: Prompt as an OpenAI client style list.
-            response_format: Optional argument used in the OpenAI API - used to force the json output
+            conversation: List of dicts with "role" and "content" keys, representing the chat history so far.
             options: Additional settings used by the LLM.
             event: Container with the prompt, LLM response and call metrics.
+            json_mode: Force the response to be in JSON format.
 
         Returns:
             Response string from LLM.
@@ -94,9 +94,11 @@ class LiteLLMClient(LLMClient[LiteLLMOptions]):
             LLMStatusError: If the LLM API returns an error status code.
             LLMResponseError: If the LLM API response is invalid.
         """
+        response_format = {"type": "json_object"} if json_mode else None
+
         try:
             response = await litellm.acompletion(
-                messages=prompt,
+                messages=conversation,
                 model=self.model_name,
                 base_url=self.base_url,
                 api_key=self.api_key,

@@ -1,4 +1,4 @@
-# <h1 align="center">db-ally</h1>
+# <h1 align="center">🦮 db-ally</h1>
 
 <p align="center">
     <em>Efficient, consistent and secure library for querying structured data with natural language</em>

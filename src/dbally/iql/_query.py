@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, List, Optional, Type
+from typing_extensions import Self
 
 from ..audit.event_tracker import EventTracker
 from . import syntax
@@ -16,8 +17,12 @@ class IQLQuery:
 
     root: syntax.Node
 
-    def __init__(self, root: syntax.Node):
+    def __init__(self, root: syntax.Node, source: str) -> None:
         self.root = root
+        self._source = source
+
+    def __str__(self) -> str:
+        return self._source
 
     @classmethod
     async def parse(
@@ -26,7 +31,7 @@ class IQLQuery:
         allowed_functions: List["ExposedFunction"],
         event_tracker: Optional[EventTracker] = None,
         context: Optional[CustomContextsList] = None
-    ) -> "IQLQuery":
+    ) -> Self:
         """
         Parse IQL string to IQLQuery object.
 
@@ -37,4 +42,6 @@ class IQLQuery:
         Returns:
              IQLQuery object
         """
-        return cls(await IQLProcessor(source, allowed_functions, context, event_tracker).process())
+
+        root = await IQLProcessor(source, allowed_functions, context, event_tracker).process()
+        return cls(root=root, source=source)

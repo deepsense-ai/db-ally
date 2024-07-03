@@ -1,15 +1,15 @@
 # mypy: disable-error-code="empty-body"
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import sqlalchemy
 
 from dbally import decorators
 from dbally.audit.event_tracker import EventTracker
-from dbally.iql import IQLQuery
+from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.iql_generator.iql_prompt_template import default_iql_template
+from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, IQLGenerationPromptFormat
 from dbally.views.methods_base import MethodsBaseView
 from tests.unit.mocks import MockLLM
 
@@ -41,7 +41,7 @@ def view() -> MockView:
 @pytest.fixture
 def llm() -> MockLLM:
     llm = MockLLM()
-    llm.client.call = AsyncMock(return_value="LLM IQL mock answer")
+    llm.generate_text = AsyncMock(return_value="filter_by_id(1)")
     return llm
 
 
@@ -50,35 +50,64 @@ def event_tracker() -> EventTracker:
     return EventTracker()
 
 
+@pytest.fixture
+def iql_generator(llm: MockLLM) -> IQLGenerator:
+    return IQLGenerator(llm)
+
+
 @pytest.mark.asyncio
-async def test_iql_generation(llm: MockLLM, event_tracker: EventTracker, view: MockView) -> None:
-    iql_generator = IQLGenerator(llm, default_iql_template)
-
-    filters_for_prompt = iql_generator._promptify_view(view.list_filters())
-    filters_in_prompt = set(filters_for_prompt.split("\n"))
-
-    assert filters_in_prompt == {"filter_by_id(idx: int)", "filter_by_name(city: str)"}
-
-    response = await iql_generator.generate_iql(view.list_filters(), "Mock_question", event_tracker)
-
-    template_after_response = default_iql_template.add_assistant_message(content="LLM IQL mock answer")
-    assert response == ("LLM IQL mock answer", template_after_response)
-
-    template_after_response = template_after_response.add_user_message(content="Mock_error")
-    response2 = await iql_generator.generate_iql(
-        view.list_filters(), "Mock_question", event_tracker, template_after_response
+async def test_iql_generation(iql_generator: IQLGenerator, event_tracker: EventTracker, view: MockView) -> None:
+    filters = view.list_filters()
+    prompt_format = IQLGenerationPromptFormat(
+        question="Mock_question",
+        filters=filters,
     )
-    template_after_2nd_response = template_after_response.add_assistant_message(content="LLM IQL mock answer")
-    assert response2 == ("LLM IQL mock answer", template_after_2nd_response)
+    formatted_prompt = IQL_GENERATION_TEMPLATE.format_prompt(prompt_format)
+
+    with patch("dbally.iql.IQLQuery.parse", AsyncMock(return_value="filter_by_id(1)")) as mock_parse:
+        iql = await iql_generator.generate_iql(
+            question="Mock_question",
+            filters=filters,
+            event_tracker=event_tracker,
+        )
+        assert iql == "filter_by_id(1)"
+        iql_generator._llm.generate_text.assert_called_once_with(
+            prompt=formatted_prompt,
+            event_tracker=event_tracker,
+            options=None,
+        )
+        mock_parse.assert_called_once_with(
+            source="filter_by_id(1)",
+            allowed_functions=filters,
+            event_tracker=event_tracker,
+        )
 
 
-def test_add_error_msg(llm: MockLLM) -> None:
-    iql_generator = IQLGenerator(llm, default_iql_template)
-    errors = [ValueError("Mock_error")]
+@pytest.mark.asyncio
+async def test_iql_generation_error_handling(
+    iql_generator: IQLGenerator,
+    event_tracker: EventTracker,
+    view: MockView,
+) -> None:
+    filters = view.list_filters()
 
-    conversation = default_iql_template.add_assistant_message(content="Assistant")
+    mock_node = Mock(col_offset=0, end_col_offset=-1)
+    errors = [
+        IQLError("err1", mock_node, "src1"),
+        IQLError("err2", mock_node, "src2"),
+        IQLError("err3", mock_node, "src3"),
+        IQLError("err4", mock_node, "src4"),
+    ]
 
-    conversation_with_error = iql_generator.add_error_msg(conversation, errors)
+    with patch("dbally.iql.IQLQuery.parse", AsyncMock(return_value="filter_by_id(1)")) as mock_parse:
+        mock_parse.side_effect = errors
+        iql = await iql_generator.generate_iql(
+            question="Mock_question",
+            filters=filters,
+            event_tracker=event_tracker,
+        )
 
-    error_msg = iql_generator._ERROR_MSG_PREFIX + "Mock_error\n"
-    assert conversation_with_error == conversation.add_user_message(content=error_msg)
+        assert iql is None
+        assert iql_generator._llm.generate_text.call_count == 4
+        for i, arg in enumerate(iql_generator._llm.generate_text.call_args_list[1:], start=1):
+            assert f"err{i}" in arg[1]["prompt"].chat[-1]["content"]

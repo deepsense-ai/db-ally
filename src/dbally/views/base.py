@@ -5,6 +5,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
+from dbally.prompt.elements import FewShotExample
 from dbally.similarity import AbstractSimilarityIndex
 from dbally.context.context import BaseCallerContext, CustomContextsList
 
@@ -51,3 +52,12 @@ class BaseView(metaclass=abc.ABCMeta):
             Mapping of similarity indexes to their locations.
         """
         return {}
+
+    def list_few_shots(self) -> List[FewShotExample]:
+        """
+        List all examples to be injected into few-shot prompt.
+
+        Returns:
+            List of few-shot examples
+        """
+        return []
