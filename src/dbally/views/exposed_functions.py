@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass
 from typing import _GenericAlias  # type: ignore
-from typing import List, Optional, Union, Type
+from typing import Sequence, Optional, Union, Type
 
 from dbally.similarity import AbstractSimilarityIndex
 from dbally.context.context import BaseCallerContext
@@ -57,7 +57,7 @@ class ExposedFunction:
 
     name: str
     description: str
-    parameters: List[MethodParamWithTyping]
+    parameters: Sequence[MethodParamWithTyping]
     context_class: Optional[Type[BaseCallerContext]] = None
 
     def __str__(self) -> str:

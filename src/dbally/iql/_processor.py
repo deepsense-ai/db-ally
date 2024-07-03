@@ -132,7 +132,6 @@ class IQLProcessor:
                 raise ContextualisationNotAllowed("The LLM detected that the context is required to execute the query while the filter signature does not allow it at all.")
 
             if not _does_arg_allow_context(arg_spec):
-                print(arg_spec)
                 raise ContextualisationNotAllowed(f"The LLM detected that the context is required to execute the query while the filter signature does allow it for `{arg_spec.name}` argument.")
 
             return parent_func_def.context_class.select_context(self.contexts)
