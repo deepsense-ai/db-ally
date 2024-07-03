@@ -25,8 +25,8 @@ from dbally.collection import Collection
 from dbally.collection.exceptions import NoViewFoundError
 from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, UnsupportedQueryError
 from dbally.llms.litellm import LiteLLM
-from dbally.view_selection.prompt import VIEW_SELECTION_TEMPLATE
 from dbally.llms.local import LocalLLM
+from dbally.view_selection.prompt import VIEW_SELECTION_TEMPLATE
 
 
 async def _run_dbally_for_single_example(example: BIRDExample, collection: Collection) -> Text2SQLResult:

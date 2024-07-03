@@ -1,11 +1,12 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoTokenizer, pipeline
 
 from dbally.audit.events import LLMEvent
 from dbally.llms.clients.base import LLMClient, LLMOptions
+from dbally.prompt.template import ChatFormat
 
 from ..._types import NOT_GIVEN, NotGiven
 
@@ -52,43 +53,46 @@ class LocalLLMClient(LLMClient[LocalLLMOptions]):
 
         super().__init__(model_name)
 
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_api_key)
-        self.model = AutoModelForCausalLM.from_pretrained(
-            model_name, device_map="auto", torch_dtype=torch.bfloat16, token=hf_api_key
+        self.pipeline = pipeline(
+            "text-generation", model=model_name, torch_dtype=torch.bfloat16, device_map="auto", token=hf_api_key
         )
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_api_key)
 
     async def call(
         self,
-        prompt: torch.tensor,
-        response_format: Optional[Dict[str, str]],
+        conversation: ChatFormat,
         options: LocalLLMOptions,
         event: LLMEvent,
+        json_mode: bool = False,
     ) -> str:
         """
         Makes a call to the local LLM with the provided prompt and options.
 
         Args:
-            prompt: Tokenized prompt.
-            response_format: Optional argument used in the OpenAI API - used to force the json output.
+            conversation: List of dicts with "role" and "content" keys, representing the chat history so far.
             options: Additional settings used by the LLM.
             event: Container with the prompt, LLM response, and call metrics.
+            json_mode: Force the response to be in JSON format.
 
         Returns:
             Response string from LLM.
         """
 
-        outputs = self.model.generate(
-            prompt,
+        input_ids = self.tokenizer.apply_chat_template(conversation)
+
+        outputs = self.pipeline(
+            conversation,
             eos_token_id=self.tokenizer.eos_token_id,
             **options.dict(),
         )
 
-        response = outputs[0][prompt.shape[-1] :]
+        output_ids = self.tokenizer.apply_chat_template(outputs[0]["generated_text"])
+        response_ids = output_ids[len(input_ids) :]
 
-        event.completion_tokens = len(outputs[0][prompt.shape[-1] :])
-        event.prompt_tokens = len(outputs[0][: prompt.shape[-1]])
-        event.total_tokens = prompt.shape[-1]
+        event.completion_tokens = len(response_ids)
+        event.prompt_tokens = len(input_ids)
+        event.total_tokens = len(output_ids)
 
-        decoded_response = self.tokenizer.decode(response, skip_special_tokens=True)
+        decoded_response = self.tokenizer.decode(response_ids, skip_special_tokens=True)
 
         return decoded_response
