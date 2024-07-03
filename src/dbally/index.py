@@ -1,3 +1,5 @@
+from typing import Union, List
+
 from .audit import EventHandler
 from .audit.event_handlers.buffer_event_handler import BufferEventHandler
 
@@ -58,7 +60,7 @@ class GlobalEventHandlerClass:
             raise ValueError(f"Handler {item} is not EventHandler type")
         self._list.append(item)
 
-    def remove_item(self, item):
+    def remove_item(self, item: EventHandler):
         """
         Removes an event handler from the list.
 
@@ -82,19 +84,19 @@ class GlobalEventHandlerClass:
         """
         self._list.clear()
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int):
         """
         Gets the event handler at the specified index.
 
         Args:
-            index (int): The index of the event handler to get.
+            index: The index of the event handler to get.
 
         Returns:
             EventHandler: The event handler at the specified index.
         """
         return self._list[index]
 
-    def __setitem__(self, index, value):
+    def __setitem__(self, index: int, value: EventHandler):
         """
         Sets the event handler at the specified index.
 
@@ -109,7 +111,7 @@ class GlobalEventHandlerClass:
             raise ValueError(f"Handler {value} is not EventHandler type")
         self._list[index] = value
 
-    def __delitem__(self, index):
+    def __delitem__(self, index: int):
         """
         Deletes the event handler at the specified index.
 
@@ -127,7 +129,7 @@ class GlobalEventHandlerClass:
         """
         return len(self._list)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Union[list, "GlobalEventHandlerClass"]):
         """
         Determine if this instance is equal to another object.
 
@@ -152,7 +154,7 @@ class GlobalEventHandlerClass:
             return self._list == other
         return NotImplemented
 
-    def __ne__(self, other):
+    def __ne__(self, other: Union[list, "GlobalEventHandlerClass"]):
         """
         Determine if this instance is not equal to another object.
 
@@ -177,6 +179,17 @@ class GlobalEventHandlerClass:
             return self._list != other
         return NotImplemented
 
+    def set(self, value: List[EventHandler]):
+        """
+
+        Args:
+            value:
+
+        Returns:
+
+        """
+        self._list = value
+
     def append(self, value):
         """
         Appends an event handler to the list.
@@ -194,10 +207,10 @@ class GlobalEventHandlerClass:
             Buffer: The buffer of a BufferEventHandler if found, None otherwise.
         """
         for handler in self._list:
-            if type(handler) is BufferEventHandler:  # pylint: disable=C0123
+            if isinstance(handler, BufferEventHandler):  # pylint: disable=C0123
                 return handler.buffer
         return None
 
 
 # Global instance of the event handler singleton
-global_event_handlers = GlobalEventHandlerClass()
+event_handlers = GlobalEventHandlerClass()

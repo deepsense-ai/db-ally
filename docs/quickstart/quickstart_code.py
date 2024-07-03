@@ -6,7 +6,7 @@ import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 
-from dbally import decorators, SqlAlchemyBaseView, global_event_handlers
+from dbally import decorators, SqlAlchemyBaseView, event_handlers
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.llms.litellm import LiteLLM
 
@@ -58,7 +58,7 @@ class CandidateView(SqlAlchemyBaseView):
 async def main():
     llm = LiteLLM(model_name="gpt-3.5-turbo")
 
-    global_event_handlers.append(CLIEventHandler())
+    event_handlers.append(CLIEventHandler())
     collection = dbally.create_collection("recruitment", llm)
     collection.add(CandidateView, lambda: CandidateView(engine))
 

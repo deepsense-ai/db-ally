@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 import pandas as pd
 
-from dbally import decorators, SqlAlchemyBaseView, DataFrameBaseView, ExecutionResult, global_event_handlers
+from dbally import decorators, SqlAlchemyBaseView, DataFrameBaseView, ExecutionResult, event_handlers
 from dbally.audit import CLIEventHandler
 from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
@@ -126,7 +126,7 @@ def display_results(result: ExecutionResult):
 
 
 async def main():
-    global_event_handlers.append(CLIEventHandler())
+    event_handlers.append(CLIEventHandler())
     await country_similarity.update()
 
     llm = LiteLLM(model_name="gpt-3.5-turbo")

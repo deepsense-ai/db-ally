@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring
 import asyncio
 
+from dbally.audit import CLIEventHandler
 from recruiting.candidate_view_with_similarity_store import CandidateView, country_similarity, engine
 from recruiting.cypher_text2sql_view import SampleText2SQLViewCyphers, create_freeform_memory_engine
 
@@ -12,6 +13,7 @@ from dbally.llms.litellm import LiteLLM
 async def main():
     await country_similarity.update()
     llm = LiteLLM(model_name="gpt-3.5-turbo")
+    dbally.event_handlers.set
     collection = dbally.create_collection("candidates", llm)
     collection.add(CandidateView, lambda: CandidateView(engine))
     collection.add(SampleText2SQLViewCyphers, lambda: SampleText2SQLViewCyphers(create_freeform_memory_engine()))

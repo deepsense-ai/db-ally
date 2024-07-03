@@ -19,14 +19,14 @@ from .embeddings.exceptions import (
     EmbeddingStatusError,
 )
 from .exceptions import DbAllyError
-from .index import global_event_handlers
+from .index import event_handlers
 from .llms.clients.exceptions import LLMConnectionError, LLMError, LLMResponseError, LLMStatusError
 
 __all__ = [
     "__version__",
     "create_collection",
     "decorators",
-    "global_event_handlers",
+    "event_handlers",
     "BaseStructuredView",
     "Collection",
     "DataFrameBaseView",
