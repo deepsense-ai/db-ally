@@ -31,10 +31,8 @@ class LocalLLM(LLM[LocalLLMOptions]):
             api_key: The API key for Hugging Face authentication.
         """
 
-        hf_model_name = model_name.split("/", 1)[1]
-
-        super().__init__(hf_model_name, default_options)
-        self.tokenizer = AutoTokenizer.from_pretrained(hf_model_name, token=api_key)
+        super().__init__(model_name, default_options)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=api_key)
         self.api_key = api_key
 
     @cached_property

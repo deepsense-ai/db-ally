@@ -1,4 +1,4 @@
-# How-To: Use local LLMs
+# How-To: Use Local LLMs
 
 db-ally includes a ready-to-use implementation for local LLMs called [`LocalLLM`](../../reference/llms/local.md#dbally.llms.local.LocalLLM), which leverages the Hugging Face Transformers library to provide access to various LLMs available on Hugging Face.
 
@@ -7,7 +7,7 @@ db-ally includes a ready-to-use implementation for local LLMs called [`LocalLLM`
 Install the required dependencies for using local LLMs.
 
 ```bash
-pip install dbally[localllm]
+pip install dbally[local]
 ```
 
 Integrate db-ally with your Local LLM
@@ -21,7 +21,7 @@ from dbally.llms.localllm import LocalLLM
 
 os.environ["HUGGINGFACE_API_KEY"] = "your-api-key"
 
-llm = LocalLLM(model_name="local/meta-llama/Meta-Llama-3-8B-Instruct")
+llm = LocalLLM(model_name="meta-llama/Meta-Llama-3-8B-Instruct")
 ```
 
 Use LLM in your collection
@@ -50,7 +50,7 @@ For advanced users, you can customize your LLM using [`LocalLLMOptions`](../../r
 import dbally
 from dbally.llms.clients.localllm import LocalLLMOptions
 
-llm = LocalLLM("local/meta-llama/Meta-Llama-3-8B-Instruct", default_options=LocalLLMOptions(temperature=0.7))
+llm = LocalLLM("meta-llama/Meta-Llama-3-8B-Instruct", default_options=LocalLLMOptions(temperature=0.7))
 my_collection = dbally.create_collection("my_collection", llm)
 ```
 
