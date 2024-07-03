@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional, Union
 
 import torch
-from transformers import AutoTokenizer, pipeline
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from dbally.audit.events import LLMEvent
 from dbally.llms.clients.base import LLMClient, LLMOptions
@@ -53,8 +53,8 @@ class LocalLLMClient(LLMClient[LocalLLMOptions]):
 
         super().__init__(model_name)
 
-        self.pipeline = pipeline(
-            "text-generation", model=model_name, torch_dtype=torch.bfloat16, device_map="auto", token=hf_api_key
+        self.model = AutoModelForCausalLM.from_pretrained(
+            model_name, device_map="auto", torch_dtype=torch.bfloat16, token=hf_api_key
         )
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_api_key)
 
@@ -78,21 +78,18 @@ class LocalLLMClient(LLMClient[LocalLLMOptions]):
             Response string from LLM.
         """
 
-        input_ids = self.tokenizer.apply_chat_template(conversation)
+        input_ids = self.tokenizer.apply_chat_template(
+            conversation, add_generation_prompt=True, return_tensors="pt"
+        ).to(self.model.device)
 
-        outputs = self.pipeline(
-            conversation,
+        outputs = self.model.generate(
+            input_ids,
             eos_token_id=self.tokenizer.eos_token_id,
             **options.dict(),
         )
-
-        output_ids = self.tokenizer.apply_chat_template(outputs[0]["generated_text"])
-        response_ids = output_ids[len(input_ids) :]
-
-        event.completion_tokens = len(response_ids)
-        event.prompt_tokens = len(input_ids)
-        event.total_tokens = len(output_ids)
-
-        decoded_response = self.tokenizer.decode(response_ids, skip_special_tokens=True)
-
+        response = outputs[0][input_ids.shape[-1] :]
+        event.completion_tokens = len(outputs[0][input_ids.shape[-1] :])
+        event.prompt_tokens = len(outputs[0][: input_ids.shape[-1]])
+        event.total_tokens = input_ids.shape[-1]
+        decoded_response = self.tokenizer.decode(response, skip_special_tokens=True)
         return decoded_response
