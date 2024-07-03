@@ -27,7 +27,7 @@ class BaseView(metaclass=abc.ABCMeta):
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        context: Optional[CustomContextsList] = None
+        contexts: Optional[CustomContextsList] = None
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result.

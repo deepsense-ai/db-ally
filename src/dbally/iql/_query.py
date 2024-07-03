@@ -30,7 +30,7 @@ class IQLQuery:
         source: str,
         allowed_functions: List["ExposedFunction"],
         event_tracker: Optional[EventTracker] = None,
-        context: Optional[CustomContextsList] = None
+        contexts: Optional[CustomContextsList] = None
     ) -> Self:
         """
         Parse IQL string to IQLQuery object.
@@ -43,5 +43,5 @@ class IQLQuery:
              IQLQuery object
         """
 
-        root = await IQLProcessor(source, allowed_functions, context, event_tracker).process()
+        root = await IQLProcessor(source, allowed_functions, contexts, event_tracker).process()
         return cls(root=root, source=source)

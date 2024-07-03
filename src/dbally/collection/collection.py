@@ -157,7 +157,7 @@ class Collection:
         dry_run: bool = False,
         return_natural_response: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        context: Optional[CustomContextsList] = None
+        contexts: Optional[CustomContextsList] = None
     ) -> ExecutionResult:
         """
         Ask question in a text form and retrieve the answer based on the available views.
@@ -217,7 +217,7 @@ class Collection:
             n_retries=self.n_retries,
             dry_run=dry_run,
             llm_options=llm_options,
-            context=context
+            contexts=contexts
         )
         end_time_view = time.monotonic()
 

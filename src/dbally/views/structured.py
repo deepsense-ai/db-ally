@@ -42,7 +42,7 @@ class BaseStructuredView(BaseView):
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        context: Optional[CustomContextsList] = None
+        contexts: Optional[CustomContextsList] = None
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result. It generates the IQL query from the natural language query\
@@ -71,6 +71,7 @@ class BaseStructuredView(BaseView):
             event_tracker=event_tracker,
             llm_options=llm_options,
             n_retries=n_retries,
+            contexts=contexts
         )
 
         await self.apply_filters(iql)
