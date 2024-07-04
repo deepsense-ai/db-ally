@@ -126,7 +126,7 @@ def display_results(result: ExecutionResult):
 
 
 async def main():
-    dbally.event_handlers.append(CLIEventHandler())
+    dbally.event_handlers = [CLIEventHandler()]
     await country_similarity.update()
 
     llm = LiteLLM(model_name="gpt-3.5-turbo")
