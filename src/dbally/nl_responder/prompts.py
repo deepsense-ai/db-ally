@@ -19,16 +19,24 @@ class NLResponsePromptFormat(PromptFormat):
         examples: List[FewShotExample] = None,
     ) -> None:
         """
-        Constructs a new IQLGenerationPromptFormat instance.
+        Constructs a new NLResponsePromptFormat instance.
 
         Args:
             question: Question to be asked.
-            filters: List of filters exposed by the view.
+            results: List of records, where dictonary keys store column names.
             examples: List of examples to be injected into the conversation.
         """
         super().__init__(examples)
         self.question = question
-        self.results = pd.DataFrame.from_records(results).to_markdown(index=False, headers="keys", tablefmt="psql")
+
+        if results:
+            self.results = pd.DataFrame.from_records(results).to_markdown(index=False, headers="keys", tablefmt="psql")
+        else:
+            self.results = (
+                "The query returned 0 rows. The table has no data. Don't halucinate responses. "
+                "Make sure to inform the user, that there are no data points, that satisfy their question."
+                "Be brief in your response and remember to answer the question correctly."
+            )
 
 
 class QueryExplanationPromptFormat(PromptFormat):
