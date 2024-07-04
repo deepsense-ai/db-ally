@@ -30,7 +30,7 @@ def parse_param_type(param_type: Union[type, _GenericAlias, str]) -> str:
     if isinstance(param_type, str):
         return f"'{param_type}'"
 
-    if param_type.__module__ == "typing" or param_type.__module__ == "typing_extensions":
+    if param_type.__module__ in ["typing", "typing_extensions"]:
         type_args = type_ext.get_args(param_type)
         if type_args:
             param_name = param_type._name  # pylint: disable=protected-access
