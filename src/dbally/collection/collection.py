@@ -35,8 +35,8 @@ class Collection:
         name: str,
         view_selector: ViewSelector,
         llm: LLM,
-        event_handlers: List[EventHandler],
         nl_responder: NLResponder,
+        event_handlers: Optional[List[EventHandler]] = None,
         n_retries: int = 3,
     ) -> None:
         """
@@ -47,10 +47,10 @@ class Collection:
             before generating the IQL query, a View that fits query the most is selected by the\
             [ViewSelector](view_selection/index.md).
             llm: LLM used by the collection to generate views and respond to natural language queries.
+            nl_responder: Object that translates RAW response from db-ally into natural language.
             event_handlers: Event handlers used by the collection during query executions. Can be used\
             to log events as [CLIEventHandler](event_handlers/cli_handler.md) or to validate system performance\
             as [LangSmithEventHandler](event_handlers/langsmith_handler.md).
-            nl_responder: Object that translates RAW response from db-ally into natural language.
             n_retries: IQL generator may produce invalid IQL. If this is the case this argument specifies\
             how many times db-ally will try to regenerate it. Previous try with the error message is\
             appended to the chat history to guide next generations.
@@ -324,7 +324,6 @@ def create_collection(
     """
     view_selector = view_selector or LLMViewSelector(llm=llm)
     nl_responder = nl_responder or NLResponder(llm=llm)
-    event_handlers = event_handlers or dbally.event_handlers
 
     return Collection(
         name,
