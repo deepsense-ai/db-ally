@@ -6,12 +6,59 @@ from sqlalchemy.sql.ddl import CreateTable
 from typing_extensions import Self
 
 from dbally.llms.base import LLM
-from dbally.prompts import PromptTemplate
+from dbally.prompt.template import PromptFormat, PromptTemplate
 from dbally.similarity.index import SimilarityIndex
-from dbally.views.freeform.text2sql import ColumnConfig, TableConfig
+from dbally.views.freeform.text2sql.config import ColumnConfig, TableConfig
 
-DISCOVERY_TEMPLATE = PromptTemplate(
-    chat=(
+
+class DiscoveryPromptFormat(PromptFormat):
+    """
+    Formats provided parameters to a form acceptable by default discovery prompt.
+    """
+
+    def __init__(
+        self,
+        *,
+        dialect: str,
+        table_ddl: str,
+        samples: List[Dict[str, Any]],
+    ) -> None:
+        """
+        Constructs a new DiscoveryPromptFormat instance.
+
+        Args:
+            dialect: The SQL dialect of the database.
+            table_ddl: The DDL of the table.
+            samples: The example rows from the table.
+        """
+        super().__init__()
+        self.dialect = dialect
+        self.table_ddl = table_ddl
+        self.samples = samples
+
+
+class SimilarityPromptFormat(PromptFormat):
+    """
+    Formats provided parameters to a form acceptable by default similarity prompt.
+    """
+
+    def __init__(self, *, table_summary: str, column_name: str, samples: List[Any]) -> None:
+        """
+        Constructs a new SimilarityPromptFormat instance.
+
+        Args:
+            table_summary: The summary of the table.
+            column_name: The name of the column.
+            samples: The example values from the column.
+        """
+        super().__init__()
+        self.table_summary = table_summary
+        self.column_name = column_name
+        self.samples = samples
+
+
+DISCOVERY_TEMPLATE = PromptTemplate[DiscoveryPromptFormat](
+    [
         {
             "role": "system",
             "content": (
@@ -24,11 +71,11 @@ DISCOVERY_TEMPLATE = PromptTemplate(
             "role": "user",
             "content": "DDL:\n {table_ddl}\n" "EXAMPLE ROWS:\n {samples}",
         },
-    ),
+    ],
 )
 
-SIMILARITY_TEMPLATE = PromptTemplate(
-    chat=(
+SIMILARITY_TEMPLATE = PromptTemplate[SimilarityPromptFormat](
+    [
         {
             "role": "system",
             "content": (
@@ -43,7 +90,7 @@ SIMILARITY_TEMPLATE = PromptTemplate(
             "role": "user",
             "content": "TABLE SUMMARY: {table_summary}\n" "COLUMN NAME: {column_name}\n" "EXAMPLE VALUES: {samples}",
         },
-    )
+    ],
 )
 
 
@@ -108,14 +155,15 @@ class LLMSummaryDescriptionExtraction(DescriptionExtractionStrategy):
         """
         ddl = self._generate_ddl(table)
         samples = self._fetch_samples(connection, table)
-        return await self.llm.generate_text(
-            template=DISCOVERY_TEMPLATE,
-            fmt={
-                "dialect": self.engine.dialect.name,
-                "table_ddl": ddl,
-                "samples": samples,
-            },
+
+        prompt_format = DiscoveryPromptFormat(
+            dialect=self.engine.dialect.name,
+            table_ddl=ddl,
+            samples=samples,
         )
+        formatted_prompt = DISCOVERY_TEMPLATE.format_prompt(prompt_format)
+
+        return await self.llm.generate_text(formatted_prompt)
 
     def _fetch_samples(self, connection: Connection, table: Table) -> List[Dict[str, Any]]:
         rows = connection.execute(table.select().limit(self.samples_count)).fetchall()
@@ -218,14 +266,15 @@ class LLMSuggestedSimilarityIndexSelection(SimilarityIndexSelectionStrategy):
             table=table,
             column=column,
         )
-        use_index = await self.llm.generate_text(
-            template=SIMILARITY_TEMPLATE,
-            fmt={
-                "table_summary": description,
-                "column_name": column.name,
-                "samples": samples,
-            },
+
+        prompt_format = SimilarityPromptFormat(
+            table_summary=description,
+            column_name=column.name,
+            samples=samples,
         )
+        formatted_prompt = SIMILARITY_TEMPLATE.format_prompt(prompt_format)
+
+        use_index = await self.llm.generate_text(formatted_prompt)
         return self.index_builder(connection.engine, table, column) if use_index.upper() == "TRUE" else None
 
     def _fetch_samples(self, connection: Connection, table: Table, column: Column) -> List[Any]:

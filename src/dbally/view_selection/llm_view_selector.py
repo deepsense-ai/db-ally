@@ -1,12 +1,11 @@
-import copy
-from typing import Callable, Dict, Optional
+from typing import Dict, Optional
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.iql_generator.iql_prompt_template import IQLPromptTemplate
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
+from dbally.prompt.template import PromptTemplate
 from dbally.view_selection.base import ViewSelector
-from dbally.view_selection.view_selector_prompt_template import default_view_selector_template
+from dbally.view_selection.prompt import VIEW_SELECTION_TEMPLATE, ViewSelectionPromptFormat
 
 
 class LLMViewSelector(ViewSelector):
@@ -20,22 +19,16 @@ class LLMViewSelector(ViewSelector):
     ultimately returning the name of the most suitable view.
     """
 
-    def __init__(
-        self,
-        llm: LLM,
-        prompt_template: Optional[IQLPromptTemplate] = None,
-        promptify_views: Optional[Callable[[Dict[str, str]], str]] = None,
-    ) -> None:
+    def __init__(self, llm: LLM, prompt_template: Optional[PromptTemplate[ViewSelectionPromptFormat]] = None) -> None:
         """
+        Constructs a new LLMViewSelector instance.
+
         Args:
             llm: LLM used to generate IQL
             prompt_template: template for the prompt used for the view selection
-            promptify_views: Function formatting filters for prompt. By default names and descriptions of\
-            all views are concatenated
         """
         self._llm = llm
-        self._prompt_template = prompt_template or copy.deepcopy(default_view_selector_template)
-        self._promptify_views = promptify_views or _promptify_views
+        self._prompt_template = prompt_template or VIEW_SELECTION_TEMPLATE
 
     async def select_view(
         self,
@@ -56,28 +49,13 @@ class LLMViewSelector(ViewSelector):
         Returns:
             The most relevant view name.
         """
-
-        views_for_prompt = self._promptify_views(views)
+        prompt_format = ViewSelectionPromptFormat(question=question, views=views)
+        formatted_prompt = self._prompt_template.format_prompt(prompt_format)
 
         llm_response = await self._llm.generate_text(
-            template=self._prompt_template,
-            fmt={"views": views_for_prompt, "question": question},
+            prompt=formatted_prompt,
             event_tracker=event_tracker,
             options=llm_options,
         )
-        selected_view = self._prompt_template.llm_response_parser(llm_response)
+        selected_view = self._prompt_template.response_parser(llm_response)
         return selected_view
-
-
-def _promptify_views(views: Dict[str, str]) -> str:
-    """
-    Formats views for prompt
-
-    Args:
-        views: dictionary of available view names with corresponding descriptions.
-
-    Returns:
-        views_for_prompt: views formatted for prompt
-    """
-
-    return "\n".join([f"{name}: {description}" for name, description in views.items()])

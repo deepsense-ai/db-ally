@@ -1,7 +1,7 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name, missing-return-type-doc
 
 from typing import List, Tuple, Type
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from typing_extensions import Annotated
@@ -10,9 +10,9 @@ import dbally
 from dbally.collection import Collection
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ViewExecutionResult
-from dbally.iql._exceptions import IQLError
+from dbally.iql import IQLQuery
+from dbally.iql.syntax import FunctionCall
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
-from dbally.views.structured import BaseStructuredView
 from tests.unit.mocks import MockIQLGenerator, MockLLM, MockSimilarityIndex, MockViewBase, MockViewSelector
 
 
@@ -59,8 +59,8 @@ class MockViewWithResults(MockViewBase):
     def list_filters(self) -> List[ExposedFunction]:
         return [ExposedFunction("test_filter", "", [])]
 
-    def get_iql_generator(self, *_, **__):
-        return MockIQLGenerator("test_filter()")
+    def get_iql_generator(self, *_, **__) -> MockIQLGenerator:
+        return MockIQLGenerator(IQLQuery(FunctionCall("test_filter", []), "test_filter()"))
 
 
 @pytest.fixture(name="similarity_classes")
@@ -273,42 +273,6 @@ def mock_collection_feedback_loop() -> Collection:
     collection = Collection("foo", view_selector=Mock(), llm=MockLLM(), nl_responder=Mock(), event_handlers=[])
     collection.add(ViewWithMockGenerator)
     return collection
-
-
-async def test_ask_feedback_loop(collection_feedback: Collection) -> None:
-    """
-    Tests that the ask_feedback_loop method works correctly
-    """
-
-    mock_node = Mock(col_offset=0, end_col_offset=-1)
-    errors = [
-        IQLError("err1", mock_node, "src1"),
-        IQLError("err2", mock_node, "src2"),
-        ValueError("err3"),
-        ValueError("err4"),
-    ]
-    with patch("dbally.iql._query.IQLQuery.parse") as mock_iql_query:
-        mock_iql_query.side_effect = errors
-        view = collection_feedback.get("ViewWithMockGenerator")
-        assert isinstance(view, BaseStructuredView)
-        iql_generator = view.get_iql_generator(llm=MockLLM())
-
-        await collection_feedback.ask("Mock question")
-
-        iql_gen_error: Mock = iql_generator.add_error_msg  # type: ignore
-
-        iql_gen_error.assert_has_calls(
-            [call("iql1_c", [errors[0]]), call("iql2_c", [errors[1]]), call("iql3_c", [errors[2]])]
-        )
-        assert iql_gen_error.call_count == 3
-
-        iql_gen_gen_iql: Mock = iql_generator.generate_iql  # type: ignore
-
-        for i, c in enumerate(iql_gen_gen_iql.call_args_list):
-            if i > 0:
-                assert c[1]["conversation"] == f"err{i}"
-
-        assert iql_gen_gen_iql.call_count == 4
 
 
 async def test_ask_view_selection_single_view() -> None:
