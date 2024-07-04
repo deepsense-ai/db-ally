@@ -32,15 +32,15 @@ def find_event_buffer() -> Optional[BufferEventHandler]:
     """
     Searches through global event handlers to find an instance of BufferEventHandler.
 
-    This function iterates over the list of global event handlers stored in `dbally.global_event_handlers`.
+    This function iterates over the list of global event handlers stored in `dbally.event_handlers`.
     It checks the type of each handler, and if it finds one that is an instance of `BufferEventHandler`, it
     returns that handler. If no such handler is found, the function returns `None`.
 
     Returns:
         The first instance of `BufferEventHandler` found in the list, or `None` if no such handler is found.
     """
-    for handler in dbally.global_event_handlers:
-        if type(handler) is BufferEventHandler:  # pylint: disable=C0123
+    for handler in dbally.event_handlers:
+        if isinstance(handler, BufferEventHandler):
             return handler
     return None
 
@@ -62,7 +62,7 @@ class GradioAdapter:
         buffer_event_handler = find_event_buffer()
         if not buffer_event_handler:
             buffer_event_handler = BufferEventHandler()
-            dbally.global_event_handlers.append(buffer_event_handler)
+            dbally.event_handlers.append(buffer_event_handler)
 
         self.log: BufferEventHandler = buffer_event_handler.buffer  # pylint: disable=no-member
 
