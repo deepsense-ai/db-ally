@@ -1,6 +1,6 @@
 """ dbally """
 
-from typing import Callable, List
+from typing import List
 
 from dbally.collection.collection import Collection, create_collection
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
@@ -13,6 +13,7 @@ from dbally.views.structured import BaseStructuredView
 
 from .__version__ import __version__
 from ._types import NOT_GIVEN, NotGiven
+from .audit import EventHandler
 from .embeddings.exceptions import (
     EmbeddingConnectionError,
     EmbeddingError,
@@ -22,7 +23,7 @@ from .embeddings.exceptions import (
 from .exceptions import DbAllyError
 from .llms.clients.exceptions import LLMConnectionError, LLMError, LLMResponseError, LLMStatusError
 
-event_handlers: List = []
+event_handlers: List[EventHandler] = []
 
 __all__ = [
     "__version__",
