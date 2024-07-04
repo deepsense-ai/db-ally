@@ -14,8 +14,9 @@ class BufferEventHandler(CLIEventHandler):
 
     ```python
         import dbally
+        from dbally.audit.event_handlers.buffer_event_handler import BufferEventHandler
 
-        dbally.event_handlers_list=[BufferEventHandler()]
+        dbally.event_handlers = [BufferEventHandler()]
         my_collection = dbally.create_collection("my_collection", llm)
     ```
     """

@@ -1,9 +1,6 @@
 import re
 from typing import Optional
 
-from dbally.audit.event_handlers.base import EventHandler
-from dbally.audit.events import Event, FallbackEvent, LLMEvent, RequestEnd, RequestStart, SimilarityEvent
-
 try:
     from rich import print as pprint
     from rich.console import Console
@@ -15,6 +12,8 @@ except ImportError:
     RICH_OUTPUT = False
     pprint = print  # type: ignore
 
+from dbally.audit.event_handlers.base import EventHandler
+from dbally.audit.events import Event, LLMEvent, RequestEnd, RequestStart, SimilarityEvent, FallbackEvent
 
 _RICH_FORMATING_KEYWORD_SET = {"green", "orange", "grey", "bold", "cyan"}
 _RICH_FORMATING_PATTERN = rf"\[.*({'|'.join(_RICH_FORMATING_KEYWORD_SET)}).*\]"
@@ -31,7 +30,7 @@ class CLIEventHandler(EventHandler):
         import dbally
         from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 
-        dbally.event_handlers_list.append(CLIEventHandler())
+        dbally.event_handlers = [CLIEventHandler()]
         my_collection = dbally.create_collection("my_collection", llm)
     ```
 

@@ -1,8 +1,7 @@
 """ dbally """
 
-from typing import List
+from typing import TYPE_CHECKING, List
 
-from dbally.collection.collection import Collection, create_collection
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
 from dbally.views import decorators
@@ -12,6 +11,7 @@ from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 from dbally.views.structured import BaseStructuredView
 
 from .__version__ import __version__
+from ._main import create_collection
 from ._types import NOT_GIVEN, NotGiven
 from .embeddings.exceptions import (
     EmbeddingConnectionError,
@@ -22,7 +22,10 @@ from .embeddings.exceptions import (
 from .exceptions import DbAllyError
 from .llms.clients.exceptions import LLMConnectionError, LLMError, LLMResponseError, LLMStatusError
 
-event_handlers: List = []
+if TYPE_CHECKING:
+    from .audit import EventHandler
+
+event_handlers: List["EventHandler"] = []
 
 __all__ = [
     "__version__",
@@ -30,7 +33,6 @@ __all__ = [
     "decorators",
     "event_handlers",
     "BaseStructuredView",
-    "Collection",
     "DataFrameBaseView",
     "DbAllyError",
     "ExecutionResult",
@@ -38,7 +40,6 @@ __all__ = [
     "EmbeddingConnectionError",
     "EmbeddingResponseError",
     "EmbeddingStatusError",
-    "IndexUpdateError",
     "LLMError",
     "LLMConnectionError",
     "LLMResponseError",

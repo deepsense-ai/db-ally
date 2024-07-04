@@ -2,7 +2,6 @@ import asyncio
 import inspect
 import textwrap
 import time
-import warnings
 from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Type, TypeVar
 
@@ -55,6 +54,7 @@ class Collection:
             event_handlers: Event handlers used by the collection during query executions. Can be used\
             to log events as [CLIEventHandler](event_handlers/cli_handler.md) or to validate system performance\
             as [LangSmithEventHandler](event_handlers/langsmith_handler.md).
+            nl_responder: Object that translates RAW response from db-ally into natural language.
             n_retries: IQL generator may produce invalid IQL. If this is the case this argument specifies\
             how many times db-ally will try to regenerate it. Previous try with the error message is\
             appended to the chat history to guide next generations.
@@ -67,16 +67,9 @@ class Collection:
         self._builders: Dict[str, Callable[[], BaseView]] = {}
         self._view_selector = view_selector
         self._nl_responder = nl_responder
+        self._event_handlers = event_handlers or dbally.event_handlers
         self._llm = llm
         self._fallback_collection: Optional[Collection] = fallback_collection
-
-        if not event_handlers:
-            event_handlers = dbally.event_handlers
-        elif event_handlers != dbally.event_handlers:
-            # At this moment, there is no event tracker initialized to record an event
-            warnings.warn("Default event handler has been overwritten for {self.name}.")
-
-        self._event_handlers = event_handlers
 
     T = TypeVar("T", bound=BaseView)
 
