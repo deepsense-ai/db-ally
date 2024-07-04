@@ -13,7 +13,6 @@ from dbally.views.structured import BaseStructuredView
 
 from .__version__ import __version__
 from ._types import NOT_GIVEN, NotGiven
-from .audit import EventHandler
 from .embeddings.exceptions import (
     EmbeddingConnectionError,
     EmbeddingError,
@@ -23,7 +22,7 @@ from .embeddings.exceptions import (
 from .exceptions import DbAllyError
 from .llms.clients.exceptions import LLMConnectionError, LLMError, LLMResponseError, LLMStatusError
 
-event_handlers: List[EventHandler] = []
+event_handlers: List = []
 
 __all__ = [
     "__version__",
