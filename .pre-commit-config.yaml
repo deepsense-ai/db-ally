@@ -58,7 +58,7 @@ repos:
 
       # Enforces a coding standard, looks for code smells, and can make suggestions about how the code could be refactored.
     - repo: https://github.com/pycqa/pylint
-      rev: v3.0.1
+      rev: v3.1.0
       hooks:
           - id: pylint
             exclude: (/test_|tests/|docs/)

@@ -5,6 +5,7 @@ import time
 from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Type, TypeVar
 
+import dbally
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import RequestEnd, RequestStart
@@ -32,22 +33,22 @@ class Collection:
         name: str,
         view_selector: ViewSelector,
         llm: LLM,
-        event_handlers: List[EventHandler],
         nl_responder: NLResponder,
+        event_handlers: Optional[List[EventHandler]] = None,
         n_retries: int = 3,
     ) -> None:
         """
         Args:
             name: Name of the collection is available for [Event handlers](event_handlers/index.md) and is\
             used to distinguish different db-ally runs.
-            view_selector: As you register more then one [View](views/index.md) within single collection,\
+            view_selector: As you register more than one [View](views/index.md) within single collection,\
             before generating the IQL query, a View that fits query the most is selected by the\
             [ViewSelector](view_selection/index.md).
             llm: LLM used by the collection to generate views and respond to natural language queries.
+            nl_responder: Object that translates RAW response from db-ally into natural language.
             event_handlers: Event handlers used by the collection during query executions. Can be used\
             to log events as [CLIEventHandler](event_handlers/cli_handler.md) or to validate system performance\
             as [LangSmithEventHandler](event_handlers/langsmith_handler.md).
-            nl_responder: Object that translates RAW response from db-ally into natural language.
             n_retries: IQL generator may produce invalid IQL. If this is the case this argument specifies\
             how many times db-ally will try to regenerate it. Previous try with the error message is\
             appended to the chat history to guide next generations.
@@ -58,8 +59,9 @@ class Collection:
         self._builders: Dict[str, Callable[[], BaseView]] = {}
         self._view_selector = view_selector
         self._nl_responder = nl_responder
-        self._event_handlers = event_handlers
         self._llm = llm
+
+        self._event_handlers = event_handlers or dbally.event_handlers
 
     T = TypeVar("T", bound=BaseView)
 
@@ -68,7 +70,7 @@ class Collection:
         Register new [View](views/index.md) that will be available to query via the collection.
 
         Args:
-            view: A class inherithing from BaseView. Object of this type will be initialized during\
+            view: A class inheriting from BaseView. Object of this type will be initialized during\
             query execution. We expect Class instead of object, as otherwise Views must have been implemented\
             stateless, which would be cumbersome.
             builder: Optional factory function that will be used to create the View instance. Use it when you\
@@ -110,15 +112,6 @@ class Collection:
 
         self._views[name] = view
         self._builders[name] = builder
-
-    def add_event_handler(self, event_handler: EventHandler):
-        """
-        Adds an event handler to the list of event handlers.
-
-        Args:
-            event_handler: The event handler to be added.
-        """
-        self._event_handlers.append(event_handler)
 
     def get(self, name: str) -> BaseView:
         """
@@ -237,7 +230,6 @@ class Collection:
         )
 
         await event_tracker.request_end(RequestEnd(result=result))
-
         return result
 
     def get_similarity_indexes(self) -> Dict[AbstractSimilarityIndex, List[IndexLocation]]:

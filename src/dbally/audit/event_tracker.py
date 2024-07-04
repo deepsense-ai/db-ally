@@ -27,11 +27,16 @@ class EventTracker:
 
         Returns:
             The initialized event store.
+
+        Raises:
+            ValueError: if invalid event handler object is passed as argument.
         """
 
         instance = cls()
 
         for handler in event_handlers:
+            if not isinstance(handler, EventHandler):
+                raise ValueError(f"Could not register {handler}. Handler must be instance of EvenHandler type")
             instance.subscribe(handler)
 
         return instance

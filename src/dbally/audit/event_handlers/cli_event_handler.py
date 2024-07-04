@@ -1,6 +1,4 @@
 import re
-from io import StringIO
-from sys import stdout
 from typing import Optional
 
 try:
@@ -24,7 +22,7 @@ _RICH_FORMATING_PATTERN = rf"\[.*({'|'.join(_RICH_FORMATING_KEYWORD_SET)}).*\]"
 class CLIEventHandler(EventHandler):
     """
     This handler displays all interactions between LLM and user happening during `Collection.ask`\
-    execution inside the terminal or store them in the given buffer.
+    execution inside the terminal.
 
     ### Usage
 
@@ -32,7 +30,8 @@ class CLIEventHandler(EventHandler):
         import dbally
         from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 
-        my_collection = dbally.create_collection("my_collection", llm, event_handlers=[CLIEventHandler()])
+        dbally.event_handlers = [CLIEventHandler()]
+        my_collection = dbally.create_collection("my_collection", llm)
     ```
 
     After using `CLIEventHandler`, during every `Collection.ask` execution you will see output similar to the one below:
@@ -40,12 +39,9 @@ class CLIEventHandler(EventHandler):
     ![Example output from CLIEventHandler](../../assets/event_handler_example.png)
     """
 
-    def __init__(self, buffer: Optional[StringIO] = None) -> None:
+    def __init__(self) -> None:
         super().__init__()
-
-        self.buffer = buffer
-        out = self.buffer if buffer else stdout
-        self._console = Console(file=out, record=True) if RICH_OUTPUT else None
+        self._console = Console(record=True) if RICH_OUTPUT else None
 
     def _print_syntax(self, content: str, lexer: Optional[str] = None) -> None:
         if self._console:
@@ -69,6 +65,7 @@ class CLIEventHandler(EventHandler):
         self._print_syntax("[grey53]\n=======================================")
         self._print_syntax("[grey53]=======================================\n")
 
+    # pylint: disable=unused-argument
     async def event_start(self, event: Event, request_context: None) -> None:
         """
         Displays information that event has started, then all messages inside the prompt
@@ -98,6 +95,7 @@ class CLIEventHandler(EventHandler):
                 f"[cyan bold]FETCHER: [grey53]{event.fetcher}\n"
             )
 
+    # pylint: disable=unused-argument
     async def event_end(self, event: Optional[Event], request_context: None, event_context: None) -> None:
         """
         Displays the response from the LLM.
@@ -116,6 +114,7 @@ class CLIEventHandler(EventHandler):
             self._print_syntax("[grey53]\n=======================================")
             self._print_syntax("[grey53]=======================================\n")
 
+    # pylint: disable=unused-argument
     async def request_end(self, output: RequestEnd, request_context: Optional[dict] = None) -> None:
         """
         Displays the output of the request, namely the `results` and the `context`

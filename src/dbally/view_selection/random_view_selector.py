@@ -11,6 +11,7 @@ class RandomViewSelector(ViewSelector):
     Mock View Selector selecting a random view.
     """
 
+    # pylint: disable=unused-argument
     async def select_view(
         self,
         question: str,
