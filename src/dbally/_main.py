@@ -41,7 +41,7 @@ def create_collection(
         event_handlers: Event handlers used by the collection during query executions. Can be used to\
         log events as [CLIEventHandler](event_handlers/cli_handler.md) or to validate system performance as\
         [LangSmithEventHandler](event_handlers/langsmith_handler.md). If provided, this parameter overrides the
-        global dbally.event_handlers_list
+        global dbally.event_handlers.
         view_selector: View selector used by the collection to select the best view for the given query.\
         If None, a new instance of [LLMViewSelector][dbally.view_selection.llm_view_selector.LLMViewSelector]\
         will be used.
@@ -49,10 +49,10 @@ def create_collection(
         a new instance of [NLResponder][dbally.nl_responder.nl_responder.NLResponder] will be used.
 
     Returns:
-        a new instance of db-ally Collection
+        New instance of db-ally Collection.
 
     Raises:
-        ValueError: if default LLM client is not configured
+        ValueError: If default LLM client is not configured.
     """
     from dbally.collection import Collection  # pylint: disable=import-outside-toplevel
 
