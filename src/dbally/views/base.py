@@ -1,15 +1,17 @@
 import abc
-from typing import Dict, List, Optional, Tuple, Type
+from typing import Dict, Iterable, List, Optional, Tuple
+
+from typing_extensions import TypeAlias
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
+from dbally.context.context import CustomContext
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.prompt.elements import FewShotExample
 from dbally.similarity import AbstractSimilarityIndex
-from dbally.context.context import BaseCallerContext, CustomContextsList
 
-IndexLocation = Tuple[str, str, str]
+IndexLocation: TypeAlias = Tuple[str, str, str]
 
 
 class BaseView(metaclass=abc.ABCMeta):
@@ -27,7 +29,7 @@ class BaseView(metaclass=abc.ABCMeta):
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        contexts: Optional[CustomContextsList] = None
+        contexts: Optional[Iterable[CustomContext]] = None,
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result.
@@ -39,6 +41,8 @@ class BaseView(metaclass=abc.ABCMeta):
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
             llm_options: Options to use for the LLM.
+            contexts: An iterable (typically a list) of context objects, each being
+                an instance of a subclass of BaseCallerContext.
 
         Returns:
             The result of the query.

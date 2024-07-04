@@ -1,10 +1,12 @@
-from typing import TYPE_CHECKING, List, Optional, Type
+from typing import TYPE_CHECKING, Iterable, List, Optional
+
 from typing_extensions import Self
+
+from dbally.context.context import CustomContext
 
 from ..audit.event_tracker import EventTracker
 from . import syntax
 from ._processor import IQLProcessor
-from dbally.context.context import BaseCallerContext, CustomContextsList
 
 if TYPE_CHECKING:
     from dbally.views.structured import ExposedFunction
@@ -30,7 +32,7 @@ class IQLQuery:
         source: str,
         allowed_functions: List["ExposedFunction"],
         event_tracker: Optional[EventTracker] = None,
-        contexts: Optional[CustomContextsList] = None
+        contexts: Optional[Iterable[CustomContext]] = None,
     ) -> Self:
         """
         Parse IQL string to IQLQuery object.
@@ -39,6 +41,8 @@ class IQLQuery:
             source: IQL string that needs to be parsed
             allowed_functions: list of IQL functions that are allowed for this query
             event_tracker: EventTracker object to track events
+            contexts: An iterable (typically a list) of context objects, each being
+                an instance of a subclass of BaseCallerContext.
         Returns:
              IQLQuery object
         """

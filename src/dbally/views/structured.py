@@ -1,16 +1,15 @@
 import abc
 from collections import defaultdict
-from typing import Dict, List, Optional, Type
+from typing import Dict, Iterable, List, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
-from dbally.context.context import BaseCallerContext
+from dbally.context.context import CustomContext
 from dbally.iql import IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
-from dbally.context.context import BaseCallerContext, CustomContextsList
 
 from ..similarity import AbstractSimilarityIndex
 from .base import BaseView, IndexLocation
@@ -42,7 +41,7 @@ class BaseStructuredView(BaseView):
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        contexts: Optional[CustomContextsList] = None
+        contexts: Optional[Iterable[CustomContext]] = None,
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result. It generates the IQL query from the natural language query\
@@ -55,6 +54,8 @@ class BaseStructuredView(BaseView):
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
             llm_options: Options to use for the LLM.
+            contexts: An iterable (typically a list) of context objects, each being
+                an instance of a subclass of BaseCallerContext.
 
         Returns:
             The result of the query.
@@ -71,7 +72,7 @@ class BaseStructuredView(BaseView):
             event_tracker=event_tracker,
             llm_options=llm_options,
             n_retries=n_retries,
-            contexts=contexts
+            contexts=contexts,
         )
 
         await self.apply_filters(iql)

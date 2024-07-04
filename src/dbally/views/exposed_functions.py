@@ -1,10 +1,10 @@
 import re
 from dataclasses import dataclass
 from typing import _GenericAlias  # type: ignore
-from typing import Sequence, Optional, Union, Type
+from typing import Optional, Sequence, Type, Union
 
-from dbally.similarity import AbstractSimilarityIndex
 from dbally.context.context import BaseCallerContext
+from dbally.similarity import AbstractSimilarityIndex
 
 
 def parse_param_type(param_type: Union[type, _GenericAlias]) -> str:

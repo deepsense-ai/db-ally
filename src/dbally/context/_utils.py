@@ -1,15 +1,17 @@
-import typing_extensions as type_ext
-
-from typing import Sequence, Tuple, Optional, Type, Any, Union
 from inspect import isclass
+from typing import Any, Optional, Sequence, Tuple, Type, Union
+
+import typing_extensions as type_ext
 
 from dbally.context.context import BaseCallerContext
 from dbally.views.exposed_functions import MethodParamWithTyping
 
+ContextClass: type_ext.TypeAlias = Optional[Type[BaseCallerContext]]
+
 
 def _extract_params_and_context(
     filter_method_: type_ext.Callable, hidden_args: Sequence[str]
-) -> Tuple[Sequence[MethodParamWithTyping], Optional[Type[BaseCallerContext]]]:
+) -> Tuple[Sequence[MethodParamWithTyping], ContextClass]:
     """
     Processes the MethodsBaseView filter method signauture to extract the args and type hints in the desired format.
     Context claases are getting excluded the returned MethodParamWithTyping list. Only the first BaseCallerContext
@@ -17,9 +19,10 @@ def _extract_params_and_context(
 
     Args:
         filter_method_: MethodsBaseView filter method (annotated with @decorators.view_filter() decorator)
+        hidden_args: method arguments that should not be extracted
 
     Returns:
-        A tuple. The first field contains the list of arguments, each encapsulated as MethodParamWithTyping.
+        The first field contains the list of arguments, each encapsulated as MethodParamWithTyping.
         The 2nd is the BaseCallerContext subclass provided for this filter, or None if no context specified.
     """
 
@@ -52,6 +55,16 @@ def _extract_params_and_context(
 
 
 def _does_arg_allow_context(arg: MethodParamWithTyping) -> bool:
+    """
+    Verifies whether a method argument allows contextualization based on the type hints attached to a method signature.
+
+    Args:
+        arg: MethodParamWithTyping container preserving information about the method argument
+
+    Returns:
+        Verification result.
+    """
+
     if type_ext.get_origin(arg.type) is not Union and not issubclass(arg.type, BaseCallerContext):
         return False
 

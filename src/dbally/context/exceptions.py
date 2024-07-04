@@ -3,17 +3,22 @@ from abc import ABC
 
 class BaseContextException(Exception, ABC):
     """
-    A base exception for all specification context-related exception.
+    A base (abstract) exception for all specification context-related exception.
     """
-    pass
 
 
 class ContextNotAvailableError(Exception):
-    pass
+    """
+    An exception inheriting from BaseContextException pointining that no sufficient context information
+    was provided by the user while calling view.ask().
+    """
 
 
 class ContextualisationNotAllowed(Exception):
-    pass
+    """
+    An exception inheriting from BaseContextException pointining that the filter method signature
+    does not allow to provide an additional context.
+    """
 
 
 # WORKAROUND - traditional inhertiance syntax is not working in context of abstract Exceptions

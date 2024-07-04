@@ -3,11 +3,11 @@ import inspect
 import textwrap
 from typing import Any, Callable, List, Tuple
 
+from dbally.context._utils import _extract_params_and_context
 from dbally.iql import syntax
 from dbally.views import decorators
-from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
+from dbally.views.exposed_functions import ExposedFunction
 from dbally.views.structured import BaseStructuredView
-from dbally.context._utils import _extract_params_and_context
 
 
 class MethodsBaseView(BaseStructuredView, metaclass=abc.ABCMeta):
@@ -43,7 +43,7 @@ class MethodsBaseView(BaseStructuredView, metaclass=abc.ABCMeta):
                         name=method_name,
                         description=textwrap.dedent(method.__doc__).strip() if method.__doc__ else "",
                         parameters=params,
-                        context_class=context_class
+                        context_class=context_class,
                     )
                 )
         return methods

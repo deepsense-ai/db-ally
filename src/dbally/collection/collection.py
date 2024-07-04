@@ -3,20 +3,20 @@ import inspect
 import textwrap
 import time
 from collections import defaultdict
-from typing import Callable, Dict, List, Optional, Type, TypeVar
+from typing import Callable, Dict, Iterable, List, Optional, Type, TypeVar
 
 from dbally.audit.event_handlers.base import EventHandler
 from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
+from dbally.context.context import CustomContext
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.base import BaseView, IndexLocation
-from dbally.context.context import BaseCallerContext, CustomContextsList
 
 
 class Collection:
@@ -157,7 +157,7 @@ class Collection:
         dry_run: bool = False,
         return_natural_response: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        contexts: Optional[CustomContextsList] = None
+        contexts: Optional[Iterable[CustomContext]] = None,
     ) -> ExecutionResult:
         """
         Ask question in a text form and retrieve the answer based on the available views.
@@ -177,6 +177,8 @@ class Collection:
                 the natural response will be included in the answer
             llm_options: options to use for the LLM client. If provided, these options will be merged with the default
                 options provided to the LLM client, prioritizing option values other than NOT_GIVEN
+            contexts: An iterable (typically a list) of context objects, each being an instance of
+                a subclass of BaseCallerContext. May contain contexts irrelevant for the currently processed query.
 
         Returns:
             ExecutionResult object representing the result of the query execution.
@@ -217,7 +219,7 @@ class Collection:
             n_retries=self.n_retries,
             dry_run=dry_run,
             llm_options=llm_options,
-            contexts=contexts
+            contexts=contexts,
         )
         end_time_view = time.monotonic()
 
