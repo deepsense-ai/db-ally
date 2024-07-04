@@ -12,7 +12,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import FallbackEvent, RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult, ViewExecutionResult
-from dbally.iql_generator.iql_prompt_template import UnsupportedQueryError
+from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
