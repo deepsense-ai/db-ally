@@ -31,7 +31,7 @@ def views() -> Dict[str, str]:
 
 
 @pytest.mark.asyncio
-async def test_view_selection(llm: LLM, views: Dict[str, str]):
+async def test_view_selection(llm: LLM, views: Dict[str, str]) -> None:
     view_selector = LLMViewSelector(llm)
     view = await view_selector.select_view("Mock question?", views, event_tracker=EventTracker())
     assert view == "MockView1"
