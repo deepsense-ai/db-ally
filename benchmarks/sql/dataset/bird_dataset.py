@@ -4,8 +4,8 @@ import enum
 from pathlib import Path
 from typing import Iterator
 
-from dbally_benchmark.utils import load_data
 from pydantic import BaseModel, RootModel
+from sql.utils import load_data
 
 
 class DifficultyLevel(str, enum.Enum):

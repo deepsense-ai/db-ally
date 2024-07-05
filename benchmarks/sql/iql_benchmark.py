@@ -6,17 +6,17 @@ from typing import Any, List
 
 import hydra
 import neptune
-from dbally_benchmark.config import BenchmarkConfig
-from dbally_benchmark.constants import VIEW_REGISTRY, EvaluationType, ViewName
-from dbally_benchmark.dataset.bird_dataset import BIRDDataset, BIRDExample
-from dbally_benchmark.iql.iql_result import IQLResult
-from dbally_benchmark.iql.metrics import calculate_dataset_metrics
-from dbally_benchmark.paths import PATH_EXPERIMENTS
-from dbally_benchmark.utils import batch, get_datetime_str, set_up_gitlab_metadata
 from hydra.utils import instantiate
 from loguru import logger
 from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
+from sql.config import BenchmarkConfig
+from sql.constants import VIEW_REGISTRY, EvaluationType, ViewName
+from sql.dataset.bird_dataset import BIRDDataset, BIRDExample
+from sql.iql.iql_result import IQLResult
+from sql.iql.metrics import calculate_dataset_metrics
+from sql.paths import PATH_EXPERIMENTS
+from sql.utils import batch, get_datetime_str, set_up_gitlab_metadata
 from sqlalchemy import create_engine
 
 from dbally.audit.event_tracker import EventTracker

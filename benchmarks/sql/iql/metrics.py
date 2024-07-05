@@ -1,9 +1,9 @@
 import ast
 from typing import Dict, List, Tuple
 
-from dbally_benchmark.iql.iql_result import IQLResult
-from dbally_benchmark.iql.method_call_visitor import MethodCallVisitor
 from loguru import logger
+from sql.iql.iql_result import IQLResult
+from sql.iql.method_call_visitor import MethodCallVisitor
 
 from dbally.iql._exceptions import IQLError, IQLUnsupportedSyntaxError
 from dbally.iql._query import IQLQuery

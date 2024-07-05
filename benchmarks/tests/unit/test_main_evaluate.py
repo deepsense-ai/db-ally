@@ -1,8 +1,8 @@
 from unittest.mock import call, patch
 
 import pytest
-from dbally_benchmark.evaluate import evaluate
 from omegaconf import DictConfig
+from sql.evaluate import evaluate
 
 
 @patch("dbally_benchmark.evaluate.e2e_evaluate")

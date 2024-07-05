@@ -1,5 +1,5 @@
-from dbally_benchmark.iql.iql_result import IQLResult
-from dbally_benchmark.iql.metrics import (
+from sql.iql.iql_result import IQLResult
+from sql.iql.metrics import (
     _count_hallucinated_methods_for_single_example,
     calculate_hallucinated_filters_for_dataset,
     calculate_syntax_errors,
