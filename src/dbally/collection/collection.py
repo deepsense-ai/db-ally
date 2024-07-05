@@ -374,7 +374,7 @@ class Collection:
             view_result = await self._ask_view(selected_view_name, question, event_tracker, llm_options, dry_run)
             end_time_view = time.monotonic()
 
-            natural_response = (
+            natural_response = await (
                 self._generate_textual_response(view_result, question, event_tracker, llm_options)
                 if not dry_run and return_natural_response
                 else ""

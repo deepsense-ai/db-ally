@@ -18,7 +18,6 @@ async def main():
     user_collection = dbally.create_collection("candidates", llm)
     user_collection.add(CandidateView, lambda: CandidateView(candidate_view_with_similarity_store.engine))
     user_collection.add(SampleText2SQLViewCyphers, lambda: SampleText2SQLViewCyphers(create_freeform_memory_engine()))
-    user_collection.add(CandidateView, lambda: (candidate_view_with_similarity_store.engine))
 
     fallback_collection = dbally.create_collection("freeform candidates", llm)
     fallback_collection.add(CandidateFreeformView, lambda: CandidateFreeformView(candidates_freeform.engine))
