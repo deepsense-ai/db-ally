@@ -13,7 +13,7 @@ except ImportError:
     pprint = print  # type: ignore
 
 from dbally.audit.event_handlers.base import EventHandler
-from dbally.audit.events import Event, LLMEvent, RequestEnd, RequestStart, SimilarityEvent, FallbackEvent
+from dbally.audit.events import Event, FallbackEvent, LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 _RICH_FORMATING_KEYWORD_SET = {"green", "orange", "grey", "bold", "cyan"}
 _RICH_FORMATING_PATTERN = rf"\[.*({'|'.join(_RICH_FORMATING_KEYWORD_SET)}).*\]"
@@ -96,12 +96,13 @@ class CLIEventHandler(EventHandler):
             )
         elif isinstance(event, FallbackEvent):
             self._print_syntax(
-                "[grey53]\n=======================================\n"
+                f"[grey53]\n=======================================\n"
                 "[grey53]=======================================\n"
                 f"[orange bold]Fallback event starts \n"
                 f"[orange bold]Triggering collection: [grey53]{event.triggering_collection_name}\n"
                 f"[orange bold]Triggering view name: [grey53]{event.triggering_view_name}\n"
                 f"[orange bold]Fallback collection name: [grey53]{event.fallback_collection_name}\n"
+                f"[orange bold]Override event handlers: [grey53]{event.override_global_event}\n"
                 f"[orange bold]Error description: [grey53]{event.error_description}\n"
                 "[grey53]=======================================\n"
                 "[grey53]=======================================\n"

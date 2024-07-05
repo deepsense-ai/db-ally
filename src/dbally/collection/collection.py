@@ -67,9 +67,9 @@ class Collection:
         self._builders: Dict[str, Callable[[], BaseView]] = {}
         self._view_selector = view_selector
         self._nl_responder = nl_responder
-        self._event_handlers = event_handlers or dbally.event_handlers
         self._llm = llm
         self._fallback_collection: Optional[Collection] = fallback_collection
+        self._event_handlers = event_handlers or dbally.event_handlers
 
     T = TypeVar("T", bound=BaseView)
 
@@ -132,6 +132,7 @@ class Collection:
             The fallback collection to create chains call
         """
         self._fallback_collection = fallback_collection
+
         return fallback_collection
 
     def __rshift__(self, fallback_collection: "Collection"):
@@ -303,21 +304,26 @@ class Collection:
         """
 
         if self._fallback_collection:
-            event = FallbackEvent(
+            override_global_event = (
+                self._fallback_collection._event_handlers != dbally.event_handlers  # pylint: disable=W0212
+            )
+
+            fallback_event = FallbackEvent(
                 triggering_collection_name=self.name,
                 triggering_view_name=selected_view_name,
                 fallback_collection_name=self._fallback_collection.name,
                 error_description=repr(caught_exception),
+                override_global_event=override_global_event,
             )
 
-            async with event_tracker.track_event(event) as span:
+            async with event_tracker.track_event(fallback_event) as span:
                 result = await self._fallback_collection.ask(
                     question=question,
                     dry_run=dry_run,
                     return_natural_response=return_natural_response,
                     llm_options=llm_options,
                 )
-                span(event)
+                span(fallback_event)
             return result
 
         raise caught_exception
@@ -360,13 +366,15 @@ class Collection:
         """
 
         if not event_tracker:
+            is_fallback_call = False
             event_tracker = EventTracker.initialize_with_handlers(self._event_handlers)
+            await event_tracker.request_start(RequestStart(question=question, collection_name=self.name))
+        else:
+            is_fallback_call = True
 
         selected_view_name = ""
 
         try:
-            await event_tracker.request_start(RequestStart(question=question, collection_name=self.name))
-
             start_time = time.monotonic()
             selected_view_name = await self._select_view(question, event_tracker, llm_options)
 
@@ -374,8 +382,8 @@ class Collection:
             view_result = await self._ask_view(selected_view_name, question, event_tracker, llm_options, dry_run)
             end_time_view = time.monotonic()
 
-            natural_response = await (
-                self._generate_textual_response(view_result, question, event_tracker, llm_options)
+            natural_response = (
+                await self._generate_textual_response(view_result, question, event_tracker, llm_options)
                 if not dry_run and return_natural_response
                 else ""
             )
@@ -399,7 +407,9 @@ class Collection:
                 event_tracker=event_tracker,
                 caught_exception=caught_exception,
             )
-        await event_tracker.request_end(RequestEnd(result=result))
+
+        if not is_fallback_call:
+            await event_tracker.request_end(RequestEnd(result=result))
 
         return result
 

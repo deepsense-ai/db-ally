@@ -51,6 +51,7 @@ class FallbackEvent(Event):
     triggering_view_name: str
     fallback_collection_name: str
     error_description: str
+    override_global_event: False
 
 
 @dataclass
