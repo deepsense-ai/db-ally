@@ -10,4 +10,4 @@ tbd
 
 Please refer to each subfolder to discover each benchmark suite. Links are provided where descriptions exist:
 
-tbd
+* [SQL](sql/README.md)
