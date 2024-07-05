@@ -39,6 +39,6 @@ class ExecutionResult:
     results: List[Dict[str, Any]]
     context: Dict[str, Any]
     execution_time: float
-    execution_time_view: float = 0
-    view_name: str = ""
+    execution_time_view: float
+    view_name: str
     textual_response: Optional[str] = None
