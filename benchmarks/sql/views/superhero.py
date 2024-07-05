@@ -1,7 +1,7 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc
 
 import sqlalchemy
-from sql.config import config
+from config import config
 from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.automap import automap_base

@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Dict, Type
 
-from sql.views.superhero import SuperheroCountByPowerView, SuperheroView
+from views.superhero import SuperheroCountByPowerView, SuperheroView
 
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 

@@ -3,9 +3,9 @@ from dataclasses import dataclass
 from typing import Any, Dict, List
 
 import pandas as pd
-from sql.text2sql.text2sql_result import Text2SQLResult
-from sql.utils import batch
 from sqlalchemy import Engine, text
+from text2sql.text2sql_result import Text2SQLResult
+from utils import batch
 
 
 @dataclass

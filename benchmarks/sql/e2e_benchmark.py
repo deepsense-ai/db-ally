@@ -7,18 +7,18 @@ from typing import Any, List
 
 import hydra
 import neptune
+from config import BenchmarkConfig
+from constants import VIEW_REGISTRY, EvaluationType, ViewName
+from dataset.bird_dataset import BIRDDataset, BIRDExample
 from hydra.utils import instantiate
 from loguru import logger
 from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
-from sql.config import BenchmarkConfig
-from sql.constants import VIEW_REGISTRY, EvaluationType, ViewName
-from sql.dataset.bird_dataset import BIRDDataset, BIRDExample
-from sql.paths import PATH_EXPERIMENTS
-from sql.text2sql.metrics import calculate_dataset_metrics
-from sql.text2sql.text2sql_result import Text2SQLResult
-from sql.utils import batch, get_datetime_str, set_up_gitlab_metadata
+from paths import PATH_EXPERIMENTS
 from sqlalchemy import create_engine
+from text2sql.metrics import calculate_dataset_metrics
+from text2sql.text2sql_result import Text2SQLResult
+from utils import batch, get_datetime_str, set_up_gitlab_metadata
 
 import dbally
 from dbally.collection import Collection

@@ -1,7 +1,7 @@
 import ast
 
 import pytest
-from sql.iql.method_call_visitor import MethodCallVisitor
+from iql.method_call_visitor import MethodCallVisitor
 
 
 @pytest.fixture

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Iterator
 
 from pydantic import BaseModel, RootModel
-from sql.utils import load_data
+from utils import load_data
 
 
 class DifficultyLevel(str, enum.Enum):

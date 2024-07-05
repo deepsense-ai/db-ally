@@ -6,18 +6,18 @@ from typing import Any, List
 
 import hydra
 import neptune
+from config import BenchmarkConfig
+from constants import VIEW_REGISTRY, EvaluationType, ViewName
+from dataset.bird_dataset import BIRDDataset, BIRDExample
 from hydra.utils import instantiate
+from iql.iql_result import IQLResult
+from iql.metrics import calculate_dataset_metrics
 from loguru import logger
 from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
-from sql.config import BenchmarkConfig
-from sql.constants import VIEW_REGISTRY, EvaluationType, ViewName
-from sql.dataset.bird_dataset import BIRDDataset, BIRDExample
-from sql.iql.iql_result import IQLResult
-from sql.iql.metrics import calculate_dataset_metrics
-from sql.paths import PATH_EXPERIMENTS
-from sql.utils import batch, get_datetime_str, set_up_gitlab_metadata
+from paths import PATH_EXPERIMENTS
 from sqlalchemy import create_engine
+from utils import batch, get_datetime_str, set_up_gitlab_metadata
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_generator import IQLGenerator

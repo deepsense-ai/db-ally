@@ -1,5 +1,5 @@
-from sql.iql.iql_result import IQLResult
-from sql.iql.metrics import (
+from iql.iql_result import IQLResult
+from iql.metrics import (
     _count_hallucinated_methods_for_single_example,
     calculate_hallucinated_filters_for_dataset,
     calculate_syntax_errors,

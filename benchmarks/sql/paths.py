@@ -1,8 +1,8 @@
 from pathlib import Path
 
-import sql
+# import sql
 
-PATH_PACKAGE = Path(sql.__file__).parent
+PATH_PACKAGE = Path(__file__).parent
 
 PATH_ROOT = PATH_PACKAGE.parent.parent
 PATH_EXPERIMENTS = PATH_ROOT / "experiments"

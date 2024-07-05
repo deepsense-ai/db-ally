@@ -6,19 +6,19 @@ from typing import Any, List, Optional
 
 import hydra
 import neptune
+from config import BenchmarkConfig
+from constants import EvaluationType
+from dataset.bird_dataset import BIRDDataset, BIRDExample
 from hydra.utils import instantiate
 from loguru import logger
 from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
-from sql.config import BenchmarkConfig
-from sql.constants import EvaluationType
-from sql.dataset.bird_dataset import BIRDDataset, BIRDExample
-from sql.paths import PATH_EXPERIMENTS, PATH_SCHEMAS
-from sql.text2sql.metrics import calculate_dataset_metrics
-from sql.text2sql.prompt_template import TEXT2SQL_PROMPT_TEMPLATE
-from sql.text2sql.text2sql_result import Text2SQLResult
-from sql.utils import batch, get_datetime_str, set_up_gitlab_metadata
+from paths import PATH_EXPERIMENTS, PATH_SCHEMAS
 from sqlalchemy import create_engine
+from text2sql.metrics import calculate_dataset_metrics
+from text2sql.prompt_template import TEXT2SQL_PROMPT_TEMPLATE
+from text2sql.text2sql_result import Text2SQLResult
+from utils import batch, get_datetime_str, set_up_gitlab_metadata
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.llms.litellm import LiteLLM

@@ -2,11 +2,11 @@ import asyncio
 from typing import Callable, Dict
 
 import hydra
+from constants import EvaluationType
+from e2e_benchmark import evaluate as e2e_evaluate
+from iql_benchmark import evaluate as iql_evaluate
 from omegaconf import DictConfig
-from sql.constants import EvaluationType
-from sql.e2e_benchmark import evaluate as e2e_evaluate
-from sql.iql_benchmark import evaluate as iql_evaluate
-from sql.text2sql_benchmark import evaluate as text2sql_evaluate
+from text2sql_benchmark import evaluate as text2sql_evaluate
 
 
 async def evaluate(cfg: DictConfig) -> None:
