@@ -113,13 +113,13 @@ class IQLProcessor:
         if len(func_def.parameters) != len(node.args):
             raise ValueError(f"The method {func.id} has incorrect number of arguments")
 
-        for i, (arg, arg_def) in enumerate(zip(node.args, func_def.parameters)):
-            arg_value = self._parse_arg(arg, arg_spec=func_def.parameters[i], parent_func_def=func_def)
+        for arg, arg_spec in zip(node.args, func_def.parameters):
+            arg_value = self._parse_arg(arg, arg_spec=arg_spec, parent_func_def=func_def)
 
-            if arg_def.similarity_index:
-                arg_value = await arg_def.similarity_index.similar(arg_value, event_tracker=self._event_tracker)
+            if arg_spec.similarity_index:
+                arg_value = await arg_spec.similarity_index.similar(arg_value, event_tracker=self._event_tracker)
 
-            check_result = validate_arg_type(arg_def.type, arg_value)
+            check_result = validate_arg_type(arg_spec.type, arg_value)
 
             if not check_result.valid:
                 raise IQLArgumentValidationError(message=check_result.reason or "", node=arg, source=self.source)
