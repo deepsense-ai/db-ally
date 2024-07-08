@@ -16,7 +16,6 @@ from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
 from dbally.similarity.index import AbstractSimilarityIndex
-from dbally.view_selection import LLMViewSelector
 from dbally.view_selection.base import ViewSelector
 from dbally.views.base import BaseView, IndexLocation
 
