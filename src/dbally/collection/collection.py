@@ -282,7 +282,7 @@ class Collection:
         selected_view_name: str,
         event_tracker: EventTracker,
         caught_exception: HANDLED_EXCEPTION_TYPES,
-    ):
+    ) -> ExecutionResult:
         """
         Handle fallback if the main query fails.
 
@@ -296,36 +296,31 @@ class Collection:
             caught_exception: The exception that was caught.
 
         Returns:
-            Any: The result from the fallback collection.
+            The result from the fallback collection.
 
-        Raises:
-            Exception: If there is no fallback collection or if an error occurs in the fallback.
         """
 
-        if self._fallback_collection:
-            override_global_event = (
-                self._fallback_collection._event_handlers != dbally.event_handlers  # pylint: disable=W0212
+        override_global_event = (
+            self._fallback_collection._event_handlers != self._event_handlers  # pylint: disable=W0212
+        )
+
+        fallback_event = FallbackEvent(
+            triggering_collection_name=self.name,
+            triggering_view_name=selected_view_name,
+            fallback_collection_name=self._fallback_collection.name,
+            error_description=repr(caught_exception),
+            override_global_event=override_global_event,
+        )
+
+        async with event_tracker.track_event(fallback_event) as span:
+            result = await self._fallback_collection.ask(
+                question=question,
+                dry_run=dry_run,
+                return_natural_response=return_natural_response,
+                llm_options=llm_options,
             )
-
-            fallback_event = FallbackEvent(
-                triggering_collection_name=self.name,
-                triggering_view_name=selected_view_name,
-                fallback_collection_name=self._fallback_collection.name,
-                error_description=repr(caught_exception),
-                override_global_event=override_global_event,
-            )
-
-            async with event_tracker.track_event(fallback_event) as span:
-                result = await self._fallback_collection.ask(
-                    question=question,
-                    dry_run=dry_run,
-                    return_natural_response=return_natural_response,
-                    llm_options=llm_options,
-                )
-                span(fallback_event)
-            return result
-
-        raise caught_exception
+            span(fallback_event)
+        return result
 
     async def ask(
         self,
@@ -334,7 +329,7 @@ class Collection:
         return_natural_response: bool = False,
         llm_options: Optional[LLMOptions] = None,
         event_tracker: Optional[EventTracker] = None,
-    ) -> Optional[ExecutionResult]:
+    ) -> ExecutionResult:
         """
         Ask question in a text form and retrieve the answer based on the available views.
 
@@ -362,6 +357,9 @@ class Collection:
             ValueError: if collection is empty
             IQLError: if incorrect IQL was generated `n_retries` amount of times.
             ValueError: if incorrect IQL was generated `n_retries` amount of times.
+            NoViewFoundError: if question does not match to any registered view,
+            UnsupportedQueryError: if the question could not be answered
+            IndexUpdateError: if index update failed
         """
 
         if not event_tracker:
@@ -397,15 +395,18 @@ class Collection:
             )
 
         except HANDLED_EXCEPTION_TYPES as caught_exception:
-            result = await self._handle_fallback(
-                question=question,
-                dry_run=dry_run,
-                return_natural_response=return_natural_response,
-                llm_options=llm_options,
-                selected_view_name=selected_view_name,
-                event_tracker=event_tracker,
-                caught_exception=caught_exception,
-            )
+            if self._fallback_collection:
+                result = await self._handle_fallback(
+                    question=question,
+                    dry_run=dry_run,
+                    return_natural_response=return_natural_response,
+                    llm_options=llm_options,
+                    selected_view_name=selected_view_name,
+                    event_tracker=event_tracker,
+                    caught_exception=caught_exception,
+                )
+            else:
+                raise caught_exception
 
         if not is_fallback_call:
             await event_tracker.request_end(RequestEnd(result=result))
