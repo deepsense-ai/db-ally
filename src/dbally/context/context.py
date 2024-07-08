@@ -1,16 +1,16 @@
 import ast
+from dataclasses import dataclass
 from typing import Iterable
 
-from pydantic import BaseModel
 from typing_extensions import Self, TypeAlias
 
 from dbally.context.exceptions import ContextNotAvailableError
 
-# CustomContext = TypeVar('CustomContext', bound='BaseCallerContext', covariant=True)
 CustomContext: TypeAlias = "BaseCallerContext"
 
 
-class BaseCallerContext(BaseModel):
+@dataclass
+class BaseCallerContext:
     """
     Pydantic-based record class. Base class for contexts that are used to pass additional knowledge about
     the caller environment to the filters. It is not made abstract for the convinience of IQL parsing.

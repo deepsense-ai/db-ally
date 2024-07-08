@@ -1,6 +1,7 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name
 
 import re
+from dataclasses import dataclass
 from typing import Union
 
 import sqlalchemy
@@ -11,6 +12,7 @@ from dbally.views.decorators import view_filter
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
 
+@dataclass
 class SomeTestContext(BaseCallerContext):
     age: int
 

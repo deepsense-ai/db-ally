@@ -1,4 +1,5 @@
 import re
+from dataclasses import dataclass
 from typing import List, Union
 
 import pytest
@@ -10,10 +11,12 @@ from dbally.iql._processor import IQLProcessor
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 
 
+@dataclass
 class TestCustomContext(BaseCallerContext):
     city: str
 
 
+@dataclass
 class AnotherTestCustomContext(BaseCallerContext):
     some_field: str
 
