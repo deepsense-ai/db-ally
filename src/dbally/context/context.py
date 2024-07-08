@@ -12,10 +12,12 @@ CustomContext: TypeAlias = "BaseCallerContext"
 class BaseCallerContext(ABC):
     """
     An interface for contexts that are used to pass additional knowledge about
-    the caller environment to the filters. LLM will always return `BaseCallerContext()`
+    the caller environment to the filters. LLM will always return `Context()`
     when the context is required and this call will be later substituted by an instance of
     a class implementing this interface, selected based on the filter method signature (type hints).
     """
+
+    _alias: str = "Context"
 
     @classmethod
     def select_context(cls, contexts: Iterable[CustomContext]) -> Self:
@@ -55,4 +57,8 @@ class BaseCallerContext(ABC):
             Verification result.
         """
 
-        return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == cls.__name__
+        return (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id in [cls._alias, cls.__name__]
+        )

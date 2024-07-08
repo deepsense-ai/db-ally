@@ -74,10 +74,10 @@ IQL_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
                 "You MUST use only these methods:\n"
                 "\n{filters}\n"
                 "It is VERY IMPORTANT not to use methods other than those listed above."
-                "Finally, if a called function argument value is not directly specified in the query but instead requires knowledge of some additional context, than substitute that argument value by: BaseCallerContext()."
+                "Finally, if a called function argument value is not directly specified in the query but instead requires knowledge of some additional context, than substitute that argument value by: Context()."
                 'The typical input phrase referencing some additional context contains the word "my" or similar phrasing, e.g. "my position name", "my company valuation".'
                 "In that case, the part of the output will look like this:"
-                "filter4(BaseCallerContext())"
+                "filter4(Context())"
                 """If you DON'T KNOW HOW TO ANSWER DON'T SAY \"\", SAY: `UNSUPPORTED QUERY` INSTEAD! """
                 "This is CRUCIAL, otherwise the system will crash. "
             ),

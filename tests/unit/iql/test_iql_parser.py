@@ -26,7 +26,7 @@ async def test_iql_parser():
     custom_context2 = AnotherTestCustomContext(some_field="aaa")
 
     parsed = await IQLQuery.parse(
-        "not (filter_by_name(['John', 'Anne']) and filter_by_city(BaseCallerContext()) and filter_by_company('deepsense.ai'))",
+        "not (filter_by_name(['John', 'Anne']) and filter_by_city(Context()) and filter_by_company('deepsense.ai'))",
         allowed_functions=[
             ExposedFunction(
                 name="filter_by_name", description="", parameters=[MethodParamWithTyping(name="name", type=List[str])]
