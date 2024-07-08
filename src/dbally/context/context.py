@@ -1,5 +1,5 @@
 import ast
-from dataclasses import dataclass
+from abc import ABC
 from typing import Iterable
 
 from typing_extensions import Self, TypeAlias
@@ -9,13 +9,12 @@ from dbally.context.exceptions import ContextNotAvailableError
 CustomContext: TypeAlias = "BaseCallerContext"
 
 
-@dataclass
-class BaseCallerContext:
+class BaseCallerContext(ABC):
     """
-    Pydantic-based record class. Base class for contexts that are used to pass additional knowledge about
-    the caller environment to the filters. It is not made abstract for the convinience of IQL parsing.
-    LLM will always return `BaseCallerContext()` when the context is required and this call will be
-    later substituted by a proper subclass instance selected based on the filter method signature (type hints).
+    An interface for contexts that are used to pass additional knowledge about
+    the caller environment to the filters. LLM will always return `BaseCallerContext()`
+    when the context is required and this call will be later substituted by an instance of
+    a class implementing this interface, selected based on the filter method signature (type hints).
     """
 
     @classmethod
