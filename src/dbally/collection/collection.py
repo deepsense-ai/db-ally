@@ -1,5 +1,6 @@
 import asyncio
 import inspect
+import logging
 import textwrap
 import time
 from collections import defaultdict
@@ -130,8 +131,13 @@ class Collection:
         Returns:
             The fallback collection to create chains call
         """
-        self._fallback_collection = fallback_collection
+        if fallback_collection._event_handlers != self._event_handlers:  # pylint: disable=W0212
+            logging.warning(
+                "Global event handlers are override by fallback. New event handlers are: %s",
+                fallback_collection._event_handlers,  # pylint: disable=W0212
+            )
 
+        self._fallback_collection = fallback_collection
         return fallback_collection
 
     def __rshift__(self, fallback_collection: "Collection"):
@@ -300,16 +306,11 @@ class Collection:
 
         """
 
-        override_global_event = (
-            self._fallback_collection._event_handlers != self._event_handlers  # pylint: disable=W0212
-        )
-
         fallback_event = FallbackEvent(
             triggering_collection_name=self.name,
             triggering_view_name=selected_view_name,
             fallback_collection_name=self._fallback_collection.name,
             error_description=repr(caught_exception),
-            override_global_event=override_global_event,
         )
 
         async with event_tracker.track_event(fallback_event) as span:

@@ -101,8 +101,8 @@ class CLIEventHandler(EventHandler):
                 f"[orange bold]Fallback event starts \n"
                 f"[orange bold]Triggering collection: [grey53]{event.triggering_collection_name}\n"
                 f"[orange bold]Triggering view name: [grey53]{event.triggering_view_name}\n"
-                f"[orange bold]Fallback collection name: [grey53]{event.fallback_collection_name}\n"
                 f"[orange bold]Error description: [grey53]{event.error_description}\n"
+                f"[orange bold]Fallback collection name: [grey53]{event.fallback_collection_name}\n"
                 "[grey53]=======================================\n"
                 "[grey53]=======================================\n"
             )
