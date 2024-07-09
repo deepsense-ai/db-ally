@@ -1,7 +1,8 @@
-from typing import Dict, Mapping, Sequence
+from typing import Dict, Mapping, Optional, Union
 
 from opentelemetry import trace
 from opentelemetry.trace import Span, StatusCode
+from opentelemetry.util.types import AttributeValue
 
 from dbally.audit.event_handlers.otel_event_handler import SpanHandler
 
@@ -13,42 +14,20 @@ class MockSpan(Span):
         self.status = StatusCode.UNSET
         self.is_finished = False
 
-    def end(self, end_time: int | None = None) -> None:
+    def end(self, end_time: Optional[int] = None) -> None:
         self.is_finished = True
 
     def get_span_context(self) -> trace.SpanContext:
         raise NotImplementedError
 
-    def set_attributes(
-        self,
-        attributes: Dict[
-            str, str | bool | int | float | Sequence[str] | Sequence[bool] | Sequence[int] | Sequence[float]
-        ],
-    ) -> None:
-        self.attributes |= attributes
+    def set_attributes(self, attributes: Dict[str, AttributeValue]) -> None:
+        self.attributes.update(attributes)
 
-    def set_attribute(
-        self,
-        key: str,
-        value: str
-        | bool
-        | int
-        | float
-        | trace.Sequence[str]
-        | trace.Sequence[bool]
-        | trace.Sequence[int]
-        | trace.Sequence[float],
-    ) -> None:
+    def set_attribute(self, key: str, value: AttributeValue) -> None:
         self.attributes[key] = value
 
     def add_event(
-        self,
-        name: str,
-        attributes: Mapping[
-            str, str | bool | int | float | Sequence[str] | Sequence[bool] | Sequence[int] | Sequence[float]
-        ]
-        | None = None,
-        timestamp: int | None = None,
+        self, name: str, attributes: Optional[Mapping[str, AttributeValue]] = None, timestamp: Optional[int] = None
     ) -> None:
         raise NotImplementedError
 
@@ -58,17 +37,14 @@ class MockSpan(Span):
     def is_recording(self) -> bool:
         raise NotImplementedError
 
-    def set_status(self, status: trace.Status | StatusCode, description: str | None = None) -> None:
+    def set_status(self, status: Union[trace.Status, StatusCode], description: Optional[str] = None) -> None:
         self.status = status.status_code if isinstance(status, trace.Status) else status
 
     def record_exception(
         self,
         exception: BaseException,
-        attributes: Mapping[
-            str, str | bool | int | float | Sequence[str] | Sequence[bool] | Sequence[int] | Sequence[float]
-        ]
-        | None = None,
-        timestamp: int | None = None,
+        attributes: Optional[Mapping[str, AttributeValue]] = None,
+        timestamp: Optional[int] = None,
         escaped: bool = False,
     ) -> None:
         raise NotImplementedError
