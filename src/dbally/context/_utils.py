@@ -1,5 +1,5 @@
 from inspect import isclass
-from typing import Any, Optional, Sequence, List, Tuple, Type, Union
+from typing import Any, List, Optional, Sequence, Tuple, Type, Union
 
 import typing_extensions as type_ext
 
