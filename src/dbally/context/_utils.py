@@ -1,5 +1,5 @@
 from inspect import isclass
-from typing import Any, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Optional, Sequence, List, Tuple, Type, Union
 
 import typing_extensions as type_ext
 
@@ -11,11 +11,11 @@ ContextClass: type_ext.TypeAlias = Optional[Type[BaseCallerContext]]
 
 def _extract_params_and_context(
     filter_method_: type_ext.Callable, hidden_args: Sequence[str]
-) -> Tuple[Sequence[MethodParamWithTyping], ContextClass]:
+) -> Tuple[List[MethodParamWithTyping], ContextClass]:
     """
-    Processes the MethodsBaseView filter method signauture to extract the args and type hints in the desired format.
-    Context claases are getting excluded the returned MethodParamWithTyping list. Only the first BaseCallerContext
-    class is returned.
+    Processes the MethodsBaseView filter method signature to extract the argument names and type hint
+    in the form of MethodParamWithTyping list. Additionally, the first type hint, pointing to the subclass
+    of BaseCallerContext is returned.
 
     Args:
         filter_method_: MethodsBaseView filter method (annotated with @decorators.view_filter() decorator)
