@@ -25,7 +25,9 @@ my_collection.ask("Find me Italian recipes for soups")
 
 In this scenario, the LLM first determines the most suitable view to address the query, and then that view is used to pull the relevant data.
 
-Sometimes, the selected view may not be able to answer the question and will raise an error. In such situations, the fallback collections can be used. This will cause a next view selection, but from the fallback collection.
+Sometimes, the selected view does not match question (LLM select wrong view) and will raise an error. In such situations, the fallback collections can be used.
+This will cause a next view selection, but from the fallback collection.
+
 ```python
     llm = LiteLLM(model_name="gpt-3.5-turbo")
     user_collection = dbally.create_collection("candidates", llm)
