@@ -8,8 +8,14 @@ This folder contains benchmarks for querying SQL databases with db-ally. This su
 
 ## Run benchmarks
 
-tbd
+Run evaluation suite:
+
+```bash
+python bench.py
+```
 
 ## Run tests
 
-tbd
+```bash
+python -m pytest
+```

@@ -4,10 +4,14 @@ This folder contains scripts that produce reproducible timings and evaluation me
 
 ## Setup environment
 
-tbd
+Install dependencies with:
+
+```bash
+pip install dbally[benchmarks]
+```
 
 ## Benchmark list
 
 Please refer to each subfolder to discover each benchmark suite. Links are provided where descriptions exist:
 
-* [SQL](sql/README.md)
+- [`SQL`](sql/README.md)
