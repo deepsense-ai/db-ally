@@ -9,7 +9,7 @@ from sqlalchemy.orm import aliased
 
 from dbally import SqlAlchemyBaseView, decorators
 
-engine = create_engine(config.pg_connection_string + "/superhero")
+engine = create_engine(config.pg_connection_string + "/superhero.sqlite")
 SuperheroModel = automap_base()
 SuperheroModel.prepare(autoload_with=engine, reflect=True)
 
@@ -43,6 +43,14 @@ class SuperheroDBSchema:
 
 
 class SuperheroFilterMixin:
+    @decorators.view_filter()
+    def filter_by_name(self, name: str) -> sqlalchemy.ColumnElement:
+        return SuperheroModel.classes.superhero.name == name
+
+    @decorators.view_filter()
+    def filter_by_full_name(self, full_name: str) -> sqlalchemy.ColumnElement:
+        return SuperheroModel.classes.superhero.full_name == full_name
+
     @decorators.view_filter()
     def filter_by_superhero_name(self, name: str) -> sqlalchemy.ColumnElement:
         return SuperheroModel.classes.superhero.superhero_name == name
@@ -98,12 +106,24 @@ class SuperheroFilterMixin:
         )
 
     @decorators.view_filter()
+    def filter_by_missing_weight(self) -> sqlalchemy.ColumnElement:
+        return SuperheroModel.classes.superhero.weight_kg == 0 or SuperheroModel.classes.superhero.weight_kg is None
+
+    @decorators.view_filter()
+    def filter_by_weight(self, weight: float) -> sqlalchemy.ColumnElement:
+        return SuperheroModel.classes.superhero.weight_kg == weight
+
+    @decorators.view_filter()
     def heavier_than(self, weight: float) -> sqlalchemy.ColumnElement:
         return SuperheroModel.classes.superhero.weight_kg > weight
 
     @decorators.view_filter()
     def lighter_than(self, weight: float) -> sqlalchemy.ColumnElement:
         return SuperheroModel.classes.superhero.weight_kg < weight
+
+    @decorators.view_filter()
+    def filter_by_height(self, height: float) -> sqlalchemy.ColumnElement:
+        return SuperheroModel.classes.superhero.height_cm == height
 
     @decorators.view_filter()
     def taller_than(self, height: float) -> sqlalchemy.ColumnElement:

@@ -9,5 +9,6 @@ class IQLResult(BaseModel):
     """
 
     question: str
-    iql_filters: str
+    ground_truth_iql: str
+    predicted_iql: str
     exception_raised: Optional[bool] = None

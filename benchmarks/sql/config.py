@@ -5,7 +5,7 @@ from pydantic.v1 import BaseSettings
 class BenchmarkConfig(BaseSettings):
     """db-ally Benchmark configuration."""
 
-    pg_connection_string: str = ""
+    pg_connection_string: str = "sqlite://"
     openai_api_key: str = ""
 
     neptune_project: str = "deepsense-ai/db-ally"

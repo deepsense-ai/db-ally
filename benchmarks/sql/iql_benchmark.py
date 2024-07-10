@@ -1,14 +1,13 @@
 import asyncio
 import json
 import os
-from pathlib import Path
+from ast import Dict
 from typing import Any, List
 
 import hydra
 import neptune
-from config import BenchmarkConfig
 from constants import VIEW_REGISTRY, EvaluationType, ViewName
-from dataset.bird_dataset import BIRDDataset, BIRDExample
+from datasets import Dataset, load_dataset
 from hydra.utils import instantiate
 from iql.iql_result import IQLResult
 from iql.metrics import calculate_dataset_metrics
@@ -17,7 +16,7 @@ from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
 from paths import PATH_EXPERIMENTS
 from sqlalchemy import create_engine
-from utils import batch, get_datetime_str, set_up_gitlab_metadata
+from utils import get_datetime_str, set_up_gitlab_metadata
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql_generator.iql_generator import IQLGenerator
@@ -28,25 +27,46 @@ from dbally.views.structured import BaseStructuredView
 
 
 async def _run_iql_for_single_example(
-    example: BIRDExample, view: BaseStructuredView, iql_generator: IQLGenerator
+    example: Dict,
+    view: BaseStructuredView,
+    iql_generator: IQLGenerator,
 ) -> IQLResult:
-    filter_list = view.list_filters()
+    filters = view.list_filters()
     event_tracker = EventTracker()
 
     try:
-        iql_filters = await iql_generator.generate_iql(
-            question=example.question,
-            filters=filter_list,
+        predicted_iql = await iql_generator.generate_iql(
+            question=example["question"],
+            filters=filters,
             event_tracker=event_tracker,
         )
     except UnsupportedQueryError:
-        return IQLResult(question=example.question, iql_filters="UNSUPPORTED_QUERY", exception_raised=True)
+        return IQLResult(
+            question=example["question"],
+            ground_truth_iql=example["iql"],
+            predicted_iql="UNSUPPORTED_QUERY",
+            exception_raised=True,
+        )
+    except (SyntaxError, ValueError):
+        return IQLResult(
+            question=example["question"],
+            ground_truth_iql=example["iql"],
+            predicted_iql="",
+            exception_raised=True,
+        )
 
-    return IQLResult(question=example.question, iql_filters=str(iql_filters), exception_raised=False)
+    return IQLResult(
+        question=example["question"],
+        ground_truth_iql=example["iql"],
+        predicted_iql=str(predicted_iql),
+        exception_raised=False,
+    )
 
 
 async def run_iql_for_dataset(
-    dataset: BIRDDataset, view: BaseStructuredView, iql_generator: IQLGenerator
+    dataset: Dataset,
+    view: BaseStructuredView,
+    iql_generator: IQLGenerator,
 ) -> List[IQLResult]:
     """
     Runs IQL predictions for a dataset.
@@ -59,14 +79,11 @@ async def run_iql_for_dataset(
     Returns:
         A list of IQLResult objects representing the predictions.
     """
-
     results: List[IQLResult] = []
 
-    for group in batch(dataset, 5):
-        current_results = await asyncio.gather(
-            *[_run_iql_for_single_example(example, view, iql_generator) for example in group]
-        )
-        results = [*current_results, *results]
+    for example in dataset:
+        result = await _run_iql_for_single_example(example, view, iql_generator)
+        results.append(result)
 
     return results
 
@@ -83,35 +100,45 @@ async def evaluate(cfg: DictConfig) -> Any:
         ValueError: If model_name is not supported (at the
         moment only OpenAI's model are supported).
     """
+    cfg = instantiate(cfg)
 
     output_dir = PATH_EXPERIMENTS / cfg.output_path / get_datetime_str()
     output_dir.mkdir(exist_ok=True, parents=True)
-    cfg = instantiate(cfg)
-    benchmark_cfg = BenchmarkConfig()
 
     view_name = cfg.view_name
     allowed_views = [view.value for view in ViewName]
     if view_name not in allowed_views:
         raise ValueError(f"View {view_name} not supported. Available views: {allowed_views}")
 
-    engine = create_engine(benchmark_cfg.pg_connection_string + f"/{cfg.db_name}")
+    engine = create_engine(cfg.db_url)
     view = VIEW_REGISTRY[ViewName(view_name)](engine)
 
-    if cfg.model_name.startswith("local/"):
-        llm = LocalLLM(model_name=cfg.model_name.split("/", 1)[1], api_key=benchmark_cfg.hf_api_key)
+    if cfg.llm.model_name.startswith("local/"):
+        llm = LocalLLM(
+            model_name=cfg.llm.model_name.split("/", 1)[1],
+            api_key=cfg.llm.api_key,
+        )
     else:
-        llm = LiteLLM(api_key=benchmark_cfg.openai_api_key, model_name=cfg.model_name)
+        llm = LiteLLM(
+            model_name=cfg.llm.model_name,
+            api_key=cfg.llm.api_key,
+        )
 
     iql_generator = IQLGenerator(llm=llm)
 
     run = None
     if cfg.neptune.log:
         run = neptune.init_run(
-            project=benchmark_cfg.neptune_project,
-            api_token=benchmark_cfg.neptune_api_token,
+            project=cfg.neptune.project,
+            api_token=cfg.neptune.api_token,
         )
         run["config"] = stringify_unsupported(cfg)
-        tags = list(cfg.neptune.get("tags", [])) + [EvaluationType.IQL.value, view_name, cfg.model_name, cfg.db_name]
+        tags = list(cfg.neptune.get("tags", [])) + [
+            EvaluationType.IQL.value,
+            view_name,
+            cfg.llm.model_name,
+            cfg.db_name,
+        ]
         run["sys/tags"].add(tags)
 
         if "CI_MERGE_REQUEST_IID" in os.environ:
@@ -120,10 +147,11 @@ async def evaluate(cfg: DictConfig) -> Any:
     metrics_file_name, results_file_name = "metrics.json", "eval_results.json"
 
     logger.info(f"Running IQL predictions for dataset: {cfg.dataset_path} and view: {view_name}")
-    evaluation_dataset = BIRDDataset.from_json_file(
-        Path(cfg.dataset_path), difficulty_levels=cfg.get("difficulty_levels")
-    )
-    dbally_results = await run_iql_for_dataset(dataset=evaluation_dataset, view=view, iql_generator=iql_generator)
+
+    dataset = load_dataset(cfg.dataset_path, split=cfg.split)
+    dataset = dataset.filter(lambda x: x["db_id"] in cfg.db_ids and x["difficulty"] in cfg.difficulties)
+
+    dbally_results = await run_iql_for_dataset(dataset=dataset, view=view, iql_generator=iql_generator)
     valid_dbally_results = [result for result in dbally_results if not result.exception_raised]
     unsupported_query_error = (len(dbally_results) - len(valid_dbally_results)) / len(dbally_results)
 

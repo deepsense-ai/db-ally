@@ -45,7 +45,7 @@ def calculate_hallucinated_filters_for_dataset(dataset: List[IQLResult], filter_
 
     for example in dataset:
         hallucinated_filters, total_filters = _count_hallucinated_methods_for_single_example(
-            example.iql_filters, allowed_filters
+            example.predicted_iql, allowed_filters
         )
         hallucinated_filters_count += hallucinated_filters
         total_filters_count += total_filters
@@ -73,12 +73,34 @@ async def calculate_valid_iql(dataset: List[IQLResult], filter_list: List[Expose
 
     for example in dataset:
         try:
-            await IQLQuery.parse(example.iql_filters, filter_list)
+            await IQLQuery.parse(example.predicted_iql, filter_list)
             valid_iql += 1
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            logger.warning(f"Error while parsing IQL: {example.iql_filters}\n{exc}")
+            logger.warning(f"Error while parsing IQL: {example.predicted_iql}\n{exc}")
 
     return valid_iql / len(dataset)
+
+
+def calculate_exact_match(dataset: List[IQLResult]) -> float:
+    """
+    For a dataset, it calculates the ratio of predicated queries that are identical
+    to the ground truth ones.
+
+    Args:
+        dataset: List containing Text2SQLResult objects that
+        represents (ground truth query, predicted query).
+
+    Returns:
+        The ratio of predicated queries that are identical to the ground truth ones.
+    """
+
+    exact_query_matches = 0
+
+    for example in dataset:
+        if example.ground_truth_iql == example.predicted_iql:
+            exact_query_matches += 1
+
+    return exact_query_matches / len(dataset)
 
 
 async def calculate_syntax_errors(dataset: List[IQLResult], filter_list: List[ExposedFunction]) -> float:
@@ -96,16 +118,16 @@ async def calculate_syntax_errors(dataset: List[IQLResult], filter_list: List[Ex
 
     syntax_errors = 0
 
-    filtered_dataset = [example for example in dataset if example.iql_filters != "UNSUPPORTED_QUERY"]
+    filtered_dataset = [example for example in dataset if example.predicted_iql != "UNSUPPORTED_QUERY"]
 
     for example in filtered_dataset:
         try:
-            await IQLQuery.parse(example.iql_filters, filter_list)
+            await IQLQuery.parse(example.predicted_iql, filter_list)
         except (IQLError, IQLUnsupportedSyntaxError, SyntaxError):
             syntax_errors += 1
         except Exception as exc:  # pylint: disable=broad-exception-caught
             # I haven't figured out yet how to handle it better :(
-            logger.warning(f"Error while parsing IQL: {example.iql_filters}\n{exc}")
+            logger.warning(f"Error while parsing IQL: {example.predicted_iql}\n{exc}")
 
     return syntax_errors / len(filtered_dataset)
 
@@ -126,6 +148,7 @@ async def calculate_dataset_metrics(dataset: List[IQLResult], filter_list: List[
 
     metrics = {
         "valid_iql": await calculate_valid_iql(dataset, filter_list),
+        "exact_match": calculate_exact_match(dataset),
         "hallucinated_filters": calculate_hallucinated_filters_for_dataset(dataset, filter_list),
         "syntax_errors": await calculate_syntax_errors(dataset, filter_list),
     }

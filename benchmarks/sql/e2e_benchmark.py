@@ -83,11 +83,11 @@ async def evaluate(cfg: DictConfig) -> Any:
 
     engine = create_engine(benchmark_cfg.pg_connection_string + f"/{cfg.db_name}")
 
-    if cfg.model_name.startswith("local/"):
-        llm = LocalLLM(api_key=benchmark_cfg.hf_api_key, model_name=cfg.model_name.split("/", 1)[1])
+    if cfg.llm.model_name.startswith("local/"):
+        llm = LocalLLM(api_key=benchmark_cfg.hf_api_key, model_name=cfg.llm.model_name.split("/", 1)[1])
     else:
         llm = LiteLLM(
-            model_name=cfg.model_name,
+            model_name=cfg.llm.model_name,
             api_key=benchmark_cfg.openai_api_key,
         )
 
@@ -104,7 +104,7 @@ async def evaluate(cfg: DictConfig) -> Any:
             api_token=benchmark_cfg.neptune_api_token,
         )
         run["config"] = stringify_unsupported(cfg)
-        tags = list(cfg.neptune.get("tags", [])) + [EvaluationType.END2END.value, cfg.model_name, cfg.db_name]
+        tags = list(cfg.neptune.get("tags", [])) + [EvaluationType.END2END.value, cfg.llm.model_name, cfg.db_name]
         run["sys/tags"].add(tags)
 
         if "CI_MERGE_REQUEST_IID" in os.environ:
