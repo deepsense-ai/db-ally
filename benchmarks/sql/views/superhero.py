@@ -1,7 +1,6 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc
 
 import sqlalchemy
-from config import config
 from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.automap import automap_base
@@ -9,7 +8,7 @@ from sqlalchemy.orm import aliased
 
 from dbally import SqlAlchemyBaseView, decorators
 
-engine = create_engine(config.pg_connection_string + "/superhero.sqlite")
+engine = create_engine("sqlite:///superhero.db")
 SuperheroModel = automap_base()
 SuperheroModel.prepare(autoload_with=engine, reflect=True)
 

@@ -1,10 +1,10 @@
-from iql.iql_result import IQLResult
 from iql.metrics import (
     _count_hallucinated_methods_for_single_example,
-    calculate_hallucinated_filters_for_dataset,
-    calculate_syntax_errors,
+    calculate_hallucinated_filters,
+    calculate_invalid_iql,
     calculate_valid_iql,
 )
+from results import TextToIQLResult
 
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 
@@ -21,7 +21,7 @@ IQL_WITH_HALLUCINATED_FILTERS = "filter_by_name('Cody Brown') and filter_by_age(
 IQL_WITH_SYNTAX_ERROR = "filter_by_name('Cody Brown'"
 
 
-def test_count_hallucinated_methods_for_single_example():
+def test_count_hallucinated_methods_for_single_example() -> None:
     hallucinated_methods, total_methods = _count_hallucinated_methods_for_single_example(
         IQL_WITH_HALLUCINATED_FILTERS, [method.name for method in ALLOWED_METHODS]
     )
@@ -35,31 +35,30 @@ def test_count_hallucinated_methods_for_single_example():
     assert total_methods == 2
 
 
-def test_calculate_hallucinated_filters_for_dataset():
+def test_calculate_hallucinated_filters() -> None:
     dataset = [
-        IQLResult(question="", iql_filters=IQL_WITH_HALLUCINATED_FILTERS),
-        IQLResult(question="", iql_filters=VALID_IQL),
+        TextToIQLResult(question="", ground_truth_iql="", predicted_iql=IQL_WITH_HALLUCINATED_FILTERS),
+        TextToIQLResult(question="", ground_truth_iql="", predicted_iql=VALID_IQL),
     ]
-
-    hallucinated_filters_ratio = calculate_hallucinated_filters_for_dataset(dataset, ALLOWED_METHODS)
+    hallucinated_filters_ratio = calculate_hallucinated_filters(dataset, ALLOWED_METHODS)
     assert hallucinated_filters_ratio == 0.25
 
 
-async def test_calculate_syntax_errors():
+async def test_calculate_invalid_iql() -> None:
     dataset = [
-        IQLResult(question="", iql_filters=IQL_WITH_SYNTAX_ERROR),
-        IQLResult(question="", iql_filters=VALID_IQL),
+        TextToIQLResult(question="", ground_truth_iql="", predicted_iql=IQL_WITH_SYNTAX_ERROR),
+        TextToIQLResult(question="", ground_truth_iql="", predicted_iql=VALID_IQL),
     ]
 
-    syntax_errors_ratio = await calculate_syntax_errors(dataset, ALLOWED_METHODS)
+    syntax_errors_ratio = await calculate_invalid_iql(dataset, ALLOWED_METHODS)
     assert syntax_errors_ratio == 0.5
 
 
-async def test_calculate_valid_iql():
+async def test_calculate_valid_iql() -> None:
     dataset = [
-        IQLResult(question="", iql_filters=IQL_WITH_SYNTAX_ERROR),
-        IQLResult(question="", iql_filters=VALID_IQL),
-        IQLResult(question="", iql_filters=IQL_WITH_HALLUCINATED_FILTERS),
+        TextToIQLResult(question="", ground_truth_iql="", predicted_iql=IQL_WITH_SYNTAX_ERROR),
+        TextToIQLResult(question="", ground_truth_iql="", predicted_iql=VALID_IQL),
+        TextToIQLResult(question="", ground_truth_iql="", predicted_iql=IQL_WITH_HALLUCINATED_FILTERS),
     ]
 
     valid_iql_ratio = await calculate_valid_iql(dataset, ALLOWED_METHODS)

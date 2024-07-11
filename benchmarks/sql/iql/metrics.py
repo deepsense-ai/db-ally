@@ -1,9 +1,9 @@
 import ast
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
-from iql.iql_result import IQLResult
 from iql.method_call_visitor import MethodCallVisitor
 from loguru import logger
+from results import TextToIQLResult
 
 from dbally.iql._exceptions import IQLError, IQLUnsupportedSyntaxError
 from dbally.iql._query import IQLQuery
@@ -25,13 +25,12 @@ def _count_hallucinated_methods_for_single_example(iql: str, allowed_methods: Li
         return 0, 0
 
 
-def calculate_hallucinated_filters_for_dataset(dataset: List[IQLResult], filter_list: List[ExposedFunction]) -> float:
+def calculate_hallucinated_filters(results: List[TextToIQLResult], filter_list: List[ExposedFunction]) -> float:
     """
-    Calculates the ratio of hallucinated filters for a given dataset.
+    Calculates the ratio of hallucinated filters for a given results.
 
     Args:
-        dataset: List containing IQLResult objects that
-        represents predicted filters.
+        results: List containing TextToIQLResult objects that represents predicted filters.
         filter_list: List of allowed filters.
 
     Returns:
@@ -43,7 +42,7 @@ def calculate_hallucinated_filters_for_dataset(dataset: List[IQLResult], filter_
 
     allowed_filters = [filter.name for filter in filter_list]
 
-    for example in dataset:
+    for example in results:
         hallucinated_filters, total_filters = _count_hallucinated_methods_for_single_example(
             example.predicted_iql, allowed_filters
         )
@@ -56,13 +55,12 @@ def calculate_hallucinated_filters_for_dataset(dataset: List[IQLResult], filter_
     return hallucinated_filters_count / total_filters_count
 
 
-async def calculate_valid_iql(dataset: List[IQLResult], filter_list: List[ExposedFunction]) -> float:
+async def calculate_valid_iql(results: List[TextToIQLResult], filter_list: List[ExposedFunction]) -> float:
     """
-    Calculates the ratio of valid IQL queries for a given dataset.
+    Calculates the ratio of valid IQL queries for a given results.
 
     Args:
-        dataset: List containing IQLResult objects that
-        represents predicted filters.
+        results: List containing TextToIQLResult objects that represents predicted filters.
         filter_list: List of allowed filters.
 
     Returns:
@@ -71,86 +69,77 @@ async def calculate_valid_iql(dataset: List[IQLResult], filter_list: List[Expose
 
     valid_iql = 0
 
-    for example in dataset:
+    for example in results:
         try:
             await IQLQuery.parse(example.predicted_iql, filter_list)
             valid_iql += 1
         except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.warning(f"Error while parsing IQL: {example.predicted_iql}\n{exc}")
 
-    return valid_iql / len(dataset)
+    return valid_iql / len(results)
 
 
-def calculate_exact_match(dataset: List[IQLResult]) -> float:
+def calculate_exact_match(results: List[TextToIQLResult]) -> float:
     """
-    For a dataset, it calculates the ratio of predicated queries that are identical
+    For a results, it calculates the ratio of predicated queries that are identical
     to the ground truth ones.
 
     Args:
-        dataset: List containing Text2SQLResult objects that
-        represents (ground truth query, predicted query).
+        results: List containing Text2SQLResult objects that represents ground truth query, predicted query.
 
     Returns:
         The ratio of predicated queries that are identical to the ground truth ones.
     """
-
     exact_query_matches = 0
 
-    for example in dataset:
+    for example in results:
         if example.ground_truth_iql == example.predicted_iql:
             exact_query_matches += 1
 
-    return exact_query_matches / len(dataset)
+    return exact_query_matches / len(results)
 
 
-async def calculate_syntax_errors(dataset: List[IQLResult], filter_list: List[ExposedFunction]) -> float:
+async def calculate_invalid_iql(results: List[TextToIQLResult], filter_list: List[ExposedFunction]) -> float:
     """
-    Calculates the ratio of syntax errors for a given dataset.
+    Calculates the ratio of syntax errors for a given results.
 
     Args:
-        dataset: List containing IQLResult objects that
-        represents predicted filters.
+        results: List containing TextToIQLResult objects that represents predicted filters.
         filter_list: List of allowed filters.
 
     Returns:
         Syntax errors ratio.
     """
-
     syntax_errors = 0
 
-    filtered_dataset = [example for example in dataset if example.predicted_iql != "UNSUPPORTED_QUERY"]
+    filtered_results = [result for result in results if result.predicted_iql != "UNSUPPORTED_QUERY"]
 
-    for example in filtered_dataset:
+    for result in filtered_results:
         try:
-            await IQLQuery.parse(example.predicted_iql, filter_list)
+            await IQLQuery.parse(result.predicted_iql, filter_list)
         except (IQLError, IQLUnsupportedSyntaxError, SyntaxError):
             syntax_errors += 1
         except Exception as exc:  # pylint: disable=broad-exception-caught
             # I haven't figured out yet how to handle it better :(
-            logger.warning(f"Error while parsing IQL: {example.predicted_iql}\n{exc}")
+            logger.warning(f"Error while parsing IQL: {result.predicted_iql}\n{exc}")
 
-    return syntax_errors / len(filtered_dataset)
+    return syntax_errors / len(filtered_results)
 
 
-async def calculate_dataset_metrics(dataset: List[IQLResult], filter_list: List[ExposedFunction]) -> Dict[str, float]:
+def calculate_unsupported_iql(results: List[TextToIQLResult]) -> float:
     """
-    Calculates metrics for a given dataset. The following metrics are being calculated: valid IQL,
-    ratio of hallucinated filters and ratio of IQLs contained syntax error.
+    Calculates the ratio of unsupported queries for a given results.
 
     Args:
-        dataset: List containing IQLResult objects that
-        represents predicted filters.
-        filter_list: List of allowed filters.
+        results: List containingTextToTextToIQLResult objects that represents predicted filters.
 
     Returns:
-        Dictionary containing metrics.
+        Unsupported queries ratio.
     """
+    unsupported_queries = 0
 
-    metrics = {
-        "valid_iql": await calculate_valid_iql(dataset, filter_list),
-        "exact_match": calculate_exact_match(dataset),
-        "hallucinated_filters": calculate_hallucinated_filters_for_dataset(dataset, filter_list),
-        "syntax_errors": await calculate_syntax_errors(dataset, filter_list),
-    }
+    for result in results:
+        if result.predicted_iql == "UNSUPPORTED_QUERY":
+            unsupported_queries += 1
 
-    return metrics
+    return unsupported_queries / len(results)

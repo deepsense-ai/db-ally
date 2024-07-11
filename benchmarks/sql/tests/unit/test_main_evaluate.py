@@ -5,9 +5,9 @@ from bench import evaluate
 from omegaconf import DictConfig
 
 
-@patch("dbally_benchmark.evaluate.e2e_evaluate")
-@patch("dbally_benchmark.evaluate.text2sql_evaluate")
-@patch("dbally_benchmark.evaluate.iql_evaluate")
+@patch("bench.e2e_evaluate")
+@patch("bench.text2sql_evaluate")
+@patch("bench.iql_evaluate")
 @pytest.mark.asyncio
 async def test_evaluate(iql_mock, text2sql_mock, e2e_mock) -> None:
     cfg = DictConfig(

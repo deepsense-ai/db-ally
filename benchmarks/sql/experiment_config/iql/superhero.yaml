@@ -5,4 +5,4 @@ superhero:
   difficulties: ["simple"]
   output_path: "iql_evaluation"
   view_name: "SuperheroView"
-  db_url: "sqlite://"
+  db_url: "sqlite:///superhero.db"
