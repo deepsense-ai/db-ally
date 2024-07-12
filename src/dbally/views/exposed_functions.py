@@ -15,9 +15,11 @@ class TypeParsingError(ValueError):
     """
 
 
-def _parse_complex_type(param_type: Union[type_ext.Type, _GenericAlias]) -> str:
+def _parse_standard_type(param_type: Union[type_ext.Type, _GenericAlias]) -> str:
     """
-    Generates string representation of a complex type from `typing` or `typing_extensions` module.
+    Generates string representation of a data type (or alias) being neither custom class or string.
+    This function is primarily intended to parse types from consecutive modules:
+    `builtins` (>= Python 3.9), `typing` and `typing_extensions`.
 
     Args:
         param_type: type or type alias.
@@ -78,9 +80,16 @@ def parse_param_type(param_type: Union[type_ext.Type, _GenericAlias, str]) -> st
     if isinstance(param_type, str):
         return f"'{param_type}'"
 
-    if param_type.__module__ in ["typing", "typing_extensions"]:
-        return _parse_complex_type(param_type)
+    if param_type.__module__ in ["builtins", "typing", "typing_extensions"]:
+        return _parse_standard_type(param_type)
 
+    # TODO add explicit support Generic types,
+    # although they should be already handled okay by _parse_standard_type()
+
+    # TODO test on various different Python versions > 3.8
+
+    # fallback, at the moment we expect this to be called only for type aliases
+    # note that in Python 3.12+ there exists typing.TypeAliasType that can be checked with isinstance()
     return str(param_type)
 
 
