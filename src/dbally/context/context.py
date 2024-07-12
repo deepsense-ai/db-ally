@@ -1,6 +1,6 @@
 import ast
 from abc import ABC
-from typing import Iterable
+from typing import ClassVar, Iterable
 
 from typing_extensions import Self, TypeAlias
 
@@ -15,9 +15,12 @@ class BaseCallerContext(ABC):
     the caller environment to the filters. LLM will always return `Context()`
     when the context is required and this call will be later substituted by an instance of
     a class implementing this interface, selected based on the filter method signature (type hints).
+
+    Attributes:
+        alias: Class variable defining an alias which is defined in the prompt for the LLM to reference context.
     """
 
-    alias: str = "AskerContext"
+    alias: ClassVar[str] = "AskerContext"
 
     @classmethod
     def select_context(cls, contexts: Iterable[CustomContext]) -> Self:
@@ -38,8 +41,8 @@ class BaseCallerContext(ABC):
 
         if not contexts:
             raise ContextNotAvailableError(
-                "The LLM detected that the context is required to execute the query +\
-                and the filter signature allows contextualization while the context was not provided."
+                "The LLM detected that the context is required to execute the query"
+                "and the filter signature allows contextualization while the context was not provided."
             )
 
         # TODO confirm whether it is possible to design a correct type hints here and skipping `type: ignore`
