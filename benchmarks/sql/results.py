@@ -18,7 +18,6 @@ class TextToSQLResult:
     Represents a single TextToSQL result.
     """
 
-    db_id: str
     question: str
     ground_truth_sql: str
     predicted_sql: str
