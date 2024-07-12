@@ -151,7 +151,7 @@ class BaseText2SQLView(BaseView, ABC):
                 )
 
                 if dry_run:
-                    return ViewExecutionResult(results=[], context={"sql": sql})
+                    return ViewExecutionResult(results=[], metadata={"sql": sql})
 
                 rows = await self._execute_sql(sql, parameters, event_tracker=event_tracker)
                 break
@@ -167,7 +167,7 @@ class BaseText2SQLView(BaseView, ABC):
         # pylint: disable=protected-access
         return ViewExecutionResult(
             results=[dict(row._mapping) for row in rows],
-            context={
+            metadata={
                 "sql": sql,
             },
         )

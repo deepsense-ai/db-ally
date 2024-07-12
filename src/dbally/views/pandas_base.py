@@ -83,7 +83,7 @@ class DataFrameBaseView(MethodsBaseView):
 
         return ViewExecutionResult(
             results=filtered_data.to_dict(orient="records"),
-            context={
+            metadata={
                 "filter_mask": self._filter_mask,
             },
         )

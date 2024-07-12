@@ -23,7 +23,7 @@ async def test_iql_prompt_format_default() -> None:
             "You MUST use only these methods:\n"
             "\n\n"
             "It is VERY IMPORTANT not to use methods other than those listed above."
-            "Finally, if a called function argument value is not directly specified in the query but instead requires some additional execution context, than substitute that argument value by: AskerContext()."
+            "Finally, if a called function argument value is not directly specified in the query but instead requires some additional execution context, than substitute that argument value with: AskerContext()."
             'The typical input phrase suggesting that the additional execution context need to be referenced contains words like: "I", "my", "mine", "current", "the" etc..'
             'For example: "my position name", "my company valuation", "current day", "the ongoing project".'
             "In that case, the part of the output will look like this:"
@@ -58,7 +58,7 @@ async def test_iql_prompt_format_few_shots_injected() -> None:
             "You MUST use only these methods:\n"
             "\n\n"
             "It is VERY IMPORTANT not to use methods other than those listed above."
-            "Finally, if a called function argument value is not directly specified in the query but instead requires some additional execution context, than substitute that argument value by: AskerContext()."
+            "Finally, if a called function argument value is not directly specified in the query but instead requires some additional execution context, than substitute that argument value with: AskerContext()."
             'The typical input phrase suggesting that the additional execution context need to be referenced contains words like: "I", "my", "mine", "current", "the" etc..'
             'For example: "my position name", "my company valuation", "current day", "the ongoing project".'
             "In that case, the part of the output will look like this:"

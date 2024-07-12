@@ -78,7 +78,7 @@ class BaseStructuredView(BaseView):
         await self.apply_filters(iql)
 
         result = self.execute(dry_run=dry_run)
-        result.context["iql"] = f"{iql}"
+        result.metadata["iql"] = f"{iql}"
 
         return result
 

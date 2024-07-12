@@ -17,7 +17,7 @@ class BaseCallerContext(ABC):
     a class implementing this interface, selected based on the filter method signature (type hints).
     """
 
-    _alias: str = "AskerContext"
+    alias: str = "AskerContext"
 
     @classmethod
     def select_context(cls, contexts: Iterable[CustomContext]) -> Self:
@@ -58,7 +58,5 @@ class BaseCallerContext(ABC):
         """
 
         return (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id in [cls._alias, cls.__name__]
+            isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in [cls.alias, cls.__name__]
         )

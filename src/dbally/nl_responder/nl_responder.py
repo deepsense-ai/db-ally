@@ -70,7 +70,7 @@ class NLResponder:
         if tokens_count > self._max_tokens_count:
             prompt_format = QueryExplanationPromptFormat(
                 question=question,
-                context=result.context,
+                metadata=result.metadata,
                 results=result.results,
             )
             formatted_prompt = self._explainer_prompt_template.format_prompt(prompt_format)

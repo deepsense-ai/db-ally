@@ -234,7 +234,7 @@ class Collection:
 
         result = ExecutionResult(
             results=view_result.results,
-            context=view_result.context,
+            metadata=view_result.metadata,
             execution_time=time.monotonic() - start_time,
             execution_time_view=end_time_view - start_time_view,
             view_name=selected_view,

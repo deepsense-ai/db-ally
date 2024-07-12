@@ -65,5 +65,5 @@ async def test_filter_sql_generation() -> None:
         contexts=[SomeTestContext(age=69)],
     )
     await mock_view.apply_filters(query)
-    sql = normalize_whitespace(mock_view.execute(dry_run=True).context["sql"])
+    sql = normalize_whitespace(mock_view.execute(dry_run=True).metadata["sql"])
     assert sql == "SELECT 'test' AS foo WHERE 1 AND 'hello London in 2020' AND 69"

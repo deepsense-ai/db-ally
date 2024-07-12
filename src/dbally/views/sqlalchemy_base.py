@@ -88,5 +88,5 @@ class SqlAlchemyBaseView(MethodsBaseView):
 
         return ViewExecutionResult(
             results=results,
-            context={"sql": sql},
+            metadata={"sql": sql},
         )
