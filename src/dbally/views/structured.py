@@ -57,19 +57,31 @@ class BaseStructuredView(BaseView):
             The result of the query.
         """
         iql_generator = self.get_iql_generator(llm)
-
         filters = self.list_filters()
         examples = self.list_few_shots()
+        aggregations = self.list_aggregations()
 
         iql = await iql_generator.generate_iql(
             question=query,
             filters=filters,
             examples=examples,
+            aggregations=[],
             event_tracker=event_tracker,
             llm_options=llm_options,
             n_retries=n_retries,
         )
         await self.apply_filters(iql)
+
+        iql = await iql_generator.generate_iql(
+            question=query,
+            filters=[],
+            examples=[],
+            aggregations=aggregations,
+            event_tracker=event_tracker,
+            llm_options=llm_options,
+            n_retries=n_retries,
+        )
+        await self.apply_aggregation(iql)
 
         result = self.execute(dry_run=dry_run)
         result.context["iql"] = f"{iql}"
@@ -92,6 +104,23 @@ class BaseStructuredView(BaseView):
 
         Args:
             filters: [IQLQuery](../../concepts/iql.md) object representing the filters to apply
+        """
+
+    @abc.abstractmethod
+    def list_aggregations(self) -> List[ExposedFunction]:
+        """
+
+        Returns:
+            Aggregations defined inside the View.
+        """
+
+    @abc.abstractmethod
+    async def apply_aggregation(self, aggregation: IQLQuery) -> None:
+        """
+        Applies the chosen aggregation to the view.
+
+        Args:
+            aggregation: [IQLQuery](../../concepts/iql.md) object representing the filters to apply
         """
 
     @abc.abstractmethod

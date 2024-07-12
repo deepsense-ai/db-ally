@@ -2,7 +2,11 @@ from typing import List, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql import IQLError, IQLQuery
-from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, IQLGenerationPromptFormat
+from dbally.iql_generator.prompt import (
+    IQL_GENERATION_TEMPLATE,
+    IQL_GENERATION_TEMPLATE_AGGREGATION,
+    IQLGenerationPromptFormat,
+)
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.prompt.elements import FewShotExample
@@ -30,6 +34,7 @@ class IQLGenerator:
 
         Args:
             llm: LLM used to generate IQL
+            prompt_template: If not provided by the users is set to `default_iql_template`
         """
         self._llm = llm
         self._prompt_template = prompt_template or IQL_GENERATION_TEMPLATE
@@ -39,6 +44,7 @@ class IQLGenerator:
         question: str,
         filters: List[ExposedFunction],
         event_tracker: EventTracker,
+        aggregations: List[ExposedFunction] = None,
         examples: Optional[List[FewShotExample]] = None,
         llm_options: Optional[LLMOptions] = None,
         n_retries: int = 3,
@@ -50,6 +56,7 @@ class IQLGenerator:
             question: User question.
             filters: List of filters exposed by the view.
             event_tracker: Event store used to audit the generation process.
+            aggregations: List of aggregations to be applied on the view.
             examples: List of examples to be injected into the conversation.
             llm_options: Options to use for the LLM client.
             n_retries: Number of retries to regenerate IQL in case of errors.
@@ -60,8 +67,12 @@ class IQLGenerator:
         prompt_format = IQLGenerationPromptFormat(
             question=question,
             filters=filters,
+            aggregations=aggregations,
             examples=examples,
         )
+        if aggregations and not filters:
+            self._prompt_template = IQL_GENERATION_TEMPLATE_AGGREGATION
+
         formatted_prompt = self._prompt_template.format_prompt(prompt_format)
 
         for _ in range(n_retries + 1):
@@ -76,7 +87,7 @@ class IQLGenerator:
                 # TODO: Move IQL query parsing to prompt response parser
                 return await IQLQuery.parse(
                     source=iql,
-                    allowed_functions=filters,
+                    allowed_functions=filters or [] + aggregations or [],
                     event_tracker=event_tracker,
                 )
             except IQLError as exc:

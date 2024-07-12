@@ -45,6 +45,7 @@ class IQLGenerationPromptFormat(PromptFormat):
         question: str,
         filters: List[ExposedFunction],
         examples: List[FewShotExample] = None,
+        aggregations: List[ExposedFunction] = None,
     ) -> None:
         """
         Constructs a new IQLGenerationPromptFormat instance.
@@ -53,10 +54,12 @@ class IQLGenerationPromptFormat(PromptFormat):
             question: Question to be asked.
             filters: List of filters exposed by the view.
             examples: List of examples to be injected into the conversation.
+            aggregations: List of examples to be computed for the view (Currently 1 aggregation supported).
         """
         super().__init__(examples)
         self.question = question
-        self.filters = "\n".join([str(filter) for filter in filters])
+        self.filters = "\n".join([str(condition) for condition in filters]) if filters else []
+        self.aggregations = "\n".join([str(aggregation) for aggregation in aggregations]) if aggregations else []
 
 
 IQL_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
@@ -66,7 +69,7 @@ IQL_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
             "content": (
                 "You have access to API that lets you query a database:\n"
                 "\n{filters}\n"
-                "Please suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
+                "Suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
                 "Remember! Don't give any comments, just the function calls.\n"
                 "The output will look like this:\n"
                 'filter1("arg1") AND (NOT filter2(120) OR filter3(True))\n'
@@ -83,5 +86,28 @@ IQL_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
             "content": "{question}",
         },
     ],
+    response_parser=_validate_iql_response,
+)
+
+IQL_GENERATION_TEMPLATE_AGGREGATION = PromptTemplate[IQLGenerationPromptFormat](
+    chat=(
+        {
+            "role": "system",
+            "content": "You have access to API that lets you query a database supporting SINGLE aggregation.\n"
+            "When prompted for just aggregation, use the following methods: \n"
+            "{aggregations}"
+            "DO NOT INCLUDE arguments names in your response. Only the values.\n"
+            "You MUST use only these methods:\n"
+            "\n{aggregations}\n"
+            "Structure output to resemble the following pattern:\n"
+            'aggregation1("Argument_in_lowercase")\n'
+            "It is VERY IMPORTANT not to use methods other than those listed above."
+            """If you DON'T KNOW HOW TO ANSWER DON'T SAY \"\" anything other than `UNSUPPORTED QUERY`"""
+            "This is CRUCIAL to put `UNSUPPORTED QUERY` text only, otherwise the system will crash. "
+            "Structure output to resemble the following pattern:\n"
+            'aggregation1("Argument_in_lowercase", another_base_python_datatype_argument)\n',
+        },
+        {"role": "user", "content": "{question}"},
+    ),
     response_parser=_validate_iql_response,
 )

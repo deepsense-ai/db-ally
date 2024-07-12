@@ -30,7 +30,7 @@ async def test_llm_options_propagation():
         llm_options=custom_options,
     )
 
-    assert llm.client.call.call_count == 3
+    assert llm.client.call.call_count == 4
 
     llm.client.call.assert_has_calls(
         [

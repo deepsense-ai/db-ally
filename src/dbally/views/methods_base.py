@@ -15,7 +15,10 @@ class MethodsBaseView(BaseStructuredView, metaclass=abc.ABCMeta):
     """
 
     # Method arguments that should be skipped when listing methods
-    HIDDEN_ARGUMENTS = ["self", "select", "return"]
+    HIDDEN_ARGUMENTS = ["self", "select", "return", "subquery"]
+
+    def __init__(self):
+        self._subquery = None
 
     @classmethod
     def list_methods_by_decorator(cls, decorator: Callable) -> List[ExposedFunction]:
@@ -56,6 +59,15 @@ class MethodsBaseView(BaseStructuredView, metaclass=abc.ABCMeta):
         """
         return self.list_methods_by_decorator(decorators.view_filter)
 
+    def list_aggregations(self) -> List[ExposedFunction]:
+        """
+        List aggregations in the given view
+
+        Returns:
+            Aggregations defined inside the View and decorated with `decorators.view_aggregation`.
+        """
+        return self.list_methods_by_decorator(decorators.view_aggregation)
+
     def _method_with_args_from_call(
         self, func: syntax.FunctionCall, method_decorator: Callable
     ) -> Tuple[Callable, list]:
@@ -64,7 +76,8 @@ class MethodsBaseView(BaseStructuredView, metaclass=abc.ABCMeta):
 
         Args:
             func: IQL FunctionCall node
-            method_decorator: The decorator that thhe method should have
+            method_decorator: The decorator that the method should have
+                            (currently allows discrimination between filters and aggregations)
 
         Returns:
             Tuple with the method object and its arguments
@@ -99,3 +112,19 @@ class MethodsBaseView(BaseStructuredView, metaclass=abc.ABCMeta):
         if inspect.iscoroutinefunction(method):
             return await method(*args)
         return method(*args)
+
+    async def call_aggregation_method(self, func: syntax.FunctionCall) -> Any:
+        """
+        Converts a IQL FunctonCall aggregation to a method call. If the method is a coroutine, it will be awaited.
+
+        Args:
+            func: IQL FunctionCall node
+
+        Returns:
+            The result of the method call
+        """
+        method, args = self._method_with_args_from_call(func, decorators.view_aggregation)
+
+        if inspect.iscoroutinefunction(method):
+            return await method(self._subquery, *args)
+        return method(self._subquery, *args)

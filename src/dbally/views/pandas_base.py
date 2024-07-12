@@ -36,6 +36,15 @@ class DataFrameBaseView(MethodsBaseView):
         """
         self._filter_mask = await self.build_filter_node(filters.root)
 
+    async def apply_aggregation(self, aggregation: IQLQuery) -> None:
+        """
+        Applies the aggregation of choice to the view.
+
+        Args:
+            aggregation: IQLQuery object representing the aggregation to apply
+        """
+        pass  # pylint: disable=unnecessary-pass
+
     async def build_filter_node(self, node: syntax.Node) -> pd.Series:
         """
         Converts a filter node from the IQLQuery to a Pandas Series representing

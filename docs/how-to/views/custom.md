@@ -106,37 +106,41 @@ Let's implement the required `apply_filters` method in our `FilteredIterableBase
 
 ```python
     def __init__(self) -> None:
-        super().__init__()
-        self._filter: Callable[[Any], bool] = lambda x: True
 
-    async def apply_filters(self, filters: IQLQuery) -> None:
-        """
-        Applies the selected filters to the view.
 
-        Args:
-            filters: IQLQuery object representing the filters to apply
-        """
-        self._filter = await self.build_filter_node(filters.root)
+super().__init__()
+self._filter: Callable[[Any], bool] = lambda x: True
 
-    async def build_filter_node(self, node: syntax.Node) -> Callable[[Any], bool]:
-        """
-        Turns a filter node from the IQLQuery into a Python function.
 
-        Args:
-            node: IQLQuery node representing the filter or logical operator
-        """
-        if isinstance(node, syntax.FunctionCall):  # filter
-            return await self.call_filter_method(node)
-        if isinstance(node, syntax.And):  # logical AND
-            children = await asyncio.gather(*[self.build_filter_node(child) for child in node.children])
-            return lambda x: all(child(x) for child in children)  # combine children with logical AND
-        if isinstance(node, syntax.Or):  # logical OR
-            children = await asyncio.gather(*[self.build_filter_node(child) for child in node.children])
-            return lambda x: any(child(x) for child in children)  # combine children with logical OR
-        if isinstance(node, syntax.Not):  # logical NOT
-            child = await self.build_filter_node(node.child)
-            return lambda x: not child(x)
-        raise ValueError(f"Unsupported grammar: {node}")
+async def apply_filters(self, filters: IQLQuery) -> None:
+    """
+    Applies the selected filters to the view.
+
+    Args:
+        filters: IQLQuery object representing the filters to apply
+    """
+    self._filter = await self.build_filter_node(filters.root)
+
+
+async def build_filter_node(self, node: syntax.Node) -> Callable[[Any], bool]:
+    """
+    Turns a filter node from the IQLQuery into a Python function.
+
+    Args:
+        node: IQLQuery node representing the filter or logical operator
+    """
+    if isinstance(node, syntax.FunctionCall):  # filter
+        return await self.call_filter_method(node)
+    if isinstance(node, syntax.And):  # logical AND
+        children = await asyncio.gather(*[self.build_filter_node(child) for child in node.children])
+        return lambda x: all(child(x) for child in children)  # combine children with logical AND
+    if isinstance(node, syntax.Or):  # logical OR
+        children = await asyncio.gather(*[self.build_filter_node(child) for child in node.children])
+        return lambda x: any(child(x) for child in children)  # combine children with logical OR
+    if isinstance(node, syntax.Not):  # logical NOT
+        child = await self.build_filter_node(node.child)
+        return lambda x: not child(x)
+    raise ValueError(f"Unsupported grammar: {node}")
 ```
 
 In the `apply_filters` method, we're calling the `build_filter_node` method on the root of the IQL tree. The `build_filter_node` method uses recursion to create an object that represents the combined logic of the IQL expression and the returned filter methods. For `FilteredIterableBaseView`, this object is a function that takes a single argument (a candidate) and returns a boolean. We save this function in the `_filter` attribute.

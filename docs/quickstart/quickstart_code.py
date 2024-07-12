@@ -6,7 +6,6 @@ import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 
-import dbally
 from dbally import decorators, SqlAlchemyBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.llms.litellm import LiteLLM
@@ -55,6 +54,12 @@ class CandidateView(SqlAlchemyBaseView):
         """
         return Candidate.country == country
 
+    @decorators.view_aggregation()
+    def count_by_column(self, subquery: sqlalchemy.Select, column_name: str) -> sqlalchemy.Select:  # pylint: disable=W0602, C0116, W9011
+        select = sqlalchemy.select(getattr(subquery.c, column_name), sqlalchemy.func.count(subquery.c.name).label("count")) \
+            .group_by(getattr(subquery.c, column_name))
+        return select
+
 
 async def main():
     llm = LiteLLM(model_name="gpt-3.5-turbo")
@@ -63,7 +68,8 @@ async def main():
     collection = dbally.create_collection("recruitment", llm)
     collection.add(CandidateView, lambda: CandidateView(engine))
 
-    result = await collection.ask("Find me French candidates suitable for a senior data scientist position.")
+    result = await collection.ask("Could you find French candidates suitable for a senior data scientist position"
+                                  "and count the candidates university-wise and present the rows?")
 
     print(f"The generated SQL query is: {result.context.get('sql')}")
     print()
