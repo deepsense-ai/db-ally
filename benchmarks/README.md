@@ -4,10 +4,10 @@ This folder contains scripts that produce reproducible timings and evaluation me
 
 ## Setup environment
 
-Install dependencies with:
+From the root directory of the project, install the dependencies:
 
 ```bash
-pip install dbally[benchmarks]
+pip install -e '.[benchmarks]'
 ```
 
 ## Benchmark list
