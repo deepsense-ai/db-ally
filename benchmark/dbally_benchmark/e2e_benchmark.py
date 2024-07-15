@@ -31,7 +31,7 @@ from dbally.view_selection.prompt import VIEW_SELECTION_TEMPLATE
 async def _run_dbally_for_single_example(example: BIRDExample, collection: Collection) -> Text2SQLResult:
     try:
         result = await collection.ask(example.question, dry_run=True)
-        sql = result.context["sql"]
+        sql = result.metadata["sql"]
     except UnsupportedQueryError:
         sql = "UnsupportedQueryError"
     except NoViewFoundError:

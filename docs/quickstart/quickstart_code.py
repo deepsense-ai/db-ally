@@ -63,7 +63,7 @@ async def main():
 
     result = await collection.ask("Find me French candidates suitable for a senior data scientist position.")
 
-    print(f"The generated SQL query is: {result.context.get('sql')}")
+    print(f"The generated SQL query is: {result.metadata.get('sql')}")
     print()
     print(f"Retrieved {len(result.results)} candidates:")
     for candidate in result.results:
