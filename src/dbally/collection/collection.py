@@ -319,6 +319,7 @@ class Collection:
                 dry_run=dry_run,
                 return_natural_response=return_natural_response,
                 llm_options=llm_options,
+                event_tracker=event_tracker,
             )
             span(fallback_event)
         return result
