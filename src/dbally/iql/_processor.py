@@ -6,8 +6,12 @@ from dbally.iql import syntax
 from dbally.iql._exceptions import (
     IQLArgumentParsingError,
     IQLArgumentValidationError,
-    IQLError,
+    IQLEmptyExpressionError,
     IQLFunctionNotExists,
+    IQLIcorrectNumberArgumentsError,
+    IQLMultipleExpressionsError,
+    IQLNoExpressionError,
+    IQLSyntaxError,
     IQLUnsupportedSyntaxError,
 )
 from dbally.iql._type_validators import validate_arg_type
@@ -33,21 +37,28 @@ class IQLProcessor:
         Process IQL string to root IQL.Node.
 
         Returns:
-            IQL.Node which is root of the tree representing IQL query.
+            IQL node which is root of the tree representing IQL query.
 
         Raises:
-             IQLError: if parsing fails.
+            IQLError: If parsing fails.
         """
         self.source = self._to_lower_except_in_quotes(self.source, ["AND", "OR", "NOT"])
 
-        ast_tree = ast.parse(self.source)
-        first_element = ast_tree.body[0]
+        try:
+            ast_tree = ast.parse(self.source)
+        except (SyntaxError, ValueError) as exc:
+            raise IQLSyntaxError(self.source) from exc
 
-        if not isinstance(first_element, ast.Expr):
-            raise IQLError("Not a valid IQL expression", first_element, self.source)
+        if not ast_tree.body:
+            raise IQLEmptyExpressionError(self.source)
 
-        root = await self._parse_node(first_element.value)
-        return root
+        if len(ast_tree.body) > 1:
+            raise IQLMultipleExpressionsError(ast_tree.body, self.source)
+
+        if not isinstance(ast_tree.body[0], ast.Expr):
+            raise IQLNoExpressionError(ast_tree.body[0], self.source)
+
+        return await self._parse_node(ast_tree.body[0].value)
 
     async def _parse_node(self, node: Union[ast.expr, ast.Expr]) -> syntax.Node:
         if isinstance(node, ast.BoolOp):
@@ -82,7 +93,7 @@ class IQLProcessor:
         args = []
 
         if len(func_def.parameters) != len(node.args):
-            raise ValueError(f"The method {func.id} has incorrect number of arguments")
+            raise IQLIcorrectNumberArgumentsError(node, self.source)
 
         for arg, arg_def in zip(node.args, func_def.parameters):
             arg_value = self._parse_arg(arg)

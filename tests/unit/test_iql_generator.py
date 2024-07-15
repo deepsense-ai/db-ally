@@ -1,6 +1,6 @@
 # mypy: disable-error-code="empty-body"
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import sqlalchemy
@@ -84,30 +84,51 @@ async def test_iql_generation(iql_generator: IQLGenerator, event_tracker: EventT
 
 
 @pytest.mark.asyncio
-async def test_iql_generation_error_handling(
+async def test_iql_generation_error_excalation_after_max_retires(
     iql_generator: IQLGenerator,
     event_tracker: EventTracker,
     view: MockView,
 ) -> None:
     filters = view.list_filters()
-
-    mock_node = Mock(col_offset=0, end_col_offset=-1)
-    errors = [
-        IQLError("err1", mock_node, "src1"),
-        IQLError("err2", mock_node, "src2"),
-        IQLError("err3", mock_node, "src3"),
-        IQLError("err4", mock_node, "src4"),
+    responses = [
+        IQLError("err1", "src1"),
+        IQLError("err2", "src2"),
+        IQLError("err3", "src3"),
+        IQLError("err4", "src4"),
     ]
 
-    with patch("dbally.iql.IQLQuery.parse", AsyncMock(return_value="filter_by_id(1)")) as mock_parse:
-        mock_parse.side_effect = errors
+    with patch("dbally.iql.IQLQuery.parse", AsyncMock(side_effect=responses)), pytest.raises(IQLError):
         iql = await iql_generator.generate_iql(
             question="Mock_question",
             filters=filters,
             event_tracker=event_tracker,
+            n_retries=3,
         )
 
         assert iql is None
+        assert iql_generator._llm.generate_text.call_count == 4
+        for i, arg in enumerate(iql_generator._llm.generate_text.call_args_list[1:], start=1):
+            assert f"err{i}" in arg[1]["prompt"].chat[-1]["content"]
+
+
+@pytest.mark.asyncio
+async def test_iql_generation_response_after_max_retries(
+    iql_generator: IQLGenerator,
+    event_tracker: EventTracker,
+    view: MockView,
+) -> None:
+    filters = view.list_filters()
+    responses = [IQLError("err1", "src1"), IQLError("err2", "src2"), IQLError("err3", "src3"), "filter_by_id(1)"]
+
+    with patch("dbally.iql.IQLQuery.parse", AsyncMock(side_effect=responses)):
+        iql = await iql_generator.generate_iql(
+            question="Mock_question",
+            filters=filters,
+            event_tracker=event_tracker,
+            n_retries=3,
+        )
+
+        assert iql == "filter_by_id(1)"
         assert iql_generator._llm.generate_text.call_count == 4
         for i, arg in enumerate(iql_generator._llm.generate_text.call_args_list[1:], start=1):
             assert f"err{i}" in arg[1]["prompt"].chat[-1]["content"]
