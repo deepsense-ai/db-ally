@@ -8,7 +8,7 @@ from dbally.iql._exceptions import (
     IQLArgumentValidationError,
     IQLEmptyExpressionError,
     IQLFunctionNotExists,
-    IQLIcorrectNumberArgumentsError,
+    IQLIncorrectNumberArgumentsError,
     IQLMultipleExpressionsError,
     IQLNoExpressionError,
     IQLSyntaxError,
@@ -185,7 +185,7 @@ async def test_iql_parser_method_not_exists():
 
 
 async def test_iql_parser_incorrect_number_of_arguments_fail():
-    with pytest.raises(IQLIcorrectNumberArgumentsError) as exc_info:
+    with pytest.raises(IQLIncorrectNumberArgumentsError) as exc_info:
         await IQLQuery.parse(
             "filter_by_age('too old', 40)",
             allowed_functions=[

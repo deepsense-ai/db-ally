@@ -8,7 +8,7 @@ from dbally.iql._exceptions import (
     IQLArgumentValidationError,
     IQLEmptyExpressionError,
     IQLFunctionNotExists,
-    IQLIcorrectNumberArgumentsError,
+    IQLIncorrectNumberArgumentsError,
     IQLMultipleExpressionsError,
     IQLNoExpressionError,
     IQLSyntaxError,
@@ -93,7 +93,7 @@ class IQLProcessor:
         args = []
 
         if len(func_def.parameters) != len(node.args):
-            raise IQLIcorrectNumberArgumentsError(node, self.source)
+            raise IQLIncorrectNumberArgumentsError(node, self.source)
 
         for arg, arg_def in zip(node.args, func_def.parameters):
             arg_value = self._parse_arg(arg)

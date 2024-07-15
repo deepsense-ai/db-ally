@@ -1,5 +1,5 @@
 import ast
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from dbally.exceptions import DbAllyError
 
@@ -31,7 +31,7 @@ class IQLEmptyExpressionError(IQLError):
 class IQLMultipleExpressionsError(IQLError):
     """Raised when IQL contains multiple expressions."""
 
-    def __init__(self, nodes: List[Union[ast.stmt, ast.expr]], source: str) -> None:
+    def __init__(self, nodes: List[ast.stmt], source: str) -> None:
         message = "Multiple expressions or statements in IQL are not supported"
         super().__init__(message, source)
         self.nodes = nodes
@@ -41,7 +41,7 @@ class IQLExpressionError(IQLError):
     """Raised when IQL expression is invalid."""
 
     def __init__(self, message: str, node: ast.expr, source: str) -> None:
-        message = message + ": " + source[node.col_offset : node.end_col_offset]
+        message = f"{message}: {source[node.col_offset : node.end_col_offset]}"
         super().__init__(message, source)
         self.node = node
 
@@ -84,7 +84,7 @@ class IQLFunctionNotExists(IQLExpressionError):
         super().__init__(message, node, source)
 
 
-class IQLIcorrectNumberArgumentsError(IQLExpressionError):
+class IQLIncorrectNumberArgumentsError(IQLExpressionError):
     """Raised when IQL contains too many arguments for a function."""
 
     def __init__(self, node: ast.Call, source: str) -> None:
