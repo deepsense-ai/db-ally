@@ -99,13 +99,11 @@ IQL_GENERATION_TEMPLATE_AGGREGATION = PromptTemplate[IQLGenerationPromptFormat](
             "DO NOT INCLUDE arguments names in your response. Only the values.\n"
             "You MUST use only these methods:\n"
             "\n{aggregations}\n"
-            "Structure output to resemble the following pattern:\n"
-            'aggregation1("Argument_in_lowercase")\n'
             "It is VERY IMPORTANT not to use methods other than those listed above."
             """If you DON'T KNOW HOW TO ANSWER DON'T SAY \"\" anything other than `UNSUPPORTED QUERY`"""
             "This is CRUCIAL to put `UNSUPPORTED QUERY` text only, otherwise the system will crash. "
             "Structure output to resemble the following pattern:\n"
-            'aggregation1("Argument_in_lowercase", another_base_python_datatype_argument)\n',
+            'aggregation1("arg1", arg2)\n',
         },
         {"role": "user", "content": "{question}"},
     ),

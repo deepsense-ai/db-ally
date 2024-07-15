@@ -72,7 +72,7 @@ class BaseStructuredView(BaseView):
         )
         await self.apply_filters(iql)
 
-        iql = await iql_generator.generate_iql(
+        iql_agg = await iql_generator.generate_iql(
             question=query,
             filters=[],
             examples=[],
@@ -81,10 +81,11 @@ class BaseStructuredView(BaseView):
             llm_options=llm_options,
             n_retries=n_retries,
         )
-        await self.apply_aggregation(iql)
+        await self.apply_aggregation(iql_agg)
 
         result = self.execute(dry_run=dry_run)
-        result.context["iql"] = f"{iql}"
+        result.context["iql"] = {"filters": f"{iql}", "aggregation": f"{iql_agg}"}
+
 
         return result
 
