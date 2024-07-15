@@ -4,11 +4,11 @@ from typing import Any, Iterable, List, Mapping, Optional, Union
 from dbally.audit.event_tracker import EventTracker
 from dbally.context._utils import _does_arg_allow_context
 from dbally.context.context import BaseCallerContext, CustomContext
-from dbally.context.exceptions import ContextualisationNotAllowed
 from dbally.iql import syntax
 from dbally.iql._exceptions import (
     IQLArgumentParsingError,
     IQLArgumentValidationError,
+    IQLContextNotAllowedError,
     IQLError,
     IQLFunctionNotExists,
     IQLUnsupportedSyntaxError,
@@ -143,16 +143,10 @@ class IQLProcessor:
                 raise IQLArgumentParsingError(arg, self.source)
 
             if parent_func_def.context_class is None:
-                raise ContextualisationNotAllowed(
-                    "The LLM detected that the context is required +\
-                    to execute the query while the filter signature does not allow it at all."
-                )
+                raise IQLContextNotAllowedError(arg, self.source)
 
             if not _does_arg_allow_context(arg_spec):
-                raise ContextualisationNotAllowed(
-                    f"The LLM detected that the context is required +\
-                    to execute the query while the filter signature does allow it for `{arg_spec.name}` argument."
-                )
+                raise IQLContextNotAllowedError(arg, self.source, arg_name=arg_spec.name)
 
             return parent_func_def.context_class.select_context(self.contexts)
 
