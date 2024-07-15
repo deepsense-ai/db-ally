@@ -55,6 +55,7 @@ licenses.txt
 **/dist/
 **/checkpoints/
 **/outputs/
+**/multirun/
 
 # Other env files
 .python-version
@@ -74,7 +75,6 @@ coverage.xml
 
 # dotenv
 .env
-src/dbally_benchmark/.env
 
 # coverage and pytest reports
 coverage.xml
@@ -87,8 +87,8 @@ cmake-build-*/
 **/.terraform.lock.hcl
 **/.terraform
 
-# experiments results
-experiments/
+# benchmarks
+benchmarks/sql/data/
 
 # mkdocs generated files
 site/
