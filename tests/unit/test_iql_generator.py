@@ -84,7 +84,7 @@ async def test_iql_generation(iql_generator: IQLGenerator, event_tracker: EventT
 
 
 @pytest.mark.asyncio
-async def test_iql_generation_error_excalation_after_max_retires(
+async def test_iql_generation_error_escalation_after_max_retires(
     iql_generator: IQLGenerator,
     event_tracker: EventTracker,
     view: MockView,
