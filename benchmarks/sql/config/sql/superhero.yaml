@@ -1,8 +1,0 @@
-superhero:
-  dataset_path: "micpst/bird-dev-iql"
-  split: "dev"
-  db_ids: ["superhero"]
-  difficulties: ["simple"]
-  output_path: "iql_evaluation"
-  view_name: "SuperheroFreeformView"
-  db_url: "sqlite:///superhero.db"

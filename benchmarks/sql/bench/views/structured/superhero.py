@@ -8,7 +8,7 @@ from sqlalchemy.orm import aliased
 
 from dbally import SqlAlchemyBaseView, decorators
 
-engine = create_engine("sqlite:///superhero.db")
+engine = create_engine("sqlite:///data/superhero.db")
 SuperheroModel = automap_base()
 SuperheroModel.prepare(autoload_with=engine, reflect=True)
 
@@ -86,7 +86,7 @@ class SuperheroFilterMixin:
     def filter_by_publisher(self, publisher: str) -> sqlalchemy.ColumnElement:
         return SuperheroModel.classes.superhero.publisher_id.in_(
             sqlalchemy.select(SuperheroModel.classes.publisher.id).where(
-                SuperheroModel.classes.publisher.publisher == publisher
+                SuperheroModel.classes.publisher.publisher_name == publisher
             )
         )
 
@@ -103,6 +103,10 @@ class SuperheroFilterMixin:
         return SuperheroModel.classes.superhero.gender_id.in_(
             sqlalchemy.select(SuperheroModel.classes.gender.id).where(SuperheroModel.classes.gender.gender == gender)
         )
+
+    @decorators.view_filter()
+    def filter_by_power(self, power: str) -> sqlalchemy.ColumnElement:
+        return SuperheroModel.classes.superpower.power_name == power
 
     @decorators.view_filter()
     def filter_by_missing_weight(self) -> sqlalchemy.ColumnElement:
@@ -135,7 +139,6 @@ class SuperheroView(SqlAlchemyBaseView, SuperheroFilterMixin):
     """
 
     def __init__(self, sqlalchemy_engine: sqlalchemy.engine.Engine) -> None:
-        self._inner = sqlalchemy.select()
         super().__init__(sqlalchemy_engine)
 
     def get_select(self) -> sqlalchemy.Select:
@@ -194,53 +197,3 @@ class SuperheroView(SqlAlchemyBaseView, SuperheroFilterMixin):
                 SuperheroDBSchema.skin_color,
             )
         )
-
-    @decorators.view_filter()
-    def has_power(self, power: str) -> sqlalchemy.ColumnElement:
-        return self._inner.c.powers.contains([power])
-
-    #
-    #
-    # @decorators.view_filter()
-    # def power_higher_than(self, power_level: int) -> sqlalchemy.ColumnElement:
-    #     return self._inner.c.attributes["Power"] < power_level  # TODO: this does not work for some reason
-    #
-    #
-    # @decorators.view_filter()
-    # def combat_higher_than(self, combat_level: int) -> sqlalchemy.ColumnElement:
-    #     return self._inner.c.attributes["Combat"] < combat_level  # TODO: this does not work for some reason
-
-
-# todo: sometimes I use classes, sometimes metadata.tables, because some classes aren't automapped correctly.
-# at some point we should either fix the automap or use metadata.tables everywhere
-class SuperheroCountByPowerView(SqlAlchemyBaseView, SuperheroFilterMixin):
-    """
-    View used to count the number of superheroes with a specific power.
-    """
-
-    def __init__(self, sqlalchemy_engine: sqlalchemy.engine.Engine) -> None:
-        self._superhero_count = sqlalchemy.func.count(SuperheroModel.classes.superhero.id).label("superhero_count")
-        self._hero_power = SuperheroModel.metadata.tables["hero_power"]
-
-        super().__init__(sqlalchemy_engine)
-
-    def get_select(self) -> sqlalchemy.Select:
-        """
-        Creates the initial SqlAlchemy select object, which will be used to build the query.
-        """
-        # TODO: this should use part of the main query instead of replicating joins
-        return (
-            sqlalchemy.select(
-                SuperheroModel.classes.superpower.power_name,
-                self._superhero_count,
-            )
-            .join(self._hero_power, self._hero_power.c.hero_id == SuperheroModel.classes.superhero.id)
-            .join(
-                SuperheroModel.classes.superpower, SuperheroModel.classes.superpower.id == self._hero_power.c.power_id
-            )
-            .group_by(SuperheroModel.classes.superpower.power_name)
-        )
-
-    @decorators.view_filter()
-    def filter_by_power(self, power: str) -> sqlalchemy.ColumnElement:
-        return SuperheroModel.classes.superpower.power_name == power
