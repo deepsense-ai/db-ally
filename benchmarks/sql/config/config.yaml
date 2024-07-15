@@ -1,5 +1,5 @@
 defaults:
-  - task: iql
+  - component: iql-view
   - data: superhero
   - llm: gpt
   - _self_

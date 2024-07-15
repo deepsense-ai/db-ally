@@ -1,11 +1,11 @@
 import time
+from dataclasses import asdict
 from typing import Any, Callable, Dict, List, Tuple
 
 from datasets import Dataset
-from sqlalchemy import create_engine
 
+from .metrics.base import MetricSet
 from .pipelines.base import EvaluationPipeline, EvaluationResult
-from .utils import avarage_execution_time, execute_query
 
 
 class Evaluator:
@@ -26,7 +26,7 @@ class Evaluator:
         self,
         pipe: Callable,
         data: Dataset,
-        metrics: Dict[str, Callable],
+        metrics: MetricSet,
     ) -> Dict[str, Any]:
         """
         Compute the evaluation results for the given pipeline and data.
@@ -39,18 +39,21 @@ class Evaluator:
         Returns:
             The evaluation results.
         """
-        results, perf_results = await self.call_pipeline(pipe, data)
-        results = self.results_processor(results)
-        metrics = self.compute_metrics(metrics, results["results"])
+        results, perf_results = await self._call_pipeline(pipe, data)
+        results = self._results_processor(results)
+        computed_metrics = self._compute_metrics(metrics, results["results"])
+        results["results"] = [asdict(result) for result in results["results"]]
 
         result = {}
-        result.update(metrics)
         result.update(perf_results)
+        result.update(computed_metrics)
         result.update(results)
         return result
 
-    async def call_pipeline(
-        self, pipe: EvaluationPipeline, data: Dataset
+    async def _call_pipeline(
+        self,
+        pipe: EvaluationPipeline,
+        data: Dataset,
     ) -> Tuple[List[EvaluationResult], Dict[str, Any]]:
         """
         Call the pipeline with the given data.
@@ -67,7 +70,7 @@ class Evaluator:
         end_time = time.perf_counter()
         return pipe_output, self._compute_time_perf(start_time, end_time, len(pipe_output))
 
-    def results_processor(self, results: List[EvaluationResult]) -> Dict[str, Any]:
+    def _results_processor(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
         Process the results.
 
@@ -77,22 +80,9 @@ class Evaluator:
         Returns:
             The processed results.
         """
-        for result in results:
-            if result.db_url is not None:
-                engine = create_engine(result.db_url)
-                if result.reference.sql is not None:
-                    result.reference.results, _ = execute_query(result.reference.sql, engine)
-                    result.reference.execution_time = avarage_execution_time(result.reference.sql, engine, 10)
+        return {"results": results}
 
-                if result.prediction.sql is not None:
-                    result.prediction.results, _ = execute_query(result.prediction.sql, engine)
-                    result.prediction.execution_time = avarage_execution_time(result.prediction.sql, engine, 10)
-
-        return {
-            "results": results,
-        }
-
-    def compute_metrics(self, metrics: Dict[str, Callable], results: List[EvaluationResult]) -> Dict[str, Any]:
+    def _compute_metrics(self, metrics: MetricSet, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
         Compute a metric using the given inputs.
 
@@ -103,10 +93,9 @@ class Evaluator:
         Returns:
             The computed metric.
         """
-        return {"metrics": {metric_name: metric(results) for metric_name, metric in metrics.items()}}
+        return {"metrics": metrics.compute(results)}
 
-    @staticmethod
-    def _compute_time_perf(start_time: float, end_time: float, num_samples: int) -> Dict[str, Any]:
+    def _compute_time_perf(self, start_time: float, end_time: float, num_samples: int) -> Dict[str, Any]:
         """
         Compute the performance metrics.
 
@@ -123,7 +112,9 @@ class Evaluator:
         latency_sample = 1.0 / throughput
 
         return {
-            "total_time_in_seconds": latency,
-            "samples_per_second": throughput,
-            "latency_in_seconds": latency_sample,
+            "time_perf": {
+                "total_time_in_seconds": latency,
+                "samples_per_second": throughput,
+                "latency_in_seconds": latency_sample,
+            },
         }

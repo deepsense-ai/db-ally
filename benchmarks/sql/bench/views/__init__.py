@@ -1,15 +1,14 @@
 from typing import Dict, Type
 
-from dbally.views.freeform.text2sql.view import BaseText2SQLView
-from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
+from dbally.views.base import BaseView
 
 from .freeform.superhero import SuperheroFreeformView
 from .structured.superhero import SuperheroView
 
-STRUCTURED_VIEW_REGISTRY: Dict[str, Type[SqlAlchemyBaseView]] = {
+STRUCTURED_VIEWS_REGISTRY: Dict[str, Type[BaseView]] = {
     SuperheroView.__name__: SuperheroView,
 }
 
-FREEFORM_VIEW_REGISTRY: Dict[str, Type[BaseText2SQLView]] = {
+FREEFORM_VIEWS_REGISTRY: Dict[str, Type[BaseView]] = {
     SuperheroFreeformView.__name__: SuperheroFreeformView,
 }

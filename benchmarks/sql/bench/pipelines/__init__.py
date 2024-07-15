@@ -1,12 +1,12 @@
 from .base import EvaluationPipeline, EvaluationResult
-from .e2e import EndToEndEvaluationPipeline
-from .iql import IQLEvaluationPipeline
-from .sql import SQLEvaluationPipeline
+from .collection import CollectionEvaluationPipeline
+from .view import IQLViewEvaluationPipeline, SQLViewEvaluationPipeline, ViewEvaluationPipeline
 
 __all__ = [
     "EvaluationPipeline",
-    "EndToEndEvaluationPipeline",
-    "SQLEvaluationPipeline",
-    "IQLEvaluationPipeline",
+    "CollectionEvaluationPipeline",
+    "ViewEvaluationPipeline",
+    "IQLViewEvaluationPipeline",
+    "SQLViewEvaluationPipeline",
     "EvaluationResult",
 ]

@@ -9,13 +9,14 @@ from dbally.collection.collection import Collection
 from dbally.collection.exceptions import NoViewFoundError
 from dbally.iql._exceptions import IQLError
 from dbally.iql_generator.prompt import UnsupportedQueryError
+from dbally.views.freeform.text2sql.exceptions import Text2SQLError
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
-from ..views import FREEFORM_VIEW_REGISTRY, STRUCTURED_VIEW_REGISTRY
+from ..views import FREEFORM_VIEWS_REGISTRY, STRUCTURED_VIEWS_REGISTRY
 from .base import EvaluationPipeline, EvaluationResult, ExecutionResult
 
 
-class EndToEndEvaluationPipeline(EvaluationPipeline):
+class CollectionEvaluationPipeline(EvaluationPipeline):
     """
     Pipeline for evaluating IQL predictions.
     """
@@ -46,22 +47,20 @@ class EndToEndEvaluationPipeline(EvaluationPipeline):
         Raises:
             ValueError: If the view name is not supported.
         """
-        if not config.structured and not config.freeform:
-            raise ValueError("No structured and freeform views found in the configuration.")
+        if not config:
+            raise ValueError("No structured or freeform views found in the configuration.")
 
         collection = dbally.create_collection("bench", self.llm)
+        collection.n_retries = 0
 
-        for view_name, db_url in config.structured.items():
-            if view_cls := STRUCTURED_VIEW_REGISTRY.get(view_name):
+        for view_name, db_url in config.items():
+            if view_cls := STRUCTURED_VIEWS_REGISTRY.get(view_name) or FREEFORM_VIEWS_REGISTRY.get(view_name):
                 collection.add(view_cls, lambda: view_cls(create_engine(db_url)))  # pylint: disable=cell-var-from-loop
             else:
-                raise ValueError(f"View {view_name} not supported. Available views: {STRUCTURED_VIEW_REGISTRY}.")
-
-        for view_name, db_url in config.freeform.items():
-            if view_cls := FREEFORM_VIEW_REGISTRY.get(view_name):
-                collection.add(view_cls, lambda: view_cls(create_engine(db_url)))  # pylint: disable=cell-var-from-loop
-            else:
-                raise ValueError(f"View {view_name} not supported. Available views: {FREEFORM_VIEW_REGISTRY}.")
+                raise ValueError(
+                    f"View {view_name} not supported. "
+                    f"Available views: {list(STRUCTURED_VIEWS_REGISTRY) + list(FREEFORM_VIEWS_REGISTRY)}."
+                )
 
         return collection
 
@@ -75,9 +74,10 @@ class EndToEndEvaluationPipeline(EvaluationPipeline):
         Returns:
             The list of IQL predictions.
         """
+        db_url = None
         results = []
 
-        for data in tqdm(dataset, desc="E2E evaluation"):
+        for data in tqdm(dataset, desc="Evaluation"):
             try:
                 result = await self.collection.ask(
                     question=data["question"],
@@ -86,11 +86,12 @@ class EndToEndEvaluationPipeline(EvaluationPipeline):
                 )
             except NoViewFoundError as exc:
                 prediction = ExecutionResult(exception=exc)
-                db_url = None
-            except (IQLError, SyntaxError, UnsupportedQueryError) as exc:
-                query = "UNSUPPORTED_QUERY" if isinstance(exc, UnsupportedQueryError) else exc.source
-                prediction = ExecutionResult(iql=query, exception=exc)
-                db_url = None
+            except IQLError as exc:
+                prediction = ExecutionResult(iql=exc.source, exception=exc)
+            except UnsupportedQueryError as exc:
+                prediction = ExecutionResult(exception=exc)
+            except Text2SQLError as exc:
+                prediction = ExecutionResult(iql=exc.source, exception=exc)
             else:
                 prediction = ExecutionResult(
                     iql=result.context.get("iql", None),
@@ -102,17 +103,17 @@ class EndToEndEvaluationPipeline(EvaluationPipeline):
                     if isinstance(used_view, SqlAlchemyBaseView)
                     else used_view._engine.url
                 )
+
             reference = ExecutionResult(
                 iql=data["iql"],
                 sql=data["sql"],
             )
-            results.append(
-                EvaluationResult(
-                    question=data["question"],
-                    reference=reference,
-                    prediction=prediction,
-                    db_url=db_url,
-                ),
+            result = EvaluationResult(
+                question=data["question"],
+                reference=reference,
+                prediction=prediction,
+                db_url=db_url,
             )
+            results.append(result)
 
         return results

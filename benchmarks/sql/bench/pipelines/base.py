@@ -15,8 +15,8 @@ class ExecutionResult:
     Represents the result of a single query execution.
     """
 
-    sql: Optional[str] = None
     iql: Optional[str] = None
+    sql: Optional[str] = None
     results: List[Dict[str, Any]] = field(default_factory=list)
     exception: Optional[Exception] = None
     execution_time: Optional[float] = None
