@@ -4,7 +4,7 @@ from typing import Dict, Iterable, List, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
-from dbally.context.context import CustomContext
+from dbally.context.context import BaseCallerContext
 from dbally.iql import IQLQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
@@ -33,6 +33,22 @@ class BaseStructuredView(BaseView):
         """
         return IQLGenerator(llm=llm)
 
+    @classmethod
+    def contextualize_filters(
+        cls, filters: Iterable[ExposedFunction], contexts: Optional[Iterable[BaseCallerContext]]
+    ) -> None:
+        """
+        Updates a list of filters packed as ExposedFunction's by ingesting the matching context objects.
+
+        Args:
+            filters: An iterable of filters.
+            contexts: An iterable of context objects.
+        """
+
+        contexts = contexts or []
+        for filter_ in filters:
+            filter_.inject_context(contexts)
+
     async def ask(
         self,
         query: str,
@@ -41,7 +57,7 @@ class BaseStructuredView(BaseView):
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        contexts: Optional[Iterable[CustomContext]] = None,
+        contexts: Optional[Iterable[BaseCallerContext]] = None,
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result. It generates the IQL query from the natural language query\
@@ -65,6 +81,8 @@ class BaseStructuredView(BaseView):
         filters = self.list_filters()
         examples = self.list_few_shots()
 
+        self.contextualize_filters(filters, contexts)
+
         iql = await iql_generator.generate_iql(
             question=query,
             filters=filters,
@@ -72,7 +90,6 @@ class BaseStructuredView(BaseView):
             event_tracker=event_tracker,
             llm_options=llm_options,
             n_retries=n_retries,
-            contexts=contexts,
         )
 
         await self.apply_filters(iql)

@@ -1,8 +1,6 @@
-from typing import TYPE_CHECKING, Iterable, List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from typing_extensions import Self
-
-from dbally.context.context import CustomContext
 
 from ..audit.event_tracker import EventTracker
 from . import syntax
@@ -28,11 +26,7 @@ class IQLQuery:
 
     @classmethod
     async def parse(
-        cls,
-        source: str,
-        allowed_functions: List["ExposedFunction"],
-        event_tracker: Optional[EventTracker] = None,
-        contexts: Optional[Iterable[CustomContext]] = None,
+        cls, source: str, allowed_functions: List["ExposedFunction"], event_tracker: Optional[EventTracker] = None
     ) -> Self:
         """
         Parse IQL string to IQLQuery object.
@@ -41,11 +35,10 @@ class IQLQuery:
             source: IQL string that needs to be parsed
             allowed_functions: list of IQL functions that are allowed for this query
             event_tracker: EventTracker object to track events
-            contexts: An iterable (typically a list) of context objects, each being
-                an instance of a subclass of BaseCallerContext.
+
         Returns:
              IQLQuery object
         """
 
-        root = await IQLProcessor(source, allowed_functions, contexts, event_tracker).process()
+        root = await IQLProcessor(source, allowed_functions, event_tracker).process()
         return cls(root=root, source=source)

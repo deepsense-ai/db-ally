@@ -1,7 +1,6 @@
-from typing import Iterable, List, Optional
+from typing import List, Optional
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.context.context import CustomContext
 from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, IQLGenerationPromptFormat
 from dbally.llms.base import LLM
@@ -43,7 +42,6 @@ class IQLGenerator:
         examples: Optional[List[FewShotExample]] = None,
         llm_options: Optional[LLMOptions] = None,
         n_retries: int = 3,
-        contexts: Optional[Iterable[CustomContext]] = None,
     ) -> IQLQuery:
         """
         Generates IQL in text form using LLM.
@@ -55,8 +53,6 @@ class IQLGenerator:
             examples: List of examples to be injected into the conversation.
             llm_options: Options to use for the LLM client.
             n_retries: Number of retries to regenerate IQL in case of errors.
-            contexts: An iterable (typically a list) of context objects, each being
-                an instance of a subclass of BaseCallerContext.
 
         Returns:
             Generated IQL query.
@@ -78,9 +74,7 @@ class IQLGenerator:
                 # TODO: Move response parsing to llm generate_text method
                 iql = formatted_prompt.response_parser(response)
                 # TODO: Move IQL query parsing to prompt response parser
-                return await IQLQuery.parse(
-                    source=iql, allowed_functions=filters, event_tracker=event_tracker, contexts=contexts
-                )
+                return await IQLQuery.parse(source=iql, allowed_functions=filters, event_tracker=event_tracker)
             except IQLError as exc:
                 # TODO handle the possibility of variable `response` being not initialized
                 # while runnning the following line

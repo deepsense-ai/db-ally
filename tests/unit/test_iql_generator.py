@@ -77,7 +77,7 @@ async def test_iql_generation(iql_generator: IQLGenerator, event_tracker: EventT
             options=None,
         )
         mock_parse.assert_called_once_with(
-            source="filter_by_id(1)", allowed_functions=filters, event_tracker=event_tracker, contexts=None
+            source="filter_by_id(1)", allowed_functions=filters, event_tracker=event_tracker
         )
 
 

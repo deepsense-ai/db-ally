@@ -59,10 +59,11 @@ async def test_filter_sql_generation() -> None:
 
     mock_connection = sqlalchemy.create_mock_engine("postgresql://", executor=None)
     mock_view = MockSqlAlchemyView(mock_connection.engine)
+    filters = mock_view.list_filters()
+    mock_view.contextualize_filters(filters, [SomeTestContext(age=69)])
+
     query = await IQLQuery.parse(
-        'method_foo(1) and method_bar("London", 2020) and method_baz(AskerContext())',
-        allowed_functions=mock_view.list_filters(),
-        contexts=[SomeTestContext(age=69)],
+        'method_foo(1) and method_bar("London", 2020) and method_baz(AskerContext())', allowed_functions=filters
     )
     await mock_view.apply_filters(query)
     sql = normalize_whitespace(mock_view.execute(dry_run=True).metadata["sql"])

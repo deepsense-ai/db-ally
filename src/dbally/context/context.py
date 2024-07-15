@@ -2,11 +2,9 @@ import ast
 from abc import ABC
 from typing import ClassVar, Iterable
 
-from typing_extensions import Self, TypeAlias
+from typing_extensions import Self
 
-from dbally.context.exceptions import ContextNotAvailableError
-
-CustomContext: TypeAlias = "BaseCallerContext"
+from dbally.context.exceptions import BaseContextError
 
 
 class BaseCallerContext(ABC):
@@ -23,7 +21,7 @@ class BaseCallerContext(ABC):
     alias: ClassVar[str] = "AskerContext"
 
     @classmethod
-    def select_context(cls, contexts: Iterable[CustomContext]) -> Self:
+    def select_context(cls, contexts: Iterable["BaseCallerContext"]) -> Self:
         """
         Typically called from a subclass of BaseCallerContext, selects a member object from `contexts` being
         an instance of the same class. Effectively provides a type dispatch mechanism, substituting the context
@@ -36,17 +34,17 @@ class BaseCallerContext(ABC):
             An instance of the same BaseCallerContext subclass this method is caller from.
 
         Raises:
-            ContextNotAvailableError: If the sequence of context objects passed as argument is empty.
+            BaseContextError: If no element in `contexts` matches `cls` class.
         """
 
-        if not contexts:
-            raise ContextNotAvailableError(
-                "The LLM detected that the context is required to execute the query"
-                "and the filter signature allows contextualization while the context was not provided."
-            )
+        try:
+            selected_context = next(filter(lambda obj: isinstance(obj, cls), contexts))
+        except StopIteration as e:
+            # this custom exception provides more clear message what have just gone wrong
+            raise BaseContextError() from e
 
         # TODO confirm whether it is possible to design a correct type hints here and skipping `type: ignore`
-        return next(filter(lambda obj: isinstance(obj, cls), contexts))  # type: ignore
+        return selected_context  # type: ignore
 
     @classmethod
     def is_context_call(cls, node: ast.expr) -> bool:

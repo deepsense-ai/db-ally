@@ -5,7 +5,7 @@ from typing_extensions import TypeAlias
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
-from dbally.context.context import CustomContext
+from dbally.context.context import BaseCallerContext
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.prompt.elements import FewShotExample
@@ -29,7 +29,7 @@ class BaseView(metaclass=abc.ABCMeta):
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        contexts: Optional[Iterable[CustomContext]] = None,
+        contexts: Optional[Iterable[BaseCallerContext]] = None,
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result.
@@ -59,9 +59,9 @@ class BaseView(metaclass=abc.ABCMeta):
 
     def list_few_shots(self) -> List[FewShotExample]:
         """
-        List all examples to be injected into few-shot prompt.
+        Lists all examples to be injected into few-shot prompt.
 
         Returns:
-            List of few-shot examples
+            List of few-shot examples.
         """
         return []

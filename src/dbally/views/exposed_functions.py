@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from inspect import isclass
 from typing import _GenericAlias  # type: ignore
-from typing import Generator, Optional, Sequence, Type, Union
+from typing import Generator, Iterable, Optional, Sequence, Type, Union
 
 import typing_extensions as type_ext
 
 from dbally.context.context import BaseCallerContext
+from dbally.context.exceptions import BaseContextError, SuitableContextNotProvidedError
 from dbally.similarity import AbstractSimilarityIndex
 
 
@@ -127,6 +128,7 @@ class ExposedFunction:
     description: str
     parameters: Sequence[MethodParamWithTyping]
     context_class: Optional[Type[BaseCallerContext]] = None
+    context: Optional[BaseCallerContext] = None
 
     def __str__(self) -> str:
         base_str = f"{self.name}({', '.join(str(param) for param in self.parameters)})"
@@ -135,3 +137,22 @@ class ExposedFunction:
             return f"{base_str} - {self.description}"
 
         return base_str
+
+    def inject_context(self, contexts: Iterable[BaseCallerContext]) -> None:
+        """
+        Inserts reference to the member of `contexts` of the proper class in self.context.
+
+        Args:
+            contexts: An iterable of user-provided context objects.
+
+        Raises:
+            SuitableContextNotProvidedError: Ff no element in `contexts` matches `self.context_class`.
+        """
+
+        if self.context_class is None:
+            return
+
+        try:
+            self.context = self.context_class.select_context(contexts)
+        except BaseContextError as e:
+            raise SuitableContextNotProvidedError(str(self), self.context_class.__name__) from e

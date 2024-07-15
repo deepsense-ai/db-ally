@@ -3,7 +3,7 @@ from typing import Any, Iterable, List, Mapping, Optional, Union
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.context._utils import _does_arg_allow_context
-from dbally.context.context import BaseCallerContext, CustomContext
+from dbally.context.context import BaseCallerContext
 from dbally.iql import syntax
 from dbally.iql._exceptions import (
     IQLArgumentParsingError,
@@ -23,21 +23,17 @@ class IQLProcessor:
 
     Attributes:
         source: Raw LLM response containing IQL filter calls.
-        allowed_functions: A mapping (typically a dict) of all filters implemented for a certain View.
-        contexts: A sequence (typically a list) of context objects, each being an instance of
-            a subclass of BaseCallerContext. May contain contexts irrelevant for the currently processed query.
+        allowed_functions: A mapping (typically a dict) of all filters implemented for a certain View.=
     """
 
     source: str
     allowed_functions: Mapping[str, "ExposedFunction"]
-    contexts: Iterable[CustomContext]
     _event_tracker: EventTracker
 
     def __init__(
         self,
         source: str,
         allowed_functions: Iterable[ExposedFunction],
-        contexts: Optional[Iterable[CustomContext]] = None,
         event_tracker: Optional[EventTracker] = None,
     ) -> None:
         """
@@ -46,14 +42,11 @@ class IQLProcessor:
         Args:
             source: Raw LLM response containing IQL filter calls.
             allowed_functions: An interable (typically a list) of all filters implemented for a certain View.
-            contexts: An iterable (typically a list) of context objects, each being an instance of
-                a subclass of BaseCallerContext.
             even_tracker: An EvenTracker instance.
         """
 
         self.source = source
         self.allowed_functions = {func.name: func for func in allowed_functions}
-        self.contexts = contexts or []
         self._event_tracker = event_tracker or EventTracker()
 
     async def process(self) -> syntax.Node:
@@ -148,7 +141,7 @@ class IQLProcessor:
             if not _does_arg_allow_context(arg_spec):
                 raise IQLContextNotAllowedError(arg, self.source, arg_name=arg_spec.name)
 
-            return parent_func_def.context_class.select_context(self.contexts)
+            return parent_func_def.context
 
         if not isinstance(arg, ast.Constant):
             raise IQLArgumentParsingError(arg, self.source)

@@ -10,7 +10,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult
-from dbally.context.context import CustomContext
+from dbally.context.context import BaseCallerContext
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
@@ -157,7 +157,7 @@ class Collection:
         dry_run: bool = False,
         return_natural_response: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        contexts: Optional[Iterable[CustomContext]] = None,
+        contexts: Optional[Iterable[BaseCallerContext]] = None,
     ) -> ExecutionResult:
         """
         Ask question in a text form and retrieve the answer based on the available views.

@@ -70,7 +70,7 @@ def validate_arg_type(required_type: Union[Type, _GenericAlias], value: Any) -> 
     actual_type = type_ext.get_origin(required_type) if isinstance(required_type, _GenericAlias) else required_type
     # typing.Union is an instance of _GenericAlias
     if actual_type is None:
-        # workaround to prevent type warning in line `if isisntanc(value, actual_type):`, TODO check whether necessary
+        # workaround to prevent type warning in line `if isisntance(value, actual_type):`, TODO check whether necessary
         actual_type = required_type.__origin__
 
     if actual_type is Union:

@@ -16,14 +16,8 @@ class TestCustomContext(BaseCallerContext):
     city: str
 
 
-@dataclass
-class AnotherTestCustomContext(BaseCallerContext):
-    some_field: str
-
-
 async def test_iql_parser():
     custom_context = TestCustomContext(city="cracow")
-    custom_context2 = AnotherTestCustomContext(some_field="aaa")
 
     parsed = await IQLQuery.parse(
         "not (filter_by_name(['John', 'Anne']) and filter_by_city(AskerContext()) and filter_by_company('deepsense.ai'))",
@@ -36,12 +30,12 @@ async def test_iql_parser():
                 description="",
                 parameters=[MethodParamWithTyping(name="city", type=Union[str, TestCustomContext])],
                 context_class=TestCustomContext,
+                context=custom_context,
             ),
             ExposedFunction(
                 name="filter_by_company", description="", parameters=[MethodParamWithTyping(name="company", type=str)]
             ),
         ],
-        contexts=[custom_context, custom_context2],
     )
 
     not_op = parsed.root
