@@ -15,10 +15,10 @@ class MethodsBaseView(BaseStructuredView, metaclass=abc.ABCMeta):
     """
 
     # Method arguments that should be skipped when listing methods
-    HIDDEN_ARGUMENTS = ["self", "select", "return", "subquery"]
+    HIDDEN_ARGUMENTS = ["self", "select", "return", "filtered_query"]
 
     def __init__(self):
-        self._subquery = None
+        self._filtered_query = None
 
     @classmethod
     def list_methods_by_decorator(cls, decorator: Callable) -> List[ExposedFunction]:
@@ -126,5 +126,5 @@ class MethodsBaseView(BaseStructuredView, metaclass=abc.ABCMeta):
         method, args = self._method_with_args_from_call(func, decorators.view_aggregation)
 
         if inspect.iscoroutinefunction(method):
-            return await method(self._subquery, *args)
-        return method(self._subquery, *args)
+            return await method(self._filtered_query, *args)
+        return method(self._filtered_query, *args)

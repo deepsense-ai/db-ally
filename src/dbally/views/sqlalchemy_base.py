@@ -17,7 +17,7 @@ class SqlAlchemyBaseView(MethodsBaseView):
         super().__init__()
         self._select = self.get_select()
         self._sqlalchemy_engine = sqlalchemy_engine
-        self._subquery = None
+        self._filtered_query = None
 
     @abc.abstractmethod
     def get_select(self) -> sqlalchemy.Select:
@@ -28,7 +28,7 @@ class SqlAlchemyBaseView(MethodsBaseView):
         which will be used to build the query.
         """
 
-    def get_subquery(self) -> sqlalchemy.Subquery:
+    def get_filtered_query(self) -> sqlalchemy.Subquery:
         """
         Creates the initial sqlalchemy.Subquery object, which will be used to build the query.
 
@@ -76,13 +76,13 @@ class SqlAlchemyBaseView(MethodsBaseView):
 
     async def apply_aggregation(self, aggregation: IQLQuery) -> None:
         """
-        Creates a subquery based on existing
+        Creates a subquery based on existing and calls the aggregation method.
 
         Args:
             aggregation: IQLQuery object representing the filters to apply
         """
-        self._subquery = self.get_subquery()
-        self._subquery = await self.call_aggregation_method(aggregation.root)
+        self._filtered_query = self.get_filtered_query()
+        self._filtered_query = await self.call_aggregation_method(aggregation.root)
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         """
@@ -98,8 +98,8 @@ class SqlAlchemyBaseView(MethodsBaseView):
 
         results = []
         statement = self._select
-        if self._subquery is not None:
-            statement = self._subquery
+        if self._filtered_query is not None:
+            statement = self._filtered_query
 
         sql = str(statement.compile(bind=self._sqlalchemy_engine, compile_kwargs={"literal_binds": True}))
 

@@ -86,7 +86,6 @@ class BaseStructuredView(BaseView):
         result = self.execute(dry_run=dry_run)
         result.context["iql"] = {"filters": f"{iql}", "aggregation": f"{iql_agg}"}
 
-
         return result
 
     @abc.abstractmethod
