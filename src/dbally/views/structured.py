@@ -36,7 +36,7 @@ class BaseStructuredView(BaseView):
         self,
         query: str,
         llm: LLM,
-        event_tracker: EventTracker,
+        event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
