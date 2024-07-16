@@ -16,7 +16,7 @@ class ExactMatchIQL(Metric):
 
     def compute(self, results: List[EvaluationResult]) -> float:
         """
-        Computes the ratio of predicated queries that are identical to the ground truth ones.
+        Computes the exact match ratio.
 
         Args:
             results: List of evaluation results.
@@ -36,7 +36,7 @@ class ValidIQL(Metric):
 
     def compute(self, results: List[EvaluationResult]) -> float:
         """
-        Calculates the ratio of valid IQL queries for a given results.
+        Calculates the valid IQL ratio.
 
         Args:
             results: List of evaluation results.
@@ -61,7 +61,7 @@ class UnsupportedIQL(Metric):
 
     def compute(self, results: List[EvaluationResult]) -> float:
         """
-        Calculates the ratio of unsupported queries for a given results.
+        Calculates the unsupported IQL ratio.
 
         Args:
             results: List of evaluation results.
@@ -90,7 +90,7 @@ class HallucinatedIQL(Metric):
 
     def compute(self, results: List[EvaluationResult]) -> float:
         """
-        Calculates the ratio of hallucinated queries for a given results.
+        Calculates the hallucinated IQL ratio.
 
         Args:
             results: List of evaluation results.

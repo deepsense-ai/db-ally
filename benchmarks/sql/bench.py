@@ -7,7 +7,17 @@ from typing import Dict
 import hydra
 import neptune
 from bench.evaluator import Evaluator
-from bench.metrics import ExactMatchIQL, ExactMatchSQL, HallucinatedIQL, MetricSet, UnsupportedIQL, ValidIQL
+from bench.metrics import (
+    ExactMatchIQL,
+    ExactMatchSQL,
+    ExecutionAccuracy,
+    HallucinatedIQL,
+    MetricSet,
+    UnsupportedIQL,
+    ValidEfficiencyScore,
+    ValidIQL,
+    ValidSQL,
+)
 from bench.pipelines import (
     CollectionEvaluationPipeline,
     EvaluationPipeline,
@@ -44,15 +54,26 @@ EVALUATION_METRICS: Dict[str, MetricSet] = {
     EvaluationType.COLLECTION.value: MetricSet(
         ExactMatchIQL,
         ExactMatchSQL,
+        ValidIQL,
+        ValidSQL,
+        UnsupportedIQL,
+        HallucinatedIQL,
+        ExecutionAccuracy,
+        ValidEfficiencyScore,
     ),
     EvaluationType.IQL_VIEW.value: MetricSet(
         ExactMatchIQL,
         ValidIQL,
         UnsupportedIQL,
         HallucinatedIQL,
+        ExecutionAccuracy,
+        ValidEfficiencyScore,
     ),
     EvaluationType.SQL_VIEW.value: MetricSet(
         ExactMatchSQL,
+        ValidSQL,
+        ExecutionAccuracy,
+        ValidEfficiencyScore,
     ),
 }
 
