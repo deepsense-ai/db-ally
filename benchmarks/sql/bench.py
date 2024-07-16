@@ -55,38 +55,6 @@ EVALUATION_METRICS: Dict[str, MetricSet] = {
         ExactMatchSQL,
     ),
 }
-# EVALUATION_METRICS: Dict[str, Callable] = {
-#     EvaluationType.IQL.value: {
-#         ExactMatchIQL.name: ExactMatchIQL,
-#         "em_iql": exact_match_iql,
-#         "valid_iql": valid_iql,
-#         "invalid_iql": invalid_iql,
-#         "unsupported_iql": unsupported_iql,
-#         "em_sql": exact_match_sql,
-#         "valid_sql": valid_sql,
-#         "invalid_sql": invalid_sql,
-#         "ex": execution_accuracy,
-#         "ves": valid_efficiency_score,
-#     },
-#     EvaluationType.SQL.value: {
-#         "em_sql": exact_match_sql,
-#         "valid_sql": valid_sql,
-#         "invalid_sql": invalid_sql,
-#         "ex": execution_accuracy,
-#         "ves": valid_efficiency_score,
-#     },
-#     EvaluationType.E2E.value: {
-#         "em_iql": exact_match_iql,
-#         "valid_iql": valid_iql,
-#         "invalid_iql": invalid_iql,
-#         "unsupported_iql": unsupported_iql,
-#         "em_sql": exact_match_iql,
-#         "valid_sql": valid_sql,
-#         "invalid_sql": invalid_sql,
-#         "ex": execution_accuracy,
-#         "ves": valid_efficiency_score,
-#     },
-# }
 
 
 async def bench(config: DictConfig) -> None:

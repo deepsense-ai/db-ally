@@ -134,9 +134,6 @@ class SuperheroView(SqlAlchemyBaseView, SuperheroFilterMixin):
     Main view, meant for finding superheroes meeting specific criteria
     """
 
-    def __init__(self, sqlalchemy_engine: sqlalchemy.engine.Engine) -> None:
-        super().__init__(sqlalchemy_engine)
-
     def get_select(self) -> sqlalchemy.Select:
         """
         Creates the initial SqlAlchemy select object, which will be used to build the query.
