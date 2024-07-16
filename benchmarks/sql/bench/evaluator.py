@@ -1,5 +1,4 @@
 import time
-from dataclasses import asdict
 from typing import Any, Callable, Dict, List, Tuple
 
 from datasets import Dataset
@@ -40,9 +39,8 @@ class Evaluator:
             The evaluation results.
         """
         results, perf_results = await self._call_pipeline(pipe, data)
+        computed_metrics = self._compute_metrics(metrics, results)
         results = self._results_processor(results)
-        computed_metrics = self._compute_metrics(metrics, results["results"])
-        results["results"] = [asdict(result) for result in results["results"]]
 
         result = {}
         result.update(perf_results)
@@ -80,7 +78,7 @@ class Evaluator:
         Returns:
             The processed results.
         """
-        return {"results": results}
+        return {"results": [result.dict() for result in results]}
 
     def _compute_metrics(self, metrics: MetricSet, results: List[EvaluationResult]) -> Dict[str, Any]:
         """

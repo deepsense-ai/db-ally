@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from datasets import Dataset
@@ -21,6 +21,19 @@ class ExecutionResult:
     exception: Optional[Exception] = None
     execution_time: Optional[float] = None
 
+    def dict(self) -> Dict[str, Any]:
+        """
+        Returns the dictionary representation of the object.
+
+        Returns:
+            The dictionary representation.
+        """
+        return {
+            "iql": self.iql,
+            "sql": self.sql,
+            "execution_time": self.execution_time,
+        }
+
 
 @dataclass
 class EvaluationResult:
@@ -33,7 +46,19 @@ class EvaluationResult:
     prediction: ExecutionResult
     db_url: Optional[str] = None
 
-    dict = asdict
+    def dict(self) -> Dict[str, Any]:
+        """
+        Returns the dictionary representation of the object.
+
+        Returns:
+            The dictionary representation.
+        """
+        return {
+            "question": self.question,
+            "reference": self.reference.dict(),
+            "prediction": self.prediction.dict(),
+            "db_url": self.db_url,
+        }
 
 
 class EvaluationPipeline(ABC):
