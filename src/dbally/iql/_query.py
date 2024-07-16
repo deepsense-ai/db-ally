@@ -33,11 +33,15 @@ class IQLQuery:
         Parse IQL string to IQLQuery object.
 
         Args:
-            source: IQL string that needs to be parsed
-            allowed_functions: list of IQL functions that are allowed for this query
-            event_tracker: EventTracker object to track events
+            source: IQL string that needs to be parsed.
+            allowed_functions: List of IQL functions that are allowed for this query.
+            event_tracker: EventTracker object to track events.
+
         Returns:
-             IQLQuery object
+            IQLQuery object.
+
+        Raises:
+            IQLError: If parsing fails.
         """
         root = await IQLProcessor(source, allowed_functions, event_tracker=event_tracker).process()
         return cls(root=root, source=source)
