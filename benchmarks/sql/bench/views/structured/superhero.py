@@ -43,10 +43,6 @@ class SuperheroDBSchema:
 
 class SuperheroFilterMixin:
     @decorators.view_filter()
-    def filter_by_name(self, name: str) -> sqlalchemy.ColumnElement:
-        return SuperheroModel.classes.superhero.name == name
-
-    @decorators.view_filter()
     def filter_by_full_name(self, full_name: str) -> sqlalchemy.ColumnElement:
         return SuperheroModel.classes.superhero.full_name == full_name
 

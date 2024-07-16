@@ -7,7 +7,7 @@ from typing import Dict
 import hydra
 import neptune
 from bench.evaluator import Evaluator
-from bench.metrics import ExactMatchIQL, ExactMatchSQL, MetricSet
+from bench.metrics import ExactMatchIQL, ExactMatchSQL, HallucinatedIQL, MetricSet, UnsupportedIQL, ValidIQL
 from bench.pipelines import (
     CollectionEvaluationPipeline,
     EvaluationPipeline,
@@ -47,12 +47,46 @@ EVALUATION_METRICS: Dict[str, MetricSet] = {
     ),
     EvaluationType.IQL_VIEW.value: MetricSet(
         ExactMatchIQL,
-        ExactMatchSQL,
+        ValidIQL,
+        UnsupportedIQL,
+        HallucinatedIQL,
     ),
     EvaluationType.SQL_VIEW.value: MetricSet(
         ExactMatchSQL,
     ),
 }
+# EVALUATION_METRICS: Dict[str, Callable] = {
+#     EvaluationType.IQL.value: {
+#         ExactMatchIQL.name: ExactMatchIQL,
+#         "em_iql": exact_match_iql,
+#         "valid_iql": valid_iql,
+#         "invalid_iql": invalid_iql,
+#         "unsupported_iql": unsupported_iql,
+#         "em_sql": exact_match_sql,
+#         "valid_sql": valid_sql,
+#         "invalid_sql": invalid_sql,
+#         "ex": execution_accuracy,
+#         "ves": valid_efficiency_score,
+#     },
+#     EvaluationType.SQL.value: {
+#         "em_sql": exact_match_sql,
+#         "valid_sql": valid_sql,
+#         "invalid_sql": invalid_sql,
+#         "ex": execution_accuracy,
+#         "ves": valid_efficiency_score,
+#     },
+#     EvaluationType.E2E.value: {
+#         "em_iql": exact_match_iql,
+#         "valid_iql": valid_iql,
+#         "invalid_iql": invalid_iql,
+#         "unsupported_iql": unsupported_iql,
+#         "em_sql": exact_match_iql,
+#         "valid_sql": valid_sql,
+#         "invalid_sql": invalid_sql,
+#         "ex": execution_accuracy,
+#         "ves": valid_efficiency_score,
+#     },
+# }
 
 
 async def bench(config: DictConfig) -> None:
@@ -66,7 +100,7 @@ async def bench(config: DictConfig) -> None:
 
     dataset = load_dataset(config.data.path, split=config.data.split)
     dataset = dataset.filter(lambda x: x["db_id"] in config.data.db_ids and x["difficulty"] in config.data.difficulties)
-    dataset = dataset.select(range(3))
+    dataset = dataset.select(range(10, 20))
 
     pipeline = EVALUATION_PIPELINES[config.component.type](config)
     metrics = EVALUATION_METRICS[config.component.type](config)

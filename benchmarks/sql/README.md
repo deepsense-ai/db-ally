@@ -14,6 +14,8 @@ New PRs adding support for new databases from BIRD or SPIDER are welcome.
 
 ### Usage
 
+Before starting, download the `superhero.sqlite` database file from [BIRD](https://bird-bench.github.io/) and change its extension to `*.db`, place it in the `data/` folder.
+
 Run the whole suite on the `superhero` database:
 
 ```bash
@@ -58,12 +60,16 @@ python -m pytest
 
 This suite computes following metrics:
 
-- `exact_match` - ratio of predicated queries that are identical to the ground truth ones.
-- `exact_match` - estimates the pass@k metric for code synthesis.
+- `EM_IQL` - ratio of predicated IQL queries that are identical to the ground truth ones.
+- `VAL_IQL` - ratio of valid IQL queries.
+- `UNSUPP_IQL` - ratio of unsupported IQL queries.
+- `HAL_IQL` - ratio of hallucinated IQL queries.
+- `EM_SQL` - ratio of predicated SQL queries that are identical to the ground truth ones.
+- ...
 
 ## Add new dataset
 
-In order to run this suite against you own dataset, upload your dataset to [Hugging Face](https://huggingface.co) and make sure the data is in the format expected by the evaluation pipeline.
+In order to run this suite against your own dataset, upload it to [Hugging Face](https://huggingface.co) and make sure the data is in the format expected by the evaluation pipeline.
 
 Evaluation dataset required fields:
 
@@ -73,5 +79,4 @@ Evaluation dataset required fields:
 - `difficulty` - SQL code difficulty label
 - `db_id` - database identifier
 
-
-Additionaly, you need to create approprite structure and freeform view for downstream components
+In addition, add a database file in the `data/` folder and create a structure and freeform view in the `bench.views` module for evaluation.

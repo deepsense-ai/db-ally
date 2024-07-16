@@ -91,7 +91,7 @@ class CollectionEvaluationPipeline(EvaluationPipeline):
             except UnsupportedQueryError as exc:
                 prediction = ExecutionResult(exception=exc)
             except Text2SQLError as exc:
-                prediction = ExecutionResult(iql=exc.source, exception=exc)
+                prediction = ExecutionResult(exception=exc)
             else:
                 prediction = ExecutionResult(
                     iql=result.context.get("iql", None),
