@@ -1,4 +1,4 @@
-from unittest.mock import ANY, AsyncMock, call
+from unittest.mock import ANY, AsyncMock, call, patch
 
 import pytest
 
@@ -24,11 +24,12 @@ async def test_llm_options_propagation():
     collection.add(MockView1)
     collection.add(MockView2)
 
-    await collection.ask(
-        question="Mock question",
-        return_natural_response=True,
-        llm_options=custom_options,
-    )
+    with patch("dbally.iql.IQLQuery.parse", AsyncMock()):
+        await collection.ask(
+            question="Mock question",
+            return_natural_response=True,
+            llm_options=custom_options,
+        )
 
     assert llm.client.call.call_count == 3
 

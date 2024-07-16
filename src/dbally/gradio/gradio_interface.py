@@ -1,12 +1,12 @@
 import json
-from io import StringIO
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import gradio
 import pandas as pd
 
+import dbally
 from dbally import BaseStructuredView
-from dbally.audit import CLIEventHandler
+from dbally.audit.event_handlers.buffer_event_handler import BufferEventHandler
 from dbally.collection import Collection
 from dbally.collection.exceptions import NoViewFoundError
 from dbally.iql_generator.prompt import UnsupportedQueryError
@@ -28,6 +28,23 @@ async def create_gradio_interface(user_collection: Collection, preview_limit: in
     return gradio_interface
 
 
+def find_event_buffer() -> Optional[BufferEventHandler]:
+    """
+    Searches through global event handlers to find an instance of BufferEventHandler.
+
+    This function iterates over the list of global event handlers stored in `dbally.event_handlers`.
+    It checks the type of each handler, and if it finds one that is an instance of `BufferEventHandler`, it
+    returns that handler. If no such handler is found, the function returns `None`.
+
+    Returns:
+        The first instance of `BufferEventHandler` found in the list, or `None` if no such handler is found.
+    """
+    for handler in dbally.event_handlers:
+        if isinstance(handler, BufferEventHandler):
+            return handler
+    return None
+
+
 class GradioAdapter:
     """
     A class to adapt and integrate data collection and query execution with Gradio interface components.
@@ -41,12 +58,30 @@ class GradioAdapter:
         self.preview_limit = None
         self.selected_view_name = None
         self.collection = None
-        self.log = StringIO()
 
-    def _load_gradio_data(self, preview_dataframe, label, empty_warning=None) -> Tuple[gradio.DataFrame, gradio.Label]:
-        if not empty_warning:
-            empty_warning = "Preview not available"
+        buffer_event_handler = find_event_buffer()
+        if not buffer_event_handler:
+            buffer_event_handler = BufferEventHandler()
+            dbally.event_handlers.append(buffer_event_handler)
 
+        self.log: BufferEventHandler = buffer_event_handler.buffer  # pylint: disable=no-member
+
+    def _load_gradio_data(self, preview_dataframe, label) -> Tuple[gradio.DataFrame, gradio.Label]:
+        """
+        Load data into Gradio components for preview.
+
+        This function takes a DataFrame and a label, and returns a tuple containing a Gradio DataFrame
+        and a Gradio Label. The visibility of these components is determined by whether the input
+        DataFrame is empty.
+
+        Args:
+            preview_dataframe: The DataFrame to be loaded into the Gradio DataFrame component.
+            label: The label to be associated with the Gradio components.
+
+        Returns:
+            A tuple containing the Gradio DataFrame component with the provided data and label and A Gradio Label
+            indicating the availability of data.
+        """
         if preview_dataframe.empty:
             gradio_preview_dataframe = gradio.DataFrame(label=label, value=preview_dataframe, visible=False)
             empty_frame_label = gradio.Label(value=f"{label} not available", visible=True, show_label=False)
@@ -130,7 +165,7 @@ class GradioAdapter:
             self.log.seek(0)
             log_content = self.log.read()
 
-        gradio_dataframe, empty_dataframe_warning = self._load_gradio_data(data, "Results", "No matching results found")
+        gradio_dataframe, empty_dataframe_warning = self._load_gradio_data(data, "Results")
         return (
             gradio_dataframe,
             empty_dataframe_warning,
@@ -177,7 +212,6 @@ class GradioAdapter:
 
         self.preview_limit = preview_limit
         self.collection = user_collection
-        self.collection.add_event_handler(CLIEventHandler(self.log))
 
         data_preview_frame = pd.DataFrame()
         question_interactive = False

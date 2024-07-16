@@ -58,7 +58,7 @@ class IQLGenerator:
             Generated IQL query.
 
         Raises:
-            IQLError: If the generated IQL is not valid.
+            IQLError: If IQL generation fails after all retries.
         """
         prompt_format = IQLGenerationPromptFormat(
             question=question,
