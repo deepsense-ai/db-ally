@@ -17,7 +17,7 @@ First, set up your environment to use a Hugging Face model.
 ```python
 
 import os
-from dbally.llms.localllm import LocalLLM
+from dbally.llms.local import LocalLLM
 
 os.environ["HUGGINGFACE_API_KEY"] = "your-api-key"
 
@@ -50,7 +50,7 @@ For advanced users, you can customize your LLM using [`LocalLLMOptions`](../../r
 
 ```python
 import dbally
-from dbally.llms.clients.localllm import LocalLLMOptions
+from dbally.llms.clients.local import LocalLLMOptions
 
 llm = LocalLLM("meta-llama/Meta-Llama-3-8B-Instruct", default_options=LocalLLMOptions(temperature=0.7))
 my_collection = dbally.create_collection("my_collection", llm)
