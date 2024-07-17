@@ -56,9 +56,16 @@ class CandidateView(SqlAlchemyBaseView):
 
     @decorators.view_aggregation()
     def count_by_column(self, filtered_query: sqlalchemy.Select, column_name: str) -> sqlalchemy.Select:  # pylint: disable=W0602, C0116, W9011
-        select = sqlalchemy.select(getattr(filtered_query.c, column_name), sqlalchemy.func.count(filtered_query.c.name).label("count")) \
+        select = sqlalchemy.select(getattr(filtered_query.c, column_name),
+                                   sqlalchemy.func.count(filtered_query.c.name).label("count")) \
             .group_by(getattr(filtered_query.c, column_name))
         return select
+
+    # @decorators.view_aggregation()
+    # def count_by_university(self, filtered_query: sqlalchemy.Select) -> sqlalchemy.Select:  # pylint: disable=W0602, C0116, W9011
+    #     select = sqlalchemy.select(filtered_query.c.university, sqlalchemy.func.count(filtered_query.c.name).label("count")) \
+    #         .group_by(filtered_query.c.university)
+    #     return select
 
 
 async def main():

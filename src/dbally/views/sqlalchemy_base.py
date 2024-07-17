@@ -82,7 +82,7 @@ class SqlAlchemyBaseView(MethodsBaseView):
             aggregation: IQLQuery object representing the filters to apply
         """
         self._filtered_query = self._get_filtered_query()
-        self._filtered_query = await self.call_aggregation_method(aggregation)
+        self._filtered_query = await self.call_aggregation_method(aggregation.root)
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         """

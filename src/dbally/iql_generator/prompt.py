@@ -77,7 +77,7 @@ IQL_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
                 "You MUST use only these methods:\n"
                 "\n{filters}\n"
                 "It is VERY IMPORTANT not to use methods other than those listed above."
-                """If you DON'T KNOW HOW TO ANSWER DON'T SAY \"\", SAY: `UNSUPPORTED QUERY` INSTEAD! """
+                """If you DON'T KNOW HOW TO ANSWER DON'T SAY anything other than `UNSUPPORTED QUERY`"""
                 "This is CRUCIAL, otherwise the system will crash. "
             ),
         },
