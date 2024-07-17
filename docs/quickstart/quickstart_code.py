@@ -68,8 +68,8 @@ async def main():
     collection = dbally.create_collection("recruitment", llm)
     collection.add(CandidateView, lambda: CandidateView(engine))
 
-    result = await collection.ask("Give me the number of French candidates suitable"
-                                  "for a senior data scientist position for each university")
+    result = await collection.ask("Could you find French candidates suitable for a senior data scientist position"
+                                  "and count them university-wise?")
 
     print(f"The generated SQL query is: {result.context.get('sql')}")
     print()
