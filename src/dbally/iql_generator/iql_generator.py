@@ -56,7 +56,7 @@ class IQLGenerator:
             question: User question.
             filters: List of filters exposed by the view.
             event_tracker: Event store used to audit the generation process.
-            aggregations: List of aggregations to be applied on the view.
+            aggregations: List of aggregations exposed by the view.
             examples: List of examples to be injected into the conversation.
             llm_options: Options to use for the LLM client.
             n_retries: Number of retries to regenerate IQL in case of errors.

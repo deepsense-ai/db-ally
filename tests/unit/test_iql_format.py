@@ -13,7 +13,7 @@ async def test_iql_prompt_format_default() -> None:
     assert formatted_prompt.chat == [
         {
             "role": "system",
-            "content": "You have access to API that lets you query a database:\n"
+            "content": "You have access to an API that lets you query a database:\n"
             "\n[]\n"
             "Suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
             "Remember! Don't give any comments, just the function calls.\n"
@@ -43,7 +43,7 @@ async def test_iql_prompt_format_few_shots_injected() -> None:
     assert formatted_prompt.chat == [
         {
             "role": "system",
-            "content": "You have access to API that lets you query a database:\n"
+            "content": "You have access to an API that lets you query a database:\n"
             "\n[]\n"
             "Suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
             "Remember! Don't give any comments, just the function calls.\n"

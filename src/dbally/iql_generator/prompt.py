@@ -54,7 +54,7 @@ class IQLGenerationPromptFormat(PromptFormat):
             question: Question to be asked.
             filters: List of filters exposed by the view.
             examples: List of examples to be injected into the conversation.
-            aggregations: List of examples to be computed for the view (Currently 1 aggregation supported).
+            aggregations: List of aggregations exposed by the view.
         """
         super().__init__(examples)
         self.question = question
@@ -67,7 +67,7 @@ IQL_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
         {
             "role": "system",
             "content": (
-                "You have access to API that lets you query a database:\n"
+                "You have access to an API that lets you query a database:\n"
                 "\n{filters}\n"
                 "Suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
                 "Remember! Don't give any comments, just the function calls.\n"
@@ -93,14 +93,14 @@ IQL_GENERATION_TEMPLATE_AGGREGATION = PromptTemplate[IQLGenerationPromptFormat](
     chat=(
         {
             "role": "system",
-            "content": "You have access to API that lets you query a database supporting SINGLE aggregation.\n"
-            "When prompted for just aggregation, use the following methods: \n"
+            "content": "You have access to an API that lets you query a database supporting a SINGLE aggregation.\n"
+            "When prompted for an aggregation, use the following methods: \n"
             "{aggregations}"
             "DO NOT INCLUDE arguments names in your response. Only the values.\n"
             "You MUST use only these methods:\n"
             "\n{aggregations}\n"
             "It is VERY IMPORTANT not to use methods other than those listed above."
-            """If you DON'T KNOW HOW TO ANSWER DON'T SAY \"\" anything other than `UNSUPPORTED QUERY`"""
+            """If you DON'T KNOW HOW TO ANSWER DON'T SAY anything other than `UNSUPPORTED QUERY`"""
             "This is CRUCIAL to put `UNSUPPORTED QUERY` text only, otherwise the system will crash. "
             "Structure output to resemble the following pattern:\n"
             'aggregation1("arg1", arg2)\n',

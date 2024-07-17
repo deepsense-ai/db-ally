@@ -18,7 +18,7 @@ def view_filter() -> typing.Callable:
 
 def view_aggregation() -> typing.Callable:
     """
-    Decorator for marking a method as a filter
+    Decorator for marking a method as an aggregation
 
     Returns:
         Function that returns the decorated method
