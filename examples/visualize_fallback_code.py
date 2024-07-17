@@ -9,6 +9,7 @@ from recruiting.db import ENGINE as recruiting_engine
 from recruiting.views import RecruitmentView
 
 import dbally
+from dbally.audit import CLIEventHandler, OtelEventHandler
 from dbally.gradio import create_gradio_interface
 from dbally.llms.litellm import LiteLLM
 
@@ -19,10 +20,10 @@ async def main():
     user_collection.add(CandidateView, lambda: CandidateView(candidate_view_with_similarity_store.engine))
     user_collection.add(SampleText2SQLViewCyphers, lambda: SampleText2SQLViewCyphers(create_freeform_memory_engine()))
 
-    fallback_collection = dbally.create_collection("freeform candidates", llm)
+    fallback_collection = dbally.create_collection("freeform candidates", llm, event_handlers=[OtelEventHandler()])
     fallback_collection.add(CandidateFreeformView, lambda: CandidateFreeformView(candidates_freeform.engine))
 
-    second_fallback_collection = dbally.create_collection("recruitment", llm)
+    second_fallback_collection = dbally.create_collection("recruitment", llm, event_handlers=[CLIEventHandler()])
     second_fallback_collection.add(RecruitmentView, lambda: RecruitmentView(recruiting_engine))
 
     user_collection.set_fallback(fallback_collection).set_fallback(second_fallback_collection)

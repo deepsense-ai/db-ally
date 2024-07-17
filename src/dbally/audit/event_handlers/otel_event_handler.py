@@ -7,7 +7,7 @@ from opentelemetry.trace import Span, SpanKind, StatusCode, TracerProvider
 from opentelemetry.util.types import AttributeValue
 
 from dbally.audit.event_handlers.base import EventHandler
-from dbally.audit.events import Event, LLMEvent, RequestEnd, RequestStart, SimilarityEvent
+from dbally.audit.events import Event, FallbackEvent, LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 TRACER_NAME = "db-ally.events"
 FORBIDDEN_CONTEXT_KEYS = {"filter_mask"}
@@ -172,8 +172,11 @@ class OtelEventHandler(EventHandler[SpanHandler, SpanHandler]):
                     .set("db-ally.similarity.fetcher", event.fetcher)
                     .set_input("db-ally.similarity.input", event.input_value)
                 )
+        if isinstance(event, FallbackEvent):
+            with self._new_child_span(request_context, "fallback") as span:
+                return self._handle_span(span).set("db-ally.error_description", event.error_description)
 
-        raise ValueError(f"Unsuported event: {type(event)}")
+        raise ValueError(f"Unsupported event: {type(event)}")
 
     async def event_end(self, event: Optional[Event], request_context: SpanHandler, event_context: SpanHandler) -> None:
         """

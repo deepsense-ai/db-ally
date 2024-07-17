@@ -131,13 +131,13 @@ class Collection:
         Returns:
             The fallback collection to create chains call
         """
+        self._fallback_collection = fallback_collection
         if fallback_collection._event_handlers != self._event_handlers:  # pylint: disable=W0212
             logging.warning(
-                "Global event handlers are override by fallback. New event handlers are: %s",
+                "Global event handlers are modified by fallback. New event handlers are: %s",
                 fallback_collection._event_handlers,  # pylint: disable=W0212
             )
 
-        self._fallback_collection = fallback_collection
         return fallback_collection
 
     def __rshift__(self, fallback_collection: "Collection"):
@@ -279,6 +279,22 @@ class Collection:
         )
         return textual_response
 
+    def get_all_event_handlers(self) -> List[EventHandler]:
+        """
+        Retrieves all event handlers, including those from a fallback collection if available.
+
+        This method returns a list of event handlers. If there is no fallback collection,
+        it simply returns the event handlers stored in the current object. If a fallback
+        collection is available, it combines the event handlers from both the current object
+        and the fallback collection, ensuring no duplicates.
+
+        Returns:
+            A list of event handlers.
+        """
+        if not self._fallback_collection:
+            return self._event_handlers
+        return list(set(self._event_handlers).union(self._fallback_collection.get_all_event_handlers()))
+
     async def _handle_fallback(
         self,
         question: str,
@@ -363,10 +379,10 @@ class Collection:
             UnsupportedQueryError: if the question could not be answered
             IndexUpdateError: if index update failed
         """
-
         if not event_tracker:
             is_fallback_call = False
-            event_tracker = EventTracker.initialize_with_handlers(self._event_handlers)
+            event_handlers = self.get_all_event_handlers()
+            event_tracker = EventTracker.initialize_with_handlers(event_handlers)
             await event_tracker.request_start(RequestStart(question=question, collection_name=self.name))
         else:
             is_fallback_call = True
@@ -375,10 +391,18 @@ class Collection:
 
         try:
             start_time = time.monotonic()
-            selected_view_name = await self._select_view(question, event_tracker, llm_options)
+            selected_view_name = await self._select_view(
+                question=question, event_tracker=event_tracker, llm_options=llm_options
+            )
 
             start_time_view = time.monotonic()
-            view_result = await self._ask_view(selected_view_name, question, event_tracker, llm_options, dry_run)
+            view_result = await self._ask_view(
+                selected_view_name=selected_view_name,
+                question=question,
+                event_tracker=event_tracker,
+                llm_options=llm_options,
+                dry_run=dry_run,
+            )
             end_time_view = time.monotonic()
 
             natural_response = (
