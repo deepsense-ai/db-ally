@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, List, Tuple
 from datasets import Dataset
 
 from .metrics.base import MetricSet
-from .pipelines.base import EvaluationPipeline, EvaluationResult
+from .pipeline import EvaluationPipeline, EvaluationResult
 
 
 class Evaluator:

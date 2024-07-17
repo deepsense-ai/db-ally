@@ -1,9 +1,6 @@
 id: "superhero"
 path: "micpst/bird-dev-iql"
 split: "dev"
-db_ids: ["superhero"]
+db_id: "superhero"
 difficulties: ["simple"]
-views:  {
-    "SuperheroView": "sqlite:///data/superhero.db",
-    "SuperheroFreeformView": "sqlite:///data/superhero.db"
-  }
+db_url: "sqlite:///data/superhero.db"

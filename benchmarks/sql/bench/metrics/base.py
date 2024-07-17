@@ -1,17 +1,15 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Type
 
 from typing_extensions import Self
 
-from ..pipelines.base import EvaluationResult
+from ..pipeline import EvaluationResult
 
 
 class Metric(ABC):
     """
     Base class for metrics.
     """
-
-    name: str = "Metric"
 
     def __init__(self, config: Optional[Dict] = None) -> None:
         """
@@ -23,7 +21,7 @@ class Metric(ABC):
         self.config = config or {}
 
     @abstractmethod
-    def compute(self, results: List[EvaluationResult]) -> Union[int, float]:
+    def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
         Compute the metric.
 
@@ -51,10 +49,19 @@ class MetricSet:
         self.metrics: List[Metric] = []
 
     def __call__(self, config: Dict) -> Self:
+        """
+        Initializes the metrics.
+
+        Args:
+            config: The configuration for the metrics.
+
+        Returns:
+            The initialized metric set.
+        """
         self.metrics = [metric(config) for metric in self._metrics]
         return self
 
-    def compute(self, results: List[EvaluationResult]) -> List[Union[int, float]]:
+    def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
         Compute the metrics.
 
@@ -64,4 +71,4 @@ class MetricSet:
         Returns:
             The computed metrics.
         """
-        return {metric.name: metric.compute(results) for metric in self.metrics}
+        return {name: value for metric in self.metrics for name, value in metric.compute(results).items()}

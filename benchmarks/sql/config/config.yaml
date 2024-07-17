@@ -1,6 +1,6 @@
 defaults:
-  - component: iql-view
   - data: superhero
+  - setup: iql
   - llm: gpt
   - _self_
 

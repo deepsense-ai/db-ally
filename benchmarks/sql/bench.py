@@ -1,8 +1,6 @@
 import asyncio
 import logging
-from enum import Enum
 from pathlib import Path
-from typing import Dict
 
 import hydra
 import neptune
@@ -14,16 +12,10 @@ from bench.metrics import (
     HallucinatedIQL,
     MetricSet,
     UnsupportedIQL,
-    ValidEfficiencyScore,
     ValidIQL,
     ValidSQL,
 )
-from bench.pipelines import (
-    CollectionEvaluationPipeline,
-    EvaluationPipeline,
-    IQLViewEvaluationPipeline,
-    SQLViewEvaluationPipeline,
-)
+from bench.pipeline import EvaluationPipeline
 from bench.utils import save
 from datasets import load_dataset
 from neptune.utils import stringify_unsupported
@@ -34,50 +26,6 @@ logging.getLogger("httpx").setLevel(logging.ERROR)
 log = logging.getLogger(__name__)
 
 
-class EvaluationType(Enum):
-    """
-    Enum representing the type of evaluation.
-    """
-
-    COLLECTION = "COLLECTION"
-    IQL_VIEW = "IQL-VIEW"
-    SQL_VIEW = "SQL-VIEW"
-
-
-EVALUATION_PIPELINES: Dict[str, EvaluationPipeline] = {
-    EvaluationType.COLLECTION.value: CollectionEvaluationPipeline,
-    EvaluationType.IQL_VIEW.value: IQLViewEvaluationPipeline,
-    EvaluationType.SQL_VIEW.value: SQLViewEvaluationPipeline,
-}
-
-EVALUATION_METRICS: Dict[str, MetricSet] = {
-    EvaluationType.COLLECTION.value: MetricSet(
-        ExactMatchIQL,
-        ExactMatchSQL,
-        ValidIQL,
-        ValidSQL,
-        UnsupportedIQL,
-        HallucinatedIQL,
-        ExecutionAccuracy,
-        ValidEfficiencyScore,
-    ),
-    EvaluationType.IQL_VIEW.value: MetricSet(
-        ExactMatchIQL,
-        ValidIQL,
-        UnsupportedIQL,
-        HallucinatedIQL,
-        ExecutionAccuracy,
-        ValidEfficiencyScore,
-    ),
-    EvaluationType.SQL_VIEW.value: MetricSet(
-        ExactMatchSQL,
-        ValidSQL,
-        ExecutionAccuracy,
-        ValidEfficiencyScore,
-    ),
-}
-
-
 async def bench(config: DictConfig) -> None:
     """
     Function running evaluation for all datasets and evaluation tasks defined in hydra config.
@@ -85,16 +33,24 @@ async def bench(config: DictConfig) -> None:
     Args:
         config: Hydra configuration.
     """
-    log.info("Starting evaluation for component: %s.", config.component.type)
+    log.info("Starting evaluation for views: %s.", config.setup.views)
 
     dataset = load_dataset(config.data.path, split=config.data.split)
-    dataset = dataset.filter(lambda x: x["db_id"] in config.data.db_ids and x["difficulty"] in config.data.difficulties)
-    dataset = dataset.select(range(10, 20))
+    dataset = dataset.filter(lambda x: x["db_id"] == config.data.db_id and x["difficulty"] in config.data.difficulties)
+    dataset = dataset.select(range(10, 25))
 
-    pipeline = EVALUATION_PIPELINES[config.component.type](config)
-    metrics = EVALUATION_METRICS[config.component.type](config)
+    pipeline = EvaluationPipeline(config)
+    metrics = MetricSet(
+        ExactMatchIQL,
+        ExactMatchSQL,
+        ValidIQL,
+        ValidSQL,
+        UnsupportedIQL,
+        HallucinatedIQL,
+        ExecutionAccuracy,
+    )(config)
 
-    evaluator = Evaluator(config.component.type)
+    evaluator = Evaluator(config.setup.name)
     results = await evaluator.compute(
         pipe=pipeline,
         data=dataset,
@@ -116,7 +72,7 @@ async def bench(config: DictConfig) -> None:
         run = neptune.init_run()
         run["sys/tags"].add(
             [
-                config.component.type,
+                *config.views,
                 config.data.id,
                 config.llm.model_name,
             ]
@@ -129,7 +85,7 @@ async def bench(config: DictConfig) -> None:
         log.info("Evaluation results logged to neptune at %s", run.get_url())
 
 
-@hydra.main(config_path="config", config_name="config", version_base="1.3.2")
+@hydra.main(config_path="config", config_name="config")
 def main(config: DictConfig) -> None:
     """
     Function running evaluation for all datasets and evaluation tasks defined in hydra config.

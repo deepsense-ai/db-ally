@@ -1,6 +1,6 @@
 from .base import Metric, MetricSet
 from .iql import ExactMatchIQL, HallucinatedIQL, UnsupportedIQL, ValidIQL
-from .sql import ExactMatchSQL, ExecutionAccuracy, ValidEfficiencyScore, ValidSQL
+from .sql import ExactMatchSQL, ExecutionAccuracy, ValidSQL
 
 __all__ = [
     "Metric",
@@ -12,5 +12,4 @@ __all__ = [
     "ValidIQL",
     "ValidSQL",
     "ExecutionAccuracy",
-    "ValidEfficiencyScore",
 ]
