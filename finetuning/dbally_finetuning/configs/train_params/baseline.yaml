@@ -8,12 +8,12 @@ bf16: true
 fp16: false
 gradient_checkpointing: true
 logging_strategy: "steps"
-max_steps: 10
+max_steps: -1
 output_dir: "output"
 seed: 42
 warmup_steps: 24
 save_strategy: "epoch"
-save_total_limit: none
+save_total_limit: -1
 do_eval: true
 evaluation_strategy: "steps"
 eval_steps: 40
