@@ -43,7 +43,7 @@ class DataFrameBaseView(MethodsBaseView):
         Args:
             aggregation: IQLQuery object representing the aggregation to apply
         """
-        pass  # pylint: disable=unnecessary-pass
+        # TODO - to be covered in a separate ticket.
 
     async def build_filter_node(self, node: syntax.Node) -> pd.Series:
         """
