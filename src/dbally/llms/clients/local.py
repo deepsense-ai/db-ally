@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional, Union
 
 import torch
+from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from dbally.audit.events import LLMEvent
@@ -41,6 +42,7 @@ class LocalLLMClient(LLMClient[LocalLLMOptions]):
         self,
         model_name: str,
         *,
+        adapter_name: Optional[str] = None,
         hf_api_key: Optional[str] = None,
     ) -> None:
         """
@@ -48,6 +50,7 @@ class LocalLLMClient(LLMClient[LocalLLMOptions]):
 
         Args:
             model_name: Name of the model to use.
+            adapter_name: The name of the LoRA adapter, if any, used to modify the model's weights.
             hf_api_key: The Hugging Face API key for authentication.
         """
 
@@ -56,6 +59,11 @@ class LocalLLMClient(LLMClient[LocalLLMOptions]):
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name, device_map="auto", torch_dtype=torch.bfloat16, token=hf_api_key
         )
+
+        if adapter_name:
+            self.model = PeftModel.from_pretrained(self.model, adapter_name)
+            self.model = self.model.merge_and_unload()
+
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_api_key)
 
     async def call(

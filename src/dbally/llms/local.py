@@ -20,6 +20,7 @@ class LocalLLM(LLM[LocalLLMOptions]):
         model_name: str,
         default_options: Optional[LocalLLMOptions] = None,
         *,
+        adapter_name: Optional[str] = None,
         api_key: Optional[str] = None,
     ) -> None:
         """
@@ -28,12 +29,14 @@ class LocalLLM(LLM[LocalLLMOptions]):
         Args:
             model_name: Name of the model to use. This should be a model from the CausalLM class.
             default_options: Default options for the LLM.
+            adapter_name: The name of the LoRA adapter, if any, used to modify the model's weights.
             api_key: The API key for Hugging Face authentication.
         """
 
         super().__init__(model_name, default_options)
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=api_key)
         self.api_key = api_key
+        self.adapter_name = adapter_name
 
     @cached_property
     def client(self) -> LocalLLMClient:
@@ -43,7 +46,7 @@ class LocalLLM(LLM[LocalLLMOptions]):
         Returns:
             The client used to interact with the LLM.
         """
-        return LocalLLMClient(model_name=self.model_name, hf_api_key=self.api_key)
+        return LocalLLMClient(model_name=self.model_name, adapter_name=self.adapter_name, hf_api_key=self.api_key)
 
     def count_tokens(self, prompt: PromptTemplate) -> int:
         """
