@@ -134,8 +134,8 @@ class Collection:
         self._fallback_collection = fallback_collection
         if fallback_collection._event_handlers != self._event_handlers:  # pylint: disable=W0212
             logging.warning(
-                "Global event handlers are modified by fallback. New event handlers are: %s",
-                fallback_collection._event_handlers,  # pylint: disable=W0212
+                "Event handlers of the fallback collection are different from the base collection. "
+                "Continuity of the audit trail is not guaranteed.",
             )
 
         return fallback_collection
@@ -303,7 +303,7 @@ class Collection:
         llm_options: Optional[LLMOptions],
         selected_view_name: str,
         event_tracker: EventTracker,
-        caught_exception: HANDLED_EXCEPTION_TYPES,
+        caught_exception: Exception,
     ) -> ExecutionResult:
         """
         Handle fallback if the main query fails.
@@ -321,6 +321,8 @@ class Collection:
             The result from the fallback collection.
 
         """
+        if not self._fallback_collection:
+            raise caught_exception
 
         fallback_event = FallbackEvent(
             triggering_collection_name=self.name,
