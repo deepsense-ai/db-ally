@@ -9,9 +9,9 @@ from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
+
 from ..iql.syntax import FunctionCall
 from ..prompt.aggregation import AggregationFormatter
-
 from ..similarity import AbstractSimilarityIndex
 from .base import BaseView, IndexLocation
 

@@ -2,7 +2,6 @@ from typing import List, Optional
 
 from dbally.audit import EventTracker
 from dbally.exceptions import UnsupportedAggregationError
-
 from dbally.iql import IQLQuery
 from dbally.llms.base import LLM
 from dbally.llms.clients import LLMOptions
@@ -45,6 +44,10 @@ class AggregationPromptFormat(PromptFormat):
 
 
 class AggregationFormatter:
+    """
+    Class used to manage choice and formatting of aggregation based on natural language question.
+    """
+
     def __init__(self, llm: LLM, prompt_template: Optional[PromptTemplate[AggregationPromptFormat]] = None) -> None:
         """
         Constructs a new AggregationFormatter instance.
@@ -63,7 +66,18 @@ class AggregationFormatter:
         aggregations: List[ExposedFunction] = None,
         llm_options: Optional[LLMOptions] = None,
     ) -> IQLQuery:
+        """
+        Generates IQL in text form using LLM.
 
+        Args:
+            question: User question.
+            event_tracker: Event store used to audit the generation process.
+            aggregations: List of aggregations exposed by the view.
+            llm_options: Options to use for the LLM client.
+
+        Returns:
+            Generated aggregation query.
+        """
         prompt_format = AggregationPromptFormat(
             question=question,
             aggregations=aggregations,
@@ -102,10 +116,7 @@ AGGREGATION_GENERATION_TEMPLATE = PromptTemplate[AggregationPromptFormat](
             "Structure output to resemble the following pattern:\n"
             'aggregation1("arg1", arg2)\n',
         },
-        {
-            "role": "user",
-            "content": "{question}"
-        },
+        {"role": "user", "content": "{question}"},
     ],
     response_parser=_validate_agg_response,
 )
