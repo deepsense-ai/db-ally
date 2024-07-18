@@ -61,12 +61,6 @@ class CandidateView(SqlAlchemyBaseView):
             .group_by(getattr(filtered_query.c, column_name))
         return select
 
-    # @decorators.view_aggregation()
-    # def count_by_university(self, filtered_query: sqlalchemy.Select) -> sqlalchemy.Select:  # pylint: disable=W0602, C0116, W9011
-    #     select = sqlalchemy.select(filtered_query.c.university, sqlalchemy.func.count(filtered_query.c.name).label("count")) \
-    #         .group_by(filtered_query.c.university)
-    #     return select
-
 
 async def main():
     llm = LiteLLM(model_name="gpt-3.5-turbo")
@@ -76,7 +70,7 @@ async def main():
     collection.add(CandidateView, lambda: CandidateView(engine))
 
     result = await collection.ask("Could you find French candidates suitable for a senior data scientist position"
-                                  "and count them university-wise?")
+                                  "and count the candidates university-wise?")
 
     print(f"The generated SQL query is: {result.context.get('sql')}")
     print()

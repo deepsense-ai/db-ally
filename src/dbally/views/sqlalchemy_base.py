@@ -82,7 +82,7 @@ class SqlAlchemyBaseView(MethodsBaseView):
             aggregation: IQLQuery object representing the filters to apply
         """
         self._filtered_query = self._get_filtered_query()
-        self._filtered_query = await self.call_aggregation_method(aggregation.root)
+        self._select = await self.call_aggregation_method(aggregation)
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         """
@@ -97,17 +97,14 @@ class SqlAlchemyBaseView(MethodsBaseView):
         """
 
         results = []
-        statement = self._select
-        if self._filtered_query is not None:
-            statement = self._filtered_query
 
-        sql = str(statement.compile(bind=self._sqlalchemy_engine, compile_kwargs={"literal_binds": True}))
+        sql = str(self._select.compile(bind=self._sqlalchemy_engine, compile_kwargs={"literal_binds": True}))
 
         if not dry_run:
             with self._sqlalchemy_engine.connect() as connection:
                 # The underscore is used by sqlalchemy to avoid conflicts with column names
                 # pylint: disable=protected-access
-                rows = connection.execute(statement).fetchall()
+                rows = connection.execute(self._select).fetchall()
                 results = [dict(row._mapping) for row in rows]
 
         return ViewExecutionResult(

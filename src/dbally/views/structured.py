@@ -9,6 +9,8 @@ from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
+from ..iql.syntax import FunctionCall
+from ..prompt.aggregation import AggregationFormatter
 
 from ..similarity import AbstractSimilarityIndex
 from .base import BaseView, IndexLocation
@@ -31,6 +33,18 @@ class BaseStructuredView(BaseView):
             IQL generator for the view.
         """
         return IQLGenerator(llm=llm)
+
+    def get_agg_formatter(self, llm: LLM) -> AggregationFormatter:
+        """
+        Returns the AggregtionFormatter for the view.
+
+        Args:
+            llm: LLM used to generate the queries.
+
+        Returns:
+            AggregtionFormatter for the view.
+        """
+        return AggregationFormatter(llm=llm)
 
     async def ask(
         self,
@@ -57,6 +71,7 @@ class BaseStructuredView(BaseView):
             The result of the query.
         """
         iql_generator = self.get_iql_generator(llm)
+        agg_formatter = self.get_agg_formatter(llm)
         filters = self.list_filters()
         examples = self.list_few_shots()
         aggregations = self.list_aggregations()
@@ -65,26 +80,22 @@ class BaseStructuredView(BaseView):
             question=query,
             filters=filters,
             examples=examples,
-            aggregations=[],
             event_tracker=event_tracker,
             llm_options=llm_options,
             n_retries=n_retries,
         )
         await self.apply_filters(iql)
 
-        iql_agg = await iql_generator.generate_iql(
+        agg_node = await agg_formatter.format_to_query_object(
             question=query,
-            filters=[],
-            examples=[],
             aggregations=aggregations,
             event_tracker=event_tracker,
             llm_options=llm_options,
-            n_retries=n_retries,
         )
-        await self.apply_aggregation(iql_agg)
+        await self.apply_aggregation(agg_node.root)
 
         result = self.execute(dry_run=dry_run)
-        result.context["iql"] = {"filters": f"{iql}", "aggregation": f"{iql_agg}"}
+        result.context["iql"] = {"filters": f"{iql}", "aggregation": f"{agg_node}"}
 
         return result
 
@@ -115,7 +126,7 @@ class BaseStructuredView(BaseView):
         """
 
     @abc.abstractmethod
-    async def apply_aggregation(self, aggregation: IQLQuery) -> None:
+    async def apply_aggregation(self, aggregation: FunctionCall) -> None:
         """
         Applies the chosen aggregation to the view.
 

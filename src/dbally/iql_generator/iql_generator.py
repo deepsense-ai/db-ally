@@ -4,7 +4,6 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.prompt import (
     IQL_GENERATION_TEMPLATE,
-    IQL_GENERATION_TEMPLATE_AGGREGATION,
     IQLGenerationPromptFormat,
 )
 from dbally.llms.base import LLM
@@ -44,7 +43,6 @@ class IQLGenerator:
         question: str,
         filters: List[ExposedFunction],
         event_tracker: EventTracker,
-        aggregations: List[ExposedFunction] = None,
         examples: Optional[List[FewShotExample]] = None,
         llm_options: Optional[LLMOptions] = None,
         n_retries: int = 3,
@@ -67,11 +65,8 @@ class IQLGenerator:
         prompt_format = IQLGenerationPromptFormat(
             question=question,
             filters=filters,
-            aggregations=aggregations,
             examples=examples,
         )
-        if aggregations and not filters:
-            self._prompt_template = IQL_GENERATION_TEMPLATE_AGGREGATION
 
         formatted_prompt = self._prompt_template.format_prompt(prompt_format)
 
@@ -87,7 +82,7 @@ class IQLGenerator:
                 # TODO: Move IQL query parsing to prompt response parser
                 return await IQLQuery.parse(
                     source=iql,
-                    allowed_functions=filters or [] + aggregations or [],
+                    allowed_functions=filters or [],
                     event_tracker=event_tracker,
                 )
             except IQLError as exc:
