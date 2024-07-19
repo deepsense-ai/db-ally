@@ -13,8 +13,14 @@ from dbally.collection.results import ViewExecutionResult
 from dbally.iql import IQLQuery
 from dbally.iql.syntax import FunctionCall
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
-from tests.unit.mocks import MockIQLGenerator, MockLLM, MockSimilarityIndex, MockViewBase, MockViewSelector, \
-    MockAggregationFormatter
+from tests.unit.mocks import (
+    MockAggregationFormatter,
+    MockIQLGenerator,
+    MockLLM,
+    MockSimilarityIndex,
+    MockViewBase,
+    MockViewSelector,
+)
 
 
 class MockView1(MockViewBase):
@@ -298,7 +304,7 @@ async def test_ask_view_selection_single_view() -> None:
     result = await collection.ask("Mock question")
     assert result.view_name == "MockViewWithResults"
     assert result.results == [{"foo": "bar"}]
-    assert result.context == {"baz": "qux", "iql": {'aggregation': 'test_aggregation()', 'filters': 'test_filter()'}}
+    assert result.context == {"baz": "qux", "iql": {"aggregation": "test_aggregation()", "filters": "test_filter()"}}
 
 
 async def test_ask_view_selection_multiple_views() -> None:
@@ -319,7 +325,7 @@ async def test_ask_view_selection_multiple_views() -> None:
     result = await collection.ask("Mock question")
     assert result.view_name == "MockViewWithResults"
     assert result.results == [{"foo": "bar"}]
-    assert result.context == {"baz": "qux", "iql": {'aggregation': 'test_aggregation()', 'filters': 'test_filter()'}}
+    assert result.context == {"baz": "qux", "iql": {"aggregation": "test_aggregation()", "filters": "test_filter()"}}
 
 
 async def test_ask_view_selection_no_views() -> None:
