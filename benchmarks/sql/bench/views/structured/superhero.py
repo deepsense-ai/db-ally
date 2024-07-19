@@ -370,7 +370,7 @@ class HeroAttributeFilterMixin:
         Returns:
             The filter condition.
         """
-        return HeroAttribute.attribute_value == select(func.min(HeroAttribute.attribute_value))
+        return HeroAttribute.attribute_value == select(func.min(HeroAttribute.attribute_value)).scalar_subquery()
 
 
 class AttributeFilterMixin:

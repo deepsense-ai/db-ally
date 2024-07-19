@@ -11,6 +11,7 @@ from bench.metrics import (
     ExecutionAccuracy,
     HallucinatedIQL,
     MetricSet,
+    NoViewFound,
     UnsupportedIQL,
     ValidIQL,
     ValidSQL,
@@ -37,12 +38,12 @@ async def bench(config: DictConfig) -> None:
 
     dataset = load_dataset(config.data.path, split=config.data.split)
     dataset = dataset.filter(lambda x: x["db_id"] == config.data.db_id and x["difficulty"] in config.data.difficulties)
-    dataset = dataset.select(range(10, 25))
 
     pipeline = EvaluationPipeline(config)
     metrics = MetricSet(
         ExactMatchIQL,
         ExactMatchSQL,
+        NoViewFound,
         ValidIQL,
         ValidSQL,
         UnsupportedIQL,

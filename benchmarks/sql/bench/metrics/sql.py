@@ -150,6 +150,7 @@ class ExecutionAccuracy(_DBMixin, Metric):
         """
         if result.prediction.sql is None:
             return False
+
         try:
             result.reference.results = self._execute_query(result.reference.sql)
             result.prediction.results = self._execute_query(result.prediction.sql)

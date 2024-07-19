@@ -64,7 +64,6 @@ class EvaluationResult:
             "question": self.question,
             "reference": self.reference.dict(),
             "prediction": self.prediction.dict(),
-            "db_url": self.db_url,
         }
 
 

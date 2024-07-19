@@ -116,3 +116,26 @@ class HallucinatedIQL(Metric):
                 else 0.0
             )
         }
+
+
+class NoViewFound(Metric):
+    """
+    Ratio of queries with no view found.
+    """
+
+    def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
+        """
+        Calculates the ratio of queries with no view found.
+
+        Args:
+            results: List of evaluation results.
+
+        Returns:
+            Ratio of queries with no view found.
+        """
+        return {
+            "NO_VIEW": sum(isinstance(result.prediction.exception, NoViewFoundError) for result in results)
+            / len(results)
+            if results
+            else 0.0
+        }
