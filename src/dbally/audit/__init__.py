@@ -7,14 +7,15 @@ try:
 except ImportError:
     pass
 
+from .event_handlers.otel_event_handler import OtelEventHandler
 from .event_tracker import EventTracker
-from .events import Event, LLMEvent, RequestEnd, RequestStart, SimilarityEvent
+from .events import LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 from .spans import EventSpan
 
 __all__ = [
     "CLIEventHandler",
     "LangSmithEventHandler",
-    "Event",
+    "OtelEventHandler",
     "EventHandler",
     "EventTracker",
     "EventSpan",

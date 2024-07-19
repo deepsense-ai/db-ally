@@ -69,6 +69,9 @@ class BaseStructuredView(BaseView):
 
         Returns:
             The result of the query.
+
+        Raises:
+            IQLError: If the generated IQL query is not valid.
         """
         iql_generator = self.get_iql_generator(llm)
         agg_formatter = self.get_agg_formatter(llm)

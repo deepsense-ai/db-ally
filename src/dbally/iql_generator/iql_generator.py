@@ -57,6 +57,9 @@ class IQLGenerator:
 
         Returns:
             Generated IQL query.
+
+        Raises:
+            IQLError: If IQL generation fails after all retries.
         """
         prompt_format = IQLGenerationPromptFormat(
             question=question,
@@ -66,7 +69,7 @@ class IQLGenerator:
 
         formatted_prompt = self._prompt_template.format_prompt(prompt_format)
 
-        for _ in range(n_retries + 1):
+        for retry in range(n_retries + 1):
             try:
                 response = await self._llm.generate_text(
                     prompt=formatted_prompt,
@@ -82,5 +85,7 @@ class IQLGenerator:
                     event_tracker=event_tracker,
                 )
             except IQLError as exc:
+                if retry == n_retries:
+                    raise exc
                 formatted_prompt = formatted_prompt.add_assistant_message(response)
                 formatted_prompt = formatted_prompt.add_user_message(ERROR_MESSAGE.format(error=exc))
