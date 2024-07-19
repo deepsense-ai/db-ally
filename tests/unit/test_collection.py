@@ -13,7 +13,8 @@ from dbally.collection.results import ViewExecutionResult
 from dbally.iql import IQLQuery
 from dbally.iql.syntax import FunctionCall
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
-from tests.unit.mocks import MockIQLGenerator, MockLLM, MockSimilarityIndex, MockViewBase, MockViewSelector
+from tests.unit.mocks import MockIQLGenerator, MockLLM, MockSimilarityIndex, MockViewBase, MockViewSelector, \
+    MockAggregationFormatter
 
 
 class MockView1(MockViewBase):
@@ -61,6 +62,12 @@ class MockViewWithResults(MockViewBase):
 
     def get_iql_generator(self, *_, **__) -> MockIQLGenerator:
         return MockIQLGenerator(IQLQuery(FunctionCall("test_filter", []), "test_filter()"))
+
+    def list_aggregations(self) -> List[ExposedFunction]:
+        return [ExposedFunction("test_aggregation", "", [])]
+
+    def get_agg_formatter(self, *_, **__) -> MockAggregationFormatter:
+        return MockAggregationFormatter(IQLQuery(FunctionCall("test_aggregation", []), "test_aggregation()"))
 
 
 @pytest.fixture(name="similarity_classes")
@@ -291,7 +298,7 @@ async def test_ask_view_selection_single_view() -> None:
     result = await collection.ask("Mock question")
     assert result.view_name == "MockViewWithResults"
     assert result.results == [{"foo": "bar"}]
-    assert result.context == {"baz": "qux", "iql": "test_filter()"}
+    assert result.context == {"baz": "qux", "iql": {'aggregation': 'test_aggregation()', 'filters': 'test_filter()'}}
 
 
 async def test_ask_view_selection_multiple_views() -> None:
@@ -312,7 +319,7 @@ async def test_ask_view_selection_multiple_views() -> None:
     result = await collection.ask("Mock question")
     assert result.view_name == "MockViewWithResults"
     assert result.results == [{"foo": "bar"}]
-    assert result.context == {"baz": "qux", "iql": "test_filter()"}
+    assert result.context == {"baz": "qux", "iql": {'aggregation': 'test_aggregation()', 'filters': 'test_filter()'}}
 
 
 async def test_ask_view_selection_no_views() -> None:
