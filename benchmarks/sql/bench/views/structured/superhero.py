@@ -67,7 +67,7 @@ class DBInitMixin:
         super().__init__(sqlalchemy_engine)
 
 
-class SuperheroFilterMixin:
+class SuperheroFilterMixin:  # pylint: disable=too-many-public-methods
     """
     Mixin for filtering the view by the superhero attributes.
     """
@@ -122,6 +122,19 @@ class SuperheroFilterMixin:
         return Superhero.full_name == superhero_full_name
 
     @view_filter()
+    def filter_by_superhero_first_name(self, superhero_first_name: str) -> ColumnElement:
+        """
+        Filters the view by the simmilar full name of the superhero.
+
+        Args:
+            superhero_first_name: The first name of the superhero.
+
+        Returns:
+            The filter condition.
+        """
+        return Superhero.full_name.like(f"{superhero_first_name}%")
+
+    @view_filter()
     def filter_by_height_cm(self, height_cm: float) -> ColumnElement:
         """
         Filters the view by the height of the superhero.
@@ -135,6 +148,55 @@ class SuperheroFilterMixin:
         return Superhero.height_cm == height_cm
 
     @view_filter()
+    def filter_by_height_cm_greater_than(self, height_cm: float) -> ColumnElement:
+        """
+        Filters the view by the height of the superhero.
+
+        Args:
+            height_cm: The height of the superhero.
+
+        Returns:
+            The filter condition.
+        """
+        return Superhero.height_cm > height_cm
+
+    @view_filter()
+    def filter_by_the_tallest(self) -> ColumnElement:
+        """
+        Filter the view by the tallest superhero.
+
+        Returns:
+            The filter condition.
+        """
+        return Superhero.height_cm == select(func.max(Superhero.height_cm)).scalar_subquery()
+
+    @view_filter()
+    def filter_by_height_greater_than_percentage_of_average(self, average_percentage: int) -> ColumnElement:
+        """
+        Filters the view by the height greater than the percentage of average of superheroes.
+
+        Args:
+            average_percentage: The percentage of the average height.
+
+        Returns:
+            The filter condition.
+        """
+        return Superhero.height_cm * 100 > select(func.avg(Superhero.height_cm)).scalar_subquery() * average_percentage
+
+    @view_filter()
+    def filter_by_height_cm_less_than(self, height_cm: float) -> ColumnElement:
+        """
+        Filters the view by the height of the superhero.
+
+        Args:
+            height_cm: The height of the superhero.
+
+        Returns:
+            The filter condition.
+        """
+        return Superhero.height_cm < height_cm
+
+    @view_filter()
     def filter_by_missing_weight(self) -> ColumnElement:
         """
         Filters the view by the missing weight of the superhero.
@@ -145,7 +207,24 @@ class SuperheroFilterMixin:
         return Superhero.weight_kg == 0 or Superhero.weight_kg is None
 
     @view_filter()
-    def filter_by_weight_kg(self, weight_kg: float) -> ColumnElement:
+    def filter_by_the_heaviest(self) -> ColumnElement:
+        return
+
+    @view_filter()
+    def filter_by_weight_greater_than_percentage_of_average(self, average_percentage: int) -> ColumnElement:
+        """
+        Filters the view by the weight greater than the percentage of average of superheroes.
+
+        Args:
+            average_percentage: The percentage of the average weight.
+
+        Returns:
+            The filter condition.
+        """
+        return Superhero.weight_kg * 100 > select(func.avg(Superhero.weight_kg)).scalar_subquery() * average_percentage
+
+    @view_filter()
+    def filter_by_weight_kg(self, weight_kg: int) -> ColumnElement:
         """
         Filters the view by the weight of the superhero.
 
@@ -158,7 +237,7 @@ class SuperheroFilterMixin:
         return Superhero.weight_kg == weight_kg
 
     @view_filter()
-    def filter_by_weight_kg_bigger_than(self, weight_kg: float) -> ColumnElement:
+    def filter_by_weight_kg_greater_than(self, weight_kg: int) -> ColumnElement:
         """
         Filters the view by the weight of the superhero.
 
@@ -171,7 +250,7 @@ class SuperheroFilterMixin:
         return Superhero.weight_kg > weight_kg
 
     @view_filter()
-    def filter_by_weight_kg_lower_than(self, weight_kg: float) -> ColumnElement:
+    def filter_by_weight_kg_less_than(self, weight_kg: int) -> ColumnElement:
         """
         Filters the view by the weight of the superhero.
 
@@ -182,6 +261,139 @@ class SuperheroFilterMixin:
             The filter condition.
         """
         return Superhero.weight_kg < weight_kg
+
+    @view_filter()
+    def filter_by_number_powers(self, number_powers: int) -> ColumnElement:
+        """
+        Filters the view by the number of superpowers.
+
+        Args:
+            number_powers: The number of hero superpowers.
+
+        Returns:
+            The filter condition.
+        """
+        return Superhero.id.in_(
+            select(HeroPower.hero_id)
+            .group_by(HeroPower.hero_id)
+            .having(func.count(HeroPower.power_id) == number_powers)
+        )
+
+    @view_filter()
+    def filter_by_number_super_powers_greater_than(self, number_powers: int) -> ColumnElement:
+        """
+        Filters the view by the number of superpowers.
+
+        Args:
+            number_powers: The number of hero superpowers.
+
+        Returns:
+            The filter condition.
+        """
+        return Superhero.id.in_(
+            select(HeroPower.hero_id).group_by(HeroPower.hero_id).having(func.count(HeroPower.power_id) > number_powers)
+        )
+
+    @view_filter()
+    def filter_by_number_powers_less_than(self, number_powers: int) -> ColumnElement:
+        """
+        Filters the view by the number of superpowers.
+
+        Args:
+            number_powers: The number of hero superpowers.
+
+        Returns:
+            The filter condition.
+        """
+        return Superhero.id.in_(
+            select(HeroPower.hero_id).group_by(HeroPower.hero_id).having(func.count(HeroPower.power_id) < number_powers)
+        )
+
+    @view_filter()
+    def filter_by_missing_publisher(self) -> ColumnElement:
+        """
+        Filters the view by the missing publisher of the superhero.
+
+        Returns:
+            The filter condition.
+        """
+        return Superhero.publisher_id is None
+
+    @view_filter()
+    def filter_by_super_power(self, super_power: str) -> ColumnElement:
+        """
+        Filters the view by the hero superpower.
+
+        Args:
+            super_power: The superpower of the superhero.
+
+        Returns:
+            The filter condition.
+        """
+        return (
+            select(1)
+            .select_from(HeroPower)
+            .join(Superpower, Superpower.id == HeroPower.power_id)
+            .where(Superpower.power_name == super_power)
+            .where(Superhero.id == HeroPower.hero_id)
+            .exists()
+        )
+
+    @view_filter()
+    def filter_by_the_most_super_powers(self) -> ColumnElement:
+        pass
+
+    @view_filter()
+    def filter_by_attribute_name(self, attribute_name: str) -> ColumnElement:
+        """
+        Filters the view by the hero attribute name.
+
+        Args:
+            attribute_name: The name of the hero attribute.
+
+        Returns:
+            The filter condition.
+        """
+        return (
+            select(1)
+            .select_from(HeroAttribute)
+            .join(Attribute, Attribute.id == HeroAttribute.attribute_id)
+            .where(Attribute.attribute_name == attribute_name)
+            .where(Superhero.id == HeroAttribute.hero_id)
+            .exists()
+        )
+
+    @view_filter()
+    def filter_by_the_lowest_attribute_value(self) -> ColumnElement:
+        return True
+
+    @view_filter()
+    def filter_by_the_highest_attribute_value(self) -> ColumnElement:
+        return True
+
+    @view_filter()
+    def filter_by_attribute_value_between(self) -> ColumnElement:
+        return True
+
+    @view_filter()
+    def filter_by_attribute_value(self) -> ColumnElement:
+        return True
+
+    @view_filter()
+    def filter_by_the_fastest(self) -> ColumnElement:
+        return True
+
+    @view_filter()
+    def filter_by_same_hair_and_eye_colour(self) -> ColumnElement:
+        return True
+
+    @view_filter()
+    def filter_by_same_hair_and_skin_colour(self) -> ColumnElement:
+        return True
+
+    @view_filter()
+    def filter_by_the_dumbest(self) -> ColumnElement:
+        return True
 
 
 class SuperheroColourFilterMixin:
@@ -349,6 +561,19 @@ class HeroAttributeFilterMixin:
         return HeroAttribute.attribute_value == attribute_value
 
     @view_filter()
+    def filter_by_attribute_value_less_than(self, attribute_value: int) -> ColumnElement:
+        """
+        Filters the view by the hero attribute value.
+
+        Args:
+            attribute_value: The value of the hero attribute.
+
+        Returns:
+            The filter condition.
+        """
+        return HeroAttribute.attribute_value < attribute_value
+
+    @view_filter()
     def filter_by_attribute_value_between(self, begin_attribute_value: int, end_attribute_value: int) -> ColumnElement:
         """
         Filters the view by the hero attribute value.
@@ -371,6 +596,16 @@ class HeroAttributeFilterMixin:
             The filter condition.
         """
         return HeroAttribute.attribute_value == select(func.min(HeroAttribute.attribute_value)).scalar_subquery()
+
+    @view_filter()
+    def filter_by_the_highest_attribute_value(self) -> ColumnElement:
+        """
+        Filters the view by the highest hero attribute value.
+
+        Returns:
+            The filter condition.
+        """
+        return HeroAttribute.attribute_value == select(func.max(HeroAttribute.attribute_value)).scalar_subquery()
 
 
 class AttributeFilterMixin:
@@ -403,10 +638,9 @@ class SuperheroView(  # pylint: disable=too-many-ancestors
     AlignmentFilterMixin,
     GenderFilterMixin,
     RaceFilterMixin,
-    HeroAttributeFilterMixin,
 ):
     """
-    View containing superhero data for querying superheroes.
+    View for querying only superheros data.
     """
 
     def get_select(self) -> Select:
@@ -438,13 +672,19 @@ class SuperheroView(  # pylint: disable=too-many-ancestors
             .join(self.eye_colour, self.eye_colour.id == Superhero.eye_colour_id)
             .join(self.hair_colour, self.hair_colour.id == Superhero.hair_colour_id)
             .join(self.skin_colour, self.skin_colour.id == Superhero.skin_colour_id)
-            .join(HeroAttribute, HeroAttribute.hero_id == Superhero.id)
         )
 
 
-class HeroAttributeView(DBInitMixin, SqlAlchemyBaseView, HeroAttributeFilterMixin, AttributeFilterMixin):
+class HeroAttributeView(
+    DBInitMixin,
+    SqlAlchemyBaseView,
+    HeroAttributeFilterMixin,
+    AttributeFilterMixin,
+    SuperheroFilterMixin,
+    AlignmentFilterMixin,
+):
     """
-    View containing hero attribute data for querying superhero attributes.
+    View for querying only hero attributes data.
     """
 
     def get_select(self) -> Select:
@@ -454,16 +694,21 @@ class HeroAttributeView(DBInitMixin, SqlAlchemyBaseView, HeroAttributeFilterMixi
         Returns:
             The select object.
         """
-        return select(
-            HeroAttribute.hero_id,
-            Attribute.attribute_name,
-            HeroAttribute.attribute_value,
-        ).join(Attribute, Attribute.id == HeroAttribute.attribute_id)
+        return (
+            select(
+                Attribute.attribute_name,
+                HeroAttribute.attribute_value,
+            )
+            .join(Attribute, Attribute.id == HeroAttribute.attribute_id)
+            .join(Superhero, Superhero.id == HeroAttribute.hero_id)
+            .join(Alignment, Alignment.id == Superhero.alignment_id)
+            .join(Publisher, Publisher.id == Superhero.publisher_id)
+        )
 
 
 class HeroPowerView(DBInitMixin, SqlAlchemyBaseView, SuperheroFilterMixin, SuperpowerFilterMixin):
     """
-    View containing hero superpowers data for querying hero superpowers.
+    View for querying only hero powers data.
     """
 
     def get_select(self) -> Select:
@@ -476,7 +721,7 @@ class HeroPowerView(DBInitMixin, SqlAlchemyBaseView, SuperheroFilterMixin, Super
         return (
             select(
                 HeroPower.hero_id,
-                Superhero.superhero_name,
+                HeroPower.power_id,
                 Superpower.power_name,
             )
             .join(Superhero, Superhero.id == HeroPower.hero_id)
@@ -486,7 +731,7 @@ class HeroPowerView(DBInitMixin, SqlAlchemyBaseView, SuperheroFilterMixin, Super
 
 class PublisherView(DBInitMixin, SqlAlchemyBaseView, PublisherFilterMixin):
     """
-    View containing publisher data for querying publishers.
+    View for querying only publisher data.
     """
 
     def get_select(self) -> Select:

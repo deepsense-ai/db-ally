@@ -5,8 +5,6 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 
-from dbally.views.freeform.text2sql.exceptions import Text2SQLError
-
 from ..pipeline import EvaluationResult
 from .base import Metric
 
@@ -30,32 +28,6 @@ class ExactMatchSQL(Metric):
             "EM_SQL": (
                 sum(result.prediction.sql == result.reference.sql for result in results) / len(results)
                 if results
-                else 0.0
-            )
-        }
-
-
-class ValidSQL(Metric):
-    """
-    Ratio of valid SQL queries for a given results.
-    """
-
-    def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
-        """
-        Calculates the valid SQL ratio.
-
-        Args:
-            results: List of evaluation results.
-
-        Returns:
-            Valid IQL ratio.
-        """
-        supported_queries = [result for result in results if result.prediction.sql is not None]
-        return {
-            "VAL_SQL": (
-                sum(not isinstance(result.prediction.exception, Text2SQLError) for result in supported_queries)
-                / len(supported_queries)
-                if supported_queries
                 else 0.0
             )
         }
@@ -123,6 +95,7 @@ class ExecutionAccuracy(_DBMixin, Metric):
             Execution accuracy score and valid efficiency score.
         """
         accurate_results = [result for result in results if self._execution_accuracy(result)]
+
         return {
             "EX": len(accurate_results) / len(results) if results else 0.0,
             "VES": sum(

@@ -1,7 +1,6 @@
 defaults:
   - data: superhero
-  - setup: iql
-  - llm: gpt
+  - setup: iql-view
   - _self_
 
 neptune: False

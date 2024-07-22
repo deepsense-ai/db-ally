@@ -1,7 +1,6 @@
 from typing import Any, Dict, List
 
-from dbally.collection.exceptions import NoViewFoundError
-from dbally.iql._exceptions import IQLError, IQLFunctionNotExists
+from dbally.iql._exceptions import IQLError
 from dbally.iql_generator.prompt import UnsupportedQueryError
 
 from ..pipeline import EvaluationResult
@@ -23,15 +22,45 @@ class ExactMatchIQL(Metric):
         Returns:
             Ratio of predicated queries that are identical to the ground truth ones.
         """
-        iql_results = [
-            result
-            for result in results
-            if result.prediction.iql is not None or isinstance(result.prediction.exception, NoViewFoundError)
+        results = [
+            result for result in results if result.prediction.iql is not None and result.reference.iql is not None
         ]
         return {
             "EM_IQL": (
-                sum(result.prediction.iql == result.reference.iql for result in iql_results) / len(iql_results)
-                if iql_results
+                sum(result.prediction.iql == result.reference.iql for result in results) / len(results)
+                if results
+                else None
+            )
+        }
+
+
+class UnsupportedIQL(Metric):
+    """
+    Ratio of unsupported IQL queries.
+    """
+
+    def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
+        """
+        Calculates the unsupported IQL ratio.
+
+        Args:
+            results: List of evaluation results.
+
+        Returns:
+            Unsupported queries ratio.
+        """
+        results = [
+            result
+            for result in results
+            # TODO: Update filtering to filter out text-to-sql results
+            if result.prediction.iql is not None
+            and result.reference.iql is not None
+            or isinstance(result.prediction.exception, UnsupportedQueryError)
+        ]
+        return {
+            "UNSUPP_IQL": (
+                sum(isinstance(result.prediction.exception, UnsupportedQueryError) for result in results) / len(results)
+                if results
                 else 0.0
             )
         }
@@ -52,90 +81,36 @@ class ValidIQL(Metric):
         Returns:
             Valid IQL queries ratio.
         """
-        supported_queries = [result for result in results if result.prediction.iql is not None]
+        results = [result for result in results if result.prediction.iql is not None]
         return {
             "VAL_IQL": (
-                sum(not isinstance(result.prediction.exception, IQLError) for result in supported_queries)
-                / len(supported_queries)
-                if supported_queries
+                sum(not isinstance(result.prediction.exception, IQLError) for result in results) / len(results)
+                if results
                 else 0.0
             )
         }
 
 
-class UnsupportedIQL(Metric):
+class InvalidIQL(Metric):
     """
-    Ratio of unsupported IQL queries.
+    Ratio of invalid IQL queries.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
-        Calculates the unsupported IQL ratio.
+        Calculates the invalid IQL ratio.
 
         Args:
             results: List of evaluation results.
 
         Returns:
-            Unsupported queries ratio.
+            Invalid IQL queries ratio.
         """
-        iql_queries = [
-            result
-            for result in results
-            if result.prediction.iql is not None or isinstance(result.prediction.exception, UnsupportedQueryError)
-        ]
+        results = [result for result in results if result.prediction.iql is not None]
         return {
-            "UNSUPP_IQL": (
-                sum(isinstance(result.prediction.exception, UnsupportedQueryError) for result in iql_queries)
-                / len(iql_queries)
-                if iql_queries
+            "INV_IQL": (
+                sum(isinstance(result.prediction.exception, IQLError) for result in results) / len(results)
+                if results
                 else 0.0
             )
-        }
-
-
-class HallucinatedIQL(Metric):
-    """
-    Ratio of hallucinated IQL queries.
-    """
-
-    def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
-        """
-        Calculates the hallucinated IQL ratio.
-
-        Args:
-            results: List of evaluation results.
-
-        Returns:
-            Hallucinated queries ratio.
-        """
-        supported_queries = [result for result in results if result.prediction.iql is not None]
-        return {
-            "HAL_IQL": (
-                sum(isinstance(result, IQLFunctionNotExists) for result in supported_queries) / len(supported_queries)
-                if supported_queries
-                else 0.0
-            )
-        }
-
-
-class NoViewFound(Metric):
-    """
-    Ratio of queries with no view found.
-    """
-
-    def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
-        """
-        Calculates the ratio of queries with no view found.
-
-        Args:
-            results: List of evaluation results.
-
-        Returns:
-            Ratio of queries with no view found.
-        """
-        return {
-            "NO_VIEW": sum(isinstance(result.prediction.exception, NoViewFoundError) for result in results)
-            / len(results)
-            if results
-            else 0.0
         }

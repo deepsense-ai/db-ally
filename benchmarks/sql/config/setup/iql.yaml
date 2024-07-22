@@ -1,3 +1,0 @@
-name: IQL
-defaults:
-  - views: superhero/structured

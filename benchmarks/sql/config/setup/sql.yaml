@@ -1,3 +1,0 @@
-name: SQL
-defaults:
-  - views: superhero/freeform

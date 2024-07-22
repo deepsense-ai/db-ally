@@ -1,6 +1,10 @@
-[
+name: IQL_VIEW
+views: [
   "HeroAttributeView",
   "HeroPowerView",
   "PublisherView",
   "SuperheroView",
 ]
+
+defaults:
+  - llm: gpt-3.5-turbo

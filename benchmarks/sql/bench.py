@@ -1,22 +1,13 @@
 import asyncio
 import logging
+from enum import Enum
 from pathlib import Path
 
 import hydra
 import neptune
 from bench.evaluator import Evaluator
-from bench.metrics import (
-    ExactMatchIQL,
-    ExactMatchSQL,
-    ExecutionAccuracy,
-    HallucinatedIQL,
-    MetricSet,
-    NoViewFound,
-    UnsupportedIQL,
-    ValidIQL,
-    ValidSQL,
-)
-from bench.pipeline import EvaluationPipeline
+from bench.metrics import ExactMatchIQL, ExactMatchSQL, ExecutionAccuracy, MetricSet, UnsupportedIQL, ValidIQL
+from bench.pipeline import IQLViewEvaluationPipeline, SQLViewEvaluationPipeline
 from bench.utils import save
 from datasets import load_dataset
 from neptune.utils import stringify_unsupported
@@ -27,6 +18,34 @@ logging.getLogger("httpx").setLevel(logging.ERROR)
 log = logging.getLogger(__name__)
 
 
+class EvaluationType(Enum):
+    """
+    Enum representing the evaluation type.
+    """
+
+    IQL = "IQL_VIEW"
+    SQL = "SQL_VIEW"
+
+
+EVALUATION_PIPELINES = {
+    EvaluationType.IQL.value: IQLViewEvaluationPipeline,
+    EvaluationType.SQL.value: SQLViewEvaluationPipeline,
+}
+
+EVALUATION_METRICS = {
+    EvaluationType.IQL.value: MetricSet(
+        ExactMatchIQL,
+        ValidIQL,
+        UnsupportedIQL,
+        ExecutionAccuracy,
+    ),
+    EvaluationType.SQL.value: MetricSet(
+        ExactMatchSQL,
+        ExecutionAccuracy,
+    ),
+}
+
+
 async def bench(config: DictConfig) -> None:
     """
     Function running evaluation for all datasets and evaluation tasks defined in hydra config.
@@ -34,22 +53,14 @@ async def bench(config: DictConfig) -> None:
     Args:
         config: Hydra configuration.
     """
-    log.info("Starting evaluation for views: %s.", config.setup.views)
+    log.info("Starting evaluation: %s", config.setup.name)
 
     dataset = load_dataset(config.data.path, split=config.data.split)
     dataset = dataset.filter(lambda x: x["db_id"] == config.data.db_id and x["difficulty"] in config.data.difficulties)
+    dataset = dataset.select(range(30))
 
-    pipeline = EvaluationPipeline(config)
-    metrics = MetricSet(
-        ExactMatchIQL,
-        ExactMatchSQL,
-        NoViewFound,
-        ValidIQL,
-        ValidSQL,
-        UnsupportedIQL,
-        HallucinatedIQL,
-        ExecutionAccuracy,
-    )(config)
+    pipeline = EVALUATION_PIPELINES[config.setup.name](config)
+    metrics = EVALUATION_METRICS[config.setup.name](config)
 
     evaluator = Evaluator(config.setup.name)
     results = await evaluator.compute(
@@ -74,7 +85,8 @@ async def bench(config: DictConfig) -> None:
         run["sys/tags"].add(
             [
                 *config.views,
-                config.data.id,
+                config.data.db_id,
+                *config.data.difficulties,
                 config.llm.model_name,
             ]
         )
