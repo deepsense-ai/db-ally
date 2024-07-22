@@ -1,0 +1,62 @@
+[
+  {
+    "question": "Find me French candidates suitable for my position with at least 1 year of experience.",
+    "correct_answer": "from_country('France') AND has_position(AskerContext()) AND at_least_experience(1)",
+    "context": false
+  },
+  {
+    "question": "Please find me candidates from my country who have at most 4 years of experience.",
+    "correct_answer": "from_country(AskerContext()) AND at_most_experience(4)",
+    "context": true
+  },
+  {
+    "question": "Find me candidates who graduated from Stanford University and work as Software Engineers.",
+    "correct_answer": "graduated_from_university('Stanford University') AND has_position('Software Engineer')",
+    "context": false
+  },
+  {
+    "question": "Find me candidates who graduated from my university",
+    "correct_answer": "graduated_from_university(AskerContext())",
+    "context": true
+  },
+  {
+    "question": "Could you find me candidates with at most as experience who also know Python?",
+    "correct_answer": "at_most_experience(AskerContext()) AND know_python()",
+    "context": true
+  },
+  {
+    "question": "Please find me candidates who know Data Analysis and Python",
+    "correct_answer": "know_python() AND know_data_analysis()",
+    "context": false
+  },
+  {
+    "question": "Find me candidates with at least minimal required experience for the currently open position.",
+    "correct_answer": "at_least_experience(AskerContext())",
+    "context": true
+  },
+  {
+    "question": "List candidates with between 2 and 6 years of experience.",
+    "correct_answer": "at_least_experience(2) AND at_most_experience(6)",
+    "context": false
+  },
+  {
+    "question": "Find me candidates who currently have the same position as we look for in our company?",
+    "correct_answer": "has_position(AskerContext())",
+    "context": true
+  },
+  {
+    "question": "Please find me senior data scientist candidates who know Data Analysis and come from my country",
+    "correct_answer": "senior_data_scientist_position() AND has_skill('Data Analysis') AND from_country(AskerContext())",
+    "context": true
+  },
+  {
+    "question": "Find me candidates that have the same first name as me",
+    "correct_answer": "first_name_is(AskerContext())",
+    "context": true
+  },
+  {
+    "question": "List candidates named Mohammed from India",
+    "correct_answer": "first_name_is('Mohammed') AND from_country('India')",
+    "context": false
+  }
+]
