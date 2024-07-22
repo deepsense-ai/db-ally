@@ -675,7 +675,7 @@ class SuperheroView(  # pylint: disable=too-many-ancestors
         )
 
 
-class HeroAttributeView(
+class HeroAttributeView(  # pylint: disable=too-many-ancestors
     DBInitMixin,
     SqlAlchemyBaseView,
     HeroAttributeFilterMixin,
