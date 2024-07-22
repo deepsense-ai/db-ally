@@ -19,6 +19,7 @@ from dbally import decorators, SqlAlchemyBaseView
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.llms.litellm import LiteLLM
 from dbally.context import BaseCallerContext
+from dbally.iql import IQLError
 
 
 SQLITE_DB_FILE_REL_PATH = "../../examples/recruiting/data/candidates.db"
@@ -154,6 +155,9 @@ async def generate_iql_from_question(
             contexts=contexts,
             dry_run=True
         )
+    except IQLError as e:
+        exc_pretty = traceback.format_exception_only(e.__class__, e)[0]
+        return question, model_name, f"FAILED: {exc_pretty}({e.source})"
     except Exception as e:
         exc_pretty = traceback.format_exception_only(e.__class__, e)[0]
         return question, model_name, f"FAILED: {exc_pretty}"
