@@ -53,4 +53,4 @@ And many more, the full list can be found in the [LiteLLM documentation](https:/
 ### Query tracking
 
 - [x] LangSmith
-- [ ] OpenTelemetry
+- [x] OpenTelemetry

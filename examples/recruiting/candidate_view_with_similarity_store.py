@@ -5,9 +5,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from typing_extensions import Annotated
 
-from dbally import SqlAlchemyBaseView, decorators
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 from dbally.similarity import FaissStore, SimilarityIndex, SimpleSqlAlchemyFetcher
+from dbally.views import decorators
+from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
 engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
 
