@@ -1,14 +1,14 @@
 # pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring
+import polars as pl
+
 import dbally
 import asyncio
 import typing
 import json
 import traceback
 import os
-
 import tqdm.asyncio
 import sqlalchemy
-import pydantic
 from typing_extensions import TypeAlias
 from copy import deepcopy
 from sqlalchemy import create_engine
@@ -31,7 +31,8 @@ Base.prepare(autoload_with=engine)
 Candidate = Base.classes.candidates
 
 
-class MyData(BaseCallerContext, pydantic.BaseModel):
+@dataclass
+class MyData(BaseCallerContext):
     first_name: str
     surname: str
     position: str
@@ -41,7 +42,8 @@ class MyData(BaseCallerContext, pydantic.BaseModel):
     country: str
 
 
-class OpenPosition(BaseCallerContext, pydantic.BaseModel):
+@dataclass
+class OpenPosition(BaseCallerContext):
     position: str
     min_years_of_experience: int
     graduated_from_university: str
@@ -130,7 +132,7 @@ class CandidateView(SqlAlchemyBaseView):
         return Candidate.name.startswith(first_name)
 
 
-OpenAILLMName: TypeAlias = typing.Literal['gpt-3.5-turbo', 'gpt-4-turbo', 'gpt-4o']
+OpenAILLMName: TypeAlias = typing.Literal['gpt-3.5-turbo', 'gpt-3.5-turbo-instruct', 'gpt-4-turbo', 'gpt-4o']
 
 
 def setup_collection(model_name: OpenAILLMName) -> dbally.Collection:
@@ -224,10 +226,30 @@ async def main(config: BenchmarkConfig):
 
         output_data[question]["answers"][llm_name].append(answer)
 
-    output_data_list = list(output_data.values())
+    df_out_raw =  pl.DataFrame(list(output_data.values()))
+
+    df_out = (
+        df_out_raw
+        .unnest("answers")
+        .unpivot(
+            on=pl.selectors.starts_with("gpt"),
+            index=["question", "correct_answer", "context"],
+            variable_name="model",
+            value_name="answer"
+        )
+        .explode("answer")
+        .group_by(["context", "model"])
+        .agg([
+            (pl.col("correct_answer") == pl.col("answer")).mean().alias("frac_hits"),
+            (pl.col("correct_answer") == pl.col("answer")).sum().alias("n_hits"),
+        ])
+        .sort(["model", "context"])
+    )
+
+    print(df_out)
 
     with open(config.out_path, 'w') as file:
-        file.write(json.dumps(test_set, indent=2))
+        file.write(json.dumps(df_out_raw.to_dicts(), indent=2))
 
 
 if __name__ == "__main__":
