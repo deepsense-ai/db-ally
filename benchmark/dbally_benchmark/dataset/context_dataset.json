@@ -20,7 +20,7 @@
     "context": true
   },
   {
-    "question": "Could you find me candidates with at most as experience who also know Python?",
+    "question": "Could you find me candidates with at most as experience as I have who also know Python?",
     "correct_answer": "at_most_experience(AskerContext()) AND know_python()",
     "context": true
   },
