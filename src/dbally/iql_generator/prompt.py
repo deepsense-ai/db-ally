@@ -76,10 +76,16 @@ IQL_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
                 "It is VERY IMPORTANT not to use methods other than those listed above.\n"
                 "Finally, if a called function argument value is not directly specified in the query but instead requires "
                 "some additional execution context, than substitute that argument value with: AskerContext().\n"
-                'The typical input phrase suggesting that the additional execution context need to be referenced contains words like: "I", "my", "mine", "current", "the" etc..\n'
+                "The typical input phrase suggesting that the additional execution context need to be referenced \n"
+                'contains words like: "I", "my", "mine", "current", "the" etc..\n'
                 'For example: "my position name", "my company valuation", "current day", "the ongoing project".\n'
                 "In that case, the part of the output will look like this:\n"
                 "filter4(AskerContext())\n"
+                "Outside this situation DO NOT combine filters like this:\n"
+                "filter4(filter2())\n"
+                "And NEVER quote the filter argument unless you're sure it represents the string/literal datatype, \n"
+                "Especially do not quote AskerContext() calls like this:\n"
+                "filter2('AskerContext()')\n"
                 """If you DON'T KNOW HOW TO ANSWER DON'T SAY \"\", SAY: `UNSUPPORTED QUERY` INSTEAD! """
                 "This is CRUCIAL, otherwise the system will crash. "
             ),
