@@ -1,4 +1,4 @@
-# pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, singleton-comparison, consider-using-in
+# pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, singleton-comparison, consider-using-in, too-many-ancestors, too-many-public-methods
 # flake8: noqa
 
 from typing import Literal
@@ -67,7 +67,7 @@ class DBInitMixin:
         super().__init__(sqlalchemy_engine)
 
 
-class SuperheroFilterMixin:  # pylint: disable=too-many-public-methods
+class SuperheroFilterMixin:
     """
     Mixin for filtering the view by the superhero attributes.
     """
@@ -771,7 +771,7 @@ class AttributeFilterMixin:
         return Attribute.attribute_name == attribute_name
 
 
-class SuperheroView(  # pylint: disable=too-many-ancestors
+class SuperheroView(
     DBInitMixin,
     SqlAlchemyBaseView,
     SuperheroFilterMixin,
@@ -819,7 +819,7 @@ class SuperheroView(  # pylint: disable=too-many-ancestors
         )
 
 
-class HeroAttributeView(  # pylint: disable=too-many-ancestors
+class HeroAttributeView(
     DBInitMixin,
     SqlAlchemyBaseView,
     HeroAttributeFilterMixin,
