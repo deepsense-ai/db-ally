@@ -5,7 +5,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 
-from ..pipeline import EvaluationResult
+from ..pipelines import EvaluationResult
 from .base import Metric
 
 

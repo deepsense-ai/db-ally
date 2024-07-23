@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Type
 
 from typing_extensions import Self
 
-from ..pipeline import EvaluationResult
+from ..pipelines import EvaluationResult
 
 
 class Metric(ABC):

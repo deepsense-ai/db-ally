@@ -6,10 +6,20 @@ from pathlib import Path
 import hydra
 import neptune
 from bench.evaluator import Evaluator
-from bench.metrics import ExactMatchIQL, ExactMatchSQL, ExecutionAccuracy, MetricSet, UnsupportedIQL, ValidIQL
-from bench.pipeline import IQLViewEvaluationPipeline, SQLViewEvaluationPipeline
+from bench.loaders import CollectionDataLoader, IQLViewDataLoader, SQLViewDataLoader
+from bench.metrics import (
+    ExactMatchAggregationIQL,
+    ExactMatchFiltersIQL,
+    ExactMatchIQL,
+    ExactMatchSQL,
+    ExecutionAccuracy,
+    MetricSet,
+    UnsupportedIQL,
+    ValidIQL,
+    ViewSelectionAccuracy,
+)
+from bench.pipelines import CollectionEvaluationPipeline, IQLViewEvaluationPipeline, SQLViewEvaluationPipeline
 from bench.utils import save
-from datasets import load_dataset
 from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
 
@@ -25,21 +35,42 @@ class EvaluationType(Enum):
 
     IQL = "IQL_VIEW"
     SQL = "SQL_VIEW"
+    E2E = "COLLECTION"
 
+
+EVALUATION_DATALOADERS = {
+    EvaluationType.IQL.value: IQLViewDataLoader,
+    EvaluationType.SQL.value: SQLViewDataLoader,
+    EvaluationType.E2E.value: CollectionDataLoader,
+}
 
 EVALUATION_PIPELINES = {
     EvaluationType.IQL.value: IQLViewEvaluationPipeline,
     EvaluationType.SQL.value: SQLViewEvaluationPipeline,
+    EvaluationType.E2E.value: CollectionEvaluationPipeline,
 }
 
 EVALUATION_METRICS = {
     EvaluationType.IQL.value: MetricSet(
         ExactMatchIQL,
+        ExactMatchFiltersIQL,
+        ExactMatchAggregationIQL,
         ValidIQL,
+        ViewSelectionAccuracy,
         UnsupportedIQL,
         ExecutionAccuracy,
     ),
     EvaluationType.SQL.value: MetricSet(
+        ExactMatchSQL,
+        ExecutionAccuracy,
+    ),
+    EvaluationType.E2E.value: MetricSet(
+        ExactMatchIQL,
+        ExactMatchFiltersIQL,
+        ExactMatchAggregationIQL,
+        ValidIQL,
+        UnsupportedIQL,
+        ViewSelectionAccuracy,
         ExactMatchSQL,
         ExecutionAccuracy,
     ),
@@ -55,17 +86,14 @@ async def bench(config: DictConfig) -> None:
     """
     log.info("Starting evaluation: %s", config.setup.name)
 
-    dataset = load_dataset(config.data.path, split=config.data.split)
-    dataset = dataset.filter(lambda x: x["db_id"] == config.data.db_id and x["difficulty"] in config.data.difficulties)
-    dataset = dataset.select(range(30))
-
+    dataloader = EVALUATION_DATALOADERS[config.setup.name](config)
     pipeline = EVALUATION_PIPELINES[config.setup.name](config)
     metrics = EVALUATION_METRICS[config.setup.name](config)
 
     evaluator = Evaluator(config.setup.name)
     results = await evaluator.compute(
-        pipe=pipeline,
-        data=dataset,
+        pipeline=pipeline,
+        dataloader=dataloader,
         metrics=metrics,
     )
 
@@ -84,21 +112,19 @@ async def bench(config: DictConfig) -> None:
         run = neptune.init_run()
         run["sys/tags"].add(
             [
-                *config.views,
+                config.setup.name,
                 config.data.db_id,
                 *config.data.difficulties,
-                config.llm.model_name,
             ]
         )
         run["config"] = stringify_unsupported(config)
-        run["evaluation/results.json"].upload(results_file.as_posix())
-        run["evaluation/metrics.json"].upload(metrics_file.as_posix())
         run["evaluation/metrics"] = stringify_unsupported(results["metrics"])
+        run["evaluation/time_perf"] = stringify_unsupported(results["time_perf"])
+        run["evaluation/metrics.json"].upload(metrics_file.as_posix())
+        run["evaluation/results.json"].upload(results_file.as_posix())
 
-        log.info("Evaluation results logged to neptune at %s", run.get_url())
 
-
-@hydra.main(config_path="config", config_name="config")
+@hydra.main(config_path="config", config_name="config", version_base="3.2")
 def main(config: DictConfig) -> None:
     """
     Function running evaluation for all datasets and evaluation tasks defined in hydra config.

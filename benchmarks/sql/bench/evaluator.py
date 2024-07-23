@@ -2,9 +2,11 @@ import time
 from typing import Any, Callable, Dict, List, Tuple
 
 from datasets import Dataset
+from tqdm.asyncio import tqdm
 
+from .loaders import DataLoader
 from .metrics.base import MetricSet
-from .pipeline import EvaluationPipeline, EvaluationResult
+from .pipelines import EvaluationPipeline, EvaluationResult
 
 
 class Evaluator:
@@ -23,22 +25,23 @@ class Evaluator:
 
     async def compute(
         self,
-        pipe: Callable,
-        data: Dataset,
+        pipeline: Callable,
+        dataloader: DataLoader,
         metrics: MetricSet,
     ) -> Dict[str, Any]:
         """
         Compute the evaluation results for the given pipeline and data.
 
         Args:
-            pipe: The pipeline to be evaluated.
-            data: The evaluation data.
+            pipeline: The pipeline to be evaluated.
+            dataloader: The dataloader to load the data.
             metrics: The metrics to be computed.
 
         Returns:
             The evaluation results.
         """
-        results, perf_results = await self._call_pipeline(pipe, data)
+        dataset = await dataloader.load()
+        results, perf_results = await self._call_pipeline(pipeline, dataset)
         computed_metrics = self._compute_metrics(metrics, results)
         results = self._results_processor(results)
 
@@ -51,7 +54,7 @@ class Evaluator:
     async def _call_pipeline(
         self,
         pipe: EvaluationPipeline,
-        data: Dataset,
+        dataset: Dataset,
     ) -> Tuple[List[EvaluationResult], Dict[str, Any]]:
         """
         Call the pipeline with the given data.
@@ -64,9 +67,9 @@ class Evaluator:
             The evaluation results and performance metrics.
         """
         start_time = time.perf_counter()
-        pipe_output = await pipe(data)
+        pipe_outputs = await tqdm.gather(*[pipe(data) for data in dataset], desc="Evaluation")
         end_time = time.perf_counter()
-        return pipe_output, self._compute_time_perf(start_time, end_time, len(pipe_output))
+        return pipe_outputs, self._compute_time_perf(start_time, end_time, len(pipe_outputs))
 
     def _results_processor(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
