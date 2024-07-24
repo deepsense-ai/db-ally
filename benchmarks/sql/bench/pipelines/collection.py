@@ -50,6 +50,17 @@ class CollectionEvaluationPipeline(EvaluationPipeline):
             view_cls = VIEWS_REGISTRY[view_name]
             collection.add(view_cls, lambda: view_cls(self.db))  # pylint: disable=cell-var-from-loop
 
+        if config.fallback:
+            fallback = dbally.create_collection(
+                name=config.fallback,
+                llm=generator_llm,
+                view_selector=view_selector,
+            )
+            fallback.n_retries = 0
+            fallback_cls = VIEWS_REGISTRY[config.fallback]
+            fallback.add(fallback_cls, lambda: fallback_cls(self.db))
+            collection.set_fallback(fallback)
+
         return collection
 
     async def __call__(self, data: Dict[str, Any]) -> EvaluationResult:

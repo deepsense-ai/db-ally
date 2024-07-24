@@ -784,7 +784,8 @@ class SuperheroView(
     RaceFilterMixin,
 ):
     """
-    View for querying only superheros data.
+    View for querying only superheros data. Contains the superhero id, superhero name, full name, height, weight,
+    publisher name, gender, race, alignment, eye colour, hair colour, skin colour.
     """
 
     def get_select(self) -> Select:
@@ -828,7 +829,7 @@ class HeroAttributeView(
     AlignmentFilterMixin,
 ):
     """
-    View for querying only hero attributes data.
+    View for querying only hero attributes data. Contains the attribute name and attribute value.
     """
 
     def get_select(self) -> Select:
@@ -852,7 +853,7 @@ class HeroAttributeView(
 
 class HeroPowerView(DBInitMixin, SqlAlchemyBaseView, HeroPowerFilterMixin, SuperheroFilterMixin, SuperpowerFilterMixin):
     """
-    View for querying only hero powers data.
+    View for querying only hero super powers data. Contains the power id and power name.
     """
 
     def get_select(self) -> Select:
@@ -864,13 +865,10 @@ class HeroPowerView(DBInitMixin, SqlAlchemyBaseView, HeroPowerFilterMixin, Super
         """
         return (
             select(
-                HeroPower.hero_id,
-                Alignment.alignment,
                 HeroPower.power_id,
                 Superpower.power_name,
             )
             .join(Superhero, Superhero.id == HeroPower.hero_id)
-            .join(Alignment, Alignment.id == Superhero.alignment_id)
             .join(Superpower, Superpower.id == HeroPower.power_id)
             .group_by(HeroPower.power_id)
         )
@@ -878,7 +876,7 @@ class HeroPowerView(DBInitMixin, SqlAlchemyBaseView, HeroPowerFilterMixin, Super
 
 class PublisherView(DBInitMixin, SqlAlchemyBaseView, PublisherFilterMixin, PublisherSuperheroMixin):
     """
-    View for querying only publisher data.
+    View for querying only publisher data. Contains the publisher id and publisher name.
     """
 
     def get_select(self) -> Select:

@@ -1,93 +1,89 @@
-from unittest.mock import AsyncMock, MagicMock
+from typing import Dict, List
 
 import pytest
 
 from benchmarks.sql.bench.evaluator import Evaluator
 
 
-class MockPipeline:
-    async def __call__(self, data):
-        return ["mock_result"], {"mock_perf": "mock_value"}
+class MockDataLoader:
+    async def load(self) -> List[str]:
+        return ["data1", "data2"]
 
 
 class MockMetricSet:
-    def compute(self, results):
-        return {"mock_metric": "mock_value"}
-
-
-class MockDataset:
-    pass
+    def compute(self, results) -> Dict[str, float]:
+        return {"accuracy": 0.95}
 
 
 class MockEvaluationResult:
-    def dict(self):
-        return {"mock_result_key": "mock_result_value"}
+    def dict(self) -> Dict[str, str]:
+        return {"result": "processed_data"}
+
+
+class MockEvaluationPipeline:
+    async def __call__(self, data) -> MockEvaluationResult:
+        return MockEvaluationResult()
 
 
 @pytest.mark.asyncio
-async def test_compute():
+async def test_compute() -> None:
     evaluator = Evaluator(task="test_task")
-    pipe = MockPipeline()
-    data = MockDataset()
+    dataloader = MockDataLoader()
     metrics = MockMetricSet()
+    pipeline = MockEvaluationPipeline()
 
-    # Mocking the internal methods which are not the target of this test
-    evaluator._call_pipeline = AsyncMock(return_value=(["mock_result"], {"mock_perf": "mock_value"}))
-    evaluator._compute_metrics = MagicMock(return_value={"mock_metric": "mock_value"})
-    evaluator._results_processor = MagicMock(return_value={"processed_results": "mock_processed_results"})
+    result = await evaluator.compute(pipeline, dataloader, metrics)
 
-    expected_result = {
-        "mock_perf": "mock_value",
-        "mock_metric": "mock_value",
-        "processed_results": "mock_processed_results",
-    }
-
-    result = await evaluator.compute(pipe, data, metrics)
-    assert result == expected_result
+    assert "metrics" in result
+    assert "results" in result
+    assert result["metrics"]["accuracy"] == 0.95
+    assert len(result["results"]) == 2  # Assuming two data points were processed
 
 
 @pytest.mark.asyncio
-async def test_call_pipeline():
+async def test_call_pipeline() -> None:
     evaluator = Evaluator(task="test_task")
-    pipe = MockPipeline()
-    data = MockDataset()
+    pipeline = MockEvaluationPipeline()
+    dataset = [1, 2]
 
-    results, perf_results = await evaluator._call_pipeline(pipe, data)
+    results, perf_results = await evaluator._call_pipeline(pipeline, dataset)
 
-    assert len(results) == 2
-    assert "mock_perf" in perf_results
+    assert len(results) == len(dataset)  # Ensure all data was processed
+    assert "total_time_in_seconds" in perf_results["time_perf"]
 
 
-def test_results_processor():
+@pytest.mark.asyncio
+def test_results_processor() -> None:
     evaluator = Evaluator(task="test_task")
-    results = [MockEvaluationResult()]
+    results = [MockEvaluationResult(), MockEvaluationResult()]
 
     processed_results = evaluator._results_processor(results)
 
     assert "results" in processed_results
-    assert processed_results["results"][0]["mock_result_key"] == "mock_result_value"
+    assert len(processed_results["results"]) == len(results)
 
 
-def test_compute_metrics():
+@pytest.mark.asyncio
+def test_compute_metrics() -> None:
     evaluator = Evaluator(task="test_task")
     metrics = MockMetricSet()
-    results = [MockEvaluationResult()]
+    results = [MockEvaluationResult(), MockEvaluationResult()]
 
     computed_metrics = evaluator._compute_metrics(metrics, results)
 
     assert "metrics" in computed_metrics
-    assert computed_metrics["metrics"]["mock_metric"] == "mock_value"
+    assert computed_metrics["metrics"]["accuracy"] == 0.95
 
 
+@pytest.mark.asyncio
 def test_compute_time_perf() -> None:
     evaluator = Evaluator(task="test_task")
     start_time = 0
-    end_time = 10
+    end_time = 2
     num_samples = 100
 
     perf_metrics = evaluator._compute_time_perf(start_time, end_time, num_samples)
 
-    assert "time_perf" in perf_metrics
-    assert perf_metrics["time_perf"]["total_time_in_seconds"] == 10
-    assert perf_metrics["time_perf"]["samples_per_second"] == 10
-    assert perf_metrics["time_perf"]["latency_in_seconds"] == 0.1
+    assert perf_metrics["time_perf"]["total_time_in_seconds"] == 2
+    assert perf_metrics["time_perf"]["samples_per_second"] == 50
+    assert perf_metrics["time_perf"]["latency_in_seconds"] == 0.02
