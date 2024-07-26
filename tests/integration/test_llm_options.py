@@ -4,7 +4,15 @@ import pytest
 
 from dbally import create_collection
 from tests.unit.mocks import MockLLM, MockLLMOptions
-from tests.unit.test_collection import MockView1, MockView2
+from tests.unit.test_collection import MockViewWithResults
+
+
+class MockView1(MockViewWithResults):
+    pass
+
+
+class MockView2(MockViewWithResults):
+    pass
 
 
 @pytest.mark.asyncio

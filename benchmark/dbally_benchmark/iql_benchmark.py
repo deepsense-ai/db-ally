@@ -20,15 +20,15 @@ from omegaconf import DictConfig
 from sqlalchemy import create_engine
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, UnsupportedQueryError
+from dbally.iql_generator.filters_prompt import IQL_GENERATION_TEMPLATE, UnsupportedQueryError
+from dbally.iql_generator.iql_filters_generator import IQLFiltersGenerator
 from dbally.llms.litellm import LiteLLM
 from dbally.llms.local import LocalLLM
 from dbally.views.structured import BaseStructuredView
 
 
 async def _run_iql_for_single_example(
-    example: BIRDExample, view: BaseStructuredView, iql_generator: IQLGenerator
+    example: BIRDExample, view: BaseStructuredView, iql_generator: IQLFiltersGenerator
 ) -> IQLResult:
     filter_list = view.list_filters()
     event_tracker = EventTracker()
@@ -46,7 +46,7 @@ async def _run_iql_for_single_example(
 
 
 async def run_iql_for_dataset(
-    dataset: BIRDDataset, view: BaseStructuredView, iql_generator: IQLGenerator
+    dataset: BIRDDataset, view: BaseStructuredView, iql_generator: IQLFiltersGenerator
 ) -> List[IQLResult]:
     """
     Runs IQL predictions for a dataset.
@@ -102,7 +102,7 @@ async def evaluate(cfg: DictConfig) -> Any:
     else:
         llm = LiteLLM(api_key=benchmark_cfg.openai_api_key, model_name=cfg.model_name)
 
-    iql_generator = IQLGenerator(llm=llm)
+    iql_generator = IQLFiltersGenerator(llm=llm)
 
     run = None
     if cfg.neptune.log:

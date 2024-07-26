@@ -10,10 +10,10 @@ from typing import List, Optional, Union
 
 from dbally import NOT_GIVEN, NotGiven
 from dbally.iql import IQLQuery
-from dbally.iql_generator.iql_generator import IQLGenerator
+from dbally.iql_generator.iql_aggregation_generator import IQLAggregationGenerator
+from dbally.iql_generator.iql_filters_generator import IQLFiltersGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMClient, LLMOptions
-from dbally.prompt.aggregation import AggregationFormatter
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.structured import BaseStructuredView, ExposedFunction, ViewExecutionResult
@@ -40,7 +40,7 @@ class MockViewBase(BaseStructuredView):
         return ViewExecutionResult(results=[], context={})
 
 
-class MockIQLGenerator(IQLGenerator):
+class MockIQLFiltersGenerator(IQLFiltersGenerator):
     def __init__(self, iql: IQLQuery) -> None:
         self.iql = iql
         super().__init__(llm=MockLLM())
@@ -49,12 +49,12 @@ class MockIQLGenerator(IQLGenerator):
         return self.iql
 
 
-class MockAggregationFormatter(AggregationFormatter):
+class MockIQLAggregationGenerator(IQLAggregationGenerator):
     def __init__(self, iql_query: IQLQuery) -> None:
         self.iql_query = iql_query
         super().__init__(llm=MockLLM())
 
-    async def format_to_query_object(self, *_, **__) -> IQLQuery:
+    async def generate_iql(self, *_, **__) -> IQLQuery:
         return self.iql_query
 
 
