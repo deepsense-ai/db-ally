@@ -1,4 +1,4 @@
-from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, IQLGenerationPromptFormat
+from dbally.iql_generator.filters_prompt import IQL_GENERATION_TEMPLATE, IQLGenerationPromptFormat
 from dbally.prompt.elements import FewShotExample
 
 

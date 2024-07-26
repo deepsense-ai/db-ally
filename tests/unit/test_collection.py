@@ -12,10 +12,11 @@ from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ViewExecutionResult
 from dbally.iql import IQLQuery
 from dbally.iql.syntax import FunctionCall
+from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 from tests.unit.mocks import (
-    MockAggregationFormatter,
-    MockIQLGenerator,
+    MockIQLAggregationGenerator,
+    MockIQLFiltersGenerator,
     MockLLM,
     MockSimilarityIndex,
     MockViewBase,
@@ -66,14 +67,16 @@ class MockViewWithResults(MockViewBase):
     def list_filters(self) -> List[ExposedFunction]:
         return [ExposedFunction("test_filter", "", [])]
 
-    def get_iql_generator(self, *_, **__) -> MockIQLGenerator:
-        return MockIQLGenerator(IQLQuery(FunctionCall("test_filter", []), "test_filter()"))
+    def get_iql_generator(self, *_, **__) -> IQLGenerator:
+        return IQLGenerator(
+            filters_generator=MockIQLFiltersGenerator(IQLQuery(FunctionCall("test_filter", []), "test_filter()")),
+            aggregation_generator=MockIQLAggregationGenerator(
+                IQLQuery(FunctionCall("test_aggregation", []), "test_aggregation()")
+            ),
+        )
 
     def list_aggregations(self) -> List[ExposedFunction]:
         return [ExposedFunction("test_aggregation", "", [])]
-
-    def get_agg_formatter(self, *_, **__) -> MockAggregationFormatter:
-        return MockAggregationFormatter(IQLQuery(FunctionCall("test_aggregation", []), "test_aggregation()"))
 
 
 @pytest.fixture(name="similarity_classes")

@@ -6,7 +6,8 @@ from openai.types.beta.threads import RequiredActionFunctionToolCall
 
 from dbally.assistants.base import AssistantAdapter, FunctionCallingError, FunctionCallState
 from dbally.collection import Collection
-from dbally.iql_generator.prompt import UnsupportedQueryError
+from dbally.iql_generator.aggregation_prompt import UnsupportedAggregationError
+from dbally.iql_generator.filters_prompt import UnsupportedQueryError
 
 _DBALLY_INFO = "Dbally has access to the following database views: "
 
@@ -114,7 +115,7 @@ class OpenAIAdapter(AssistantAdapter):
                             # In case of  raise_exception use TaskGroup, otherwise asyncio.gather.
                             response_dbally = await self.collection.ask(question=function_args.get("query"))
                             response = json.dumps(response_dbally.results)
-                        except UnsupportedQueryError:
+                        except (UnsupportedQueryError, UnsupportedAggregationError):
                             state = FunctionCallState.UNSUPPORTED_QUERY
                             response = str(state)
 

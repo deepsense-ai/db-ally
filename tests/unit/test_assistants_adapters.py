@@ -8,7 +8,7 @@ from openai.types.beta.threads.required_action_function_tool_call import Functio
 
 from dbally.assistants.base import FunctionCallingError, FunctionCallState
 from dbally.assistants.openai import _DBALLY_INFO, _DBALLY_INSTRUCTION, OpenAIAdapter, OpenAIDballyResponse
-from dbally.iql_generator.prompt import UnsupportedQueryError
+from dbally.iql_generator.filters_prompt import UnsupportedQueryError
 
 MOCK_VIEWS = {"view1": "description1", "view2": "description2"}
 F_ID = "f_id"

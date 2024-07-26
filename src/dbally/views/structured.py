@@ -5,13 +5,14 @@ from typing import Dict, List, Optional
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
 from dbally.iql import IQLQuery
-from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.views.exposed_functions import ExposedFunction
 
 from ..iql.syntax import FunctionCall
-from ..prompt.aggregation import AggregationFormatter
+from ..iql_generator.iql_aggregation_generator import IQLAggregationGenerator
+from ..iql_generator.iql_filters_generator import IQLFiltersGenerator
+from ..iql_generator.iql_generator import IQLGenerator
 from ..similarity import AbstractSimilarityIndex
 from .base import BaseView, IndexLocation
 
@@ -32,19 +33,10 @@ class BaseStructuredView(BaseView):
         Returns:
             IQL generator for the view.
         """
-        return IQLGenerator(llm=llm)
-
-    def get_agg_formatter(self, llm: LLM) -> AggregationFormatter:
-        """
-        Returns the AggregtionFormatter for the view.
-
-        Args:
-            llm: LLM used to generate the queries.
-
-        Returns:
-            AggregtionFormatter for the view.
-        """
-        return AggregationFormatter(llm=llm)
+        return IQLGenerator(
+            filters_generator=IQLFiltersGenerator(llm),
+            aggregation_generator=IQLAggregationGenerator(llm),
+        )
 
     async def ask(
         self,
@@ -74,31 +66,39 @@ class BaseStructuredView(BaseView):
             IQLError: If the generated IQL query is not valid.
         """
         iql_generator = self.get_iql_generator(llm)
-        agg_formatter = self.get_agg_formatter(llm)
         filters = self.list_filters()
         examples = self.list_few_shots()
         aggregations = self.list_aggregations()
 
-        iql = await iql_generator.generate_iql(
-            question=query,
-            filters=filters,
-            examples=examples,
-            event_tracker=event_tracker,
-            llm_options=llm_options,
-            n_retries=n_retries,
-        )
-        await self.apply_filters(iql)
+        context = {
+            "filters": None,
+            "aggregation": None,
+        }
 
-        agg_node = await agg_formatter.format_to_query_object(
-            question=query,
-            aggregations=aggregations,
-            event_tracker=event_tracker,
-            llm_options=llm_options,
-        )
-        await self.apply_aggregation(agg_node.root)
+        if filters:
+            iql = await iql_generator.filters.generate_iql(
+                question=query,
+                filters=filters,
+                examples=examples,
+                event_tracker=event_tracker,
+                llm_options=llm_options,
+                n_retries=n_retries,
+            )
+            await self.apply_filters(iql)
+            context["filters"] = f"{iql}"
+
+        if aggregations:
+            agg_node = await iql_generator.aggregation.generate_iql(
+                question=query,
+                aggregations=aggregations,
+                event_tracker=event_tracker,
+                llm_options=llm_options,
+            )
+            await self.apply_aggregation(agg_node.root)
+            context["aggregation"] = f"{agg_node}"
 
         result = self.execute(dry_run=dry_run)
-        result.context["iql"] = {"filters": f"{iql}", "aggregation": f"{agg_node}"}
+        result.context["iql"] = context
 
         return result
 

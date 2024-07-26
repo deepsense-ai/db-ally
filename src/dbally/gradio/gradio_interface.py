@@ -9,7 +9,7 @@ from dbally import BaseStructuredView
 from dbally.audit.event_handlers.buffer_event_handler import BufferEventHandler
 from dbally.collection import Collection
 from dbally.collection.exceptions import NoViewFoundError
-from dbally.iql_generator.prompt import UnsupportedQueryError
+from dbally.iql_generator.filters_prompt import UnsupportedQueryError
 from dbally.prompt.template import PromptTemplateError
 
 

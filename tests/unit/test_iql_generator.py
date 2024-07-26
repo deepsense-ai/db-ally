@@ -8,8 +8,8 @@ import sqlalchemy
 from dbally import decorators
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql import IQLError, IQLQuery
-from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, IQLGenerationPromptFormat
+from dbally.iql_generator.filters_prompt import IQL_GENERATION_TEMPLATE, IQLGenerationPromptFormat
+from dbally.iql_generator.iql_filters_generator import IQLFiltersGenerator
 from dbally.views.methods_base import MethodsBaseView
 from tests.unit.mocks import MockLLM
 
@@ -54,12 +54,12 @@ def event_tracker() -> EventTracker:
 
 
 @pytest.fixture
-def iql_generator(llm: MockLLM) -> IQLGenerator:
-    return IQLGenerator(llm)
+def iql_generator(llm: MockLLM) -> IQLFiltersGenerator:
+    return IQLFiltersGenerator(llm=llm)
 
 
 @pytest.mark.asyncio
-async def test_iql_generation(iql_generator: IQLGenerator, event_tracker: EventTracker, view: MockView) -> None:
+async def test_iql_generation(iql_generator: IQLFiltersGenerator, event_tracker: EventTracker, view: MockView) -> None:
     filters = view.list_filters()
     prompt_format = IQLGenerationPromptFormat(
         question="Mock_question",
@@ -88,7 +88,7 @@ async def test_iql_generation(iql_generator: IQLGenerator, event_tracker: EventT
 
 @pytest.mark.asyncio
 async def test_iql_generation_error_escalation_after_max_retires(
-    iql_generator: IQLGenerator,
+    iql_generator: IQLFiltersGenerator,
     event_tracker: EventTracker,
     view: MockView,
 ) -> None:
@@ -116,7 +116,7 @@ async def test_iql_generation_error_escalation_after_max_retires(
 
 @pytest.mark.asyncio
 async def test_iql_generation_response_after_max_retries(
-    iql_generator: IQLGenerator,
+    iql_generator: IQLFiltersGenerator,
     event_tracker: EventTracker,
     view: MockView,
 ) -> None:
