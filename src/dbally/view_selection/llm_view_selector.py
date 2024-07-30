@@ -48,6 +48,9 @@ class LLMViewSelector(ViewSelector):
 
         Returns:
             The most relevant view name.
+
+        Raises:
+            LLMError: If LLM text generation fails.
         """
         prompt_format = ViewSelectionPromptFormat(question=question, views=views)
         formatted_prompt = self._prompt_template.format_prompt(prompt_format)
