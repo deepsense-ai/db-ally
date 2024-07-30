@@ -7,9 +7,9 @@ from sqlalchemy import create_engine
 
 from dbally.iql._exceptions import IQLError
 from dbally.iql_generator.prompt import UnsupportedQueryError
+from dbally.views.exceptions import IQLGenerationError
 from dbally.views.freeform.text2sql.view import BaseText2SQLView
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
-from dbally.views.structured import IQLGenerationError
 
 from ..views import VIEWS_REGISTRY
 from .base import IQL, EvaluationPipeline, EvaluationResult, ExecutionResult, IQLResult
@@ -193,11 +193,19 @@ class SQLViewEvaluationPipeline(ViewEvaluationPipeline):
             )
         # TODO: Remove this broad exception handling once the Text2SQL view is fixed
         except Exception:  # pylint: disable=broad-except
-            prediction = ExecutionResult()
+            prediction = ExecutionResult(
+                view_name=view.__class__.__name__,
+            )
         else:
-            prediction = ExecutionResult(sql=result.context["sql"])
+            prediction = ExecutionResult(
+                view_name=view.__class__.__name__,
+                sql=result.context["sql"],
+            )
 
-        reference = ExecutionResult(sql=data["sql"])
+        reference = ExecutionResult(
+            view_name=data["view_name"],
+            sql=data["sql"],
+        )
 
         return EvaluationResult(
             db_id=data["db_id"],

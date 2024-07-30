@@ -8,7 +8,7 @@ from dbally.collection.exceptions import NoViewFoundError
 from dbally.iql._exceptions import IQLError
 from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.view_selection.llm_view_selector import LLMViewSelector
-from dbally.views.structured import IQLGenerationError
+from dbally.views.exceptions import IQLGenerationError
 
 from ..views import VIEWS_REGISTRY
 from .base import IQL, EvaluationPipeline, EvaluationResult, ExecutionResult, IQLResult
