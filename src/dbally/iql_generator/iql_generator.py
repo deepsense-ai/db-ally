@@ -5,6 +5,7 @@ from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, IQLGenerationPromptFormat
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
+from dbally.llms.clients.exceptions import LLMError
 from dbally.prompt.elements import FewShotExample
 from dbally.prompt.template import PromptTemplate
 from dbally.views.exposed_functions import ExposedFunction
@@ -52,13 +53,15 @@ class IQLGenerator:
             event_tracker: Event store used to audit the generation process.
             examples: List of examples to be injected into the conversation.
             llm_options: Options to use for the LLM client.
-            n_retries: Number of retries to regenerate IQL in case of errors.
+            n_retries: Number of retries to regenerate IQL in case of errors in parsing or LLM connection.
 
         Returns:
             Generated IQL query.
 
         Raises:
-            IQLError: If IQL generation fails after all retries.
+            LLMError: If LLM text generation fails after all retries.
+            IQLError: If IQL parsing fails after all retries.
+            UnsupportedQueryError: If the question is not supported by the view.
         """
         prompt_format = IQLGenerationPromptFormat(
             question=question,
@@ -82,6 +85,9 @@ class IQLGenerator:
                     allowed_functions=filters,
                     event_tracker=event_tracker,
                 )
+            except LLMError as exc:
+                if retry == n_retries:
+                    raise exc
             except IQLError as exc:
                 if retry == n_retries:
                     raise exc

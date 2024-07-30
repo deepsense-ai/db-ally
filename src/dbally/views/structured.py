@@ -5,9 +5,12 @@ from typing import Dict, List, Optional
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
 from dbally.iql import IQLQuery
+from dbally.iql._exceptions import IQLError
 from dbally.iql_generator.iql_generator import IQLGenerator
+from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
+from dbally.views.exceptions import IQLGenerationError
 from dbally.views.exposed_functions import ExposedFunction
 
 from ..similarity import AbstractSimilarityIndex
@@ -57,21 +60,36 @@ class BaseStructuredView(BaseView):
             The result of the query.
 
         Raises:
-            IQLError: If the generated IQL query is not valid.
+            LLMError: If LLM text generation API fails.
+            IQLGenerationError: If the IQL generation fails.
         """
         iql_generator = self.get_iql_generator(llm)
 
         filters = self.list_filters()
         examples = self.list_few_shots()
 
-        iql = await iql_generator.generate_iql(
-            question=query,
-            filters=filters,
-            examples=examples,
-            event_tracker=event_tracker,
-            llm_options=llm_options,
-            n_retries=n_retries,
-        )
+        try:
+            iql = await iql_generator.generate_iql(
+                question=query,
+                filters=filters,
+                examples=examples,
+                event_tracker=event_tracker,
+                llm_options=llm_options,
+                n_retries=n_retries,
+            )
+        except UnsupportedQueryError as exc:
+            raise IQLGenerationError(
+                view_name=self.__class__.__name__,
+                filters=None,
+                aggregation=None,
+            ) from exc
+        except IQLError as exc:
+            raise IQLGenerationError(
+                view_name=self.__class__.__name__,
+                filters=exc.source,
+                aggregation=None,
+            ) from exc
+
         await self.apply_filters(iql)
 
         result = self.execute(dry_run=dry_run)

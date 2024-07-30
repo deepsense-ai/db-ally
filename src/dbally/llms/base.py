@@ -69,6 +69,9 @@ class LLM(Generic[LLMClientOptions], ABC):
 
         Returns:
             Text response from LLM.
+
+        Raises:
+            LLMError: If LLM text generation fails.
         """
         options = (self.default_options | options) if options else self.default_options
         event = LLMEvent(prompt=prompt.chat, type=type(prompt).__name__)
