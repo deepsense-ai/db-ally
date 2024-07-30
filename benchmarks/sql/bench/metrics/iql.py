@@ -6,7 +6,7 @@ from .base import Metric
 
 class FilteringAccuracy(Metric):
     """
-    Filtering accuracy indicating proportion of questions that were correctly identified as having filters.
+    Filtering accuracy is proportion of correct decisions (to filter or not) out of all decisions made.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
@@ -36,7 +36,7 @@ class FilteringAccuracy(Metric):
 
 class FilteringPrecision(Metric):
     """
-    Filtering precision indicating proportion of questions that were identified as having filters correctly.
+    Filtering precision is proportion of correct decisions to filter out of all decisions to filter.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
@@ -71,7 +71,8 @@ class FilteringPrecision(Metric):
 
 class FilteringRecall(Metric):
     """
-    Filtering recall indicating proportion of questions that were correctly identified as having filters.
+    Filtering recall is proportion of correct decisions to filter out of all cases where filtering
+    should have been applied.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
@@ -106,18 +107,19 @@ class FilteringRecall(Metric):
 
 class IQLFiltersAccuracy(Metric):
     """
-    Ratio of predicated IQL filters that are identical to the ground truth ones.
+    IQL filters accuracy is proportion of correct IQL generations and unsupported query identifications out
+    of all attempts.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
-        Computes the exact match ratio.
+        Computes the IQL filters accuracy.
 
         Args:
             results: List of evaluation results.
 
         Returns:
-            Ratio of predicated queries that are identical to the ground truth ones.
+            IQL filters accuracy.
         """
         results = [
             result
@@ -145,18 +147,18 @@ class IQLFiltersAccuracy(Metric):
 
 class IQLFiltersPrecision(Metric):
     """
-    Ratio of predicated IQL filters that are identical to the ground truth ones.
+    IQL filters precision is proportion of correct IQL generations out of all IQL generation attempts.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
-        Computes the exact match ratio.
+        Computes the IQL filters precision.
 
         Args:
             results: List of evaluation results.
 
         Returns:
-            Ratio of predicated queries that are identical to the ground truth ones.
+            IQL filters precision.
         """
         results = [
             result
@@ -183,18 +185,19 @@ class IQLFiltersPrecision(Metric):
 
 class IQLFiltersRecall(Metric):
     """
-    Ratio of predicated IQL filters that are identical to the ground truth ones.
+    IQL filters recall is proportion of correct IQL generations out of all cases where an IQL
+    should have been generated.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
-        Computes the exact match ratio.
+        Computes the IQL filters recall.
 
         Args:
             results: List of evaluation results.
 
         Returns:
-            Ratio of predicated queries that are identical to the ground truth ones.
+            IQL filters recall.
         """
         results = [
             result
@@ -221,18 +224,18 @@ class IQLFiltersRecall(Metric):
 
 class IQLFiltersParseability(Metric):
     """
-    Ratio of predicated IQL filters that are identical to the ground truth ones.
+    IQL filters parseability is proportion of syntactically correct (parseable) IQLs out of all generated IQLs.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
-        Computes the exact match ratio.
+        Computes the IQL filters parseability.
 
         Args:
             results: List of evaluation results.
 
         Returns:
-            Ratio of predicated queries that are identical to the ground truth ones.
+            IQl filters parseability.
         """
         results = [
             result
@@ -250,18 +253,18 @@ class IQLFiltersParseability(Metric):
 
 class IQLFiltersCorrectness(Metric):
     """
-    Ratio of predicated IQL filters that are identical to the ground truth ones.
+    IQL filters correctness is proportion of IQLs that produce correct results out of all parseable IQLs.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
-        Computes the exact match ratio.
+        Computes the IQL filters correctness.
 
         Args:
             results: List of evaluation results.
 
         Returns:
-            Ratio of predicated queries that are identical to the ground truth ones.
+            IQL filters correctness.
         """
         results = [
             result

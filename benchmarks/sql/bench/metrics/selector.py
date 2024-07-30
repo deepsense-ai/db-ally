@@ -6,18 +6,18 @@ from .base import Metric
 
 class ViewSelectionAccuracy(Metric):
     """
-    Ratio of predicated queries that are identical to the ground truth ones.
+    View selection accuracy is the proportion of correct view selections out of all view selection attempts.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
-        Computes the exact match ratio.
+        Computes the view selection accuracy.
 
         Args:
             results: List of evaluation results.
 
         Returns:
-            Ratio of predicated queries that are identical to the ground truth ones.
+            View selection accuracy.
         """
         return {
             "VIEW/ACC": (
@@ -30,18 +30,18 @@ class ViewSelectionAccuracy(Metric):
 
 class ViewSelectionPrecision(Metric):
     """
-    Ratio of predicated queries that are identical to the ground truth ones.
+    View selection precision is proportion of correct view selections out of all cases where a view was selected.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
-        Computes the exact match ratio.
+        Computes the view selection precision.
 
         Args:
             results: List of evaluation results.
 
         Returns:
-            Ratio of predicated queries that are identical to the ground truth ones.
+            View selection precision.
         """
         results = [result for result in results if result.prediction.view_name]
         return {
@@ -55,18 +55,19 @@ class ViewSelectionPrecision(Metric):
 
 class ViewSelectionRecall(Metric):
     """
-    Ratio of predicated queries that are identical to the ground truth ones.
+    View selection recall is proportion of correct view selections out of all cases where a view should have
+    been selected.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
-        Computes the exact match ratio.
+        Computes the view selection recall.
 
         Args:
             results: List of evaluation results.
 
         Returns:
-            Ratio of predicated queries that are identical to the ground truth ones.
+            View selection recall.
         """
         results = [
             result
