@@ -37,7 +37,6 @@ nav:
       - how-to/trace_runs_with_otel.md
       - how-to/create_custom_event_handler.md
       - how-to/openai_assistants_integration.md
-      - how-to/finetune_iql_llm.md
   - API Reference:
       - reference/index.md
       - reference/collection.md
