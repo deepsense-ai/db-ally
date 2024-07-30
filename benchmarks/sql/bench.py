@@ -8,15 +8,20 @@ import neptune
 from bench.evaluator import Evaluator
 from bench.loaders import CollectionDataLoader, IQLViewDataLoader, SQLViewDataLoader
 from bench.metrics import (
-    ExactMatchAggregationIQL,
-    ExactMatchFiltersIQL,
-    ExactMatchIQL,
-    ExactMatchSQL,
     ExecutionAccuracy,
+    FilteringAccuracy,
+    FilteringPrecision,
+    FilteringRecall,
+    IQLFiltersAccuracy,
+    IQLFiltersCorrectness,
+    IQLFiltersParseability,
+    IQLFiltersPrecision,
+    IQLFiltersRecall,
     MetricSet,
-    UnsupportedIQL,
-    ValidIQL,
+    SQLExactMatch,
     ViewSelectionAccuracy,
+    ViewSelectionPrecision,
+    ViewSelectionRecall,
 )
 from bench.pipelines import CollectionEvaluationPipeline, IQLViewEvaluationPipeline, SQLViewEvaluationPipeline
 from bench.utils import save
@@ -52,26 +57,33 @@ EVALUATION_PIPELINES = {
 
 EVALUATION_METRICS = {
     EvaluationType.IQL.value: MetricSet(
-        ExactMatchIQL,
-        ExactMatchFiltersIQL,
-        ExactMatchAggregationIQL,
-        ValidIQL,
-        ViewSelectionAccuracy,
-        UnsupportedIQL,
+        FilteringAccuracy,
+        FilteringPrecision,
+        FilteringRecall,
+        IQLFiltersAccuracy,
+        IQLFiltersPrecision,
+        IQLFiltersRecall,
+        IQLFiltersParseability,
+        IQLFiltersCorrectness,
         ExecutionAccuracy,
     ),
     EvaluationType.SQL.value: MetricSet(
-        ExactMatchSQL,
+        SQLExactMatch,
         ExecutionAccuracy,
     ),
     EvaluationType.E2E.value: MetricSet(
-        ExactMatchIQL,
-        ExactMatchFiltersIQL,
-        ExactMatchAggregationIQL,
-        ValidIQL,
-        UnsupportedIQL,
+        FilteringAccuracy,
+        FilteringPrecision,
+        FilteringRecall,
+        IQLFiltersAccuracy,
+        IQLFiltersPrecision,
+        IQLFiltersRecall,
+        IQLFiltersParseability,
+        IQLFiltersCorrectness,
         ViewSelectionAccuracy,
-        ExactMatchSQL,
+        ViewSelectionPrecision,
+        ViewSelectionRecall,
+        SQLExactMatch,
         ExecutionAccuracy,
     ),
 }
@@ -113,7 +125,7 @@ async def bench(config: DictConfig) -> None:
         run["sys/tags"].add(
             [
                 config.setup.name,
-                config.data.db_id,
+                *config.data.db_ids,
                 *config.data.difficulties,
             ]
         )

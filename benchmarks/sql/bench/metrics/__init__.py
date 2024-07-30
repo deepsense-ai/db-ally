@@ -1,17 +1,31 @@
 from .base import Metric, MetricSet
-from .iql import ExactMatchAggregationIQL, ExactMatchFiltersIQL, ExactMatchIQL, UnsupportedIQL, ValidIQL
-from .selector import ViewSelectionAccuracy
-from .sql import ExactMatchSQL, ExecutionAccuracy
+from .iql import (
+    FilteringAccuracy,
+    FilteringPrecision,
+    FilteringRecall,
+    IQLFiltersAccuracy,
+    IQLFiltersCorrectness,
+    IQLFiltersParseability,
+    IQLFiltersPrecision,
+    IQLFiltersRecall,
+)
+from .selector import ViewSelectionAccuracy, ViewSelectionPrecision, ViewSelectionRecall
+from .sql import ExecutionAccuracy, SQLExactMatch
 
 __all__ = [
     "Metric",
     "MetricSet",
-    "ExactMatchSQL",
-    "ExactMatchIQL",
-    "ExactMatchFiltersIQL",
-    "ExactMatchAggregationIQL",
-    "ValidIQL",
+    "FilteringAccuracy",
+    "FilteringPrecision",
+    "FilteringRecall",
+    "IQLFiltersAccuracy",
+    "IQLFiltersPrecision",
+    "IQLFiltersRecall",
+    "IQLFiltersParseability",
+    "IQLFiltersCorrectness",
+    "SQLExactMatch",
     "ViewSelectionAccuracy",
-    "UnsupportedIQL",
+    "ViewSelectionPrecision",
+    "ViewSelectionRecall",
     "ExecutionAccuracy",
 ]

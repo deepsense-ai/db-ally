@@ -54,9 +54,9 @@ class IQLViewDataLoader(HuggingFaceDataLoader):
         """
         dataset = await super().load()
         return dataset.filter(
-            lambda x: x["db_id"] == self.config.data.db_id
+            lambda x: x["db_id"] in self.config.data.db_ids
             and x["difficulty"] in self.config.data.difficulties
-            and x["view"] is not None
+            and x["view_name"] is not None
         )
 
 
@@ -74,7 +74,7 @@ class SQLViewDataLoader(HuggingFaceDataLoader):
         """
         dataset = await super().load()
         return dataset.filter(
-            lambda x: x["db_id"] == self.config.data.db_id and x["difficulty"] in self.config.data.difficulties
+            lambda x: x["db_id"] in self.config.data.db_ids and x["difficulty"] in self.config.data.difficulties
         )
 
 
@@ -92,5 +92,5 @@ class CollectionDataLoader(HuggingFaceDataLoader):
         """
         dataset = await super().load()
         return dataset.filter(
-            lambda x: x["db_id"] == self.config.data.db_id and x["difficulty"] in self.config.data.difficulties
+            lambda x: x["db_id"] in self.config.data.db_ids and x["difficulty"] in self.config.data.difficulties
         )

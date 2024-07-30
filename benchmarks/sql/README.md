@@ -17,7 +17,13 @@ Before starting, download the `superhero.sqlite` database file from [BIRD](https
 Run the whole suite on the `superhero` database with `gpt-3.5-turbo`:
 
 ```bash
-python bench.py --multirun setup=iql-view,sql-view,collection data=superhero
+python bench.py --multirun setup=iql-view,sql-view,collection
+```
+
+Run on multiple databases:
+
+```bash
+python bench.py setup=sql-view setup/views/freeform@setup.views='[superhero,...]' data=bird
 ```
 
 You can also run each evaluation separately or in subgroups:
@@ -34,7 +40,7 @@ python bench.py --multirun setup=iql-view setup/llm=gpt-3.5-turbo,claude-3.5-son
 python bench.py --multirun setup=sql-view setup/llm=gpt-3.5-turbo,claude-3.5-sonnet
 ```
 
-For the `collection` steup, you need to specify models for both the view selection and the IQL generation step:
+For the `collection` setup, you need to specify models for both the view selection and the IQL generation step:
 
 ```bash
 python bench.py --multirun \

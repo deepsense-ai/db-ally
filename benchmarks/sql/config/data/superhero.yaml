@@ -1,5 +1,4 @@
 path: "micpst/bird-iql"
 split: "dev"
-db_id: "superhero"
+db_ids: ["superhero"]
 difficulties: ["simple", "moderate", "challenging"]
-db_url: "sqlite:///data/superhero.db"

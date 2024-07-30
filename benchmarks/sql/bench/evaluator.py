@@ -1,4 +1,5 @@
 import time
+from dataclasses import asdict
 from typing import Any, Callable, Dict, List, Tuple
 
 from datasets import Dataset
@@ -81,7 +82,7 @@ class Evaluator:
         Returns:
             The processed results.
         """
-        return {"results": [result.dict() for result in results]}
+        return {"results": [asdict(result) for result in results]}
 
     def _compute_metrics(self, metrics: MetricSet, results: List[EvaluationResult]) -> Dict[str, Any]:
         """

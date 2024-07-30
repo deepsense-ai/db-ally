@@ -1,81 +1,32 @@
 from typing import Any, Dict, List
 
-from dbally.iql._exceptions import IQLError
-from dbally.iql_generator.prompt import UnsupportedQueryError
-
 from ..pipelines import EvaluationResult
 from .base import Metric
 
 
-class ExactMatchIQL(Metric):
+class FilteringAccuracy(Metric):
     """
-    Ratio of predicated queries that are identical to the ground truth ones.
+    Filtering accuracy indicating proportion of questions that were correctly identified as having filters.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
-        Computes the exact match ratio.
+        Computes the filtering accuracy.
 
         Args:
             results: List of evaluation results.
 
         Returns:
-            Ratio of predicated queries that are identical to the ground truth ones.
+            Filtering accuracy.
         """
-        results = [result for result in results if result.prediction.iql is not None]
+        results = [result for result in results if result.reference.iql and result.prediction.iql]
         return {
-            "EM_IQL": (
-                sum(result.prediction.iql == result.reference.iql for result in results) / len(results)
-                if results
-                else None
-            )
-        }
-
-
-class ExactMatchFiltersIQL(Metric):
-    """
-    Ration of predicated IQL filters that are identical to the ground truth ones.
-    """
-
-    def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
-        """
-        Computes the exact match ratio.
-
-        Args:
-            results: List of evaluation results.
-
-        Returns:
-            Ratio of predicated queries that are identical to the ground truth ones.
-        """
-        results = [result for result in results if result.prediction.iql is not None]
-        return {
-            "EM_FLT_IQL": (
-                sum(result.prediction.iql.filters == result.reference.iql.filters for result in results) / len(results)
-                if results
-                else None
-            )
-        }
-
-
-class ExactMatchAggregationIQL(Metric):
-    """
-    Ratio of predicated aggregation that are identical to the ground truth ones.
-    """
-
-    def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
-        """
-        Computes the exact match ratio.
-
-        Args:
-            results: List of evaluation results.
-
-        Returns:
-            Ratio of predicated queries that are identical to the ground truth ones.
-        """
-        results = [result for result in results if result.prediction.iql is not None]
-        return {
-            "EM_AGG_IQL": (
-                sum(result.prediction.iql.aggregation == result.reference.iql.aggregation for result in results)
+            "DM/FLT/ACC": (
+                sum(
+                    isinstance(result.prediction.iql.filters.source, type(result.reference.iql.filters.source))
+                    and result.prediction.iql.filters.unsupported == result.reference.iql.filters.unsupported
+                    for result in results
+                )
                 / len(results)
                 if results
                 else None
@@ -83,55 +34,250 @@ class ExactMatchAggregationIQL(Metric):
         }
 
 
-class UnsupportedIQL(Metric):
+class FilteringPrecision(Metric):
     """
-    Ratio of unsupported IQL queries.
+    Filtering precision indicating proportion of questions that were identified as having filters correctly.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
-        Calculates the unsupported IQL ratio.
+        Computes the filtering precision.
 
         Args:
             results: List of evaluation results.
 
         Returns:
-            Unsupported queries ratio.
+            Filtering precision.
         """
         results = [
             result
             for result in results
-            if result.prediction.iql is not None or isinstance(result.prediction.exception, UnsupportedQueryError)
+            if (result.reference.iql and result.prediction.iql)
+            and (result.prediction.iql.filters.source or result.prediction.iql.filters.unsupported)
         ]
         return {
-            "UNSUPP_IQL": (
-                sum(isinstance(result.prediction.exception, UnsupportedQueryError) for result in results) / len(results)
+            "DM/FLT/PRECISION": (
+                sum(
+                    isinstance(result.prediction.iql.filters.source, type(result.reference.iql.filters.source))
+                    and result.prediction.iql.filters.unsupported == result.reference.iql.filters.unsupported
+                    for result in results
+                )
+                / len(results)
                 if results
-                else 0.0
+                else None
             )
         }
 
 
-class ValidIQL(Metric):
+class FilteringRecall(Metric):
     """
-    Ratio of valid IQL queries.
+    Filtering recall indicating proportion of questions that were correctly identified as having filters.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
-        Calculates the valid IQL ratio.
+        Computes the filtering recall.
 
         Args:
             results: List of evaluation results.
 
         Returns:
-            Valid IQL queries ratio.
+            Filtering recall.
         """
-        results = [result for result in results if result.prediction.iql is not None]
+        results = [
+            result
+            for result in results
+            if (result.reference.iql and result.prediction.iql)
+            and (result.reference.iql.filters.source or result.reference.iql.filters.unsupported)
+        ]
         return {
-            "VAL_IQL": (
-                sum(not isinstance(result.prediction.exception, IQLError) for result in results) / len(results)
+            "DM/FLT/RECALL": (
+                sum(
+                    isinstance(result.prediction.iql.filters.source, type(result.reference.iql.filters.source))
+                    and result.prediction.iql.filters.unsupported == result.reference.iql.filters.unsupported
+                    for result in results
+                )
+                / len(results)
                 if results
-                else 0.0
+                else None
+            )
+        }
+
+
+class IQLFiltersAccuracy(Metric):
+    """
+    Ratio of predicated IQL filters that are identical to the ground truth ones.
+    """
+
+    def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
+        """
+        Computes the exact match ratio.
+
+        Args:
+            results: List of evaluation results.
+
+        Returns:
+            Ratio of predicated queries that are identical to the ground truth ones.
+        """
+        results = [
+            result
+            for result in results
+            if (result.reference.iql and result.prediction.iql)
+            and (
+                result.reference.iql.filters.source
+                or result.reference.iql.filters.unsupported
+                and result.prediction.iql.filters.source
+                or result.prediction.iql.filters.unsupported
+            )
+        ]
+        return {
+            "IQL/FLT/ACC": (
+                sum(
+                    isinstance(result.prediction.iql.filters.source, type(result.reference.iql.filters.source))
+                    for result in results
+                )
+                / len(results)
+                if results
+                else None
+            )
+        }
+
+
+class IQLFiltersPrecision(Metric):
+    """
+    Ratio of predicated IQL filters that are identical to the ground truth ones.
+    """
+
+    def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
+        """
+        Computes the exact match ratio.
+
+        Args:
+            results: List of evaluation results.
+
+        Returns:
+            Ratio of predicated queries that are identical to the ground truth ones.
+        """
+        results = [
+            result
+            for result in results
+            if (result.reference.iql and result.prediction.iql)
+            and (
+                result.reference.iql.filters.source
+                or result.reference.iql.filters.unsupported
+                and result.prediction.iql.filters.source
+            )
+        ]
+        return {
+            "IQL/FLT/PRECISION": (
+                sum(
+                    isinstance(result.prediction.iql.filters.source, type(result.reference.iql.filters.source))
+                    for result in results
+                )
+                / len(results)
+                if results
+                else None
+            )
+        }
+
+
+class IQLFiltersRecall(Metric):
+    """
+    Ratio of predicated IQL filters that are identical to the ground truth ones.
+    """
+
+    def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
+        """
+        Computes the exact match ratio.
+
+        Args:
+            results: List of evaluation results.
+
+        Returns:
+            Ratio of predicated queries that are identical to the ground truth ones.
+        """
+        results = [
+            result
+            for result in results
+            if (result.reference.iql and result.prediction.iql)
+            and (
+                result.reference.iql.filters.source
+                and result.prediction.iql.filters.source
+                or result.prediction.iql.filters.unsupported
+            )
+        ]
+        return {
+            "IQL/FLT/RECALL": (
+                sum(
+                    isinstance(result.prediction.iql.filters.source, type(result.reference.iql.filters.source))
+                    for result in results
+                )
+                / len(results)
+                if results
+                else None
+            )
+        }
+
+
+class IQLFiltersParseability(Metric):
+    """
+    Ratio of predicated IQL filters that are identical to the ground truth ones.
+    """
+
+    def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
+        """
+        Computes the exact match ratio.
+
+        Args:
+            results: List of evaluation results.
+
+        Returns:
+            Ratio of predicated queries that are identical to the ground truth ones.
+        """
+        results = [
+            result
+            for result in results
+            if (result.reference.iql and result.prediction.iql)
+            and (result.reference.iql.filters and result.prediction.iql.filters)
+            and (result.reference.iql.filters.source and result.prediction.iql.filters.source)
+        ]
+        return {
+            "IQL/FLT/PARSEABILITY": (
+                sum(result.prediction.iql.filters.valid for result in results) / len(results) if results else None
+            )
+        }
+
+
+class IQLFiltersCorrectness(Metric):
+    """
+    Ratio of predicated IQL filters that are identical to the ground truth ones.
+    """
+
+    def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
+        """
+        Computes the exact match ratio.
+
+        Args:
+            results: List of evaluation results.
+
+        Returns:
+            Ratio of predicated queries that are identical to the ground truth ones.
+        """
+        results = [
+            result
+            for result in results
+            if (result.reference.iql and result.prediction.iql)
+            and (
+                result.reference.iql.filters.source
+                and result.prediction.iql.filters.source
+                and result.prediction.iql.filters.valid
+            )
+        ]
+        return {
+            "IQL/FLT/CORRECTNESS": (
+                sum(result.prediction.iql.filters.source == result.reference.iql.filters.source for result in results)
+                / len(results)
+                if results
+                else None
             )
         }

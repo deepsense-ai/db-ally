@@ -9,9 +9,10 @@ from ..pipelines import EvaluationResult
 from .base import Metric
 
 
-class ExactMatchSQL(Metric):
+class SQLExactMatch(Metric):
     """
-    Ratio of predicated queries that are identical to the ground truth ones.
+    Exact match ratio i.e. the proportion of examples in the evaluation set for which
+    the predicted SQL is identical to the ground truth SQL.
     """
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
@@ -22,10 +23,10 @@ class ExactMatchSQL(Metric):
             results: List of evaluation results.
 
         Returns:
-            Ratio of predicated queries that are identical to the ground truth ones.
+            The exact match ratio.
         """
         return {
-            "EM_SQL": (
+            "SQL/EM": (
                 sum(result.prediction.sql == result.reference.sql for result in results) / len(results)
                 if results
                 else 0.0
@@ -40,9 +41,9 @@ class _DBMixin:
 
     def __init__(self, config: Dict, *args: Any, **kwargs: Any) -> None:
         super().__init__(config, *args, **kwargs)
-        self.db = create_engine(config.data.db_url)
+        self.dbs = {db: create_engine(f"sqlite:///data/{db}.db") for db in config.data.db_ids}
 
-    def _execute_query(self, query: str) -> List[Dict[str, Any]]:
+    def _execute_query(self, query: str, db_id: str) -> List[Dict[str, Any]]:
         """
         Execute the given query on the database.
 
@@ -52,11 +53,11 @@ class _DBMixin:
         Returns:
             The query results.
         """
-        with self.db.connect() as connection:
+        with self.dbs[db_id].connect() as connection:
             rows = connection.execute(text(query)).fetchall()
         return [dict(row._mapping) for row in rows]  # pylint: disable=protected-access
 
-    def _avarage_execution_time(self, query: str, n: int = 100) -> float:
+    def _avarage_execution_time(self, query: str, db_id: str, n: int = 100) -> float:
         """
         Execute the given query on the database n times and return the average execution time.
 
@@ -70,7 +71,7 @@ class _DBMixin:
         total_time = 0
         for _ in range(n):
             start_time = time.perf_counter()
-            self._execute_query(query)
+            self._execute_query(query, db_id)
             total_time += time.perf_counter() - start_time
         return total_time / n
 
@@ -95,20 +96,19 @@ class ExecutionAccuracy(_DBMixin, Metric):
             Execution accuracy score and valid efficiency score.
         """
         accurate_results = [result for result in results if self._execution_accuracy(result)]
-
         return {
-            "EX": len(accurate_results) / len(results) if results else 0.0,
+            "EX": len(accurate_results) / len(results) if results else None,
             "VES": sum(
                 (
-                    self._avarage_execution_time(result.reference.sql)
-                    / self._avarage_execution_time(result.prediction.sql)
+                    self._avarage_execution_time(result.reference.sql, result.db_id)
+                    / self._avarage_execution_time(result.prediction.sql, result.db_id)
                 )
                 ** 0.5
                 for result in accurate_results
             )
             / len(results)
             if results
-            else 0.0,
+            else None,
         }
 
     def _execution_accuracy(self, result: EvaluationResult) -> bool:
@@ -125,13 +125,13 @@ class ExecutionAccuracy(_DBMixin, Metric):
             return False
 
         try:
-            result.reference.results = self._execute_query(result.reference.sql)
-            result.prediction.results = self._execute_query(result.prediction.sql)
+            ref_results = self._execute_query(result.reference.sql, result.db_id)
+            pred_results = self._execute_query(result.prediction.sql, result.db_id)
         except SQLAlchemyError:
             return False
 
-        reference = pd.DataFrame(result.reference.results)
-        prediction = pd.DataFrame(result.prediction.results)
+        reference = pd.DataFrame(ref_results)
+        prediction = pd.DataFrame(pred_results)
 
         # If filtering works correctly, the number of rows will be the same
         # TODO: Sometimes a different number of rows is okay, e.g. if df has aggregated values that are expanded in gt

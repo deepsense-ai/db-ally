@@ -1,18 +1,23 @@
-from abc import ABC
+# pylint: disable=duplicate-code
+
+from abc import ABC, abstractmethod
 from typing import Any, Dict, Type
+
+from sqlalchemy import create_engine
 
 from dbally.iql._exceptions import IQLError
 from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.views.freeform.text2sql.view import BaseText2SQLView
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
+from dbally.views.structured import IQLGenerationError
 
 from ..views import VIEWS_REGISTRY
-from .base import EvaluationPipeline, EvaluationResult, ExecutionResult, IQLResult
+from .base import IQL, EvaluationPipeline, EvaluationResult, ExecutionResult, IQLResult
 
 
 class ViewEvaluationPipeline(EvaluationPipeline, ABC):
     """
-    Collection evaluation pipeline.
+    View evaluation pipeline.
     """
 
     def __init__(self, config: Dict) -> None:
@@ -22,36 +27,53 @@ class ViewEvaluationPipeline(EvaluationPipeline, ABC):
         Args:
             config: The configuration for the pipeline.
         """
-        super().__init__(config)
         self.llm = self.get_llm(config.setup.llm)
+        self.dbs = self.get_dbs(config.setup)
+        self.views = self.get_views(config.setup)
+
+    def get_dbs(self, config: Dict) -> Dict:
+        """
+        Returns the database object based on the database name.
+
+        Args:
+            config: The database configuration.
+
+        Returns:
+            The database object.
+        """
+        return {db: create_engine(f"sqlite:///data/{db}.db") for db in config.views}
+
+    @abstractmethod
+    def get_views(self, config: Dict) -> Dict[str, Type[SqlAlchemyBaseView]]:
+        """
+        Creates the view classes mapping based on the configuration.
+
+        Args:
+            config: The views configuration.
+
+        Returns:
+            The view classes mapping.
+        """
 
 
 class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
     """
-    Collection evaluation pipeline.
+    IQL view evaluation pipeline.
     """
-
-    def __init__(self, config: Dict) -> None:
-        """
-        Constructs the pipeline for evaluating IQL predictions.
-
-        Args:
-            config: The configuration for the pipeline.
-        """
-        super().__init__(config)
-        self.views = self.get_views(config.setup)
 
     def get_views(self, config: Dict) -> Dict[str, Type[SqlAlchemyBaseView]]:
         """
-        Returns the view object based on the view name.
+        Creates the view classes mapping based on the configuration.
 
         Args:
-            config: The view configuration.
+            config: The views configuration.
 
         Returns:
-            The view object.
+            The view classes mapping.
         """
-        return {view: VIEWS_REGISTRY[view] for view in config.views}
+        return {
+            view_name: VIEWS_REGISTRY[view_name] for view_names in config.views.values() for view_name in view_names
+        }
 
     async def __call__(self, data: Dict[str, Any]) -> EvaluationResult:
         """
@@ -63,7 +85,8 @@ class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
         Returns:
             The evaluation result.
         """
-        view = self.views[data["view"]](self.db)
+        view = self.views[data["view_name"]](self.dbs[data["db_id"]])
+
         try:
             result = await view.ask(
                 query=data["question"],
@@ -71,34 +94,61 @@ class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
                 dry_run=True,
                 n_retries=0,
             )
-        # TODO: Refactor exception handling for IQLError for filters and aggregation
-        except IQLError as exc:
+        except IQLGenerationError as exc:
             prediction = ExecutionResult(
-                view=data["view"],
-                iql=IQLResult(filters=exc.source),
-                exception=exc,
-            )
-        except (UnsupportedQueryError, Exception) as exc:  # pylint: disable=broad-except
-            prediction = ExecutionResult(
-                view=data["view"],
-                exception=exc,
+                view_name=data["view_name"],
+                iql=IQLResult(
+                    filters=IQL(
+                        source=exc.filters,
+                        unsupported=isinstance(exc.__cause__, UnsupportedQueryError),
+                        valid=not (exc.filters and not exc.aggregation and isinstance(exc.__cause__, IQLError)),
+                    ),
+                    aggregation=IQL(
+                        source=exc.aggregation,
+                        unsupported=isinstance(exc.__cause__, UnsupportedQueryError),
+                        valid=not (exc.aggregation and isinstance(exc.__cause__, IQLError)),
+                    ),
+                ),
+                sql=None,
             )
         else:
             prediction = ExecutionResult(
-                view=data["view"],
-                iql=IQLResult(filters=result.context["iql"]),
+                view_name=data["view_name"],
+                iql=IQLResult(
+                    filters=IQL(
+                        source=result.context["iql"],
+                        unsupported=False,
+                        valid=True,
+                    ),
+                    aggregation=IQL(
+                        source=None,
+                        unsupported=False,
+                        valid=True,
+                    ),
+                ),
                 sql=result.context["sql"],
             )
 
         reference = ExecutionResult(
-            view=data["view"],
+            view_name=data["view_name"],
             iql=IQLResult(
-                filters=data["iql_filters"],
-                aggregation=data["iql_aggregation"],
+                filters=IQL(
+                    source=data["iql_filters"],
+                    unsupported=data["iql_filters_unsupported"],
+                    valid=True,
+                ),
+                aggregation=IQL(
+                    source=data["iql_aggregation"],
+                    unsupported=data["iql_aggregation_unsupported"],
+                    valid=True,
+                ),
+                context=data["iql_context"],
             ),
             sql=data["sql"],
         )
+
         return EvaluationResult(
+            db_id=data["db_id"],
             question=data["question"],
             reference=reference,
             prediction=prediction,
@@ -107,30 +157,20 @@ class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
 
 class SQLViewEvaluationPipeline(ViewEvaluationPipeline):
     """
-    Collection evaluation pipeline.
+    SQL view evaluation pipeline.
     """
 
-    def __init__(self, config: Dict) -> None:
+    def get_views(self, config: Dict) -> Dict[str, Type[BaseText2SQLView]]:
         """
-        Constructs the pipeline for evaluating IQL predictions.
+        Creates the view classes mapping based on the configuration.
 
         Args:
-            config: The configuration for the pipeline.
-        """
-        super().__init__(config)
-        self.view = self.get_view(config.setup)
-
-    def get_view(self, config: Dict) -> Type[BaseText2SQLView]:
-        """
-        Returns the view object based on the view name.
-
-        Args:
-            config: The view configuration.
+            config: The views configuration.
 
         Returns:
-            The view object.
+            The view classes mapping.
         """
-        return VIEWS_REGISTRY[config.view]
+        return {db_id: VIEWS_REGISTRY[view_name] for db_id, view_name in config.views.items()}
 
     async def __call__(self, data: Dict[str, Any]) -> EvaluationResult:
         """
@@ -142,7 +182,8 @@ class SQLViewEvaluationPipeline(ViewEvaluationPipeline):
         Returns:
             The evaluation result.
         """
-        view = self.view(self.db)
+        view = self.views[data["db_id"]](self.dbs[data["db_id"]])
+
         try:
             result = await view.ask(
                 query=data["question"],
@@ -151,26 +192,15 @@ class SQLViewEvaluationPipeline(ViewEvaluationPipeline):
                 n_retries=0,
             )
         # TODO: Remove this broad exception handling once the Text2SQL view is fixed
-        except Exception as exc:  # pylint: disable=broad-except
-            prediction = ExecutionResult(
-                view=self.view.__name__,
-                exception=exc,
-            )
+        except Exception:  # pylint: disable=broad-except
+            prediction = ExecutionResult()
         else:
-            prediction = ExecutionResult(
-                view=self.view.__name__,
-                sql=result.context["sql"],
-            )
+            prediction = ExecutionResult(sql=result.context["sql"])
 
-        reference = ExecutionResult(
-            view=data["view"],
-            iql=IQLResult(
-                filters=data["iql_filters"],
-                aggregation=data["iql_aggregation"],
-            ),
-            sql=data["sql"],
-        )
+        reference = ExecutionResult(sql=data["sql"])
+
         return EvaluationResult(
+            db_id=data["db_id"],
             question=data["question"],
             reference=reference,
             prediction=prediction,

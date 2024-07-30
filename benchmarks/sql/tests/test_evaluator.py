@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Dict, List
 
 import pytest
@@ -15,9 +16,9 @@ class MockMetricSet:
         return {"accuracy": 0.95}
 
 
+@dataclass
 class MockEvaluationResult:
-    def dict(self) -> Dict[str, str]:
-        return {"result": "processed_data"}
+    result: str = "processed_data"
 
 
 class MockEvaluationPipeline:
@@ -52,7 +53,6 @@ async def test_call_pipeline() -> None:
     assert "total_time_in_seconds" in perf_results["time_perf"]
 
 
-@pytest.mark.asyncio
 def test_results_processor() -> None:
     evaluator = Evaluator(task="test_task")
     results = [MockEvaluationResult(), MockEvaluationResult()]
@@ -63,7 +63,6 @@ def test_results_processor() -> None:
     assert len(processed_results["results"]) == len(results)
 
 
-@pytest.mark.asyncio
 def test_compute_metrics() -> None:
     evaluator = Evaluator(task="test_task")
     metrics = MockMetricSet()
@@ -75,7 +74,6 @@ def test_compute_metrics() -> None:
     assert computed_metrics["metrics"]["accuracy"] == 0.95
 
 
-@pytest.mark.asyncio
 def test_compute_time_perf() -> None:
     evaluator = Evaluator(task="test_task")
     start_time = 0

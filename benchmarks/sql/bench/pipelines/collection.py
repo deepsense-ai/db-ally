@@ -1,13 +1,17 @@
 from typing import Any, Dict
 
+from sqlalchemy import create_engine
+
 import dbally
 from dbally.collection.collection import Collection
+from dbally.collection.exceptions import NoViewFoundError
 from dbally.iql._exceptions import IQLError
 from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.view_selection.llm_view_selector import LLMViewSelector
+from dbally.views.structured import IQLGenerationError
 
 from ..views import VIEWS_REGISTRY
-from .base import EvaluationPipeline, EvaluationResult, ExecutionResult, IQLResult
+from .base import IQL, EvaluationPipeline, EvaluationResult, ExecutionResult, IQLResult
 
 
 class CollectionEvaluationPipeline(EvaluationPipeline):
@@ -22,7 +26,6 @@ class CollectionEvaluationPipeline(EvaluationPipeline):
         Args:
             config: The configuration for the pipeline.
         """
-        super().__init__(config)
         self.collection = self.get_collection(config.setup)
 
     def get_collection(self, config: Dict) -> Collection:
@@ -46,20 +49,11 @@ class CollectionEvaluationPipeline(EvaluationPipeline):
         )
         collection.n_retries = 0
 
-        for view_name in config.views:
-            view_cls = VIEWS_REGISTRY[view_name]
-            collection.add(view_cls, lambda: view_cls(self.db))  # pylint: disable=cell-var-from-loop
-
-        if config.fallback:
-            fallback = dbally.create_collection(
-                name=config.fallback,
-                llm=generator_llm,
-                view_selector=view_selector,
-            )
-            fallback.n_retries = 0
-            fallback_cls = VIEWS_REGISTRY[config.fallback]
-            fallback.add(fallback_cls, lambda: fallback_cls(self.db))
-            collection.set_fallback(fallback)
+        for db_name, view_names in config.views.items():
+            db = create_engine(f"sqlite:///data/{db_name}.db")
+            for view_name in view_names:
+                view_cls = VIEWS_REGISTRY[view_name]
+                collection.add(view_cls, lambda: view_cls(db))  # pylint: disable=cell-var-from-loop
 
         return collection
 
@@ -79,32 +73,67 @@ class CollectionEvaluationPipeline(EvaluationPipeline):
                 dry_run=True,
                 return_natural_response=False,
             )
-        # TODO: Refactor exception handling for IQLError for filters and aggregation
-        except IQLError as exc:
+        except NoViewFoundError:
             prediction = ExecutionResult(
-                iql=IQLResult(filters=exc.source),
-                exception=exc,
+                view_name=None,
+                iql=None,
+                sql=None,
             )
-        # TODO: Remove this broad exception handling once the Text2SQL view is fixed
-        except (UnsupportedQueryError, Exception) as exc:  # pylint: disable=broad-except
-            prediction = ExecutionResult(exception=exc)
-        else:
-            iql = IQLResult(filters=result.context["iql"]) if "iql" in result.context else None
+        except IQLGenerationError as exc:
             prediction = ExecutionResult(
-                view=result.view_name,
-                iql=iql,
+                view_name=exc.view_name,
+                iql=IQLResult(
+                    filters=IQL(
+                        source=exc.filters,
+                        unsupported=isinstance(exc.__cause__, UnsupportedQueryError),
+                        valid=not (exc.filters and not exc.aggregation and isinstance(exc.__cause__, IQLError)),
+                    ),
+                    aggregation=IQL(
+                        source=exc.aggregation,
+                        unsupported=isinstance(exc.__cause__, UnsupportedQueryError),
+                        valid=not (exc.aggregation and isinstance(exc.__cause__, IQLError)),
+                    ),
+                ),
+                sql=None,
+            )
+        else:
+            prediction = ExecutionResult(
+                view_name=result.view_name,
+                iql=IQLResult(
+                    filters=IQL(
+                        source=result.context.get("iql"),
+                        unsupported=False,
+                        valid=True,
+                    ),
+                    aggregation=IQL(
+                        source=None,
+                        unsupported=False,
+                        valid=True,
+                    ),
+                ),
                 sql=result.context.get("sql"),
             )
 
         reference = ExecutionResult(
-            view=data["view"],
+            view_name=data["view_name"],
             iql=IQLResult(
-                filters=data["iql_filters"],
-                aggregation=data["iql_aggregation"],
+                filters=IQL(
+                    source=data["iql_filters"],
+                    unsupported=data["iql_filters_unsupported"],
+                    valid=True,
+                ),
+                aggregation=IQL(
+                    source=data["iql_aggregation"],
+                    unsupported=data["iql_aggregation_unsupported"],
+                    valid=True,
+                ),
+                context=data["iql_context"],
             ),
             sql=data["sql"],
         )
+
         return EvaluationResult(
+            db_id=data["db_id"],
             question=data["question"],
             reference=reference,
             prediction=prediction,
