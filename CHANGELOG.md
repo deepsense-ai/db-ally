@@ -1,22 +1,45 @@
 # Changelog
 
+## v0.5.0 (2024-07-23)
+
+### Feature
+
+* feat: allow collection fallbacks (#59) ([`a2ef774`](https://github.com/deepsense-ai/db-ally/commit/a2ef7742be50502c0d8e35714cc6e585930e7d4a))
+
+* feat: Add OpenTelemetry event handler (#70) ([`07d9b27`](https://github.com/deepsense-ai/db-ally/commit/07d9b2724010e13662f9a370d7406d3f6d57bb04))
+
+* feat: implement global event handlers (#64) ([`221f6e1`](https://github.com/deepsense-ai/db-ally/commit/221f6e1a632c66b0579989676501ac559b0f5dbf))
+
+### Chore
+
+* chore: update roadmap ([`a448b01`](https://github.com/deepsense-ai/db-ally/commit/a448b0168c49ad62de1e6d25547cb680bbc91d3a))
+
+* chore: changelog heading fix ([`b4bf9c3`](https://github.com/deepsense-ai/db-ally/commit/b4bf9c3a0185b79df0f6459dde896b620af83ce5))
+
+* chore: changelog update after v0.4.0 ([`fde0884`](https://github.com/deepsense-ai/db-ally/commit/fde08849f2ecefa7ca452eadf3f2fed9f4b36265))
+
+### Refactor
+
+* refactor(iql): errors definition (#73) ([`ea687f8`](https://github.com/deepsense-ai/db-ally/commit/ea687f8e6efca02b5001d31342d5b5751a98aae9))
+
+
 ## v0.4.0 (2024-07-04)
 
-## Feature
+### Feature
 
 * Added support for local HuggingFace models (#61) ([`953d8a1`](https://github.com/deepsense-ai/db-ally/commit/953d8a1f3c39c624dcc3927e9dfb4df08121df35))
 
 * Few-shot examples can be now injected into Structured / Freeform view generation prompts (#42) ([`d482638`](https://github.com/deepsense-ai/db-ally/commit/d4826385e95505c077a1c710feeba68ddcaef20c))
 
-## Documentation
+### Documentation
 
 * Added docs explaining how to use AzureOpenAI (#55) ([`d890fec`](https://github.com/deepsense-ai/db-ally/commit/d890fecad38ed11d90a85e6472e64c81c607cf91))
 
-## Fix
+### Fix
 
 * Fixed a bug with natural language responder hallucination when no data is returned (#68) ([`e3fec18`](https://github.com/deepsense-ai/db-ally/commit/e3fec186cca0cace7db4b6e92da5b047a27dfa80))
 
-## Chore
+### Chore
 
 * Project was doggified 🦮 (#67) ([`a4fd411`](https://github.com/deepsense-ai/db-ally/commit/a4fd4115bc7884f5043a6839cfefdd36c97e94ab))
 

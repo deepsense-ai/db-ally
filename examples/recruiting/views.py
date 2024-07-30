@@ -75,7 +75,7 @@ class FewShotRecruitmentView(RecruitmentView):
         end = start + relativedelta(months=months)
         return Candidate.available_from.between(start, end)
 
-    def list_few_shots(self) -> List[FewShotExample]:  # pylint: disable=W9011
+    def list_few_shots(self) -> List[FewShotExample]:  # pylint: disable=W9011, C0116
         return [
             FewShotExample(
                 "Which candidates studied at University of Toronto?",
