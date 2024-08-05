@@ -90,7 +90,8 @@ class BaseStructuredView(BaseView):
                 aggregation=None,
             ) from exc
 
-        await self.apply_filters(iql)
+        if iql:
+            await self.apply_filters(iql)
 
         result = self.execute(dry_run=dry_run)
         result.context["iql"] = f"{iql}"
