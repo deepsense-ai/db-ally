@@ -79,7 +79,7 @@ class SqlAlchemyBaseView(MethodsBaseView):
         """
         results = []
 
-        if self._where_clause:
+        if self._where_clause is not None:
             self._select = self._select.where(self._where_clause)
 
         sql = str(self._select.compile(bind=self._sqlalchemy_engine, compile_kwargs={"literal_binds": True}))
