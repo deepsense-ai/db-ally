@@ -20,19 +20,19 @@ class IQLSyntaxError(IQLError):
         super().__init__(message, source)
 
 
-class IQLEmptyExpressionError(IQLError):
-    """Raised when IQL expression is empty."""
+class IQLNoStatementError(IQLError):
+    """Raised when IQL does not have any statement."""
 
     def __init__(self, source: str) -> None:
-        message = "Empty IQL expression"
+        message = "Empty IQL"
         super().__init__(message, source)
 
 
-class IQLMultipleExpressionsError(IQLError):
-    """Raised when IQL contains multiple expressions."""
+class IQLMultipleStatementsError(IQLError):
+    """Raised when IQL contains multiple statements."""
 
     def __init__(self, nodes: List[ast.stmt], source: str) -> None:
-        message = "Multiple expressions or statements in IQL are not supported"
+        message = "Multiple statements in IQL are not supported"
         super().__init__(message, source)
         self.nodes = nodes
 
