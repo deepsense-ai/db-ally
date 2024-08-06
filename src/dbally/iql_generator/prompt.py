@@ -53,10 +53,11 @@ class IQLGenerationPromptFormat(PromptFormat):
             question: Question to be asked.
             filters: List of filters exposed by the view.
             examples: List of examples to be injected into the conversation.
+            aggregations: List of aggregations exposed by the view.
         """
         super().__init__(examples)
         self.question = question
-        self.filters = "\n".join([str(filter) for filter in filters])
+        self.filters = "\n".join([str(condition) for condition in filters]) if filters else []
 
 
 IQL_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
@@ -64,9 +65,9 @@ IQL_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
         {
             "role": "system",
             "content": (
-                "You have access to API that lets you query a database:\n"
+                "You have access to an API that lets you query a database:\n"
                 "\n{filters}\n"
-                "Please suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
+                "Suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
                 "Remember! Don't give any comments, just the function calls.\n"
                 "The output will look like this:\n"
                 'filter1("arg1") AND (NOT filter2(120) OR filter3(True))\n'
@@ -74,7 +75,7 @@ IQL_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
                 "You MUST use only these methods:\n"
                 "\n{filters}\n"
                 "It is VERY IMPORTANT not to use methods other than those listed above."
-                """If you DON'T KNOW HOW TO ANSWER DON'T SAY \"\", SAY: `UNSUPPORTED QUERY` INSTEAD! """
+                """If you DON'T KNOW HOW TO ANSWER DON'T SAY anything other than `UNSUPPORTED QUERY`"""
                 "This is CRUCIAL, otherwise the system will crash. "
             ),
         },

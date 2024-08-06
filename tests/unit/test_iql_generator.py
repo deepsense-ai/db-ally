@@ -21,6 +21,9 @@ class MockView(MethodsBaseView):
     async def apply_filters(self, filters: IQLQuery) -> None:
         ...
 
+    async def apply_aggregation(self, filters: IQLQuery) -> None:
+        ...
+
     def execute(self, dry_run: bool = False):
         ...
 

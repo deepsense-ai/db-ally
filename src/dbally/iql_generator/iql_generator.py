@@ -31,6 +31,7 @@ class IQLGenerator:
 
         Args:
             llm: LLM used to generate IQL
+            prompt_template: If not provided by the users is set to `default_iql_template`
         """
         self._llm = llm
         self._prompt_template = prompt_template or IQL_GENERATION_TEMPLATE
@@ -68,6 +69,7 @@ class IQLGenerator:
             filters=filters,
             examples=examples,
         )
+
         formatted_prompt = self._prompt_template.format_prompt(prompt_format)
 
         for retry in range(n_retries + 1):
@@ -82,7 +84,7 @@ class IQLGenerator:
                 # TODO: Move IQL query parsing to prompt response parser
                 return await IQLQuery.parse(
                     source=iql,
-                    allowed_functions=filters,
+                    allowed_functions=filters or [],
                     event_tracker=event_tracker,
                 )
             except LLMError as exc:

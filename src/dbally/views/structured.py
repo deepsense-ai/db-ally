@@ -13,6 +13,8 @@ from dbally.llms.clients.base import LLMOptions
 from dbally.views.exceptions import IQLGenerationError
 from dbally.views.exposed_functions import ExposedFunction
 
+from ..iql.syntax import FunctionCall
+from ..prompt.aggregation import AggregationFormatter
 from ..similarity import AbstractSimilarityIndex
 from .base import BaseView, IndexLocation
 
@@ -34,6 +36,18 @@ class BaseStructuredView(BaseView):
             IQL generator for the view.
         """
         return IQLGenerator(llm=llm)
+
+    def get_agg_formatter(self, llm: LLM) -> AggregationFormatter:
+        """
+        Returns the AggregtionFormatter for the view.
+
+        Args:
+            llm: LLM used to generate the queries.
+
+        Returns:
+            AggregtionFormatter for the view.
+        """
+        return AggregationFormatter(llm=llm)
 
     async def ask(
         self,
@@ -64,9 +78,10 @@ class BaseStructuredView(BaseView):
             IQLGenerationError: If the IQL generation fails.
         """
         iql_generator = self.get_iql_generator(llm)
-
+        agg_formatter = self.get_agg_formatter(llm)
         filters = self.list_filters()
         examples = self.list_few_shots()
+        aggregations = self.list_aggregations()
 
         try:
             iql = await iql_generator.generate_iql(
@@ -92,8 +107,16 @@ class BaseStructuredView(BaseView):
 
         await self.apply_filters(iql)
 
+        agg_node = await agg_formatter.format_to_query_object(
+            question=query,
+            aggregations=aggregations,
+            event_tracker=event_tracker,
+            llm_options=llm_options,
+        )
+        await self.apply_aggregation(agg_node.root)
+
         result = self.execute(dry_run=dry_run)
-        result.context["iql"] = f"{iql}"
+        result.context["iql"] = {"filters": f"{iql}", "aggregation": f"{agg_node}"}
 
         return result
 
@@ -113,6 +136,23 @@ class BaseStructuredView(BaseView):
 
         Args:
             filters: [IQLQuery](../../concepts/iql.md) object representing the filters to apply
+        """
+
+    @abc.abstractmethod
+    def list_aggregations(self) -> List[ExposedFunction]:
+        """
+
+        Returns:
+            Aggregations defined inside the View.
+        """
+
+    @abc.abstractmethod
+    async def apply_aggregation(self, aggregation: FunctionCall) -> None:
+        """
+        Applies the chosen aggregation to the view.
+
+        Args:
+            aggregation: [IQLQuery](../../concepts/iql.md) object representing the filters to apply
         """
 
     @abc.abstractmethod
