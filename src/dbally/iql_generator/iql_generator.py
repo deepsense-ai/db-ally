@@ -39,7 +39,7 @@ class IQLGenerator:
         self,
         question: str,
         filters: List[ExposedFunction],
-        event_tracker: EventTracker,
+        event_tracker: Optional[EventTracker] = None,
         examples: Optional[List[FewShotExample]] = None,
         llm_options: Optional[LLMOptions] = None,
         n_retries: int = 3,

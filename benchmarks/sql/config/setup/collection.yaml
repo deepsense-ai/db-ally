@@ -1,0 +1,7 @@
+name: COLLECTION
+
+defaults:
+  - llm@selector_llm: gpt-3.5-turbo
+  - llm@generator_llm: gpt-3.5-turbo
+  - views/structured@views:
+    - superhero

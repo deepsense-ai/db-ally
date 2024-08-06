@@ -1,0 +1,4 @@
+superhero: [
+  PublisherView,
+  SuperheroView,
+]
