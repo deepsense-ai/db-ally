@@ -69,7 +69,7 @@ class BaseStructuredView(BaseView):
         examples = self.list_few_shots()
 
         try:
-            iql = await iql_generator.generate_iql(
+            iql = await iql_generator.generate(
                 question=query,
                 filters=filters,
                 examples=examples,

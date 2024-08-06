@@ -34,7 +34,7 @@ async def _run_iql_for_single_example(
     event_tracker = EventTracker()
 
     try:
-        iql_filters = await iql_generator.generate_iql(
+        iql_filters = await iql_generator.generate(
             question=example.question,
             filters=filter_list,
             event_tracker=event_tracker,

@@ -49,7 +49,7 @@ class IQLGenerator:
         self._decision_prompt = decision_prompt or FILTERING_DECISION_TEMPLATE
         self._generation_prompt = generation_prompt or IQL_GENERATION_TEMPLATE
 
-    async def generate_iql(
+    async def generate(
         self,
         question: str,
         filters: List[ExposedFunction],
@@ -77,7 +77,7 @@ class IQLGenerator:
             IQLError: If IQL parsing fails after all retries.
             UnsupportedQueryError: If the question is not supported by the view.
         """
-        decision = await self._decide_cot(
+        decision = await self._decide_on_generation(
             question=question,
             event_tracker=event_tracker,
             llm_options=llm_options,
@@ -86,7 +86,7 @@ class IQLGenerator:
         if not decision:
             return None
 
-        return await self._generate_iql_prediction(
+        return await self._generate_iql(
             question=question,
             filters=filters,
             event_tracker=event_tracker,
@@ -95,7 +95,7 @@ class IQLGenerator:
             n_retries=n_retries,
         )
 
-    async def _decide_cot(
+    async def _decide_on_generation(
         self,
         question: str,
         event_tracker: EventTracker,
@@ -133,7 +133,7 @@ class IQLGenerator:
                 if retry == n_retries:
                     raise exc
 
-    async def _generate_iql_prediction(
+    async def _generate_iql(
         self,
         question: str,
         filters: List[ExposedFunction],

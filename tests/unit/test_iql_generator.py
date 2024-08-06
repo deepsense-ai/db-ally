@@ -81,7 +81,7 @@ async def test_iql_generation(iql_generator: IQLGenerator, event_tracker: EventT
     ]
     iql_generator._llm.generate_text = AsyncMock(side_effect=llm_responses)
     with patch("dbally.iql.IQLQuery.parse", AsyncMock(return_value="filter_by_id(1)")) as mock_parse:
-        iql = await iql_generator.generate_iql(
+        iql = await iql_generator.generate(
             question="Mock_question",
             filters=filters,
             event_tracker=event_tracker,
@@ -131,7 +131,7 @@ async def test_iql_generation_error_escalation_after_max_retires(
 
     iql_generator._llm.generate_text = AsyncMock(side_effect=llm_responses)
     with patch("dbally.iql.IQLQuery.parse", AsyncMock(side_effect=responses)), pytest.raises(IQLError):
-        iql = await iql_generator.generate_iql(
+        iql = await iql_generator.generate(
             question="Mock_question",
             filters=filters,
             event_tracker=event_tracker,
@@ -167,7 +167,7 @@ async def test_iql_generation_response_after_max_retries(
 
     iql_generator._llm.generate_text = AsyncMock(side_effect=llm_responses)
     with patch("dbally.iql.IQLQuery.parse", AsyncMock(side_effect=responses)):
-        iql = await iql_generator.generate_iql(
+        iql = await iql_generator.generate(
             question="Mock_question",
             filters=filters,
             event_tracker=event_tracker,
