@@ -66,7 +66,7 @@ async def test_filter_or() -> None:
     await mock_view.apply_filters(query)
     result = mock_view.execute()
     assert result.results == MOCK_DATA_BERLIN_OR_LONDON
-    assert result.context["filter_mask"].tolist() == [True, False, True, False, True]
+    assert result.metadata["filter_mask"].tolist() == [True, False, True, False, True]
 
 
 async def test_filter_and() -> None:
@@ -81,7 +81,7 @@ async def test_filter_and() -> None:
     await mock_view.apply_filters(query)
     result = mock_view.execute()
     assert result.results == MOCK_DATA_PARIS_2020
-    assert result.context["filter_mask"].tolist() == [False, True, False, False, False]
+    assert result.metadata["filter_mask"].tolist() == [False, True, False, False, False]
 
 
 async def test_filter_not() -> None:
@@ -96,4 +96,4 @@ async def test_filter_not() -> None:
     await mock_view.apply_filters(query)
     result = mock_view.execute()
     assert result.results == MOCK_DATA_NOT_PARIS_2020
-    assert result.context["filter_mask"].tolist() == [True, False, True, True, True]
+    assert result.metadata["filter_mask"].tolist() == [True, False, True, True, True]

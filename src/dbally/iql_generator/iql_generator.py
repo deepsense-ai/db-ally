@@ -43,7 +43,7 @@ class IQLGenerator:
         examples: Optional[List[FewShotExample]] = None,
         llm_options: Optional[LLMOptions] = None,
         n_retries: int = 3,
-    ) -> IQLQuery:
+    ) -> IQLQuery:  # type: ignore
         """
         Generates IQL in text form using LLM.
 
@@ -66,11 +66,16 @@ class IQLGenerator:
         prompt_format = IQLGenerationPromptFormat(
             question=question,
             filters=filters,
-            examples=examples,
+            examples=examples or [],
         )
         formatted_prompt = self._prompt_template.format_prompt(prompt_format)
 
         for retry in range(n_retries + 1):
+            # IMPORTANT DEV NOTE
+            # splitting a single try-except into two prevents type checkers from
+            # identifing 'response' as possible unbound (undefined) variable, while calling:
+            # `formatted_prompt.add_assistant_message(response)`
+
             try:
                 response = await self._llm.generate_text(
                     prompt=formatted_prompt,
@@ -78,18 +83,25 @@ class IQLGenerator:
                     options=llm_options,
                 )
                 # TODO: Move response parsing to llm generate_text method
+            except LLMError as exc:
+                if retry == n_retries:
+                    raise exc
+
+                continue
+
+            try:
                 iql = formatted_prompt.response_parser(response)
                 # TODO: Move IQL query parsing to prompt response parser
+
                 return await IQLQuery.parse(
                     source=iql,
                     allowed_functions=filters,
                     event_tracker=event_tracker,
                 )
-            except LLMError as exc:
-                if retry == n_retries:
-                    raise exc
+
             except IQLError as exc:
                 if retry == n_retries:
                     raise exc
+
                 formatted_prompt = formatted_prompt.add_assistant_message(response)
                 formatted_prompt = formatted_prompt.add_user_message(ERROR_MESSAGE.format(error=exc))

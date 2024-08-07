@@ -1,8 +1,10 @@
 import re
-from typing import List
+from dataclasses import dataclass
+from typing import List, Union
 
 import pytest
 
+from dbally.context import BaseCallerContext
 from dbally.iql import IQLArgumentParsingError, IQLQuery, IQLUnsupportedSyntaxError, syntax
 from dbally.iql._exceptions import (
     IQLArgumentValidationError,
@@ -17,15 +19,26 @@ from dbally.iql._processor import IQLProcessor
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 
 
+@dataclass
+class TestCustomContext(BaseCallerContext):
+    city: str
+
+
 async def test_iql_parser():
+    custom_context = TestCustomContext(city="cracow")
+
     parsed = await IQLQuery.parse(
-        "not (filter_by_name(['John', 'Anne']) and filter_by_city('cracow') and filter_by_company('deepsense.ai'))",
+        "not (filter_by_name(['John', 'Anne']) and filter_by_city(AskerContext()) and filter_by_company('deepsense.ai'))",
         allowed_functions=[
             ExposedFunction(
                 name="filter_by_name", description="", parameters=[MethodParamWithTyping(name="name", type=List[str])]
             ),
             ExposedFunction(
-                name="filter_by_city", description="", parameters=[MethodParamWithTyping(name="city", type=str)]
+                name="filter_by_city",
+                description="",
+                parameters=[MethodParamWithTyping(name="city", type=Union[str, TestCustomContext])],
+                context_class=TestCustomContext,
+                context=custom_context,
             ),
             ExposedFunction(
                 name="filter_by_company", description="", parameters=[MethodParamWithTyping(name="company", type=str)]
@@ -45,7 +58,7 @@ async def test_iql_parser():
     assert name_filter.arguments[0] == ["John", "Anne"]
 
     assert isinstance(city_filter, syntax.FunctionCall)
-    assert city_filter.arguments[0] == "cracow"
+    assert city_filter.arguments[0] is custom_context
 
     assert isinstance(company_filter, syntax.FunctionCall)
     assert company_filter.arguments[0] == "deepsense.ai"

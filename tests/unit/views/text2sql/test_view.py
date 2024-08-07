@@ -61,7 +61,7 @@ async def test_text2sql_view(sample_db: Engine):
 
     response = await collection.ask("Show me customers from New York")
 
-    assert response.context["sql"] == llm_response["sql"]
+    assert response.metadata["sql"] == llm_response["sql"]
     assert response.results == [
         {"id": 1, "name": "Alice", "city": "New York"},
         {"id": 3, "name": "Charlie", "city": "New York"},

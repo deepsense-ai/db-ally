@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
@@ -48,9 +48,9 @@ class QueryExplanationPromptFormat(PromptFormat):
         self,
         *,
         question: str,
-        context: Dict[str, Any],
+        metadata: Dict[str, Any],
         results: List[Dict[str, Any]],
-        examples: List[FewShotExample] = None,
+        examples: Optional[List[FewShotExample]] = None,
     ) -> None:
         """
         Constructs a new QueryExplanationPromptFormat instance.
@@ -63,7 +63,7 @@ class QueryExplanationPromptFormat(PromptFormat):
         """
         super().__init__(examples)
         self.question = question
-        self.query = next((context.get(key) for key in ("iql", "sql", "query") if context.get(key)), question)
+        self.query = next((metadata.get(key) for key in ("iql", "sql", "query") if metadata.get(key)), question)
         self.number_of_results = len(results)
 
 

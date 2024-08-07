@@ -1,9 +1,10 @@
 import abc
 from collections import defaultdict
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
+from dbally.context.context import BaseCallerContext
 from dbally.iql import IQLQuery
 from dbally.iql._exceptions import IQLError
 from dbally.iql_generator.iql_generator import IQLGenerator
@@ -35,6 +36,22 @@ class BaseStructuredView(BaseView):
         """
         return IQLGenerator(llm=llm)
 
+    @classmethod
+    def contextualize_filters(
+        cls, filters: Iterable[ExposedFunction], contexts: Optional[Iterable[BaseCallerContext]]
+    ) -> None:
+        """
+        Updates a list of filters packed as ExposedFunction's by ingesting the matching context objects.
+
+        Args:
+            filters: An iterable of filters.
+            contexts: An iterable of context objects.
+        """
+
+        contexts = contexts or []
+        for filter_ in filters:
+            filter_.inject_context(contexts)
+
     async def ask(
         self,
         query: str,
@@ -43,6 +60,7 @@ class BaseStructuredView(BaseView):
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
+        contexts: Optional[Iterable[BaseCallerContext]] = None,
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result. It generates the IQL query from the natural language query\
@@ -55,6 +73,8 @@ class BaseStructuredView(BaseView):
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
             llm_options: Options to use for the LLM.
+            contexts: An iterable (typically a list) of context objects, each being
+                an instance of a subclass of BaseCallerContext.
 
         Returns:
             The result of the query.
@@ -68,6 +88,7 @@ class BaseStructuredView(BaseView):
         filters = self.list_filters()
         examples = self.list_few_shots()
 
+        self.contextualize_filters(filters, contexts)
         try:
             iql = await iql_generator.generate_iql(
                 question=query,
@@ -93,7 +114,7 @@ class BaseStructuredView(BaseView):
         await self.apply_filters(iql)
 
         result = self.execute(dry_run=dry_run)
-        result.context["iql"] = f"{iql}"
+        result.metadata["iql"] = f"{iql}"
 
         return result
 
@@ -137,4 +158,5 @@ class BaseStructuredView(BaseView):
             for param in filter_.parameters:
                 if param.similarity_index:
                     indexes[param.similarity_index].append((self.__class__.__name__, filter_.name, param.name))
+
         return indexes

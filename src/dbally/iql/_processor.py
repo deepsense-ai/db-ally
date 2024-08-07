@@ -1,11 +1,14 @@
 import ast
-from typing import TYPE_CHECKING, Any, List, Optional, Union
+from typing import Any, Iterable, List, Mapping, Optional, Union
 
 from dbally.audit.event_tracker import EventTracker
+from dbally.context._utils import _does_arg_allow_context
+from dbally.context.context import BaseCallerContext
 from dbally.iql import syntax
 from dbally.iql._exceptions import (
     IQLArgumentParsingError,
     IQLArgumentValidationError,
+    IQLContextNotAllowedError,
     IQLEmptyExpressionError,
     IQLFunctionNotExists,
     IQLIncorrectNumberArgumentsError,
@@ -15,19 +18,37 @@ from dbally.iql._exceptions import (
     IQLUnsupportedSyntaxError,
 )
 from dbally.iql._type_validators import validate_arg_type
-
-if TYPE_CHECKING:
-    from dbally.views.structured import ExposedFunction
+from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 
 
 class IQLProcessor:
     """
     Parses IQL string to tree structure.
+
+    Attributes:
+        source: Raw LLM response containing IQL filter calls.
+        allowed_functions: A mapping (typically a dict) of all filters implemented for a certain View.=
     """
 
+    source: str
+    allowed_functions: Mapping[str, "ExposedFunction"]
+    _event_tracker: EventTracker
+
     def __init__(
-        self, source: str, allowed_functions: List["ExposedFunction"], event_tracker: Optional[EventTracker] = None
+        self,
+        source: str,
+        allowed_functions: Iterable[ExposedFunction],
+        event_tracker: Optional[EventTracker] = None,
     ) -> None:
+        """
+        IQLProcessor class constructor.
+
+        Args:
+            source: Raw LLM response containing IQL filter calls.
+            allowed_functions: An interable (typically a list) of all filters implemented for a certain View.
+            even_tracker: An EvenTracker instance.
+        """
+
         self.source = source
         self.allowed_functions = {func.name: func for func in allowed_functions}
         self._event_tracker = event_tracker or EventTracker()
@@ -42,6 +63,7 @@ class IQLProcessor:
         Raises:
             IQLError: If parsing fails.
         """
+
         self.source = self._to_lower_except_in_quotes(self.source, ["AND", "OR", "NOT"])
 
         try:
@@ -95,13 +117,13 @@ class IQLProcessor:
         if len(func_def.parameters) != len(node.args):
             raise IQLIncorrectNumberArgumentsError(node, self.source)
 
-        for arg, arg_def in zip(node.args, func_def.parameters):
-            arg_value = self._parse_arg(arg)
+        for arg, arg_spec in zip(node.args, func_def.parameters):
+            arg_value = self._parse_arg(arg, arg_spec=arg_spec, parent_func_def=func_def)
 
-            if arg_def.similarity_index:
-                arg_value = await arg_def.similarity_index.similar(arg_value, event_tracker=self._event_tracker)
+            if arg_spec.similarity_index:
+                arg_value = await arg_spec.similarity_index.similar(arg_value, event_tracker=self._event_tracker)
 
-            check_result = validate_arg_type(arg_def.type, arg_value)
+            check_result = validate_arg_type(arg_spec.type, arg_value)
 
             if not check_result.valid:
                 raise IQLArgumentValidationError(message=check_result.reason or "", node=arg, source=self.source)
@@ -110,12 +132,31 @@ class IQLProcessor:
 
         return syntax.FunctionCall(func.id, args)
 
-    def _parse_arg(self, arg: ast.expr) -> Any:
+    def _parse_arg(
+        self,
+        arg: ast.expr,
+        arg_spec: Optional[MethodParamWithTyping] = None,
+        parent_func_def: Optional[ExposedFunction] = None,
+    ) -> Any:
         if isinstance(arg, ast.List):
             return [self._parse_arg(x) for x in arg.elts]
 
+        if BaseCallerContext.is_context_call(arg):
+            if parent_func_def is None or arg_spec is None:
+                # not sure whether this line will be ever reached
+                raise IQLArgumentParsingError(arg, self.source)
+
+            if parent_func_def.context_class is None:
+                raise IQLContextNotAllowedError(arg, self.source)
+
+            if not _does_arg_allow_context(arg_spec):
+                raise IQLContextNotAllowedError(arg, self.source, arg_name=arg_spec.name)
+
+            return parent_func_def.context
+
         if not isinstance(arg, ast.Constant):
             raise IQLArgumentParsingError(arg, self.source)
+
         return arg.value
 
     @staticmethod

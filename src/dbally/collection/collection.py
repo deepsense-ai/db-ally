@@ -4,7 +4,7 @@ import logging
 import textwrap
 import time
 from collections import defaultdict
-from typing import Callable, Dict, List, Optional, Type, TypeVar
+from typing import Callable, Dict, Iterable, List, Optional, Type, TypeVar
 
 import dbally
 from dbally.audit.event_handlers.base import EventHandler
@@ -12,6 +12,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import FallbackEvent, RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult, ViewExecutionResult
+from dbally.context.context import BaseCallerContext
 from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
@@ -227,7 +228,8 @@ class Collection:
         event_tracker: EventTracker,
         llm_options: Optional[LLMOptions],
         dry_run: bool,
-    ):
+        contexts: Iterable[BaseCallerContext],
+    ) -> ViewExecutionResult:
         """
         Ask the selected view to provide an answer to the question.
 
@@ -239,7 +241,7 @@ class Collection:
             dry_run: If True, only generate the query without executing it.
 
         Returns:
-            Any: The result from the selected view.
+            The result from the selected view.
         """
         selected_view = self.get(selected_view_name)
         view_result = await selected_view.ask(
@@ -249,6 +251,7 @@ class Collection:
             n_retries=self.n_retries,
             dry_run=dry_run,
             llm_options=llm_options,
+            contexts=contexts,
         )
         return view_result
 
@@ -348,6 +351,7 @@ class Collection:
         dry_run: bool = False,
         return_natural_response: bool = False,
         llm_options: Optional[LLMOptions] = None,
+        contexts: Optional[Iterable[BaseCallerContext]] = None,
         event_tracker: Optional[EventTracker] = None,
     ) -> ExecutionResult:
         """
@@ -368,6 +372,8 @@ class Collection:
                 the natural response will be included in the answer
             llm_options: options to use for the LLM client. If provided, these options will be merged with the default
                 options provided to the LLM client, prioritizing option values other than NOT_GIVEN
+            contexts: An iterable (typically a list) of context objects, each being an instance of
+                a subclass of BaseCallerContext. May contain contexts irrelevant for the currently processed query.
             event_tracker: Event tracker object for given ask.
 
         Returns:
@@ -404,6 +410,7 @@ class Collection:
                 event_tracker=event_tracker,
                 llm_options=llm_options,
                 dry_run=dry_run,
+                contexts=contexts or [],
             )
             end_time_view = time.monotonic()
 
@@ -415,7 +422,7 @@ class Collection:
 
             result = ExecutionResult(
                 results=view_result.results,
-                context=view_result.context,
+                metadata=view_result.metadata,
                 execution_time=time.monotonic() - start_time,
                 execution_time_view=end_time_view - start_time_view,
                 view_name=selected_view_name,
