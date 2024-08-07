@@ -1,0 +1,6 @@
+defaults:
+  - data: superhero
+  - setup: iql-view
+  - _self_
+
+neptune: False

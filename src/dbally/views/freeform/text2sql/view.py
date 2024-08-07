@@ -99,7 +99,7 @@ class BaseText2SQLView(BaseView, ABC):
         self,
         query: str,
         llm: LLM,
-        event_tracker: EventTracker,
+        event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
@@ -173,7 +173,7 @@ class BaseText2SQLView(BaseView, ABC):
         self,
         conversation: PromptTemplate,
         llm: LLM,
-        event_tracker: EventTracker,
+        event_tracker: Optional[EventTracker] = None,
         llm_options: Optional[LLMOptions] = None,
     ) -> Tuple[str, List[SQLParameterOption], PromptTemplate]:
         response = await llm.generate_text(
@@ -194,7 +194,10 @@ class BaseText2SQLView(BaseView, ABC):
         return sql, param_objs, conversation
 
     async def _execute_sql(
-        self, sql: str, parameters: List[SQLParameterOption], event_tracker: EventTracker
+        self,
+        sql: str,
+        parameters: List[SQLParameterOption],
+        event_tracker: Optional[EventTracker] = None,
     ) -> Iterable:
         param_values = {}
 
