@@ -79,6 +79,7 @@ class LangSmithEventHandler(EventHandler[RunTree, RunTree]):
 
         raise ValueError("Unsupported event")
 
+    # pylint: disable=unused-argument
     async def event_end(self, event: Optional[Event], request_context: RunTree, event_context: RunTree) -> None:
         """
         Log the end of the event.

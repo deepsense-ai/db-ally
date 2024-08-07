@@ -1,0 +1,6 @@
+name: SQL_VIEW
+
+defaults:
+  - llm: gpt-3.5-turbo
+  - views/freeform@views:
+    - superhero

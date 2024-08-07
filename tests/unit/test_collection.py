@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from typing_extensions import Annotated
 
-from dbally._main import create_collection
+import dbally
 from dbally.collection import Collection
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ViewExecutionResult
@@ -127,7 +127,7 @@ def mock_collection() -> Collection:
     """
     Returns a collection with two mock views
     """
-    collection = create_collection(
+    collection = dbally.create_collection(
         "foo",
         llm=MockLLM(),
         view_selector=MockViewSelector("MockView1"),

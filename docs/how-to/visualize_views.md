@@ -19,7 +19,7 @@ Define collection with implemented views
 ```python
 llm = LiteLLM(model_name="gpt-3.5-turbo")
 await country_similarity.update()
-collection = dbally.create_collection("recruitment", llm, event_handlers=[CLIEventHandler()])
+collection = dbally.create_collection("recruitment", llm)
 collection.add(CandidateView, lambda: CandidateView(engine))
 collection.add(SampleText2SQLViewCyphers, lambda: SampleText2SQLViewCyphers(create_freeform_memory_engine()))
 ```

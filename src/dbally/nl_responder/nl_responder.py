@@ -59,6 +59,9 @@ class NLResponder:
 
         Returns:
             Natural language response to the user question.
+
+        Raises:
+            LLMError: If LLM text generation fails.
         """
         prompt_format = NLResponsePromptFormat(
             question=question,

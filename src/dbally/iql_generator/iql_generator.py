@@ -5,6 +5,7 @@ from dbally.iql import IQLError, IQLQuery
 from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, IQLGenerationPromptFormat
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
+from dbally.llms.clients.exceptions import LLMError
 from dbally.prompt.elements import FewShotExample
 from dbally.prompt.template import PromptTemplate
 from dbally.views.exposed_functions import ExposedFunction
@@ -38,11 +39,11 @@ class IQLGenerator:
         self,
         question: str,
         filters: List[ExposedFunction],
-        event_tracker: EventTracker,
+        event_tracker: Optional[EventTracker] = None,
         examples: Optional[List[FewShotExample]] = None,
         llm_options: Optional[LLMOptions] = None,
         n_retries: int = 3,
-    ) -> IQLQuery:
+    ) -> IQLQuery:  # type: ignore
         """
         Generates IQL in text form using LLM.
 
@@ -52,10 +53,15 @@ class IQLGenerator:
             event_tracker: Event store used to audit the generation process.
             examples: List of examples to be injected into the conversation.
             llm_options: Options to use for the LLM client.
-            n_retries: Number of retries to regenerate IQL in case of errors.
+            n_retries: Number of retries to regenerate IQL in case of errors in parsing or LLM connection.
 
         Returns:
             Generated IQL query.
+
+        Raises:
+            LLMError: If LLM text generation fails after all retries.
+            IQLError: If IQL parsing fails after all retries.
+            UnsupportedQueryError: If the question is not supported by the view.
         """
         prompt_format = IQLGenerationPromptFormat(
             question=question,
@@ -64,7 +70,12 @@ class IQLGenerator:
         )
         formatted_prompt = self._prompt_template.format_prompt(prompt_format)
 
-        for _ in range(n_retries + 1):
+        for retry in range(n_retries + 1):
+            # IMPORTANT DEV NOTE
+            # splitting a single try-except into two prevents type checkers from
+            # identifing 'response' as possible unbound (undefined) variable, while calling:
+            # `formatted_prompt.add_assistant_message(response)`
+
             try:
                 response = await self._llm.generate_text(
                     prompt=formatted_prompt,
@@ -72,13 +83,25 @@ class IQLGenerator:
                     options=llm_options,
                 )
                 # TODO: Move response parsing to llm generate_text method
+            except LLMError as exc:
+                if retry == n_retries:
+                    raise exc
+
+                continue
+
+            try:
                 iql = formatted_prompt.response_parser(response)
                 # TODO: Move IQL query parsing to prompt response parser
-                return await IQLQuery.parse(source=iql, allowed_functions=filters, event_tracker=event_tracker)
+
+                return await IQLQuery.parse(
+                    source=iql,
+                    allowed_functions=filters,
+                    event_tracker=event_tracker,
+                )
+
             except IQLError as exc:
-                # TODO handle the possibility of variable `response` being not initialized
-                # while runnning the following line
+                if retry == n_retries:
+                    raise exc
+
                 formatted_prompt = formatted_prompt.add_assistant_message(response)
                 formatted_prompt = formatted_prompt.add_user_message(ERROR_MESSAGE.format(error=exc))
-
-        # TODO handle the situation when all retries fails and the return defaults to None

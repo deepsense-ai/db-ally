@@ -1,20 +1,14 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name
 
-import asyncio
 from dataclasses import dataclass
-from typing import List, Literal, Tuple, Union, Optional
+from typing import List, Literal, Tuple, Union
 
 from dbally.collection.results import ViewExecutionResult
+from dbally.context import BaseCallerContext
 from dbally.iql import IQLQuery
 from dbally.views.decorators import view_filter
-from dbally.views.exposed_functions import MethodParamWithTyping, ExposedFunction
+from dbally.views.exposed_functions import MethodParamWithTyping
 from dbally.views.methods_base import MethodsBaseView
-from dbally.context import BaseCallerContext
-from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.audit.event_tracker import EventTracker
-from dbally.prompt.elements import FewShotExample
-from dbally.llms.clients.base import LLMOptions
-from dbally.llms.base import LLM
 
 
 @dataclass
@@ -22,7 +16,8 @@ class TestCallerContext(BaseCallerContext):
     """
     Mock class for testing context.
     """
-    current_year: Literal['2023', '2024']
+
+    current_year: Literal["2023", "2024"]
 
 
 class MockMethodsBase(MethodsBaseView):
@@ -37,7 +32,9 @@ class MockMethodsBase(MethodsBaseView):
         """
 
     @view_filter()
-    def method_bar(self, cities: List[str], year: Union[Literal["2023", "2024"], TestCallerContext], pairs: List[Tuple[str, int]]) -> str:
+    def method_bar(
+        self, cities: List[str], year: Union[Literal["2023", "2024"], TestCallerContext], pairs: List[Tuple[str, int]]
+    ) -> str:
         return f"hello {cities} in {year} of {pairs}"
 
     async def apply_filters(self, filters: IQLQuery) -> None:
@@ -66,7 +63,8 @@ def test_list_filters() -> None:
         MethodParamWithTyping("pairs", List[Tuple[str, int]]),
     ]
     assert (
-        str(method_bar) == "method_bar(cities: List[str], year: Literal['2023', '2024'] | AskerContext, pairs: List[Tuple[str, int]])"
+        str(method_bar)
+        == "method_bar(cities: List[str], year: Literal['2023', '2024'] | AskerContext, pairs: List[Tuple[str, int]])"
     )
 
 

@@ -24,6 +24,7 @@ nav:
           - how-to/views/few-shots.md
       - Using LLMs:
           - how-to/llms/litellm.md
+          - how-to/llms/local.md
           - how-to/llms/custom.md
       - Using similarity indexes:
           - how-to/use_custom_similarity_fetcher.md
@@ -33,6 +34,7 @@ nav:
           - how-to/update_similarity_indexes.md
       - how-to/visualize_views.md
       - how-to/log_runs_to_langsmith.md
+      - how-to/trace_runs_with_otel.md
       - how-to/create_custom_event_handler.md
       - how-to/openai_assistants_integration.md
   - API Reference:
@@ -53,6 +55,7 @@ nav:
           - reference/event_handlers/index.md
           - reference/event_handlers/cli_handler.md
           - reference/event_handlers/langsmith_handler.md
+          - reference/event_handlers/otel_handler.md
       - View Selection:
           - reference/view_selection/index.md
           - reference/view_selection/llm_view_selector.md
@@ -60,6 +63,7 @@ nav:
       - LLMs:
           - reference/llms/index.md
           - reference/llms/litellm.md
+          - reference/llms/local.md
       - reference/prompt.md
       - Similarity:
           - reference/similarity/index.md

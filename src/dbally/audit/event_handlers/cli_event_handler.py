@@ -1,6 +1,4 @@
 import re
-from io import StringIO
-from sys import stdout
 from typing import Optional
 
 try:
@@ -15,7 +13,7 @@ except ImportError:
     pprint = print  # type: ignore
 
 from dbally.audit.event_handlers.base import EventHandler
-from dbally.audit.events import Event, LLMEvent, RequestEnd, RequestStart, SimilarityEvent
+from dbally.audit.events import Event, FallbackEvent, LLMEvent, RequestEnd, RequestStart, SimilarityEvent
 
 _RICH_FORMATING_KEYWORD_SET = {"green", "orange", "grey", "bold", "cyan"}
 _RICH_FORMATING_PATTERN = rf"\[.*({'|'.join(_RICH_FORMATING_KEYWORD_SET)}).*\]"
@@ -24,7 +22,7 @@ _RICH_FORMATING_PATTERN = rf"\[.*({'|'.join(_RICH_FORMATING_KEYWORD_SET)}).*\]"
 class CLIEventHandler(EventHandler):
     """
     This handler displays all interactions between LLM and user happening during `Collection.ask`\
-    execution inside the terminal or store them in the given buffer.
+    execution inside the terminal.
 
     ### Usage
 
@@ -32,7 +30,8 @@ class CLIEventHandler(EventHandler):
         import dbally
         from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 
-        my_collection = dbally.create_collection("my_collection", llm, event_handlers=[CLIEventHandler()])
+        dbally.event_handlers = [CLIEventHandler()]
+        my_collection = dbally.create_collection("my_collection", llm)
     ```
 
     After using `CLIEventHandler`, during every `Collection.ask` execution you will see output similar to the one below:
@@ -40,12 +39,9 @@ class CLIEventHandler(EventHandler):
     ![Example output from CLIEventHandler](../../assets/event_handler_example.png)
     """
 
-    def __init__(self, buffer: Optional[StringIO] = None) -> None:
+    def __init__(self) -> None:
         super().__init__()
-
-        self.buffer = buffer
-        out = self.buffer if buffer else stdout
-        self._console = Console(file=out, record=True) if RICH_OUTPUT else None
+        self._console = Console(record=True) if RICH_OUTPUT else None
 
     def _print_syntax(self, content: str, lexer: Optional[str] = None) -> None:
         if self._console:
@@ -69,6 +65,7 @@ class CLIEventHandler(EventHandler):
         self._print_syntax("[grey53]\n=======================================")
         self._print_syntax("[grey53]=======================================\n")
 
+    # pylint: disable=unused-argument
     async def event_start(self, event: Event, request_context: None) -> None:
         """
         Displays information that event has started, then all messages inside the prompt
@@ -97,7 +94,20 @@ class CLIEventHandler(EventHandler):
                 f"[cyan bold]STORE: [grey53]{event.store}\n"
                 f"[cyan bold]FETCHER: [grey53]{event.fetcher}\n"
             )
+        elif isinstance(event, FallbackEvent):
+            self._print_syntax(
+                f"[grey53]\n=======================================\n"
+                "[grey53]=======================================\n"
+                f"[orange bold]Fallback event starts \n"
+                f"[orange bold]Triggering collection: [grey53]{event.triggering_collection_name}\n"
+                f"[orange bold]Triggering view name: [grey53]{event.triggering_view_name}\n"
+                f"[orange bold]Error description: [grey53]{event.error_description}\n"
+                f"[orange bold]Fallback collection name: [grey53]{event.fallback_collection_name}\n"
+                "[grey53]=======================================\n"
+                "[grey53]=======================================\n"
+            )
 
+    # pylint: disable=unused-argument
     async def event_end(self, event: Optional[Event], request_context: None, event_context: None) -> None:
         """
         Displays the response from the LLM.
@@ -116,6 +126,7 @@ class CLIEventHandler(EventHandler):
             self._print_syntax("[grey53]\n=======================================")
             self._print_syntax("[grey53]=======================================\n")
 
+    # pylint: disable=unused-argument
     async def request_end(self, output: RequestEnd, request_context: Optional[dict] = None) -> None:
         """
         Displays the output of the request, namely the `results` and the `context`
@@ -124,8 +135,11 @@ class CLIEventHandler(EventHandler):
             output: The output of the request.
             request_context: Optional context passed from request_start method
         """
-        self._print_syntax("[green bold]REQUEST OUTPUT:")
-        self._print_syntax(f"Number of rows: {len(output.result.results)}")
+        if output.result:
+            self._print_syntax("[green bold]REQUEST OUTPUT:")
+            self._print_syntax(f"Number of rows: {len(output.result.results)}")
 
-        if "sql" in output.result.metadata:
-            self._print_syntax(f"{output.result.metadata['sql']}", "psql")
+            if "sql" in output.result.metadata:
+                self._print_syntax(f"{output.result.metadata['sql']}", "psql")
+        else:
+            self._print_syntax("[red bold]No results found")

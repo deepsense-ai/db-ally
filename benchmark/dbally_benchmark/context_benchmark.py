@@ -1,26 +1,25 @@
-# pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring
-import polars as pl
-
-import dbally
+# pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring, missing-class-docstring, broad-exception-caught
 import asyncio
-import typing
 import json
-import traceback
 import os
-import tqdm.asyncio
-import sqlalchemy
-from typing_extensions import TypeAlias
+import traceback
+import typing
 from copy import deepcopy
-from sqlalchemy import create_engine
-from sqlalchemy.ext.automap import automap_base, AutomapBase
 from dataclasses import dataclass, field
 
-from dbally import decorators, SqlAlchemyBaseView
-from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
-from dbally.llms.litellm import LiteLLM
+import polars as pl
+import sqlalchemy
+import tqdm.asyncio
+from sqlalchemy import create_engine
+from sqlalchemy.ext.automap import AutomapBase, automap_base
+from typing_extensions import TypeAlias
+
+import dbally
+from dbally import SqlAlchemyBaseView, decorators
+from dbally.collection import Collection
 from dbally.context import BaseCallerContext
 from dbally.iql import IQLError
-
+from dbally.llms.litellm import LiteLLM
 
 SQLITE_DB_FILE_REL_PATH = "../../examples/recruiting/data/candidates.db"
 engine = create_engine(f"sqlite:///{os.path.abspath(SQLITE_DB_FILE_REL_PATH)}")
@@ -132,10 +131,10 @@ class CandidateView(SqlAlchemyBaseView):
         return Candidate.name.startswith(first_name)
 
 
-OpenAILLMName: TypeAlias = typing.Literal['gpt-3.5-turbo', 'gpt-3.5-turbo-instruct', 'gpt-4-turbo', 'gpt-4o']
+OpenAILLMName: TypeAlias = typing.Literal["gpt-3.5-turbo", "gpt-3.5-turbo-instruct", "gpt-4-turbo", "gpt-4o"]
 
 
-def setup_collection(model_name: OpenAILLMName) -> dbally.Collection:
+def setup_collection(model_name: OpenAILLMName) -> Collection:
     llm = LiteLLM(model_name=model_name)
 
     collection = dbally.create_collection("recruitment", llm)
@@ -145,18 +144,13 @@ def setup_collection(model_name: OpenAILLMName) -> dbally.Collection:
 
 
 async def generate_iql_from_question(
-    collection: dbally.Collection,
+    collection: Collection,
     model_name: OpenAILLMName,
     question: str,
-    contexts: typing.Optional[typing.List[BaseCallerContext]]
+    contexts: typing.Optional[typing.List[BaseCallerContext]],
 ) -> typing.Tuple[str, OpenAILLMName, typing.Optional[str]]:
-
     try:
-        result = await collection.ask(
-            question,
-            contexts=contexts,
-            dry_run=True
-        )
+        result = await collection.ask(question, contexts=contexts, dry_run=True)
     except IQLError as e:
         exc_pretty = traceback.format_exception_only(e.__class__, e)[0]
         return question, model_name, f"FAILED: {exc_pretty}({e.source})"
@@ -168,7 +162,7 @@ async def generate_iql_from_question(
     if out is None:
         return question, model_name, None
 
-    return question, model_name, out.replace('"', '\'')
+    return question, model_name, out.replace('"', "'")
 
 
 @dataclass
@@ -176,12 +170,12 @@ class BenchmarkConfig:
     dataset_path: str
     out_path: str
     n_repeats: int = 5
-    llms: typing.List[OpenAILLMName] = field(default_factory=lambda: ['gpt-3.5-turbo', 'gpt-4-turbo', 'gpt-4o'])
+    llms: typing.List[OpenAILLMName] = field(default_factory=lambda: ["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o"])
 
 
-async def main(config: BenchmarkConfig):
+async def main(config_: BenchmarkConfig):
     test_set = None
-    with open(config.dataset_path, 'r') as file:
+    with open(config_.dataset_path, encoding="utf-8") as file:
         test_set = json.load(file)
 
     contexts = [
@@ -192,30 +186,27 @@ async def main(config: BenchmarkConfig):
             position="Data Engineer",
             university="University of Toronto",
             skills=["Python"],
-            country="United Kingdom"
+            country="United Kingdom",
         ),
         OpenPosition(
             position="Machine Learning Engineer",
             graduated_from_university="Stanford Univeristy",
             min_years_of_experience=1,
-            required_skills=["Python", "SQL"]
-        )
+            required_skills=["Python", "SQL"],
+        ),
     ]
 
     tasks: typing.List[asyncio.Task] = []
     for model_name in config.llms:
         collection = setup_collection(model_name)
         for test_case in test_set:
-            answers = []
             for _ in range(config.n_repeats):
-                task = asyncio.create_task(generate_iql_from_question(collection, model_name,
-                                                                      test_case["question"], contexts=contexts))
+                task = asyncio.create_task(
+                    generate_iql_from_question(collection, model_name, test_case["question"], contexts=contexts)
+                )
                 tasks.append(task)
 
-    output_data = {
-        test_case["question"]:test_case
-        for test_case in test_set
-    }
+    output_data = {test_case["question"]: test_case for test_case in test_set}
     empty_answers = {str(llm_name): [] for llm_name in config.llms}
 
     total_iter = len(config.llms) * len(test_set) * config.n_repeats
@@ -226,36 +217,36 @@ async def main(config: BenchmarkConfig):
 
         output_data[question]["answers"][llm_name].append(answer)
 
-    df_out_raw =  pl.DataFrame(list(output_data.values()))
+    df_out_raw = pl.DataFrame(list(output_data.values()))
 
     df_out = (
-        df_out_raw
-        .unnest("answers")
+        df_out_raw.unnest("answers")
         .unpivot(
             on=pl.selectors.starts_with("gpt"),
             index=["question", "correct_answer", "context"],
             variable_name="model",
-            value_name="answer"
+            value_name="answer",
         )
         .explode("answer")
         .group_by(["context", "model"])
-        .agg([
-            (pl.col("correct_answer") == pl.col("answer")).mean().alias("frac_hits"),
-            (pl.col("correct_answer") == pl.col("answer")).sum().alias("n_hits"),
-        ])
+        .agg(
+            [
+                (pl.col("correct_answer") == pl.col("answer")).mean().alias("frac_hits"),
+                (pl.col("correct_answer") == pl.col("answer")).sum().alias("n_hits"),
+            ]
+        )
         .sort(["model", "context"])
     )
 
     print(df_out)
 
-    with open(config.out_path, 'w') as file:
+    with open(config.out_path, "w", encoding="utf-8") as file:
         file.write(json.dumps(df_out_raw.to_dicts(), indent=2))
 
 
 if __name__ == "__main__":
     config = BenchmarkConfig(
-        dataset_path="dataset/context_dataset.json",
-        out_path="../../context_benchmark_output.json"
+        dataset_path="dataset/context_dataset.json", out_path="../../context_benchmark_output.json"
     )
 
     asyncio.run(main(config))

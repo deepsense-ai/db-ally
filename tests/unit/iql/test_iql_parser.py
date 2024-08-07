@@ -6,7 +6,15 @@ import pytest
 
 from dbally.context import BaseCallerContext
 from dbally.iql import IQLArgumentParsingError, IQLQuery, IQLUnsupportedSyntaxError, syntax
-from dbally.iql._exceptions import IQLArgumentValidationError, IQLFunctionNotExists
+from dbally.iql._exceptions import (
+    IQLArgumentValidationError,
+    IQLEmptyExpressionError,
+    IQLFunctionNotExists,
+    IQLIncorrectNumberArgumentsError,
+    IQLMultipleExpressionsError,
+    IQLNoExpressionError,
+    IQLSyntaxError,
+)
 from dbally.iql._processor import IQLProcessor
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 
@@ -81,6 +89,78 @@ async def test_iql_parser_arg_error():
     assert exc_info.match(re.escape("Not a valid IQL argument: lambda x: x + 1"))
 
 
+async def test_iql_parser_syntax_error():
+    with pytest.raises(IQLSyntaxError) as exc_info:
+        await IQLQuery.parse(
+            "filter_by_age(",
+            allowed_functions=[
+                ExposedFunction(
+                    name="filter_by_age",
+                    description="",
+                    parameters=[
+                        MethodParamWithTyping(name="age", type=int),
+                    ],
+                ),
+            ],
+        )
+
+    assert exc_info.match(re.escape("Syntax error in: filter_by_age("))
+
+
+async def test_iql_parser_multiple_expression_error():
+    with pytest.raises(IQLMultipleExpressionsError) as exc_info:
+        await IQLQuery.parse(
+            "filter_by_age\nfilter_by_age",
+            allowed_functions=[
+                ExposedFunction(
+                    name="filter_by_age",
+                    description="",
+                    parameters=[
+                        MethodParamWithTyping(name="age", type=int),
+                    ],
+                ),
+            ],
+        )
+
+    assert exc_info.match(re.escape("Multiple expressions or statements in IQL are not supported"))
+
+
+async def test_iql_parser_empty_expression_error():
+    with pytest.raises(IQLEmptyExpressionError) as exc_info:
+        await IQLQuery.parse(
+            "",
+            allowed_functions=[
+                ExposedFunction(
+                    name="filter_by_age",
+                    description="",
+                    parameters=[
+                        MethodParamWithTyping(name="age", type=int),
+                    ],
+                ),
+            ],
+        )
+
+    assert exc_info.match(re.escape("Empty IQL expression"))
+
+
+async def test_iql_parser_no_expression_error():
+    with pytest.raises(IQLNoExpressionError) as exc_info:
+        await IQLQuery.parse(
+            "import filter_by_age",
+            allowed_functions=[
+                ExposedFunction(
+                    name="filter_by_age",
+                    description="",
+                    parameters=[
+                        MethodParamWithTyping(name="age", type=int),
+                    ],
+                ),
+            ],
+        )
+
+    assert exc_info.match(re.escape("No expression found in IQL: import filter_by_age"))
+
+
 async def test_iql_parser_unsupported_syntax_error():
     with pytest.raises(IQLUnsupportedSyntaxError) as exc_info:
         await IQLQuery.parse(
@@ -115,6 +195,26 @@ async def test_iql_parser_method_not_exists():
         )
 
     assert exc_info.match(re.escape("Function filter_by_how_old_somebody_is not exists: filter_by_how_old_somebody_is"))
+
+
+async def test_iql_parser_incorrect_number_of_arguments_fail():
+    with pytest.raises(IQLIncorrectNumberArgumentsError) as exc_info:
+        await IQLQuery.parse(
+            "filter_by_age('too old', 40)",
+            allowed_functions=[
+                ExposedFunction(
+                    name="filter_by_age",
+                    description="",
+                    parameters=[
+                        MethodParamWithTyping(name="age", type=int),
+                    ],
+                ),
+            ],
+        )
+
+    assert exc_info.match(
+        re.escape("The method filter_by_age has incorrect number of arguments: filter_by_age('too old', 40)")
+    )
 
 
 async def test_iql_parser_argument_validation_fail():

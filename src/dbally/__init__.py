@@ -1,7 +1,8 @@
 """ dbally """
 
-from dbally.collection.collection import Collection
-from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
+from typing import TYPE_CHECKING, List
+
+from dbally.collection.exceptions import NoViewFoundError
 from dbally.collection.results import ExecutionResult
 from dbally.views import decorators
 from dbally.views.methods_base import MethodsBaseView
@@ -21,17 +22,20 @@ from .embeddings.exceptions import (
 from .exceptions import DbAllyError
 from .llms.clients.exceptions import LLMConnectionError, LLMError, LLMResponseError, LLMStatusError
 
+if TYPE_CHECKING:
+    from .audit import EventHandler
+
+event_handlers: List["EventHandler"] = []
+
 __all__ = [
     "__version__",
     "create_collection",
     "decorators",
-    "MethodsBaseView",
-    "SqlAlchemyBaseView",
-    "Collection",
+    "event_handlers",
     "BaseStructuredView",
     "DataFrameBaseView",
-    "ExecutionResult",
     "DbAllyError",
+    "ExecutionResult",
     "EmbeddingError",
     "EmbeddingConnectionError",
     "EmbeddingResponseError",
@@ -40,10 +44,11 @@ __all__ = [
     "LLMConnectionError",
     "LLMResponseError",
     "LLMStatusError",
-    "NoViewFoundError",
-    "IndexUpdateError",
+    "MethodsBaseView",
     "NotGiven",
     "NOT_GIVEN",
+    "NoViewFoundError",
+    "SqlAlchemyBaseView",
 ]
 
 # Update the __module__ attribute for exported symbols so that
