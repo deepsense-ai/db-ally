@@ -128,20 +128,24 @@ FILTERING_DECISION_TEMPLATE = PromptTemplate[FilteringDecisionPromptFormat](
             "role": "system",
             "content": (
                 "Given a question, determine whether the answer requires initial data filtering in order to compute it.\n"
-                "Filtering is a process in which the entities are reduced to only include the rows that meet "
-                "certain criteria specified in the question.\n\n"
+                "Initial data filtering is a process in which the result set is reduced to only include the rows "
+                "that meet certain criteria specified in the question.\n\n"
                 "---\n\n"
                 "Follow the following format.\n\n"
                 "Question: ${{question}}\n"
-                "Reasoning: Let's think step by step in order to ${{determine if the answer to "
-                "the question requires initial data filtering based on its specific features}}. We...\n"
+                "Hint: ${{hint}}"
+                "Reasoning: Let's think step by step in order to ${{produce the decision}}. We...\n"
                 "Decision: indicates whether the answer to the question requires initial data filtering. "
                 "(Respond with True or False)\n\n"
             ),
         },
         {
             "role": "user",
-            "content": ("Question: {question}\n" "Reasoning: Let's think step by step in order to "),
+            "content": (
+                "Question: {question}\n"
+                "Hint: Look for words indicating data specific features.\n"
+                "Reasoning: Let's think step by step in order to "
+            ),
         },
     ],
     response_parser=_decision_iql_response_parser,

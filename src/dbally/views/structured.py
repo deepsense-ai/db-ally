@@ -94,7 +94,7 @@ class BaseStructuredView(BaseView):
             await self.apply_filters(iql)
 
         result = self.execute(dry_run=dry_run)
-        result.context["iql"] = f"{iql}"
+        result.context["iql"] = str(iql) if iql else None
 
         return result
 
