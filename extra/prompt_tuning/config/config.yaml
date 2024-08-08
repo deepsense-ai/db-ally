@@ -1,0 +1,7 @@
+defaults:
+  - data: superhero
+  - llm: gpt-3.5-turbo
+  - program: filtering-assessor
+  - _self_
+
+neptune: False
