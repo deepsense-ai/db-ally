@@ -17,7 +17,7 @@ First, set up your environment to use a Hugging Face model.
 ```python
 
 import os
-from dbally.llms.localllm import LocalLLM
+from dbally.llms.local import LocalLLM
 
 os.environ["HUGGINGFACE_API_KEY"] = "your-api-key"
 
@@ -34,6 +34,8 @@ response = await my_collection.ask("Which LLM should I use?")
 
 ## Advanced Usage
 
+### Customizing LLM options
+
 For advanced users, you can customize your LLM using [`LocalLLMOptions`](../../reference/llms/local.md#dbally.llms.clients.local.LocalLLMOptions). Here is a list of available parameters:
 
 -   `repetition_penalty`: *float or null (optional)* - Penalizes repeated tokens to avoid repetitions.
@@ -48,7 +50,7 @@ For advanced users, you can customize your LLM using [`LocalLLMOptions`](../../r
 
 ```python
 import dbally
-from dbally.llms.clients.localllm import LocalLLMOptions
+from dbally.llms.clients.local import LocalLLMOptions
 
 llm = LocalLLM("meta-llama/Meta-Llama-3-8B-Instruct", default_options=LocalLLMOptions(temperature=0.7))
 my_collection = dbally.create_collection("my_collection", llm)
@@ -62,5 +64,22 @@ response = await my_collection.ask(
     llm_options=LocalLLMOptions(
         temperature=0.65,
     ),
+)
+```
+
+### Using LoRA Adapters
+
+To use a LoRA adapter with `LocalLLM`, specify the `adapter_name` parameter when creating the instance. It can be either the model id of a PEFT configuration hosted inside a model repo on the Hugging Face Hub, or a path to a directory containing a PEFT configuration file.
+
+```python
+
+import os
+from dbally.llms.local import LocalLLM
+
+os.environ["HUGGINGFACE_API_KEY"] = "your-api-key"
+
+llm = LocalLLM(
+    model_name="meta-llama/Meta-Llama-3-8B-Instruct",
+    adapter_name="path/to/your/adapter"
 )
 ```

@@ -1,0 +1,18 @@
+name:
+defaults:
+  - model: llama-3-8b-instruct
+  - train_params: baseline
+  - lora_params: baseline
+  - qlora_params: baseline
+  - _self_
+
+dataset: dsai-alicja-kotyla/text-to-iql-v2
+
+use_lora: true
+use_qlora: true
+
+output_dir: reports
+seed: 1234
+env_file_path: "x.env"
+overwrite_output_dir: true
+neptune_enabled: false

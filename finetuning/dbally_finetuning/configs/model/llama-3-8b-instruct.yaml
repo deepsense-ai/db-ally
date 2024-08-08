@@ -1,0 +1,4 @@
+name: meta-llama/Meta-Llama-3-8B-Instruct
+lora_target_modules: ["q_proj", "k_proj", "v_proj", "o_proj"]
+torch_dtype: bfloat16
+context_length: 2048
