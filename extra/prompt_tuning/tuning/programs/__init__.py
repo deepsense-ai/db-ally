@@ -1,5 +1,8 @@
-from .filters import FilteringAssessor
+from .iql import FilteringAssessorBaseline, FilteringAssessorCoT
 
 PROGRAMS = {
-    FilteringAssessor.__name__: FilteringAssessor,
+    FilteringAssessorBaseline.__name__: FilteringAssessorBaseline,
+    FilteringAssessorCoT.__name__: FilteringAssessorCoT,
 }
+
+__all__ = ["PROGRAMS", "FilteringAssessorBaseline", "FilteringAssessorCoT"]
