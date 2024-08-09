@@ -18,7 +18,7 @@ def serialize_results(results: List[Tuple]) -> Any:
     return [
         {
             "question": example["question"],
-            "reference": score,
+            "reference": score == prediction.decision,
             "prediction": prediction.decision,
         }
         for (example, prediction, score) in results
