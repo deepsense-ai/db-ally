@@ -69,7 +69,7 @@ class BaseStructuredView(BaseView):
         examples = self.list_few_shots()
 
         try:
-            iql = await iql_generator.generate_iql(
+            iql = await iql_generator.generate(
                 question=query,
                 filters=filters,
                 examples=examples,
@@ -90,10 +90,11 @@ class BaseStructuredView(BaseView):
                 aggregation=None,
             ) from exc
 
-        await self.apply_filters(iql)
+        if iql:
+            await self.apply_filters(iql)
 
         result = self.execute(dry_run=dry_run)
-        result.context["iql"] = f"{iql}"
+        result.context["iql"] = str(iql) if iql else None
 
         return result
 

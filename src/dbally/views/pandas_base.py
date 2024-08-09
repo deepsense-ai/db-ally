@@ -1,5 +1,6 @@
 import asyncio
 from functools import reduce
+from typing import Optional
 
 import pandas as pd
 
@@ -25,7 +26,7 @@ class DataFrameBaseView(MethodsBaseView):
         self.df = df
 
         # The mask to be applied to the dataframe to filter the data
-        self._filter_mask: pd.Series = None
+        self._filter_mask: Optional[pd.Series] = None
 
     async def apply_filters(self, filters: IQLQuery) -> None:
         """

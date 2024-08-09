@@ -38,7 +38,7 @@ class MockIQLGenerator(IQLGenerator):
         self.iql = iql
         super().__init__(llm=MockLLM())
 
-    async def generate_iql(self, *_, **__) -> IQLQuery:
+    async def generate(self, *_, **__) -> IQLQuery:
         return self.iql
 
 
