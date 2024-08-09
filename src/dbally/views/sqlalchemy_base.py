@@ -1,5 +1,6 @@
 import abc
 import asyncio
+from typing import Optional
 
 import sqlalchemy
 
@@ -13,10 +14,11 @@ class SqlAlchemyBaseView(MethodsBaseView):
     Base class for views that use SQLAlchemy to generate SQL queries.
     """
 
-    def __init__(self, sqlalchemy_engine: sqlalchemy.engine.Engine) -> None:
+    def __init__(self, sqlalchemy_engine: sqlalchemy.Engine) -> None:
         super().__init__()
-        self._select = self.get_select()
         self._sqlalchemy_engine = sqlalchemy_engine
+        self._select = self.get_select()
+        self._where_clause: Optional[sqlalchemy.ColumnElement] = None
 
     @abc.abstractmethod
     def get_select(self) -> sqlalchemy.Select:
@@ -34,7 +36,7 @@ class SqlAlchemyBaseView(MethodsBaseView):
         Args:
             filters: IQLQuery object representing the filters to apply
         """
-        self._select = self._select.where(await self._build_filter_node(filters.root))
+        self._where_clause = await self._build_filter_node(filters.root)
 
     async def _build_filter_node(self, node: syntax.Node) -> sqlalchemy.ColumnElement:
         """
@@ -75,8 +77,11 @@ class SqlAlchemyBaseView(MethodsBaseView):
             Results of the query where `results` will be a list of dictionaries representing retrieved rows or an empty\
             list if `dry_run` is set to `True`. Inside the `context` field the generated sql will be stored.
         """
-
         results = []
+
+        if self._where_clause is not None:
+            self._select = self._select.where(self._where_clause)
+
         sql = str(self._select.compile(bind=self._sqlalchemy_engine, compile_kwargs={"literal_binds": True}))
 
         if not dry_run:

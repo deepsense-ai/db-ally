@@ -34,6 +34,41 @@ def _validate_iql_response(llm_response: str) -> str:
     return llm_response
 
 
+def _decision_iql_response_parser(response: str) -> bool:
+    """
+    Parses the response from the decision prompt.
+
+    Args:
+        response: Response from the LLM.
+
+    Returns:
+        True if the response is positive, False otherwise.
+    """
+    response = response.lower()
+    if "decision:" not in response:
+        return False
+
+    _, decision = response.split("decision:", 1)
+    return "true" in decision
+
+
+class FilteringDecisionPromptFormat(PromptFormat):
+    """
+    IQL prompt format, providing a question and filters to be used in the conversation.
+    """
+
+    def __init__(self, *, question: str, examples: List[FewShotExample] = None) -> None:
+        """
+        Constructs a new IQLGenerationPromptFormat instance.
+
+        Args:
+            question: Question to be asked.
+            examples: List of examples to be injected into the conversation.
+        """
+        super().__init__(examples)
+        self.question = question
+
+
 class IQLGenerationPromptFormat(PromptFormat):
     """
     IQL prompt format, providing a question and filters to be used in the conversation.
@@ -84,4 +119,34 @@ IQL_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
         },
     ],
     response_parser=_validate_iql_response,
+)
+
+
+FILTERING_DECISION_TEMPLATE = PromptTemplate[FilteringDecisionPromptFormat](
+    [
+        {
+            "role": "system",
+            "content": (
+                "Given a question, determine whether the answer requires initial data filtering in order to compute it.\n"
+                "Initial data filtering is a process in which the result set is reduced to only include the rows "
+                "that meet certain criteria specified in the question.\n\n"
+                "---\n\n"
+                "Follow the following format.\n\n"
+                "Question: ${{question}}\n"
+                "Hint: ${{hint}}"
+                "Reasoning: Let's think step by step in order to ${{produce the decision}}. We...\n"
+                "Decision: indicates whether the answer to the question requires initial data filtering. "
+                "(Respond with True or False)\n\n"
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                "Question: {question}\n"
+                "Hint: Look for words indicating data specific features.\n"
+                "Reasoning: Let's think step by step in order to "
+            ),
+        },
+    ],
+    response_parser=_decision_iql_response_parser,
 )

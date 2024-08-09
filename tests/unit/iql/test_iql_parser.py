@@ -6,11 +6,11 @@ import pytest
 from dbally.iql import IQLArgumentParsingError, IQLQuery, IQLUnsupportedSyntaxError, syntax
 from dbally.iql._exceptions import (
     IQLArgumentValidationError,
-    IQLEmptyExpressionError,
     IQLFunctionNotExists,
     IQLIncorrectNumberArgumentsError,
-    IQLMultipleExpressionsError,
+    IQLMultipleStatementsError,
     IQLNoExpressionError,
+    IQLNoStatementError,
     IQLSyntaxError,
 )
 from dbally.iql._processor import IQLProcessor
@@ -95,7 +95,7 @@ async def test_iql_parser_syntax_error():
 
 
 async def test_iql_parser_multiple_expression_error():
-    with pytest.raises(IQLMultipleExpressionsError) as exc_info:
+    with pytest.raises(IQLMultipleStatementsError) as exc_info:
         await IQLQuery.parse(
             "filter_by_age\nfilter_by_age",
             allowed_functions=[
@@ -109,11 +109,11 @@ async def test_iql_parser_multiple_expression_error():
             ],
         )
 
-    assert exc_info.match(re.escape("Multiple expressions or statements in IQL are not supported"))
+    assert exc_info.match(re.escape("Multiple statements in IQL are not supported"))
 
 
 async def test_iql_parser_empty_expression_error():
-    with pytest.raises(IQLEmptyExpressionError) as exc_info:
+    with pytest.raises(IQLNoStatementError) as exc_info:
         await IQLQuery.parse(
             "",
             allowed_functions=[
@@ -127,7 +127,7 @@ async def test_iql_parser_empty_expression_error():
             ],
         )
 
-    assert exc_info.match(re.escape("Empty IQL expression"))
+    assert exc_info.match(re.escape("Empty IQL"))
 
 
 async def test_iql_parser_no_expression_error():
