@@ -17,6 +17,7 @@ MIT License
 MIT License, Mozilla Public License 2.0 (MPL 2.0)
 Mozilla Public License 2.0 (MPL 2.0)
 Public Domain
+Python License (CNRI Python License)
 Python Software Foundation License
 Python Software Foundation License, MIT License
 Unlicense
