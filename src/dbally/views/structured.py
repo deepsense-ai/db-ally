@@ -4,13 +4,16 @@ from typing import Dict, List, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
+from dbally.exceptions import UnsupportedAggregationError
 from dbally.iql import IQLQuery
+from dbally.iql._exceptions import IQLError
 from dbally.iql_generator.iql_generator import IQLGenerator
+from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
+from dbally.views.exceptions import IQLGenerationError
 from dbally.views.exposed_functions import ExposedFunction
 
-from ..iql.syntax import FunctionCall
 from ..prompt.aggregation import AggregationFormatter
 from ..similarity import AbstractSimilarityIndex
 from .base import BaseView, IndexLocation
@@ -50,7 +53,7 @@ class BaseStructuredView(BaseView):
         self,
         query: str,
         llm: LLM,
-        event_tracker: EventTracker,
+        event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
@@ -71,7 +74,8 @@ class BaseStructuredView(BaseView):
             The result of the query.
 
         Raises:
-            IQLError: If the generated IQL query is not valid.
+            LLMError: If LLM text generation API fails.
+            IQLGenerationError: If the IQL generation fails.
         """
         iql_generator = self.get_iql_generator(llm)
         agg_formatter = self.get_agg_formatter(llm)
@@ -79,26 +83,58 @@ class BaseStructuredView(BaseView):
         examples = self.list_few_shots()
         aggregations = self.list_aggregations()
 
-        iql = await iql_generator.generate_iql(
-            question=query,
-            filters=filters,
-            examples=examples,
-            event_tracker=event_tracker,
-            llm_options=llm_options,
-            n_retries=n_retries,
-        )
-        await self.apply_filters(iql)
+        try:
+            iql = await iql_generator.generate(
+                question=query,
+                filters=filters,
+                examples=examples,
+                event_tracker=event_tracker,
+                llm_options=llm_options,
+                n_retries=n_retries,
+            )
+        except UnsupportedQueryError as exc:
+            raise IQLGenerationError(
+                view_name=self.__class__.__name__,
+                filters=None,
+                aggregation=None,
+            ) from exc
+        except IQLError as exc:
+            raise IQLGenerationError(
+                view_name=self.__class__.__name__,
+                filters=exc.source,
+                aggregation=None,
+            ) from exc
 
-        agg_node = await agg_formatter.format_to_query_object(
-            question=query,
-            aggregations=aggregations,
-            event_tracker=event_tracker,
-            llm_options=llm_options,
-        )
-        await self.apply_aggregation(agg_node.root)
+        if iql:
+            await self.apply_filters(iql)
+
+        try:
+            agg_node = await agg_formatter.format_to_query_object(
+                question=query,
+                aggregations=aggregations,
+                event_tracker=event_tracker,
+                llm_options=llm_options,
+            )
+        except UnsupportedAggregationError as exc:
+            raise IQLGenerationError(
+                view_name=self.__class__.__name__,
+                filters=str(iql) if iql else None,
+                aggregation=None,
+            ) from exc
+        except IQLError as exc:
+            raise IQLGenerationError(
+                view_name=self.__class__.__name__,
+                filters=str(iql) if iql else None,
+                aggregation=exc.source,
+            ) from exc
+
+        await self.apply_aggregation(agg_node)
 
         result = self.execute(dry_run=dry_run)
-        result.context["iql"] = {"filters": f"{iql}", "aggregation": f"{agg_node}"}
+        result.context["iql"] = {
+            "filters": str(iql) if iql else None,
+            "aggregation": str(agg_node),
+        }
 
         return result
 
@@ -112,29 +148,30 @@ class BaseStructuredView(BaseView):
         """
 
     @abc.abstractmethod
-    async def apply_filters(self, filters: IQLQuery) -> None:
-        """
-        Applies the chosen filters to the view.
-
-        Args:
-            filters: [IQLQuery](../../concepts/iql.md) object representing the filters to apply
-        """
-
-    @abc.abstractmethod
     def list_aggregations(self) -> List[ExposedFunction]:
         """
+        Lists all available aggregations for the View.
 
         Returns:
             Aggregations defined inside the View.
         """
 
     @abc.abstractmethod
-    async def apply_aggregation(self, aggregation: FunctionCall) -> None:
+    async def apply_filters(self, filters: IQLQuery) -> None:
+        """
+        Applies the chosen filters to the view.
+
+        Args:
+            filters: [IQLQuery](../../concepts/iql.md) object representing the filters to apply.
+        """
+
+    @abc.abstractmethod
+    async def apply_aggregation(self, aggregation: IQLQuery) -> None:
         """
         Applies the chosen aggregation to the view.
 
         Args:
-            aggregation: [IQLQuery](../../concepts/iql.md) object representing the filters to apply
+            aggregation: [IQLQuery](../../concepts/iql.md) object representing the filters to apply.
         """
 
     @abc.abstractmethod
@@ -143,7 +180,10 @@ class BaseStructuredView(BaseView):
         Executes the query and returns the result.
 
         Args:
-            dry_run: if True, should only generate the query without executing it
+            dry_run: if True, should only generate the query without executing it.
+
+        Returns:
+            The view execution result.
         """
 
     def list_similarity_indexes(self) -> Dict[AbstractSimilarityIndex, List[IndexLocation]]:

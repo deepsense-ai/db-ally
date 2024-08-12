@@ -6,11 +6,11 @@ from dbally.iql import syntax
 from dbally.iql._exceptions import (
     IQLArgumentParsingError,
     IQLArgumentValidationError,
-    IQLEmptyExpressionError,
     IQLFunctionNotExists,
     IQLIncorrectNumberArgumentsError,
-    IQLMultipleExpressionsError,
+    IQLMultipleStatementsError,
     IQLNoExpressionError,
+    IQLNoStatementError,
     IQLSyntaxError,
     IQLUnsupportedSyntaxError,
 )
@@ -50,10 +50,10 @@ class IQLProcessor:
             raise IQLSyntaxError(self.source) from exc
 
         if not ast_tree.body:
-            raise IQLEmptyExpressionError(self.source)
+            raise IQLNoStatementError(self.source)
 
         if len(ast_tree.body) > 1:
-            raise IQLMultipleExpressionsError(ast_tree.body, self.source)
+            raise IQLMultipleStatementsError(ast_tree.body, self.source)
 
         if not isinstance(ast_tree.body[0], ast.Expr):
             raise IQLNoExpressionError(ast_tree.body[0], self.source)

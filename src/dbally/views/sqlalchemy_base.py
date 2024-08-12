@@ -13,38 +13,37 @@ class SqlAlchemyBaseView(MethodsBaseView):
     Base class for views that use SQLAlchemy to generate SQL queries.
     """
 
-    def __init__(self, sqlalchemy_engine: sqlalchemy.engine.Engine) -> None:
+    def __init__(self, sqlalchemy_engine: sqlalchemy.Engine) -> None:
         super().__init__()
-        self._select = self.get_select()
         self._sqlalchemy_engine = sqlalchemy_engine
-        self._filtered_query = None
+        self._select = self.get_select()
 
     @abc.abstractmethod
     def get_select(self) -> sqlalchemy.Select:
-        r"""
-        Creates the initial
-        [SqlAlchemy select object
-        ](https://docs.sqlalchemy.org/en/20/core/selectable.html#sqlalchemy.sql.expression.Select)
-        which will be used to build the query.
         """
-
-    def _get_filtered_query(self) -> sqlalchemy.Subquery:
-        """
-        Creates the initial sqlalchemy.Subquery object, which will be used to build the query.
+        Creates initial SELECT statement for the view.
 
         Returns:
-            The sqlalchemy.Subquery object based on private _select attribute.
+            SQLAlchemy Select object for the view.
         """
-        return self._select.subquery("subquery")
 
     async def apply_filters(self, filters: IQLQuery) -> None:
         """
         Applies the chosen filters to the view.
 
         Args:
-            filters: IQLQuery object representing the filters to apply
+            filters: IQLQuery object representing the filters to apply.
         """
         self._select = self._select.where(await self._build_filter_node(filters.root))
+
+    async def apply_aggregation(self, aggregation: IQLQuery) -> None:
+        """
+        Applies the chosen aggregation to the view.
+
+        Args:
+            aggregation: IQLQuery object representing the aggregation to apply.
+        """
+        self._select = self._select.with_only_columns(await self.call_aggregation_method(aggregation.root))
 
     async def _build_filter_node(self, node: syntax.Node) -> sqlalchemy.ColumnElement:
         """
@@ -72,17 +71,8 @@ class SqlAlchemyBaseView(MethodsBaseView):
             return alchemy_op(*await nodes)
         if hasattr(bool_op, "child"):
             return alchemy_op(await self._build_filter_node(bool_op.child))
+
         raise ValueError(f"BoolOp {bool_op} has no children")
-
-    async def apply_aggregation(self, aggregation: syntax.FunctionCall) -> None:
-        """
-        Creates a subquery based on existing and calls the aggregation method.
-
-        Args:
-            aggregation: IQLQuery object representing the filters to apply
-        """
-        self._filtered_query = self._get_filtered_query()
-        self._select = await self.call_aggregation_method(aggregation)
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         """
@@ -95,9 +85,7 @@ class SqlAlchemyBaseView(MethodsBaseView):
             Results of the query where `results` will be a list of dictionaries representing retrieved rows or an empty\
             list if `dry_run` is set to `True`. Inside the `context` field the generated sql will be stored.
         """
-
         results = []
-
         sql = str(self._select.compile(bind=self._sqlalchemy_engine, compile_kwargs={"literal_binds": True}))
 
         if not dry_run:

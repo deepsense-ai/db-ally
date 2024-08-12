@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, List
 
-from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
+from dbally.collection.exceptions import NoViewFoundError
 from dbally.collection.results import ExecutionResult
 from dbally.views import decorators
 from dbally.views.methods_base import MethodsBaseView
@@ -40,7 +40,6 @@ __all__ = [
     "EmbeddingConnectionError",
     "EmbeddingResponseError",
     "EmbeddingStatusError",
-    "IndexUpdateError",
     "LLMError",
     "LLMConnectionError",
     "LLMResponseError",

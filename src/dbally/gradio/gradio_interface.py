@@ -152,6 +152,7 @@ class GradioAdapter:
             generated_query = str(execution_result.context)
             data = self._load_results_into_dataframe(execution_result.results)
             textual_response = str(execution_result.textual_response) if natural_language_flag else textual_response
+
         except UnsupportedQueryError:
             generated_query = {"Query": "unsupported"}
             data = pd.DataFrame()
