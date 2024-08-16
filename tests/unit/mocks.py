@@ -19,13 +19,13 @@ from dbally.view_selection.base import ViewSelector
 from dbally.views.structured import BaseStructuredView, ExposedFunction, ViewExecutionResult
 
 
-class MockViewBase(BaseStructuredView):
+class MockViewBase(BaseStructuredView[List]):
     """
     Mock view base class
     """
 
     def __init__(self) -> None:
-        super().__init__(None)
+        super().__init__([])
 
     def list_filters(self) -> List[ExposedFunction]:
         return []
@@ -39,7 +39,7 @@ class MockViewBase(BaseStructuredView):
     async def apply_aggregation(self, filters: IQLQuery) -> None:
         ...
 
-    def execute(self, dry_run=False) -> ViewExecutionResult:
+    def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         return ViewExecutionResult(results=[], context={})
 
 
