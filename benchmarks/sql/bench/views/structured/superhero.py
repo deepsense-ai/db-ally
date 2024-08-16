@@ -1,7 +1,7 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, singleton-comparison, consider-using-in, too-many-ancestors, too-many-public-methods
 # flake8: noqa
 
-from typing import Any, Literal
+from typing import Literal
 
 from sqlalchemy import ColumnElement, Engine, Select, func, select
 from sqlalchemy.ext.declarative import DeferredReflection
@@ -285,11 +285,12 @@ class SuperheroColourFilterMixin:
     Mixin for filtering the view by the superhero colour attributes.
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, *args, **kwargs) -> None:
         self.eye_colour = aliased(Colour)
         self.hair_colour = aliased(Colour)
         self.skin_colour = aliased(Colour)
+
+        super().__init__(*args, **kwargs)
 
     @view_filter()
     def filter_by_eye_colour(self, eye_colour: str) -> ColumnElement:
@@ -433,19 +434,18 @@ class SuperheroAggregationMixin:
     """
 
     @view_aggregation()
-    def count_superheroes(self) -> Any:
+    def count_superheroes(self, data_source: Select) -> Select:
         """
         Counts the number of superheros.
 
         Returns:
             The superheros count.
         """
-        return func.count(Superhero.id).label("count_superheroes")
+        return data_source.with_only_columns(func.count(Superhero.id).label("count_superheroes")).group_by(Superhero.id)
 
 
 class SuperheroView(
     DBInitMixin,
-    SqlAlchemyBaseView,
     SuperheroFilterMixin,
     SuperheroAggregationMixin,
     SuperheroColourFilterMixin,
@@ -453,6 +453,7 @@ class SuperheroView(
     GenderFilterMixin,
     PublisherFilterMixin,
     RaceFilterMixin,
+    SqlAlchemyBaseView,
 ):
     """
     View for querying only superheros data. Contains the superhero id, superhero name, full name, height, weight,

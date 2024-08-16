@@ -8,15 +8,14 @@ from dbally.iql import IQLQuery, syntax
 from dbally.views.methods_base import MethodsBaseView
 
 
-class SqlAlchemyBaseView(MethodsBaseView):
+class SqlAlchemyBaseView(MethodsBaseView[sqlalchemy.Select]):
     """
     Base class for views that use SQLAlchemy to generate SQL queries.
     """
 
     def __init__(self, sqlalchemy_engine: sqlalchemy.Engine) -> None:
-        super().__init__()
+        super().__init__(self.get_select())
         self._sqlalchemy_engine = sqlalchemy_engine
-        self._select = self.get_select()
 
     @abc.abstractmethod
     def get_select(self) -> sqlalchemy.Select:
@@ -34,7 +33,8 @@ class SqlAlchemyBaseView(MethodsBaseView):
         Args:
             filters: IQLQuery object representing the filters to apply.
         """
-        self._select = self._select.where(await self._build_filter_node(filters.root))
+        # pylint: disable=W0201
+        self._data_source = self._data_source.where(await self._build_filter_node(filters.root))
 
     async def apply_aggregation(self, aggregation: IQLQuery) -> None:
         """
@@ -43,7 +43,8 @@ class SqlAlchemyBaseView(MethodsBaseView):
         Args:
             aggregation: IQLQuery object representing the aggregation to apply.
         """
-        self._select = self._select.with_only_columns(await self.call_aggregation_method(aggregation.root))
+        # pylint: disable=W0201
+        self._data_source = await self.call_aggregation_method(aggregation.root)
 
     async def _build_filter_node(self, node: syntax.Node) -> sqlalchemy.ColumnElement:
         """
@@ -86,13 +87,13 @@ class SqlAlchemyBaseView(MethodsBaseView):
             list if `dry_run` is set to `True`. Inside the `context` field the generated sql will be stored.
         """
         results = []
-        sql = str(self._select.compile(bind=self._sqlalchemy_engine, compile_kwargs={"literal_binds": True}))
+        sql = str(self._data_source.compile(bind=self._sqlalchemy_engine, compile_kwargs={"literal_binds": True}))
 
         if not dry_run:
             with self._sqlalchemy_engine.connect() as connection:
                 # The underscore is used by sqlalchemy to avoid conflicts with column names
                 # pylint: disable=protected-access
-                rows = connection.execute(self._select).fetchall()
+                rows = connection.execute(self._data_source).fetchall()
                 results = [dict(row._mapping) for row in rows]
 
         return ViewExecutionResult(

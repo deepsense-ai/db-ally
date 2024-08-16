@@ -1,6 +1,6 @@
 import abc
 from collections import defaultdict
-from typing import Dict, List, Optional
+from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
@@ -18,12 +18,18 @@ from ..prompt.aggregation import AggregationFormatter
 from ..similarity import AbstractSimilarityIndex
 from .base import BaseView, IndexLocation
 
+DataSourceT = TypeVar("DataSourceT", bound=Any)
 
-class BaseStructuredView(BaseView):
+
+class BaseStructuredView(Generic[DataSourceT], BaseView):
     """
     Base class for all structured [Views](../../concepts/views.md). All classes implementing this interface has\
     to be able to list all available filters, apply them and execute queries.
     """
+
+    def __init__(self, data_source: DataSourceT) -> None:
+        super().__init__()
+        self._data_source = data_source
 
     def get_iql_generator(self, llm: LLM) -> IQLGenerator:
         """

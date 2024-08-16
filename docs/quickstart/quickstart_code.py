@@ -54,13 +54,6 @@ class CandidateView(SqlAlchemyBaseView):
         """
         return Candidate.country == country
 
-    @decorators.view_aggregation()
-    def count_by_column(self, filtered_query: sqlalchemy.Select, column_name: str) -> sqlalchemy.Select:  # pylint: disable=W0602, C0116, W9011
-        select = sqlalchemy.select(getattr(filtered_query.c, column_name),
-                                   sqlalchemy.func.count(filtered_query.c.name).label("count")) \
-            .group_by(getattr(filtered_query.c, column_name))
-        return select
-
 
 async def main():
     llm = LiteLLM(model_name="gpt-3.5-turbo")
@@ -69,8 +62,7 @@ async def main():
     collection = dbally.create_collection("recruitment", llm)
     collection.add(CandidateView, lambda: CandidateView(engine))
 
-    result = await collection.ask("Could you find French candidates suitable for a senior data scientist position"
-                                  "and count the candidates university-wise?")
+    result = await collection.ask("Find me French candidates suitable for a senior data scientist position.")
 
     print(f"The generated SQL query is: {result.context.get('sql')}")
     print()

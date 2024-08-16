@@ -9,7 +9,7 @@ from dbally.iql import IQLQuery, syntax
 from dbally.views.methods_base import MethodsBaseView
 
 
-class DataFrameBaseView(MethodsBaseView):
+class DataFrameBaseView(MethodsBaseView[pd.DataFrame]):
     """
     Base class for views that use Pandas DataFrames to store and filter data.
 
@@ -22,8 +22,7 @@ class DataFrameBaseView(MethodsBaseView):
         Args:
             df: Pandas DataFrame with the data to be filtered
         """
-        super().__init__()
-        self.df = df
+        super().__init__(df)
 
         # The mask to be applied to the dataframe to filter the data
         self._filter_mask: Optional[pd.Series] = None
@@ -87,7 +86,7 @@ class DataFrameBaseView(MethodsBaseView):
         filtered_data = pd.DataFrame.empty
 
         if not dry_run:
-            filtered_data = self.df
+            filtered_data = self._data_source
             if self._filter_mask is not None:
                 filtered_data = filtered_data.loc[self._filter_mask]
 
