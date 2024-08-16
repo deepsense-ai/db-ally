@@ -6,16 +6,16 @@ from typing import Any, Callable, Generic, List, Tuple
 from dbally.iql import syntax
 from dbally.views import decorators
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
-from dbally.views.structured import BaseStructuredView, DataSourceT
+from dbally.views.structured import BaseStructuredView, DataT
 
 
-class MethodsBaseView(Generic[DataSourceT], BaseStructuredView[DataSourceT], ABC):
+class MethodsBaseView(Generic[DataT], BaseStructuredView[DataT], ABC):
     """
     Base class for views that use view methods to expose filters.
     """
 
     # Method arguments that should be skipped when listing methods
-    HIDDEN_ARGUMENTS = ["cls", "self", "return", "data_source"]
+    HIDDEN_ARGUMENTS = ["cls", "self", "return"]
 
     @classmethod
     def list_methods_by_decorator(cls, decorator: Callable) -> List[ExposedFunction]:
@@ -110,7 +110,7 @@ class MethodsBaseView(Generic[DataSourceT], BaseStructuredView[DataSourceT], ABC
             return await method(*args)
         return method(*args)
 
-    async def call_aggregation_method(self, func: syntax.FunctionCall) -> DataSourceT:
+    async def call_aggregation_method(self, func: syntax.FunctionCall) -> DataT:
         """
         Converts a IQL FunctonCall aggregation to a method call. If the method is a coroutine, it will be awaited.
 
@@ -123,5 +123,5 @@ class MethodsBaseView(Generic[DataSourceT], BaseStructuredView[DataSourceT], ABC
         method, args = self._method_with_args_from_call(func, decorators.view_aggregation)
 
         if inspect.iscoroutinefunction(method):
-            return await method(self._data_source, *args)
-        return method(self._data_source, *args)
+            return await method(*args)
+        return method(*args)

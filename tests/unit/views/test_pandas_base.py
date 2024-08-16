@@ -3,7 +3,7 @@
 import pandas as pd
 
 from dbally.iql import IQLQuery
-from dbally.views.decorators import view_filter
+from dbally.views.decorators import view_aggregation, view_filter
 from dbally.views.pandas_base import DataFrameBaseView
 
 MOCK_DATA = [
@@ -39,19 +39,23 @@ class MockDataFrameView(DataFrameBaseView):
 
     @view_filter()
     def filter_city(self, city: str) -> pd.Series:
-        return self.df["city"] == city
+        return self.data["city"] == city
 
     @view_filter()
     def filter_year(self, year: int) -> pd.Series:
-        return self.df["year"] == year
+        return self.data["year"] == year
 
     @view_filter()
     def filter_age(self, age: int) -> pd.Series:
-        return self.df["age"] == age
+        return self.data["age"] == age
 
     @view_filter()
     def filter_name(self, name: str) -> pd.Series:
-        return self.df["name"] == name
+        return self.data["name"] == name
+
+    @view_aggregation()
+    def mean_age_by_city(self) -> pd.DataFrame:
+        return self.data.groupby(["city"]).agg({"age": "mean"}).reset_index()
 
 
 async def test_filter_or() -> None:
@@ -97,3 +101,42 @@ async def test_filter_not() -> None:
     result = mock_view.execute()
     assert result.results == MOCK_DATA_NOT_PARIS_2020
     assert result.context["filter_mask"].tolist() == [True, False, True, True, True]
+
+
+async def test_aggregtion() -> None:
+    """
+    Test that DataFrame aggregation works correctly
+    """
+    mock_view = MockDataFrameView(pd.DataFrame.from_records(MOCK_DATA))
+    query = await IQLQuery.parse(
+        "mean_age_by_city()",
+        allowed_functions=mock_view.list_aggregations(),
+    )
+    await mock_view.apply_aggregation(query)
+    result = mock_view.execute()
+    assert result.results == [
+        {"city": "Berlin", "age": 45.0},
+        {"city": "London", "age": 32.5},
+        {"city": "Paris", "age": 32.5},
+    ]
+    assert result.context["filter_mask"] is None
+
+
+async def test_filters_and_aggregtion() -> None:
+    """
+    Test that DataFrame filtering and aggregation works correctly
+    """
+    mock_view = MockDataFrameView(pd.DataFrame.from_records(MOCK_DATA))
+    query = await IQLQuery.parse(
+        "filter_city('Paris')",
+        allowed_functions=mock_view.list_filters(),
+    )
+    await mock_view.apply_filters(query)
+    query = await IQLQuery.parse(
+        "mean_age_by_city()",
+        allowed_functions=mock_view.list_aggregations(),
+    )
+    await mock_view.apply_aggregation(query)
+    result = mock_view.execute()
+    assert result.results == [{"city": "Paris", "age": 32.5}]
+    assert result.context["filter_mask"].tolist() == [False, True, False, True, False]

@@ -18,18 +18,18 @@ from ..prompt.aggregation import AggregationFormatter
 from ..similarity import AbstractSimilarityIndex
 from .base import BaseView, IndexLocation
 
-DataSourceT = TypeVar("DataSourceT", bound=Any)
+DataT = TypeVar("DataT", bound=Any)
 
 
-class BaseStructuredView(Generic[DataSourceT], BaseView):
+class BaseStructuredView(Generic[DataT], BaseView):
     """
     Base class for all structured [Views](../../concepts/views.md). All classes implementing this interface has\
     to be able to list all available filters, apply them and execute queries.
     """
 
-    def __init__(self, data_source: DataSourceT) -> None:
+    def __init__(self, data: DataT) -> None:
         super().__init__()
-        self._data_source = data_source
+        self.data = data
 
     def get_iql_generator(self, llm: LLM) -> IQLGenerator:
         """

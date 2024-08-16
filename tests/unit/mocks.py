@@ -24,6 +24,9 @@ class MockViewBase(BaseStructuredView):
     Mock view base class
     """
 
+    def __init__(self) -> None:
+        super().__init__(None)
+
     def list_filters(self) -> List[ExposedFunction]:
         return []
 

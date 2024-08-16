@@ -19,8 +19,10 @@ class DataFrameBaseView(MethodsBaseView[pd.DataFrame]):
 
     def __init__(self, df: pd.DataFrame) -> None:
         """
+        Creates a new instance of the DataFrame view.
+
         Args:
-            df: Pandas DataFrame with the data to be filtered
+            df: Pandas DataFrame with the data to be filtered.
         """
         super().__init__(df)
 
@@ -32,18 +34,23 @@ class DataFrameBaseView(MethodsBaseView[pd.DataFrame]):
         Applies the chosen filters to the view.
 
         Args:
-            filters: IQLQuery object representing the filters to apply
+            filters: IQLQuery object representing the filters to apply.
         """
+        # data is defined in the parent class
+        # pylint: disable=attribute-defined-outside-init
         self._filter_mask = await self.build_filter_node(filters.root)
+        self.data = self.data.loc[self._filter_mask]
 
     async def apply_aggregation(self, aggregation: IQLQuery) -> None:
         """
         Applies the aggregation of choice to the view.
 
         Args:
-            aggregation: IQLQuery object representing the aggregation to apply
+            aggregation: IQLQuery object representing the aggregation to apply.
         """
-        # TODO - to be covered in a separate ticket.
+        # data is defined in the parent class
+        # pylint: disable=attribute-defined-outside-init
+        self.data = await self.call_aggregation_method(aggregation.root)
 
     async def build_filter_node(self, node: syntax.Node) -> pd.Series:
         """
@@ -51,13 +58,13 @@ class DataFrameBaseView(MethodsBaseView[pd.DataFrame]):
         a boolean mask to be applied to the dataframe.
 
         Args:
-            node: IQLQuery node representing the filter or logical operator
+            node: IQLQuery node representing the filter or logical operator.
 
         Returns:
-            A boolean mask that can be used to filter the original DataFrame
+            A boolean mask that can be used to filter the original DataFrame.
 
         Raises:
-            ValueError: If the node type is not supported
+            ValueError: If the node type is not supported.
         """
         if isinstance(node, syntax.FunctionCall):
             return await self.call_filter_method(node)
@@ -78,20 +85,15 @@ class DataFrameBaseView(MethodsBaseView[pd.DataFrame]):
 
         Args:
             dry_run: If True, the method will only add `context` field to the `ExecutionResult` with the\
-            mask that would be applied to the dataframe
+                mask that would be applied to the dataframe.
 
         Returns:
-            ExecutionResult object with the results and the context information with the binary mask
+            ExecutionResult object with the results and the context information with the binary mask.
         """
-        filtered_data = pd.DataFrame.empty
-
-        if not dry_run:
-            filtered_data = self._data_source
-            if self._filter_mask is not None:
-                filtered_data = filtered_data.loc[self._filter_mask]
+        results = pd.DataFrame.empty if dry_run else self.data
 
         return ViewExecutionResult(
-            results=filtered_data.to_dict(orient="records"),
+            results=results.to_dict(orient="records"),
             context={
                 "filter_mask": self._filter_mask,
             },

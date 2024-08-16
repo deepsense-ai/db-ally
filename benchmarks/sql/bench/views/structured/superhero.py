@@ -434,14 +434,14 @@ class SuperheroAggregationMixin:
     """
 
     @view_aggregation()
-    def count_superheroes(self, data_source: Select) -> Select:
+    def count_superheroes(self) -> Select:
         """
         Counts the number of superheros.
 
         Returns:
             The superheros count.
         """
-        return data_source.with_only_columns(func.count(Superhero.id).label("count_superheroes")).group_by(Superhero.id)
+        return self.data.with_only_columns(func.count(Superhero.id).label("count_superheroes")).group_by(Superhero.id)
 
 
 class SuperheroView(

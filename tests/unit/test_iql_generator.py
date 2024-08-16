@@ -20,6 +20,9 @@ from tests.unit.mocks import MockLLM
 
 
 class MockView(MethodsBaseView):
+    def __init__(self) -> None:
+        super().__init__(None)
+
     def get_select(self) -> sqlalchemy.Select:
         ...
 

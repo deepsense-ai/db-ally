@@ -15,6 +15,9 @@ class MockMethodsBase(MethodsBaseView):
     Mock class for testing the MethodsBaseView
     """
 
+    def __init__(self) -> None:
+        super().__init__(None)
+
     @view_filter()
     def method_foo(self, idx: int) -> None:
         """
