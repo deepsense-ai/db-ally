@@ -9,7 +9,7 @@ from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTypin
 from dbally.views.structured import BaseStructuredView, DataT
 
 
-class MethodsBaseView(Generic[DataT], BaseStructuredView[DataT], ABC):
+class MethodsBaseView(Generic[DataT], BaseStructuredView, ABC):
     """
     Base class for views that use view methods to expose filters.
     """

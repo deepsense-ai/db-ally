@@ -19,7 +19,7 @@ from dbally.view_selection.base import ViewSelector
 from dbally.views.structured import BaseStructuredView, ExposedFunction, ViewExecutionResult
 
 
-class MockViewBase(BaseStructuredView[List]):
+class MockViewBase(BaseStructuredView):
     """
     Mock view base class
     """

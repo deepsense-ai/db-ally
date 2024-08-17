@@ -1,6 +1,6 @@
 import abc
 from collections import defaultdict
-from typing import Any, Dict, Generic, List, Optional, TypeVar
+from typing import Any, Dict, List, Optional, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
@@ -21,7 +21,8 @@ from .base import BaseView, IndexLocation
 DataT = TypeVar("DataT", bound=Any)
 
 
-class BaseStructuredView(Generic[DataT], BaseView):
+# TODO(Python 3.9+): Make BaseStructuredView a generic class
+class BaseStructuredView(BaseView):
     """
     Base class for all structured [Views](../../concepts/views.md). All classes implementing this interface has\
     to be able to list all available filters, apply them and execute queries.
