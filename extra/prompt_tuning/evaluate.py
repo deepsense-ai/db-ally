@@ -10,7 +10,7 @@ from dspy.evaluate import Evaluate
 from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
 from tuning.loaders import IQLGenerationDataLoader
-from tuning.metrics import filtering_assess_acc
+from tuning.metrics import aggregation_assess_acc, filtering_assess_acc
 from tuning.programs import PROGRAMS
 from tuning.utils import save, serialize_results
 
@@ -25,14 +25,17 @@ class EvaluationType(Enum):
     """
 
     FILTERING_ASSESSOR = "FILTERING_ASSESSOR"
+    AGGREGATION_ASSESSOR = "AGGREGATION_ASSESSOR"
 
 
 EVALUATION_DATALOADERS = {
     EvaluationType.FILTERING_ASSESSOR.value: IQLGenerationDataLoader,
+    EvaluationType.AGGREGATION_ASSESSOR.value: IQLGenerationDataLoader,
 }
 
 EVALUATION_METRICS = {
     EvaluationType.FILTERING_ASSESSOR.value: filtering_assess_acc,
+    EvaluationType.AGGREGATION_ASSESSOR.value: aggregation_assess_acc,
 }
 
 
