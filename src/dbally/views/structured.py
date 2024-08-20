@@ -4,17 +4,12 @@ from typing import Any, Dict, List, Optional, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
-from dbally.exceptions import UnsupportedAggregationError
 from dbally.iql import IQLQuery
-from dbally.iql._exceptions import IQLError
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.views.exceptions import IQLGenerationError
 from dbally.views.exposed_functions import ExposedFunction
 
-from ..prompt.aggregation import AggregationFormatter
 from ..similarity import AbstractSimilarityIndex
 from .base import BaseView, IndexLocation
 
@@ -32,29 +27,14 @@ class BaseStructuredView(BaseView):
         super().__init__()
         self.data = data
 
-    def get_iql_generator(self, llm: LLM) -> IQLGenerator:
+    def get_iql_generator(self) -> IQLGenerator:
         """
         Returns the IQL generator for the view.
-
-        Args:
-            llm: LLM used to generate the IQL queries.
 
         Returns:
             IQL generator for the view.
         """
-        return IQLGenerator(llm=llm)
-
-    def get_agg_formatter(self, llm: LLM) -> AggregationFormatter:
-        """
-        Returns the AggregtionFormatter for the view.
-
-        Args:
-            llm: LLM used to generate the queries.
-
-        Returns:
-            AggregtionFormatter for the view.
-        """
-        return AggregationFormatter(llm=llm)
+        return IQLGenerator()
 
     async def ask(
         self,
@@ -84,65 +64,33 @@ class BaseStructuredView(BaseView):
             LLMError: If LLM text generation API fails.
             IQLGenerationError: If the IQL generation fails.
         """
-        iql_generator = self.get_iql_generator(llm)
-        agg_formatter = self.get_agg_formatter(llm)
         filters = self.list_filters()
         examples = self.list_few_shots()
         aggregations = self.list_aggregations()
 
-        try:
-            iql = await iql_generator.generate(
-                question=query,
-                filters=filters,
-                examples=examples,
-                event_tracker=event_tracker,
-                llm_options=llm_options,
-                n_retries=n_retries,
-            )
-        except UnsupportedQueryError as exc:
-            raise IQLGenerationError(
-                view_name=self.__class__.__name__,
-                filters=None,
-                aggregation=None,
-            ) from exc
-        except IQLError as exc:
-            raise IQLGenerationError(
-                view_name=self.__class__.__name__,
-                filters=exc.source,
-                aggregation=None,
-            ) from exc
+        iql_generator = self.get_iql_generator()
+        iql = await iql_generator(
+            question=query,
+            filters=filters,
+            aggregations=aggregations,
+            examples=examples,
+            llm=llm,
+            event_tracker=event_tracker,
+            llm_options=llm_options,
+            n_retries=n_retries,
+        )
 
-        if iql:
-            await self.apply_filters(iql)
+        if iql.filters:
+            await self.apply_filters(iql.filters)
 
-        try:
-            agg_node = await agg_formatter.format_to_query_object(
-                question=query,
-                aggregations=aggregations,
-                event_tracker=event_tracker,
-                llm_options=llm_options,
-            )
-        except UnsupportedAggregationError as exc:
-            raise IQLGenerationError(
-                view_name=self.__class__.__name__,
-                filters=str(iql) if iql else None,
-                aggregation=None,
-            ) from exc
-        except IQLError as exc:
-            raise IQLGenerationError(
-                view_name=self.__class__.__name__,
-                filters=str(iql) if iql else None,
-                aggregation=exc.source,
-            ) from exc
-
-        await self.apply_aggregation(agg_node)
+        if iql.aggregation:
+            await self.apply_aggregation(iql.aggregation)
 
         result = self.execute(dry_run=dry_run)
         result.context["iql"] = {
-            "filters": str(iql) if iql else None,
-            "aggregation": str(agg_node),
+            "filters": str(iql.filters) if iql.filters else None,
+            "aggregation": str(iql.aggregation) if iql.aggregation else None,
         }
-
         return result
 
     @abc.abstractmethod
