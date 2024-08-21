@@ -1,10 +1,11 @@
-site_name: dbally
+site_name: db-ally docs
 site_description: Efficient, consistent and secure library for querying structured data with natural language
+site_url: https://db-ally.deepsense.ai
 repo_name: deepsense-ai/db-ally
 repo_url: https://github.com/deepsense-ai/db-ally
 copyright: Copyright &copy; 2024 deepsense.ai
 nav:
-  - dbally: index.md
+  - db-ally docs: index.md
   - Quickstart:
       - quickstart/index.md
       - quickstart/quickstart2.md

@@ -3,7 +3,7 @@ hide:
   - navigation
 ---
 
-# dbally
+# db-ally docs
 
 <style>
 .md-content .md-typeset h1 { display: none; }
