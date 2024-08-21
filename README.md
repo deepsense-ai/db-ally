@@ -2,24 +2,16 @@
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="docs/assets/banner-light.svg">
-  <img alt="tiny corp logo" src="docs/assets/banner-dark.svg" width="40%" height="40%">
+  <img alt="dbally logo" src="docs/assets/banner-dark.svg" width="30%" height="30%">
 </picture>
 
-<p align="center">
-<em>Efficient, consistent and secure library for querying structured data with natural language</em>
+<p>
+  <em>Efficient, consistent and secure library for querying structured data with natural language</em>
 </p>
 
-<a href="https://pypi.org/project/fastapi" target="_blank">
-  <img src="https://img.shields.io/pypi/l/dbally" alt="Supported Python versions">
-</a>
-
-<a href="https://pypi.org/project/fastapi" target="_blank">
-  <img src="https://img.shields.io/pypi/v/dbally" alt="Supported Python versions">
-</a>
-
-<a href="https://pypi.org/project/fastapi" target="_blank">
-  <img src="https://img.shields.io/pypi/pyversions/dbally" alt="Supported Python versions">
-</a>
+[![PyPI - License](https://img.shields.io/pypi/l/dbally)](https://pypi.org/project/dbally)
+[![PyPI - Version](https://img.shields.io/pypi/v/dbally)](https://pypi.org/project/dbally)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dbally)](https://pypi.org/project/dbally)
 
 </div>
 

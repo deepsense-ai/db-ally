@@ -9,27 +9,27 @@ hide:
 .md-content .md-typeset h1 { display: none; }
 </style>
 
-<div align="center">
-
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="docs/assets/dbally-banner.png">
-  <img alt="tiny corp logo" src="docs/assets/banner.png">
-</picture>
+<div align="center" markdown="span">
+  ![dbally logo](https://raw.githubusercontent.com/deepsense-ai/db-ally/mp/update-logo/docs/assets/banner-light.svg#only-light){ width="30%" }
+  ![dbally logo](https://raw.githubusercontent.com/deepsense-ai/db-ally/mp/update-logo/docs/assets/banner-dark.svg#only-dark){ width="30%" }
+</div>
 
 <p align="center">
-Efficient, consistent and secure library for querying structured data with natural language
+  <em>Efficient, consistent and secure library for querying structured data with natural language</em>
 </p>
 
-<a href="https://pypi.org/project/fastapi" target="_blank">
-  <img src="https://img.shields.io/pypi/l/dbally" alt="Supported Python versions">
+<div align="center">
+
+<a href="https://pypi.org/project/dbally" target="_blank">
+  <img alt="PyPI - License" src="https://img.shields.io/pypi/l/dbally">
 </a>
 
-<a href="https://pypi.org/project/fastapi" target="_blank">
-  <img src="https://img.shields.io/pypi/v/dbally" alt="Supported Python versions">
+<a href="https://pypi.org/project/dbally" target="_blank">
+  <img alt="PyPI - Version" src="https://img.shields.io/pypi/v/dbally">
 </a>
 
-<a href="https://pypi.org/project/fastapi" target="_blank">
-  <img src="https://img.shields.io/pypi/pyversions/dbally" alt="Supported Python versions">
+<a href="https://pypi.org/project/dbally" target="_blank">
+  <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/dbally">
 </a>
 
 </div>
