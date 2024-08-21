@@ -5,7 +5,7 @@
   <img alt="dbally logo" src="docs/assets/banner-dark.svg" width="40%" height="40%">
 </picture>
 
-<p>
+<p style="margin-top: 20px">
   <em>Efficient, consistent and secure library for querying structured data with natural language</em>
 </p>
 
