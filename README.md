@@ -1,12 +1,12 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="docs/assets/dbally-banner.png">
-  <img alt="tiny corp logo" src="docs/assets/banner.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/banner-light.svg">
+  <img alt="tiny corp logo" src="docs/assets/banner-dark.svg" width="40%" height="40%">
 </picture>
 
 <p align="center">
-Efficient, consistent and secure library for querying structured data with natural language
+<em>Efficient, consistent and secure library for querying structured data with natural language</em>
 </p>
 
 <a href="https://pypi.org/project/fastapi" target="_blank">
