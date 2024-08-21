@@ -1,18 +1,26 @@
-# <h1 align="center">🦮 db-ally</h1>
+<div align="center">
 
-<p align="center">
-    <em>Efficient, consistent and secure library for querying structured data with natural language</em>
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/banner-light.svg">
+  <img alt="dbally logo" src="docs/assets/banner-dark.svg" width="40%" height="40%">
+</picture>
+
+<br/>
+<br/>
+
+<p>
+  <em>Efficient, consistent and secure library for querying structured data with natural language</em>
 </p>
 
+[![PyPI - License](https://img.shields.io/pypi/l/dbally)](https://pypi.org/project/dbally)
+[![PyPI - Version](https://img.shields.io/pypi/v/dbally)](https://pypi.org/project/dbally)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dbally)](https://pypi.org/project/dbally)
+
+</div>
+
 ---
 
-* **Documentation:** [db-ally.deepsense.ai](https://db-ally.deepsense.ai/)
-* **Source code:** [github.com/deepsense-ai/db-ally](https://github.com/deepsense-ai/db-ally)
-
----
-
-
-**db-ally** is an LLM-powered library for creating natural language interfaces to data sources. While it occupies a similar space to the text-to-SQL solutions, its goals and methods are different. db-ally allows developers to outline specific use cases for the LLM to handle, detailing the desired data format and the possible operations to fetch this data.
+db-ally is an LLM-powered library for creating natural language interfaces to data sources. While it occupies a similar space to the text-to-SQL solutions, its goals and methods are different. db-ally allows developers to outline specific use cases for the LLM to handle, detailing the desired data format and the possible operations to fetch this data.
 
 db-ally effectively shields the complexity of the underlying data source from the model, presenting only the essential information needed for solving the specific use cases. Instead of generating arbitrary SQL, the model is asked to generate responses in a simplified query language.
 

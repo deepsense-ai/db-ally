@@ -1,12 +1,15 @@
-site_name: db-ally
+site_name: db-ally docs
+site_description: Efficient, consistent and secure library for querying structured data with natural language
+site_url: https://db-ally.deepsense.ai
+repo_name: deepsense-ai/db-ally
 repo_url: https://github.com/deepsense-ai/db-ally
+copyright: Copyright &copy; 2024 deepsense.ai
 nav:
-  - Home: index.md
+  - db-ally docs: index.md
   - Quickstart:
       - quickstart/index.md
       - quickstart/quickstart2.md
       - quickstart/quickstart3.md
-  - Tutorials: tutorials.md
   - Concepts:
       - concepts/views.md
       - concepts/structured_views.md
@@ -37,6 +40,7 @@ nav:
       - how-to/trace_runs_with_otel.md
       - how-to/create_custom_event_handler.md
       - how-to/openai_assistants_integration.md
+  - Tutorials: tutorials.md
   - API Reference:
       - reference/index.md
       - reference/collection.md
@@ -86,26 +90,31 @@ nav:
     - about/contact.md
 theme:
   name: material
-  logo: assets/guide_dog_lg.png
-  favicon: assets/guide_dog_sm.png
+  logo: assets/logo.svg
+  favicon: assets/favicon.ico
   icon:
     repo: fontawesome/brands/github
   palette:
-    - media: "(prefers-color-scheme: light)"
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/lightbulb-auto
+        name: Switch to light mode
+    - media: '(prefers-color-scheme: light)'
       scheme: default
       primary: primary
       toggle:
-        icon: material/brightness-7
+        icon: material/lightbulb
         name: Switch to dark mode
-    - media: "(prefers-color-scheme: dark)"
+    - media: '(prefers-color-scheme: dark)'
       scheme: slate
       primary: primary
       toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
+        icon: material/lightbulb-outline
+        name: Switch to system preference
   features:
     - navigation.footer
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.top
     - content.code.annotate
     - content.code.copy
@@ -125,6 +134,7 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.inlinehilite
   - attr_list
+  - md_in_html
   - pymdownx.details
   - def_list
   - pymdownx.tasklist:
@@ -161,3 +171,29 @@ extra:
   analytics:
     provider: google
     property: G-FBBJRN0H0G
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/emoticon-happy-outline
+          name: This page was helpful
+          data: 1
+          note: >-
+            Thanks for your feedback!
+        - icon: material/emoticon-sad-outline
+          name: This page could be improved
+          data: 0
+          note: >-
+            Thanks for your feedback!
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/deepsense-ai
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/deepsense_ai
+    - icon: fontawesome/brands/linkedin
+      link: https://linkedin.com/company/deepsense-ai
+    - icon: fontawesome/brands/youtube
+      link: https://youtube.com/@deepsenseai
+    - icon: fontawesome/brands/medium
+      link: https://medium.com/deepsense-ai
+    - icon: fontawesome/solid/globe
+      link: https://deepsense.ai
