@@ -2,7 +2,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="docs/assets/banner-light.svg">
-  <img alt="dbally logo" src="docs/assets/banner-dark.svg" width="30%" height="30%">
+  <img alt="dbally logo" src="docs/assets/banner-dark.svg" width="40%" height="40%">
 </picture>
 
 <p>
