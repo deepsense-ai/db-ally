@@ -2,7 +2,8 @@
 
 import pandas as pd
 
-from dbally.iql import IQLQuery
+from dbally.iql import IQLFiltersQuery
+from dbally.iql._query import IQLAggregationQuery
 from dbally.views.decorators import view_aggregation, view_filter
 from dbally.views.pandas_base import DataFrameBaseView
 
@@ -63,7 +64,7 @@ async def test_filter_or() -> None:
     Test that the filtering the DataFrame with logical OR works correctly
     """
     mock_view = MockDataFrameView(pd.DataFrame.from_records(MOCK_DATA))
-    query = await IQLQuery.parse(
+    query = await IQLFiltersQuery.parse(
         'filter_city("Berlin") or filter_city("London")',
         allowed_functions=mock_view.list_filters(),
     )
@@ -78,7 +79,7 @@ async def test_filter_and() -> None:
     Test that the filtering the DataFrame with logical AND works correctly
     """
     mock_view = MockDataFrameView(pd.DataFrame.from_records(MOCK_DATA))
-    query = await IQLQuery.parse(
+    query = await IQLFiltersQuery.parse(
         'filter_city("Paris") and filter_year(2020)',
         allowed_functions=mock_view.list_filters(),
     )
@@ -93,7 +94,7 @@ async def test_filter_not() -> None:
     Test that the filtering the DataFrame with logical NOT works correctly
     """
     mock_view = MockDataFrameView(pd.DataFrame.from_records(MOCK_DATA))
-    query = await IQLQuery.parse(
+    query = await IQLFiltersQuery.parse(
         'not (filter_city("Paris") and filter_year(2020))',
         allowed_functions=mock_view.list_filters(),
     )
@@ -108,7 +109,7 @@ async def test_aggregtion() -> None:
     Test that DataFrame aggregation works correctly
     """
     mock_view = MockDataFrameView(pd.DataFrame.from_records(MOCK_DATA))
-    query = await IQLQuery.parse(
+    query = await IQLAggregationQuery.parse(
         "mean_age_by_city()",
         allowed_functions=mock_view.list_aggregations(),
     )
@@ -127,12 +128,12 @@ async def test_filters_and_aggregtion() -> None:
     Test that DataFrame filtering and aggregation works correctly
     """
     mock_view = MockDataFrameView(pd.DataFrame.from_records(MOCK_DATA))
-    query = await IQLQuery.parse(
+    query = await IQLFiltersQuery.parse(
         "filter_city('Paris')",
         allowed_functions=mock_view.list_filters(),
     )
     await mock_view.apply_filters(query)
-    query = await IQLQuery.parse(
+    query = await IQLAggregationQuery.parse(
         "mean_age_by_city()",
         allowed_functions=mock_view.list_aggregations(),
     )

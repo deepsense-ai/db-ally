@@ -1,5 +1,13 @@
 from . import syntax
 from ._exceptions import IQLArgumentParsingError, IQLError, IQLUnsupportedSyntaxError
-from ._query import IQLQuery
+from ._query import IQLAggregationQuery, IQLFiltersQuery, IQLQuery
 
-__all__ = ["IQLQuery", "syntax", "IQLError", "IQLArgumentParsingError", "IQLUnsupportedSyntaxError"]
+__all__ = [
+    "IQLQuery",
+    "IQLFiltersQuery",
+    "IQLAggregationQuery",
+    "syntax",
+    "IQLError",
+    "IQLArgumentParsingError",
+    "IQLUnsupportedSyntaxError",
+]

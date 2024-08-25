@@ -4,10 +4,11 @@ from typing import Any, Dict, List, Optional, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
-from dbally.iql import IQLQuery
+from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
+from dbally.views.exceptions import ViewExecutionError
 from dbally.views.exposed_functions import ExposedFunction
 
 from ..similarity import AbstractSimilarityIndex
@@ -19,7 +20,7 @@ DataT = TypeVar("DataT", bound=Any)
 # TODO(Python 3.9+): Make BaseStructuredView a generic class
 class BaseStructuredView(BaseView):
     """
-    Base class for all structured [Views](../../concepts/views.md). All classes implementing this interface has\
+    Base class for all structured views. All classes implementing this interface has\
     to be able to list all available filters, apply them and execute queries.
     """
 
@@ -61,8 +62,7 @@ class BaseStructuredView(BaseView):
             The result of the query.
 
         Raises:
-            LLMError: If LLM text generation API fails.
-            IQLGenerationError: If the IQL generation fails.
+            ViewExecutionError: When an error occurs while executing the view.
         """
         filters = self.list_filters()
         examples = self.list_few_shots()
@@ -79,6 +79,12 @@ class BaseStructuredView(BaseView):
             llm_options=llm_options,
             n_retries=n_retries,
         )
+
+        if iql.failed:
+            raise ViewExecutionError(
+                view_name=self.__class__.__name__,
+                iql=iql,
+            )
 
         if iql.filters:
             await self.apply_filters(iql.filters)
@@ -112,21 +118,21 @@ class BaseStructuredView(BaseView):
         """
 
     @abc.abstractmethod
-    async def apply_filters(self, filters: IQLQuery) -> None:
+    async def apply_filters(self, filters: IQLFiltersQuery) -> None:
         """
         Applies the chosen filters to the view.
 
         Args:
-            filters: [IQLQuery](../../concepts/iql.md) object representing the filters to apply.
+            filters: IQLQuery object representing the filters to apply.
         """
 
     @abc.abstractmethod
-    async def apply_aggregation(self, aggregation: IQLQuery) -> None:
+    async def apply_aggregation(self, aggregation: IQLAggregationQuery) -> None:
         """
         Applies the chosen aggregation to the view.
 
         Args:
-            aggregation: [IQLQuery](../../concepts/iql.md) object representing the filters to apply.
+            aggregation: IQLQuery object representing the aggregation to apply.
         """
 
     @abc.abstractmethod

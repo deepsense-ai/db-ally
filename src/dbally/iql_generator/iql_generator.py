@@ -1,8 +1,10 @@
+import asyncio
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Generic, List, Optional, TypeVar, Union
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql import IQLError, IQLQuery
+from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.iql_generator.prompt import (
     AGGREGATION_DECISION_TEMPLATE,
     AGGREGATION_GENERATION_TEMPLATE,
@@ -10,15 +12,15 @@ from dbally.iql_generator.prompt import (
     FILTERS_GENERATION_TEMPLATE,
     DecisionPromptFormat,
     IQLGenerationPromptFormat,
-    UnsupportedQueryError,
 )
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.llms.clients.exceptions import LLMError
 from dbally.prompt.elements import FewShotExample
 from dbally.prompt.template import PromptTemplate
-from dbally.views.exceptions import IQLGenerationError
 from dbally.views.exposed_functions import ExposedFunction
+
+IQLQueryT = TypeVar("IQLQueryT", bound=IQLQuery)
 
 
 @dataclass
@@ -27,8 +29,18 @@ class IQLGeneratorState:
     State of the IQL generator.
     """
 
-    filters: Optional[IQLQuery] = None
-    aggregation: Optional[IQLQuery] = None
+    filters: Optional[Union[IQLFiltersQuery, Exception]] = None
+    aggregation: Optional[Union[IQLAggregationQuery, Exception]] = None
+
+    @property
+    def failed(self) -> bool:
+        """
+        Checks if the generation failed.
+
+        Returns:
+            True if the generation failed, False otherwise.
+        """
+        return isinstance(self.filters, Exception) or isinstance(self.aggregation, Exception)
 
 
 class IQLGenerator:
@@ -48,11 +60,11 @@ class IQLGenerator:
             decision_prompt: Prompt template for filtering decision making.
             generation_prompt: Prompt template for IQL generation.
         """
-        self._filters_generation = filters_generation or IQLOperationGenerator(
+        self._filters_generation = filters_generation or IQLOperationGenerator[IQLFiltersQuery](
             FILTERING_DECISION_TEMPLATE,
             FILTERS_GENERATION_TEMPLATE,
         )
-        self._aggregation_generation = aggregation_generation or IQLOperationGenerator(
+        self._aggregation_generation = aggregation_generation or IQLOperationGenerator[IQLAggregationQuery](
             AGGREGATION_DECISION_TEMPLATE,
             AGGREGATION_GENERATION_TEMPLATE,
         )
@@ -85,12 +97,9 @@ class IQLGenerator:
 
         Returns:
             Generated IQL operations.
-
-        Raises:
-            IQLGenerationError: If IQL generation fails.
         """
-        try:
-            filters = await self._filters_generation(
+        filters, aggregation = await asyncio.gather(
+            self._filters_generation(
                 question=question,
                 methods=filters,
                 examples=examples,
@@ -98,16 +107,8 @@ class IQLGenerator:
                 llm_options=llm_options,
                 event_tracker=event_tracker,
                 n_retries=n_retries,
-            )
-        except (IQLError, UnsupportedQueryError) as exc:
-            raise IQLGenerationError(
-                view_name=self.__class__.__name__,
-                filters=exc.source if isinstance(exc, IQLError) else None,
-                aggregation=None,
-            ) from exc
-
-        try:
-            aggregation = await self._aggregation_generation(
+            ),
+            self._aggregation_generation(
                 question=question,
                 methods=aggregations,
                 examples=examples,
@@ -115,21 +116,16 @@ class IQLGenerator:
                 llm_options=llm_options,
                 event_tracker=event_tracker,
                 n_retries=n_retries,
-            )
-        except (IQLError, UnsupportedQueryError) as exc:
-            raise IQLGenerationError(
-                view_name=self.__class__.__name__,
-                filters=str(filters) if filters else None,
-                aggregation=exc.source if isinstance(exc, IQLError) else None,
-            ) from exc
-
+            ),
+            return_exceptions=True,
+        )
         return IQLGeneratorState(
             filters=filters,
             aggregation=aggregation,
         )
 
 
-class IQLOperationGenerator:
+class IQLOperationGenerator(Generic[IQLQueryT]):
     """
     Program that generates IQL queries for the given question.
     """
@@ -147,7 +143,7 @@ class IQLOperationGenerator:
             generator_prompt: Prompt template for IQL generation.
         """
         self.assessor = IQLQuestionAssessor(assessor_prompt)
-        self.generator = IQLQueryGenerator(generator_prompt)
+        self.generator = IQLQueryGenerator[IQLQueryT](generator_prompt)
 
     async def __call__(
         self,
@@ -159,7 +155,7 @@ class IQLOperationGenerator:
         event_tracker: Optional[EventTracker] = None,
         llm_options: Optional[LLMOptions] = None,
         n_retries: int = 3,
-    ) -> Optional[IQLQuery]:
+    ) -> Optional[IQLQueryT]:
         """
         Generates IQL query for the given question.
 
@@ -253,7 +249,7 @@ class IQLQuestionAssessor:
                     raise exc
 
 
-class IQLQueryGenerator:
+class IQLQueryGenerator(Generic[IQLQueryT]):
     """
     Program that generates IQL queries for the given question.
     """
@@ -274,7 +270,7 @@ class IQLQueryGenerator:
         llm_options: Optional[LLMOptions] = None,
         event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
-    ) -> IQLQuery:
+    ) -> IQLQueryT:
         """
         Generates IQL query for the given question.
 
@@ -310,10 +306,8 @@ class IQLQueryGenerator:
                     options=llm_options,
                 )
                 # TODO: Move response parsing to llm generate_text method
-                iql = formatted_prompt.response_parser(response)
-                # TODO: Move IQL query parsing to prompt response parser
-                return await IQLQuery.parse(
-                    source=iql,
+                return await formatted_prompt.response_parser(
+                    response=response,
                     allowed_functions=methods,
                     event_tracker=event_tracker,
                 )

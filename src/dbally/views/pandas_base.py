@@ -5,7 +5,8 @@ from typing import Optional
 import pandas as pd
 
 from dbally.collection.results import ViewExecutionResult
-from dbally.iql import IQLQuery, syntax
+from dbally.iql import syntax
+from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.views.methods_base import MethodsBaseView
 
 
@@ -29,7 +30,7 @@ class DataFrameBaseView(MethodsBaseView[pd.DataFrame]):
         # The mask to be applied to the dataframe to filter the data
         self._filter_mask: Optional[pd.Series] = None
 
-    async def apply_filters(self, filters: IQLQuery) -> None:
+    async def apply_filters(self, filters: IQLFiltersQuery) -> None:
         """
         Applies the chosen filters to the view.
 
@@ -41,7 +42,7 @@ class DataFrameBaseView(MethodsBaseView[pd.DataFrame]):
         self._filter_mask = await self.build_filter_node(filters.root)
         self.data = self.data.loc[self._filter_mask]
 
-    async def apply_aggregation(self, aggregation: IQLQuery) -> None:
+    async def apply_aggregation(self, aggregation: IQLAggregationQuery) -> None:
         """
         Applies the aggregation of choice to the view.
 

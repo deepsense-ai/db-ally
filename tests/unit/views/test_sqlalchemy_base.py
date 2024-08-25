@@ -4,7 +4,8 @@ import re
 
 import sqlalchemy
 
-from dbally.iql import IQLQuery
+from dbally.iql import IQLFiltersQuery
+from dbally.iql._query import IQLAggregationQuery
 from dbally.views.decorators import view_aggregation, view_filter
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
@@ -50,7 +51,7 @@ async def test_filter_sql_generation() -> None:
 
     mock_connection = sqlalchemy.create_mock_engine("postgresql://", executor=None)
     mock_view = MockSqlAlchemyView(mock_connection.engine)
-    query = await IQLQuery.parse(
+    query = await IQLFiltersQuery.parse(
         'method_foo(1) and method_bar("London", 2020)',
         allowed_functions=mock_view.list_filters(),
     )
@@ -66,7 +67,7 @@ async def test_aggregation_sql_generation() -> None:
 
     mock_connection = sqlalchemy.create_mock_engine("postgresql://", executor=None)
     mock_view = MockSqlAlchemyView(mock_connection.engine)
-    query = await IQLQuery.parse(
+    query = await IQLAggregationQuery.parse(
         "method_baz()",
         allowed_functions=mock_view.list_aggregations(),
     )
@@ -82,12 +83,12 @@ async def test_filter_and_aggregation_sql_generation() -> None:
 
     mock_connection = sqlalchemy.create_mock_engine("postgresql://", executor=None)
     mock_view = MockSqlAlchemyView(mock_connection.engine)
-    query = await IQLQuery.parse(
+    query = await IQLFiltersQuery.parse(
         'method_foo(1) and method_bar("London", 2020)',
         allowed_functions=mock_view.list_filters() + mock_view.list_aggregations(),
     )
     await mock_view.apply_filters(query)
-    query = await IQLQuery.parse(
+    query = await IQLAggregationQuery.parse(
         "method_baz()",
         allowed_functions=mock_view.list_aggregations(),
     )

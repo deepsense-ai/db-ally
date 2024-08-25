@@ -4,7 +4,8 @@ import asyncio
 import sqlalchemy
 
 from dbally.collection.results import ViewExecutionResult
-from dbally.iql import IQLQuery, syntax
+from dbally.iql import syntax
+from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.views.methods_base import MethodsBaseView
 
 
@@ -32,7 +33,7 @@ class SqlAlchemyBaseView(MethodsBaseView[sqlalchemy.Select]):
             SQLAlchemy Select object for the view.
         """
 
-    async def apply_filters(self, filters: IQLQuery) -> None:
+    async def apply_filters(self, filters: IQLFiltersQuery) -> None:
         """
         Applies the chosen filters to the view.
 
@@ -43,7 +44,7 @@ class SqlAlchemyBaseView(MethodsBaseView[sqlalchemy.Select]):
         # pylint: disable=attribute-defined-outside-init
         self.data = self.data.where(await self._build_filter_node(filters.root))
 
-    async def apply_aggregation(self, aggregation: IQLQuery) -> None:
+    async def apply_aggregation(self, aggregation: IQLAggregationQuery) -> None:
         """
         Applies the chosen aggregation to the view.
 

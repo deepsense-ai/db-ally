@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
+from dbally.iql._exceptions import IQLError
+from dbally.iql._query import IQLQuery
+from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.llms.base import LLM
 from dbally.llms.litellm import LiteLLM
 from dbally.llms.local import LocalLLM
@@ -16,6 +19,24 @@ class IQL:
     source: Optional[str] = None
     unsupported: bool = False
     valid: bool = True
+
+    @classmethod
+    def from_generator_state(cls, state: Optional[Union[IQLQuery, Exception]]) -> "IQL":
+        """
+        Creates an IQL object from a view execution exception.
+
+        Args:
+            state: The IQL generator state.
+
+        Returns:
+            The IQL object.
+        """
+        source = state.source if isinstance(state, IQLError) else str(state) if isinstance(state, IQLQuery) else None
+        return cls(
+            source=source,
+            unsupported=isinstance(state, UnsupportedQueryError),
+            valid=not isinstance(state, IQLError),
+        )
 
 
 @dataclass

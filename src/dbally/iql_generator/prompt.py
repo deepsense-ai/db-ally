@@ -2,7 +2,9 @@
 
 from typing import List, Optional
 
+from dbally.audit.event_tracker import EventTracker
 from dbally.exceptions import DbAllyError
+from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.prompt.elements import FewShotExample
 from dbally.prompt.template import PromptFormat, PromptTemplate
 from dbally.views.exposed_functions import ExposedFunction
@@ -15,26 +17,65 @@ class UnsupportedQueryError(DbAllyError):
     """
 
 
-def _validate_iql_response(llm_response: str) -> str:
+async def _iql_filters_parser(
+    response: str,
+    allowed_functions: List[ExposedFunction],
+    event_tracker: Optional[EventTracker] = None,
+) -> IQLFiltersQuery:
     """
-    Validates LLM response to IQL
+    Parses the response from the LLM to IQL.
 
     Args:
-        llm_response: LLM response
+        response: LLM response.
+        allowed_functions: List of functions that can be used in the IQL.
+        event_tracker: Event tracker to be used for auditing.
 
     Returns:
-        A string containing IQL for filters.
+        IQL query for filters.
 
     Raises:
-        UnsuppotedQueryError: When IQL generator is unable to construct a query
-        with given filters.
+        UnsuppotedQueryError: When IQL generator is unable to construct a query with given filters.
     """
-    if "unsupported query" in llm_response.lower():
+    if "unsupported query" in response.lower():
         raise UnsupportedQueryError
-    return llm_response
+
+    return await IQLFiltersQuery.parse(
+        source=response,
+        allowed_functions=allowed_functions,
+        event_tracker=event_tracker,
+    )
 
 
-def _decision_iql_response_parser(response: str) -> bool:
+async def _iql_aggregation_parser(
+    response: str,
+    allowed_functions: List[ExposedFunction],
+    event_tracker: Optional[EventTracker] = None,
+) -> IQLAggregationQuery:
+    """
+    Parses the response from the LLM to IQL.
+
+    Args:
+        response: LLM response.
+        allowed_functions: List of functions that can be used in the IQL.
+        event_tracker: Event tracker to be used for auditing.
+
+    Returns:
+        IQL query for aggregations.
+
+    Raises:
+        UnsuppotedQueryError: When IQL generator is unable to construct a query with given aggregations.
+    """
+    if "unsupported query" in response.lower():
+        raise UnsupportedQueryError
+
+    return await IQLAggregationQuery.parse(
+        source=response,
+        allowed_functions=allowed_functions,
+        event_tracker=event_tracker,
+    )
+
+
+def _decision_parser(response: str) -> bool:
     """
     Parses the response from the decision prompt.
 
@@ -121,7 +162,7 @@ FILTERING_DECISION_TEMPLATE = PromptTemplate[DecisionPromptFormat](
             ),
         },
     ],
-    response_parser=_decision_iql_response_parser,
+    response_parser=_decision_parser,
 )
 
 AGGREGATION_DECISION_TEMPLATE = PromptTemplate[DecisionPromptFormat](
@@ -144,7 +185,7 @@ AGGREGATION_DECISION_TEMPLATE = PromptTemplate[DecisionPromptFormat](
             "content": ("Question: {question}\n" "Reasoning: Let's think step by step in order to "),
         },
     ],
-    response_parser=_decision_iql_response_parser,
+    response_parser=_decision_parser,
 )
 
 FILTERS_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
@@ -171,7 +212,7 @@ FILTERS_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
             "content": "{question}",
         },
     ],
-    response_parser=_validate_iql_response,
+    response_parser=_iql_filters_parser,
 )
 
 AGGREGATION_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
@@ -197,5 +238,5 @@ AGGREGATION_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
             "content": "{question}",
         },
     ],
-    response_parser=_validate_iql_response,
+    response_parser=_iql_aggregation_parser,
 )
