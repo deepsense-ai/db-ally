@@ -6,6 +6,7 @@ from dbally.iql._exceptions import IQLError
 from dbally.iql._query import IQLQuery
 from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.llms.base import LLM
+from dbally.llms.clients.exceptions import LLMError
 from dbally.llms.litellm import LiteLLM
 from dbally.llms.local import LocalLLM
 
@@ -19,23 +20,24 @@ class IQL:
     source: Optional[str] = None
     unsupported: bool = False
     valid: bool = True
+    generated: bool = True
 
     @classmethod
-    def from_generator_state(cls, state: Optional[Union[IQLQuery, Exception]]) -> "IQL":
+    def from_query(cls, query: Optional[Union[IQLQuery, Exception]]) -> "IQL":
         """
-        Creates an IQL object from a view execution exception.
+        Creates an IQL object from the query.
 
         Args:
-            state: The IQL generator state.
+            query: The IQL query or exception.
 
         Returns:
             The IQL object.
         """
-        source = state.source if isinstance(state, IQLError) else str(state) if isinstance(state, IQLQuery) else None
         return cls(
-            source=source,
-            unsupported=isinstance(state, UnsupportedQueryError),
-            valid=not isinstance(state, IQLError),
+            source=query.source if isinstance(query, (IQLQuery, IQLError)) else None,
+            unsupported=isinstance(query, UnsupportedQueryError),
+            valid=not isinstance(query, IQLError),
+            generated=not isinstance(query, LLMError),
         )
 
 
@@ -68,6 +70,7 @@ class EvaluationResult:
     """
 
     db_id: str
+    question_id: str
     question: str
     reference: ExecutionResult
     prediction: ExecutionResult

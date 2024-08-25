@@ -96,24 +96,16 @@ class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
             prediction = ExecutionResult(
                 view_name=data["view_name"],
                 iql=IQLResult(
-                    filters=IQL.from_generator_state(exc.iql.filters),
-                    aggregation=IQL.from_generator_state(exc.iql.aggregation),
+                    filters=IQL.from_query(exc.iql.filters),
+                    aggregation=IQL.from_query(exc.iql.aggregation),
                 ),
             )
         else:
             prediction = ExecutionResult(
                 view_name=data["view_name"],
                 iql=IQLResult(
-                    filters=IQL(
-                        source=result.context["iql"],
-                        unsupported=False,
-                        valid=True,
-                    ),
-                    aggregation=IQL(
-                        source=None,
-                        unsupported=False,
-                        valid=True,
-                    ),
+                    filters=IQL(source=result.context["iql"]["filters"]),
+                    aggregation=IQL(source=result.context["iql"]["aggregation"]),
                 ),
                 sql=result.context["sql"],
             )
@@ -124,12 +116,10 @@ class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
                 filters=IQL(
                     source=data["iql_filters"],
                     unsupported=data["iql_filters_unsupported"],
-                    valid=True,
                 ),
                 aggregation=IQL(
                     source=data["iql_aggregation"],
                     unsupported=data["iql_aggregation_unsupported"],
-                    valid=True,
                 ),
                 context=data["iql_context"],
             ),
@@ -138,6 +128,7 @@ class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
 
         return EvaluationResult(
             db_id=data["db_id"],
+            question_id=data["question_id"],
             question=data["question"],
             reference=reference,
             prediction=prediction,
@@ -198,6 +189,7 @@ class SQLViewEvaluationPipeline(ViewEvaluationPipeline):
 
         return EvaluationResult(
             db_id=data["db_id"],
+            question_id=data["question_id"],
             question=data["question"],
             reference=reference,
             prediction=prediction,

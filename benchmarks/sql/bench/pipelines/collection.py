@@ -77,8 +77,8 @@ class CollectionEvaluationPipeline(EvaluationPipeline):
             prediction = ExecutionResult(
                 view_name=exc.view_name,
                 iql=IQLResult(
-                    filters=IQL.from_generator_state(exc.iql.filters),
-                    aggregation=IQL.from_generator_state(exc.iql.aggregation),
+                    filters=IQL.from_query(exc.iql.filters),
+                    aggregation=IQL.from_query(exc.iql.aggregation),
                 ),
             )
         else:
@@ -111,6 +111,7 @@ class CollectionEvaluationPipeline(EvaluationPipeline):
 
         return EvaluationResult(
             db_id=data["db_id"],
+            question_id=data["question_id"],
             question=data["question"],
             reference=reference,
             prediction=prediction,
