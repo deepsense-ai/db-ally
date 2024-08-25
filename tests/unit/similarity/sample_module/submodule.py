@@ -3,7 +3,7 @@
 from typing_extensions import Annotated
 
 from dbally import MethodsBaseView, decorators
-from dbally.iql import IQLQuery
+from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.views.structured import ViewExecutionResult
 from tests.unit.mocks import MockSimilarityIndex
 
@@ -20,7 +20,10 @@ class FooView(MethodsBaseView):
     def method_bar(self, city: Annotated[str, index_foo], year: Annotated[int, index_bar]) -> str:
         return f"hello {city} in {year}"
 
-    async def apply_filters(self, filters: IQLQuery) -> None:
+    async def apply_filters(self, filters: IQLFiltersQuery) -> None:
+        ...
+
+    async def apply_aggregation(self, aggregation: IQLAggregationQuery) -> None:
         ...
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
@@ -39,7 +42,10 @@ class BarView(MethodsBaseView):
         """
         return f"hello {city} in {year}"
 
-    async def apply_filters(self, filters: IQLQuery) -> None:
+    async def apply_filters(self, filters: IQLFiltersQuery) -> None:
+        ...
+
+    async def apply_aggregation(self, aggregation: IQLAggregationQuery) -> None:
         ...
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:

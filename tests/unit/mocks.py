@@ -9,7 +9,6 @@ from functools import cached_property
 from typing import List, Optional, Union
 
 from dbally import NOT_GIVEN, NotGiven
-from dbally.iql import IQLQuery
 from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.iql_generator.iql_generator import IQLGenerator, IQLGeneratorState
 from dbally.llms.base import LLM
@@ -45,7 +44,7 @@ class MockIQLGenerator(IQLGenerator):
         self.state = state
         super().__init__()
 
-    async def __call__(self, *_, **__) -> IQLQuery:
+    async def __call__(self, *_, **__) -> IQLGeneratorState:
         return self.state
 
 

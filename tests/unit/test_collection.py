@@ -10,7 +10,7 @@ import dbally
 from dbally.collection import Collection
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ViewExecutionResult
-from dbally.iql import IQLQuery
+from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.iql.syntax import FunctionCall
 from dbally.iql_generator.iql_generator import IQLGeneratorState
 from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
@@ -63,8 +63,8 @@ class MockViewWithResults(MockViewBase):
     def get_iql_generator(self) -> MockIQLGenerator:
         return MockIQLGenerator(
             IQLGeneratorState(
-                filters=IQLQuery(FunctionCall("test_filter", []), "test_filter()"),
-                aggregation=IQLQuery(FunctionCall("test_aggregation", []), "test_aggregation()"),
+                filters=IQLFiltersQuery(FunctionCall("test_filter", []), "test_filter()"),
+                aggregation=IQLAggregationQuery(FunctionCall("test_aggregation", []), "test_aggregation()"),
             ),
         )
 
