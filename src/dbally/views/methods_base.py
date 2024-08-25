@@ -110,7 +110,7 @@ class MethodsBaseView(Generic[DataT], BaseStructuredView, ABC):
             return await method(*args)
         return method(*args)
 
-    async def call_aggregation_method(self, func: syntax.FunctionCall) -> DataT:
+    async def call_aggregation_method(self, func: syntax.FunctionCall) -> Any:
         """
         Converts a IQL FunctonCall aggregation to a method call. If the method is a coroutine, it will be awaited.
 
