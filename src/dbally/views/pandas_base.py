@@ -11,7 +11,7 @@ from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.views.methods_base import MethodsBaseView
 
 
-class DataFrameBaseView(MethodsBaseView[pd.DataFrame]):
+class DataFrameBaseView(MethodsBaseView):
     """
     Base class for views that use Pandas DataFrames to store and filter data.
 
@@ -26,7 +26,8 @@ class DataFrameBaseView(MethodsBaseView[pd.DataFrame]):
         Args:
             df: Pandas DataFrame with the data to be filtered.
         """
-        super().__init__(df)
+        super().__init__()
+        self.df = df
         self._filter_mask: Optional[pd.Series] = None
         self._groupbys: Optional[Union[str, List[str]]] = None
         self._aggregations: Optional[List[Tuple[str, str]]] = None
@@ -90,7 +91,7 @@ class DataFrameBaseView(MethodsBaseView[pd.DataFrame]):
         results = pd.DataFrame()
 
         if not dry_run:
-            results = self.data
+            results = self.df
             if self._filter_mask is not None:
                 results = results.loc[self._filter_mask]
 

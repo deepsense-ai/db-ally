@@ -42,19 +42,19 @@ class MockDataFrameView(DataFrameBaseView):
 
     @view_filter()
     def filter_city(self, city: str) -> pd.Series:
-        return self.data["city"] == city
+        return self.df["city"] == city
 
     @view_filter()
     def filter_year(self, year: int) -> pd.Series:
-        return self.data["year"] == year
+        return self.df["year"] == year
 
     @view_filter()
     def filter_age(self, age: int) -> pd.Series:
-        return self.data["age"] == age
+        return self.df["age"] == age
 
     @view_filter()
     def filter_name(self, name: str) -> pd.Series:
-        return self.data["name"] == name
+        return self.df["name"] == name
 
     @view_aggregation()
     def mean_age_by_city(self) -> Tuple[str, List[Tuple[str, str]]]:

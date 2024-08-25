@@ -34,7 +34,7 @@ class MockSqlAlchemyView(SqlAlchemyBaseView):
         """
         Some documentation string
         """
-        return self.data.add_columns(sqlalchemy.literal("baz")).group_by(sqlalchemy.literal("baz"))
+        return self.select.add_columns(sqlalchemy.literal("baz")).group_by(sqlalchemy.literal("baz"))
 
 
 def normalize_whitespace(s: str) -> str:
