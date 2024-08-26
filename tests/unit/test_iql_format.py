@@ -1,14 +1,14 @@
-from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, IQLGenerationPromptFormat
+from dbally.iql_generator.prompt import FILTERS_GENERATION_TEMPLATE, IQLGenerationPromptFormat
 from dbally.prompt.elements import FewShotExample
 
 
 async def test_iql_prompt_format_default() -> None:
     prompt_format = IQLGenerationPromptFormat(
         question="",
-        filters=[],
+        methods=[],
         examples=[],
     )
-    formatted_prompt = IQL_GENERATION_TEMPLATE.format_prompt(prompt_format)
+    formatted_prompt = FILTERS_GENERATION_TEMPLATE.format_prompt(prompt_format)
 
     assert formatted_prompt.chat == [
         {
@@ -35,10 +35,10 @@ async def test_iql_prompt_format_few_shots_injected() -> None:
     examples = [FewShotExample("q1", "a1")]
     prompt_format = IQLGenerationPromptFormat(
         question="",
-        filters=[],
+        methods=[],
         examples=examples,
     )
-    formatted_prompt = IQL_GENERATION_TEMPLATE.format_prompt(prompt_format)
+    formatted_prompt = FILTERS_GENERATION_TEMPLATE.format_prompt(prompt_format)
 
     assert formatted_prompt.chat == [
         {
@@ -67,12 +67,12 @@ async def test_iql_input_format_few_shot_examples_repeat_no_example_duplicates()
     examples = [FewShotExample("q1", "a1")]
     prompt_format = IQLGenerationPromptFormat(
         question="",
-        filters=[],
+        methods=[],
         examples=examples,
     )
-    formatted_prompt = IQL_GENERATION_TEMPLATE.format_prompt(prompt_format)
+    formatted_prompt = FILTERS_GENERATION_TEMPLATE.format_prompt(prompt_format)
 
-    assert len(formatted_prompt.chat) == len(IQL_GENERATION_TEMPLATE.chat) + (len(examples) * 2)
+    assert len(formatted_prompt.chat) == len(FILTERS_GENERATION_TEMPLATE.chat) + (len(examples) * 2)
     assert formatted_prompt.chat[1]["role"] == "user"
     assert formatted_prompt.chat[1]["content"] == examples[0].question
     assert formatted_prompt.chat[2]["role"] == "assistant"

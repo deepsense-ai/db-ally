@@ -4,7 +4,7 @@
 from typing import List, Literal, Tuple
 
 from dbally.collection.results import ViewExecutionResult
-from dbally.iql import IQLQuery
+from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.views.decorators import view_aggregation, view_filter
 from dbally.views.exposed_functions import MethodParamWithTyping
 from dbally.views.methods_base import MethodsBaseView
@@ -14,9 +14,6 @@ class MockMethodsBase(MethodsBaseView):
     """
     Mock class for testing the MethodsBaseView
     """
-
-    def __init__(self) -> None:
-        super().__init__(None)
 
     @view_filter()
     def method_foo(self, idx: int) -> None:
@@ -35,13 +32,13 @@ class MockMethodsBase(MethodsBaseView):
         """
 
     @view_aggregation()
-    def method_qux(self, ages: List[int], names: List[str]) -> None:
+    def method_qux(self, ages: List[int], names: List[str]) -> str:
         return f"hello {ages} and {names}"
 
-    async def apply_filters(self, filters: IQLQuery) -> None:
+    async def apply_filters(self, filters: IQLFiltersQuery) -> None:
         ...
 
-    async def apply_aggregation(self, filters: IQLQuery) -> None:
+    async def apply_aggregation(self, aggregation: IQLAggregationQuery) -> None:
         ...
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:

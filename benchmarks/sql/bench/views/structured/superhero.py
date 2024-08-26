@@ -286,11 +286,10 @@ class SuperheroColourFilterMixin:
     """
 
     def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.eye_colour = aliased(Colour)
         self.hair_colour = aliased(Colour)
         self.skin_colour = aliased(Colour)
-
-        super().__init__(*args, **kwargs)
 
     @view_filter()
     def filter_by_eye_colour(self, eye_colour: str) -> ColumnElement:
@@ -441,11 +440,12 @@ class SuperheroAggregationMixin:
         Returns:
             The superheros count.
         """
-        return self.data.with_only_columns(func.count(Superhero.id).label("count_superheroes")).group_by(Superhero.id)
+        return self.select.with_only_columns(func.count(Superhero.id).label("count_superheroes")).group_by(Superhero.id)
 
 
 class SuperheroView(
     DBInitMixin,
+    SqlAlchemyBaseView,
     SuperheroFilterMixin,
     SuperheroAggregationMixin,
     SuperheroColourFilterMixin,
@@ -453,7 +453,6 @@ class SuperheroView(
     GenderFilterMixin,
     PublisherFilterMixin,
     RaceFilterMixin,
-    SqlAlchemyBaseView,
 ):
     """
     View for querying only superheros data. Contains the superhero id, superhero name, full name, height, weight,
