@@ -127,13 +127,13 @@ class IQLGenerationPromptFormat(PromptFormat):
 
         Args:
             question: Question to be asked.
-            methods: List of filters exposed by the view.
+            methods: List of methods exposed by the view.
             examples: List of examples to be injected into the conversation.
             aggregations: List of aggregations exposed by the view.
         """
         super().__init__(examples)
         self.question = question
-        self.methods = "\n".join([str(condition) for condition in methods]) if methods else []
+        self.methods = "\n".join(str(method) for method in methods)
 
 
 FILTERING_DECISION_TEMPLATE = PromptTemplate[DecisionPromptFormat](

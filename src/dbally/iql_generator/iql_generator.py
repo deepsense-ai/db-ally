@@ -45,7 +45,7 @@ class IQLGeneratorState:
 
 class IQLGenerator:
     """
-    Program that orchestrates all IQL operations for the given question.
+    Orchestrates all IQL operations for the given question.
     """
 
     def __init__(
@@ -127,7 +127,7 @@ class IQLGenerator:
 
 class IQLOperationGenerator(Generic[IQLQueryT]):
     """
-    Program that generates IQL queries for the given question.
+    Generates IQL queries for the given question.
     """
 
     def __init__(
@@ -199,7 +199,7 @@ class IQLOperationGenerator(Generic[IQLQueryT]):
 
 class IQLQuestionAssessor:
     """
-    Program that assesses whether a question requires applying IQL operation or not.
+    Assesses whether a question requires applying IQL operation or not.
     """
 
     def __init__(self, prompt: PromptTemplate[DecisionPromptFormat]) -> None:
@@ -251,7 +251,7 @@ class IQLQuestionAssessor:
 
 class IQLQueryGenerator(Generic[IQLQueryT]):
     """
-    Program that generates IQL queries for the given question.
+    Generates IQL queries for the given question.
     """
 
     ERROR_MESSAGE = "Unfortunately, generated IQL is not valid. Please try again, \

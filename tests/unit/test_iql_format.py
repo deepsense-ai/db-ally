@@ -14,14 +14,14 @@ async def test_iql_prompt_format_default() -> None:
         {
             "role": "system",
             "content": "You have access to an API that lets you query a database:\n"
-            "\n[]\n"
+            "\n\n"
             "Suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
             "Remember! Don't give any comments, just the function calls.\n"
             "The output will look like this:\n"
             'filter1("arg1") AND (NOT filter2(120) OR filter3(True))\n'
             "DO NOT INCLUDE arguments names in your response. Only the values.\n"
             "You MUST use only these methods:\n"
-            "\n[]\n"
+            "\n\n"
             "It is VERY IMPORTANT not to use methods other than those listed above."
             """If you DON'T KNOW HOW TO ANSWER DON'T SAY anything other than `UNSUPPORTED QUERY`"""
             "This is CRUCIAL, otherwise the system will crash. ",
@@ -44,14 +44,14 @@ async def test_iql_prompt_format_few_shots_injected() -> None:
         {
             "role": "system",
             "content": "You have access to an API that lets you query a database:\n"
-            "\n[]\n"
+            "\n\n"
             "Suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
             "Remember! Don't give any comments, just the function calls.\n"
             "The output will look like this:\n"
             'filter1("arg1") AND (NOT filter2(120) OR filter3(True))\n'
             "DO NOT INCLUDE arguments names in your response. Only the values.\n"
             "You MUST use only these methods:\n"
-            "\n[]\n"
+            "\n\n"
             "It is VERY IMPORTANT not to use methods other than those listed above."
             """If you DON'T KNOW HOW TO ANSWER DON'T SAY anything other than `UNSUPPORTED QUERY`"""
             "This is CRUCIAL, otherwise the system will crash. ",
