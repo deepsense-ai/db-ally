@@ -1,13 +1,12 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name
 
-from typing import List, Tuple
 
 import pandas as pd
 
 from dbally.iql import IQLFiltersQuery
 from dbally.iql._query import IQLAggregationQuery
 from dbally.views.decorators import view_aggregation, view_filter
-from dbally.views.pandas_base import DataFrameBaseView
+from dbally.views.pandas_base import Aggregation, AggregationGroup, DataFrameBaseView
 
 MOCK_DATA = [
     {"name": "Alice", "city": "London", "year": 2020, "age": 30},
@@ -57,12 +56,21 @@ class MockDataFrameView(DataFrameBaseView):
         return self.df["name"] == name
 
     @view_aggregation()
-    def mean_age_by_city(self) -> Tuple[str, List[Tuple[str, str]]]:
-        return "city", [("age", "mean")]
+    def mean_age_by_city(self) -> AggregationGroup:
+        return AggregationGroup(
+            aggregations=[
+                Aggregation(column="age", function="mean"),
+            ],
+            groupbys="city",
+        )
 
     @view_aggregation()
-    def count_records(self) -> Tuple[str, List[Tuple[str, str]]]:
-        return None, [("name", "count")]
+    def count_records(self) -> AggregationGroup:
+        return AggregationGroup(
+            aggregations=[
+                Aggregation(column="name", function="count"),
+            ],
+        )
 
 
 async def test_filter_or() -> None:
@@ -132,7 +140,7 @@ async def test_aggregation() -> None:
     ]
     assert result.context["filter_mask"] is None
     assert result.context["groupbys"] is None
-    assert result.context["aggregations"] == [("name", "count")]
+    assert result.context["aggregations"] == [Aggregation(column="name", function="count")]
 
 
 async def test_aggregtion_with_groupby() -> None:
@@ -153,7 +161,7 @@ async def test_aggregtion_with_groupby() -> None:
     ]
     assert result.context["filter_mask"] is None
     assert result.context["groupbys"] == "city"
-    assert result.context["aggregations"] == [("age", "mean")]
+    assert result.context["aggregations"] == [Aggregation(column="age", function="mean")]
 
 
 async def test_filters_and_aggregtion() -> None:
@@ -175,4 +183,4 @@ async def test_filters_and_aggregtion() -> None:
     assert result.results == [{"city": "Paris", "age_mean": 32.5}]
     assert result.context["filter_mask"].tolist() == [False, True, False, True, False]
     assert result.context["groupbys"] == "city"
-    assert result.context["aggregations"] == [("age", "mean")]
+    assert result.context["aggregations"] == [Aggregation(column="age", function="mean")]

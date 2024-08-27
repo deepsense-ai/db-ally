@@ -67,14 +67,14 @@ class MethodsBaseView(BaseStructuredView, ABC):
 
     def _method_with_args_from_call(
         self, func: syntax.FunctionCall, method_decorator: Callable
-    ) -> Tuple[Callable, list]:
+    ) -> Tuple[Callable, List]:
         """
         Converts a IQL FunctionCall node to a method object and its arguments.
 
         Args:
             func: IQL FunctionCall node
             method_decorator: The decorator that the method should have
-                            (currently allows discrimination between filters and aggregations)
+                (currently allows discrimination between filters and aggregations)
 
         Returns:
             Tuple with the method object and its arguments
@@ -94,6 +94,21 @@ class MethodsBaseView(BaseStructuredView, ABC):
 
         return method, func.arguments
 
+    async def _call_method(self, method: Callable, args: List) -> Any:
+        """
+        Calls the method with the given arguments. If the method is a coroutine, it will be awaited.
+
+        Args:
+            method: The method to call.
+            args: The arguments to pass to the method.
+
+        Returns:
+            The result of the method call.
+        """
+        if inspect.iscoroutinefunction(method):
+            return await method(*args)
+        return method(*args)
+
     async def call_filter_method(self, func: syntax.FunctionCall) -> Any:
         """
         Converts a IQL FunctonCall filter to a method call. If the method is a coroutine, it will be awaited.
@@ -105,10 +120,7 @@ class MethodsBaseView(BaseStructuredView, ABC):
             The result of the method call
         """
         method, args = self._method_with_args_from_call(func, decorators.view_filter)
-
-        if inspect.iscoroutinefunction(method):
-            return await method(*args)
-        return method(*args)
+        return await self._call_method(method, args)
 
     async def call_aggregation_method(self, func: syntax.FunctionCall) -> Any:
         """
@@ -121,7 +133,4 @@ class MethodsBaseView(BaseStructuredView, ABC):
             The result of the method call
         """
         method, args = self._method_with_args_from_call(func, decorators.view_aggregation)
-
-        if inspect.iscoroutinefunction(method):
-            return await method(*args)
-        return method(*args)
+        return await self._call_method(method, args)

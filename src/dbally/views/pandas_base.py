@@ -1,14 +1,34 @@
 import asyncio
+from dataclasses import dataclass
 from functools import reduce
 from typing import List, Optional, Union
 
 import pandas as pd
-from sqlalchemy import Tuple
 
 from dbally.collection.results import ViewExecutionResult
 from dbally.iql import syntax
 from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.views.methods_base import MethodsBaseView
+
+
+@dataclass(frozen=True)
+class Aggregation:
+    """
+    Represents an aggregation to be applied to a Pandas DataFrame.
+    """
+
+    column: str
+    function: str
+
+
+@dataclass(frozen=True)
+class AggregationGroup:
+    """
+    Represents an aggregations and groupbys to be applied to a Pandas DataFrame.
+    """
+
+    aggregations: Optional[List[Aggregation]] = None
+    groupbys: Optional[Union[str, List[str]]] = None
 
 
 class DataFrameBaseView(MethodsBaseView):
@@ -29,8 +49,7 @@ class DataFrameBaseView(MethodsBaseView):
         super().__init__()
         self.df = df
         self._filter_mask: Optional[pd.Series] = None
-        self._groupbys: Optional[Union[str, List[str]]] = None
-        self._aggregations: Optional[List[Tuple[str, str]]] = None
+        self._aggregation_group: AggregationGroup = AggregationGroup()
 
     async def apply_filters(self, filters: IQLFiltersQuery) -> None:
         """
@@ -48,7 +67,7 @@ class DataFrameBaseView(MethodsBaseView):
         Args:
             aggregation: IQLQuery object representing the aggregation to apply.
         """
-        self._groupbys, self._aggregations = await self.call_aggregation_method(aggregation.root)
+        self._aggregation_group = await self.call_aggregation_method(aggregation.root)
 
     async def _build_filter_node(self, node: syntax.Node) -> pd.Series:
         """
@@ -95,18 +114,23 @@ class DataFrameBaseView(MethodsBaseView):
             if self._filter_mask is not None:
                 results = results.loc[self._filter_mask]
 
-            if self._groupbys is not None:
-                results = results.groupby(self._groupbys)
+            if self._aggregation_group.groupbys is not None:
+                results = results.groupby(self._aggregation_group.groupbys)
 
-            if self._aggregations is not None:
-                results = results.agg(**{"_".join(agg): agg for agg in self._aggregations})
+            if self._aggregation_group.aggregations is not None:
+                results = results.agg(
+                    **{
+                        f"{agg.column}_{agg.function}": (agg.column, agg.function)
+                        for agg in self._aggregation_group.aggregations
+                    }
+                )
                 results = results.reset_index()
 
         return ViewExecutionResult(
             results=results.to_dict(orient="records"),
             context={
                 "filter_mask": self._filter_mask,
-                "groupbys": self._groupbys,
-                "aggregations": self._aggregations,
+                "groupbys": self._aggregation_group.groupbys,
+                "aggregations": self._aggregation_group.aggregations,
             },
         )
