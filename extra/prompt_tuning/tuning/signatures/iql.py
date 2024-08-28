@@ -31,7 +31,5 @@ class CheckQuestionAggregation(Signature):
     )
     decision = OutputField(
         prefix="Decision: ",
-        desc=(
-            "indicates whether the answer to the question requires data aggregation. " "(Respond with True or False)"
-        ),
+        desc=("indicates whether the answer to the question requires data aggregation. (Respond with True or False)"),
     )

@@ -4,4 +4,7 @@ defaults:
   - program: filtering-assessor-baseline
   - _self_
 
-neptune: False
+num_threads: 32
+breadth: 3
+depth: 10
+init_temperature: 1.4

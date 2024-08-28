@@ -1,0 +1,8 @@
+defaults:
+  - data: superhero
+  - llm: gpt-3.5-turbo
+  - program: filtering-assessor-baseline
+  - _self_
+
+num_threads: 32
+neptune: False
