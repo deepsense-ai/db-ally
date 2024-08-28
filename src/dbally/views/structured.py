@@ -17,7 +17,7 @@ from .base import BaseView, IndexLocation
 
 class BaseStructuredView(BaseView):
     """
-    Base class for all structured views. All classes implementing this interface has\
+    Base class for all structured [Views](../../concepts/views.md). All classes implementing this interface has\
     to be able to list all available filters, apply them and execute queries.
     """
 

@@ -28,10 +28,10 @@ class SqlAlchemyBaseView(MethodsBaseView):
     @abc.abstractmethod
     def get_select(self) -> sqlalchemy.Select:
         """
-        Creates initial SELECT statement for the view.
-
-        Returns:
-            SQLAlchemy Select object for the view.
+        Creates the initial
+        [SqlAlchemy select object
+        ](https://docs.sqlalchemy.org/en/20/core/selectable.html#sqlalchemy.sql.expression.Select)
+        which will be used to build the query.
         """
 
     async def apply_filters(self, filters: IQLFiltersQuery) -> None:
