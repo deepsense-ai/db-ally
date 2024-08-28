@@ -9,13 +9,39 @@ All evaluations are run on a dev split of the [BIRD](https://bird-bench.github.i
 
 ## Usage
 
+### Train new prompts
+
+Tune `filtering-assessor-baseline` prompt using [COPRO](https://dspy-docs.vercel.app/docs/deep-dive/teleprompter/signature-optimizer#how-copro-works) optimizer on the `superhero` database with `gpt-3.5-turbo`:
+
+```bash
+python train.py program=filtering-assessor-baseline
+```
+
+Train multiple prompts:
+
+```bash
+python train.py --multirun program=filtering-assessor-baseline,filtering-assessor-cot
+```
+
+Tweak optimizer params to get different results:
+
+```bash
+python train.py \
+    program=filtering-assessor-baseline \
+    optimizer.params.breadth=2 \
+    optimizer.params.depth=3 \
+    optimizer.params.init_temperature=1.0
+```
+
+### Evaluate prompts
+
 Run evalution of filtering assessor baseline on the `superhero` database with `gpt-3.5-turbo`:
 
 ```bash
 python evaluate.py program=filtering-assessor-baseline
 ```
 
-Test multiple programs:
+Test multiple prompts:
 
 ```bash
 python evaluate.py --multirun program=filtering-assessor-baseline,filtering-assessor-cot
@@ -31,7 +57,7 @@ Compare prompt performance on multiple LLMs:
 python evaluate.py --multirun program=filtering-assessor-baseline llm=gpt-3.5-turbo,claude-3.5-sonnet
 ```
 
-### Log to Neptune
+#### Log to Neptune
 
 Before running the evaluation with Neptune, configure the following environment variables:
 
