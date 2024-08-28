@@ -3,8 +3,8 @@ import logging
 from pathlib import Path
 
 import dspy
+import dspy.teleprompt
 import hydra
-from dspy.teleprompt import COPRO
 from omegaconf import DictConfig
 from tuning import DATALOADERS, METRICS
 from tuning.programs import PROGRAMS
@@ -21,7 +21,7 @@ async def train(config: DictConfig) -> None:
     Args:
         config: Hydra configuration.
     """
-    log.info("Starting training: %s", config.program.name)
+    log.info("Starting training %s with %s", config.program.name, config.optimizer.name)
 
     dataloader = DATALOADERS[config.program.type](config)
     metric = METRICS[config.program.type]
@@ -32,19 +32,15 @@ async def train(config: DictConfig) -> None:
     lm = dspy.__dict__[config.llm.provider](model=config.llm.model_name)
     dspy.settings.configure(lm=lm)
 
-    copro = COPRO(
-        metric=metric,
-        breadth=config.breadth,
-        depth=config.depth,
-        init_temperature=config.init_temperature,
-    )
-    compiled_program = copro.compile(
+    optimizer = dspy.teleprompt.__dict__[config.optimizer.name](metric=metric, **config.optimizer.params)
+    compiled_program = optimizer.compile(
         student=program,
         trainset=dataset,
         eval_kwargs={
             "num_threads": config.num_threads,
             "display_progress": True,
         },
+        **(config.optimizer.compile or {}),
     )
 
     log.info("Training finished. Saving compiled program...")

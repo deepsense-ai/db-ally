@@ -2,9 +2,7 @@ defaults:
   - data: superhero
   - llm: gpt-3.5-turbo
   - program: filtering-assessor-baseline
+  - optimizer: copro
   - _self_
 
 num_threads: 32
-breadth: 3
-depth: 10
-init_temperature: 1.4
