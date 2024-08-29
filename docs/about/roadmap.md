@@ -9,7 +9,7 @@ Below you can find a list of planned features and integrations.
 
 ## Planned Features
 
-- [ ] **Support analytical queries**: support for exposing operations beyond filtering.
+- [x] **Support analytical queries**: support for exposing operations beyond filtering.
 - [x] **Few-shot prompting configuration**: allow users to configure the few-shot prompting in View definition to
     improve IQL generation accuracy.
 - [ ] **Request contextualization**: allow to provide extra context for db-ally runs, such as user asking the question.
