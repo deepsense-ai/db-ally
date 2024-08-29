@@ -1,6 +1,6 @@
 # Quickstart: Multiple Views
 
-This guide continues from [Semantic Similarity](./quickstart2.md) guide. It assumes that you have already set up the views and the collection. If not, please refer to the complete Part 2 code here: [quickstart2_code.py](quickstart2_code.py).
+This guide continues from [Semantic Similarity](./semantic-similarity.md) guide. It assumes that you have already set up the views and the collection. If not, please refer to the complete Part 2 code on [GitHub](https://github.com/deepsense-ai/db-ally/blob/main/examples/semantic_similarity.py){:target="_blank"}.
 
 The guide illustrates how to use multiple views to handle queries requiring different types of data. `CandidateView` and `JobView` are used as examples.
 
@@ -124,7 +124,7 @@ Julia Nowak - Adobe XD;Sketch;Figma
 Anna Kowalska - AWS;Azure;Google Cloud
 ```
 
-That wraps it up! You can find the full example code here: [quickstart3_code.py](quickstart3_code.py).
+That wraps it up! You can find the full example code on [GitHub](https://github.com/deepsense-ai/db-ally/blob/main/examples/multiple-views.py){:target="_blank"}.
 
 ## Next Steps
 Visit the [Tutorial](../tutorials.md) for a more comprehensive guide on how to use db-ally.

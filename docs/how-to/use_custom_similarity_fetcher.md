@@ -55,7 +55,7 @@ In this example, we used the FaissStore, which utilizes the `faiss` library for 
 
 ## Using the Similarity Index
 
-You can use the index with a custom fetcher [the same way](../quickstart/quickstart2.md) as you would with a built-in fetcher. The similarity index will map user input to the closest matching value from your data source, allowing you to deliver more precise responses to user queries. Remember to frequently update the similarity index with new values from your data source to maintain its relevance. You can accomplish this by calling the `update` method on the similarity index.
+You can use the index with a custom fetcher [the same way](../quickstart/semantic-similarity.md) as you would with a built-in fetcher. The similarity index will map user input to the closest matching value from your data source, allowing you to deliver more precise responses to user queries. Remember to frequently update the similarity index with new values from your data source to maintain its relevance. You can accomplish this by calling the `update` method on the similarity index.
 
 ```python
 await breeds_similarity.update()
@@ -72,4 +72,4 @@ print(await breeds_similarity.similar("bagle"))
 
 This will return the most similar dog breed to "bagle" based on the data retrieved from the dog.ceo API - in this case, "beagle".
 
-In general, instead of directly calling the similarity index, you would usually use it to annotate arguments to views, as demonstrated in the [Quickstart guide](../quickstart/quickstart2.md).
+In general, instead of directly calling the similarity index, you would usually use it to annotate arguments to views, as demonstrated in the [Quickstart guide](../quickstart/semantic-similarity.md).
