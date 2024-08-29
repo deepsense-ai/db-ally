@@ -56,11 +56,11 @@ country_similarity = SimilarityIndex(
 )
 ```
 
-In this example, we used the sample `DogBreedsFetcher` fetcher detailed in the [custom fetcher guide](./use_custom_similarity_fetcher.md) and the `PickleStore` to store the values in a Python pickle file. You can use a different fetcher depending on your needs, for example [the Sqlalchemy one described in the Quickstart guide](../quickstart/quickstart2.md)).
+In this example, we used the sample `DogBreedsFetcher` fetcher detailed in the [custom fetcher guide](./use_custom_similarity_fetcher.md) and the `PickleStore` to store the values in a Python pickle file. You can use a different fetcher depending on your needs, for example [the Sqlalchemy one described in the Quickstart guide](../quickstart/semantic-similarity.md)).
 
 ## Using the Similarity Index
 
-You can use an index with a custom store [the same way](../quickstart/quickstart2.md) you would use one with a built-in store. The similarity index will map user input to the closest matching value from your data source, enabling you to deliver more accurate responses. It's important to regularly update the similarity index with new values from your data source to keep it current. Do this by invoking the `update` method on the similarity index.
+You can use an index with a custom store [the same way](../quickstart/semantic-similarity.md) you would use one with a built-in store. The similarity index will map user input to the closest matching value from your data source, enabling you to deliver more accurate responses. It's important to regularly update the similarity index with new values from your data source to keep it current. Do this by invoking the `update` method on the similarity index.
 
 ```python
 await country_similarity.update()
@@ -77,4 +77,4 @@ print(await country_similarity.similar("bagle"))
 
 This will return the closest matching dog breed to "bagle" - in this case, "beagle".
 
-Typically, instead of directly invoking the similarity index, you would employ it to annotate arguments to views, as demonstrated in the [Quickstart guide](../quickstart/quickstart2.md).
+Typically, instead of directly invoking the similarity index, you would employ it to annotate arguments to views, as demonstrated in the [Quickstart guide](../quickstart/semantic-similarity.md).

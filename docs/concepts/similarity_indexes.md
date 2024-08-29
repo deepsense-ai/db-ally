@@ -11,4 +11,4 @@ A similarity index consists of two main components:
 
 The concept of "similarity" is deliberately broad, as it varies depending on the store's implementation to best fit the use case. Db-ally not only supports custom store implementations but also includes various built-in implementations, from simple case-insensitive text matches to more complex embedding-based semantic similarities.
 
-See the [Quickstart Part 2: Semantic Similarity](../quickstart/quickstart2.md) for an example of using a similarity index with a semantic similarity store.
+See the [Quickstart Part 2: Semantic Similarity](../quickstart/semantic-similarity.md) for an example of using a similarity index with a semantic similarity store.

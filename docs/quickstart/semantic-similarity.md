@@ -1,6 +1,6 @@
 # Quickstart: Semantic Similarity
 
-This guide is a continuation of the [Intro](./index.md) guide. It assumes that you have already set up the views and the collection. If not, please refer to the complete Part 1 code here: [quickstart_code.py](quickstart_code.py).
+This guide is a continuation of the [Intro](./index.md) guide. It assumes that you have already set up the views and the collection. If not, please refer to the complete Part 1 code on [GitHub](https://github.com/deepsense-ai/db-ally/blob/main/examples/intro.py){:target="_blank"}.
 
 This guide will demonstrate how to use semantic similarity to handle queries in which the filter values are similar to those in the database, without requiring an exact match. We will use filtering by country as an example.
 
@@ -146,8 +146,8 @@ Retrieved 1 candidates:
 
 That's it! You can apply similar techniques to any other filter that takes a string value.
 
-To see the full example, you can find the code here: [quickstart2_code.py](quickstart2_code.py).
+To see the full example, you can find the code on [GitHub](https://github.com/deepsense-ai/db-ally/blob/main/examples/semantic_similarity.py){:target="_blank"}.
 
 ## Next Steps
 
-Explore [Quickstart Part 3: Multiple Views](./quickstart3.md) to learn how to run queries with multiple views and display the results based on the view that was used to fetch the data.
+Explore [Quickstart Part 3: Multiple Views](./multiple-views.md) to learn how to run queries with multiple views and display the results based on the view that was used to fetch the data.
