@@ -42,4 +42,4 @@ from_country("USA") AND senior_data_scientist_position()
 average_salary()
 ```
 
-db-ally will execute queries sequentially to build a single query plan to execute on the data source.
+In this case, db-ally will execute queries sequentially to build a single query plan to execute on the data source.
