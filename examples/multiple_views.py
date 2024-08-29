@@ -1,19 +1,20 @@
-# pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring
-import os
-import asyncio
-from typing_extensions import Annotated
+# pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring, duplicate-code
 
+import asyncio
+import os
+
+import pandas as pd
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
-import pandas as pd
+from typing_extensions import Annotated
 
 import dbally
-from dbally import decorators, SqlAlchemyBaseView, DataFrameBaseView, ExecutionResult
+from dbally import DataFrameBaseView, ExecutionResult, SqlAlchemyBaseView, decorators
 from dbally.audit import CLIEventHandler
-from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 from dbally.llms.litellm import LiteLLM
+from dbally.similarity import FaissStore, SimilarityIndex, SimpleSqlAlchemyFetcher
 
 engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
 
