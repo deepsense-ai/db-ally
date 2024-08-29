@@ -7,7 +7,7 @@ from sqlalchemy import ColumnElement, Engine, Select, func, select
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import aliased, declarative_base
 
-from dbally.views.decorators import view_filter
+from dbally.views.decorators import view_aggregation, view_filter
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
 Base = declarative_base(cls=DeferredReflection)
@@ -285,8 +285,8 @@ class SuperheroColourFilterMixin:
     Mixin for filtering the view by the superhero colour attributes.
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.eye_colour = aliased(Colour)
         self.hair_colour = aliased(Colour)
         self.skin_colour = aliased(Colour)
@@ -427,10 +427,27 @@ class RaceFilterMixin:
         return Race.race == race
 
 
+class SuperheroAggregationMixin:
+    """
+    Mixin for aggregating the view by the superhero attributes.
+    """
+
+    @view_aggregation()
+    def count_superheroes(self) -> Select:
+        """
+        Counts the number of superheros.
+
+        Returns:
+            The superheros count.
+        """
+        return self.select.with_only_columns(func.count(Superhero.id).label("count_superheroes")).group_by(Superhero.id)
+
+
 class SuperheroView(
     DBInitMixin,
     SqlAlchemyBaseView,
     SuperheroFilterMixin,
+    SuperheroAggregationMixin,
     SuperheroColourFilterMixin,
     AlignmentFilterMixin,
     GenderFilterMixin,

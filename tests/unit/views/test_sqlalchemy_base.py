@@ -4,8 +4,9 @@ import re
 
 import sqlalchemy
 
-from dbally.iql import IQLQuery
-from dbally.views.decorators import view_filter
+from dbally.iql import IQLFiltersQuery
+from dbally.iql._query import IQLAggregationQuery
+from dbally.views.decorators import view_aggregation, view_filter
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
 
@@ -28,6 +29,13 @@ class MockSqlAlchemyView(SqlAlchemyBaseView):
     async def method_bar(self, city: str, year: int) -> sqlalchemy.ColumnElement:
         return sqlalchemy.literal(f"hello {city} in {year}")
 
+    @view_aggregation()
+    def method_baz(self) -> sqlalchemy.Select:
+        """
+        Some documentation string
+        """
+        return self.select.add_columns(sqlalchemy.literal("baz")).group_by(sqlalchemy.literal("baz"))
+
 
 def normalize_whitespace(s: str) -> str:
     """
@@ -43,10 +51,47 @@ async def test_filter_sql_generation() -> None:
 
     mock_connection = sqlalchemy.create_mock_engine("postgresql://", executor=None)
     mock_view = MockSqlAlchemyView(mock_connection.engine)
-    query = await IQLQuery.parse(
+    query = await IQLFiltersQuery.parse(
         'method_foo(1) and method_bar("London", 2020)',
         allowed_functions=mock_view.list_filters(),
     )
     await mock_view.apply_filters(query)
     sql = normalize_whitespace(mock_view.execute(dry_run=True).context["sql"])
     assert sql == "SELECT 'test' AS foo WHERE 1 AND 'hello London in 2020'"
+
+
+async def test_aggregation_sql_generation() -> None:
+    """
+    Tests that the SQL generation based on aggregations works correctly
+    """
+
+    mock_connection = sqlalchemy.create_mock_engine("postgresql://", executor=None)
+    mock_view = MockSqlAlchemyView(mock_connection.engine)
+    query = await IQLAggregationQuery.parse(
+        "method_baz()",
+        allowed_functions=mock_view.list_aggregations(),
+    )
+    await mock_view.apply_aggregation(query)
+    sql = normalize_whitespace(mock_view.execute(dry_run=True).context["sql"])
+    assert sql == "SELECT 'test' AS foo, 'baz' AS anon_1 GROUP BY 'baz'"
+
+
+async def test_filter_and_aggregation_sql_generation() -> None:
+    """
+    Tests that the SQL generation based on filters and aggregations works correctly
+    """
+
+    mock_connection = sqlalchemy.create_mock_engine("postgresql://", executor=None)
+    mock_view = MockSqlAlchemyView(mock_connection.engine)
+    query = await IQLFiltersQuery.parse(
+        'method_foo(1) and method_bar("London", 2020)',
+        allowed_functions=mock_view.list_filters() + mock_view.list_aggregations(),
+    )
+    await mock_view.apply_filters(query)
+    query = await IQLAggregationQuery.parse(
+        "method_baz()",
+        allowed_functions=mock_view.list_aggregations(),
+    )
+    await mock_view.apply_aggregation(query)
+    sql = normalize_whitespace(mock_view.execute(dry_run=True).context["sql"])
+    assert sql == "SELECT 'test' AS foo, 'baz' AS anon_1 WHERE 1 AND 'hello London in 2020' GROUP BY 'baz'"

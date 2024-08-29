@@ -1,6 +1,6 @@
 import copy
 import re
-from typing import Callable, Dict, Generic, List, TypeVar
+from typing import Callable, Dict, Generic, List, Optional, TypeVar
 
 from typing_extensions import Self
 
@@ -55,7 +55,7 @@ class PromptFormat:
     Generic format for prompts allowing to inject few shot examples into the conversation.
     """
 
-    def __init__(self, examples: List[FewShotExample] = None) -> None:
+    def __init__(self, examples: Optional[List[FewShotExample]] = None) -> None:
         """
         Constructs a new PromptFormat instance.
 

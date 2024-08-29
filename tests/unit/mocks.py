@@ -9,8 +9,8 @@ from functools import cached_property
 from typing import List, Optional, Union
 
 from dbally import NOT_GIVEN, NotGiven
-from dbally.iql import IQLQuery
-from dbally.iql_generator.iql_generator import IQLGenerator
+from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
+from dbally.iql_generator.iql_generator import IQLGenerator, IQLGeneratorState
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMClient, LLMOptions
 from dbally.similarity.index import AbstractSimilarityIndex
@@ -26,20 +26,26 @@ class MockViewBase(BaseStructuredView):
     def list_filters(self) -> List[ExposedFunction]:
         return []
 
-    async def apply_filters(self, filters: IQLQuery) -> None:
+    def list_aggregations(self) -> List[ExposedFunction]:
+        return []
+
+    async def apply_filters(self, filters: IQLFiltersQuery) -> None:
         ...
 
-    def execute(self, dry_run=False) -> ViewExecutionResult:
+    async def apply_aggregation(self, aggregation: IQLAggregationQuery) -> None:
+        ...
+
+    def execute(self, dry_run: bool = False) -> ViewExecutionResult:
         return ViewExecutionResult(results=[], context={})
 
 
 class MockIQLGenerator(IQLGenerator):
-    def __init__(self, iql: IQLQuery) -> None:
-        self.iql = iql
-        super().__init__(llm=MockLLM())
+    def __init__(self, state: IQLGeneratorState) -> None:
+        self.state = state
+        super().__init__()
 
-    async def generate(self, *_, **__) -> IQLQuery:
-        return self.iql
+    async def __call__(self, *_, **__) -> IQLGeneratorState:
+        return self.state
 
 
 class MockViewSelector(ViewSelector):

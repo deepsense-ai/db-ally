@@ -5,10 +5,8 @@ from sqlalchemy import create_engine
 import dbally
 from dbally.collection.collection import Collection
 from dbally.collection.exceptions import NoViewFoundError
-from dbally.iql._exceptions import IQLError
-from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.view_selection.llm_view_selector import LLMViewSelector
-from dbally.views.exceptions import IQLGenerationError
+from dbally.views.exceptions import ViewExecutionError
 
 from ..views import VIEWS_REGISTRY
 from .base import IQL, EvaluationPipeline, EvaluationResult, ExecutionResult, IQLResult
@@ -74,44 +72,23 @@ class CollectionEvaluationPipeline(EvaluationPipeline):
                 return_natural_response=False,
             )
         except NoViewFoundError:
-            prediction = ExecutionResult(
-                view_name=None,
-                iql=None,
-                sql=None,
-            )
-        except IQLGenerationError as exc:
+            prediction = ExecutionResult()
+        except ViewExecutionError as exc:
             prediction = ExecutionResult(
                 view_name=exc.view_name,
                 iql=IQLResult(
-                    filters=IQL(
-                        source=exc.filters,
-                        unsupported=isinstance(exc.__cause__, UnsupportedQueryError),
-                        valid=not (exc.filters and not exc.aggregation and isinstance(exc.__cause__, IQLError)),
-                    ),
-                    aggregation=IQL(
-                        source=exc.aggregation,
-                        unsupported=isinstance(exc.__cause__, UnsupportedQueryError),
-                        valid=not (exc.aggregation and isinstance(exc.__cause__, IQLError)),
-                    ),
+                    filters=IQL.from_query(exc.iql.filters),
+                    aggregation=IQL.from_query(exc.iql.aggregation),
                 ),
-                sql=None,
             )
         else:
             prediction = ExecutionResult(
                 view_name=result.view_name,
                 iql=IQLResult(
-                    filters=IQL(
-                        source=result.context.get("iql"),
-                        unsupported=False,
-                        valid=True,
-                    ),
-                    aggregation=IQL(
-                        source=None,
-                        unsupported=False,
-                        valid=True,
-                    ),
+                    filters=IQL(source=result.context["iql"]["filters"]),
+                    aggregation=IQL(source=result.context["iql"]["aggregation"]),
                 ),
-                sql=result.context.get("sql"),
+                sql=result.context["sql"],
             )
 
         reference = ExecutionResult(
@@ -134,6 +111,7 @@ class CollectionEvaluationPipeline(EvaluationPipeline):
 
         return EvaluationResult(
             db_id=data["db_id"],
+            question_id=data["question_id"],
             question=data["question"],
             reference=reference,
             prediction=prediction,

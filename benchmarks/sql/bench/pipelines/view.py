@@ -5,9 +5,7 @@ from typing import Any, Dict, Type
 
 from sqlalchemy import create_engine
 
-from dbally.iql._exceptions import IQLError
-from dbally.iql_generator.prompt import UnsupportedQueryError
-from dbally.views.exceptions import IQLGenerationError
+from dbally.views.exceptions import ViewExecutionError
 from dbally.views.freeform.text2sql.view import BaseText2SQLView
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
@@ -94,37 +92,20 @@ class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
                 dry_run=True,
                 n_retries=0,
             )
-        except IQLGenerationError as exc:
+        except ViewExecutionError as exc:
             prediction = ExecutionResult(
                 view_name=data["view_name"],
                 iql=IQLResult(
-                    filters=IQL(
-                        source=exc.filters,
-                        unsupported=isinstance(exc.__cause__, UnsupportedQueryError),
-                        valid=not (exc.filters and not exc.aggregation and isinstance(exc.__cause__, IQLError)),
-                    ),
-                    aggregation=IQL(
-                        source=exc.aggregation,
-                        unsupported=isinstance(exc.__cause__, UnsupportedQueryError),
-                        valid=not (exc.aggregation and isinstance(exc.__cause__, IQLError)),
-                    ),
+                    filters=IQL.from_query(exc.iql.filters),
+                    aggregation=IQL.from_query(exc.iql.aggregation),
                 ),
-                sql=None,
             )
         else:
             prediction = ExecutionResult(
                 view_name=data["view_name"],
                 iql=IQLResult(
-                    filters=IQL(
-                        source=result.context["iql"],
-                        unsupported=False,
-                        valid=True,
-                    ),
-                    aggregation=IQL(
-                        source=None,
-                        unsupported=False,
-                        valid=True,
-                    ),
+                    filters=IQL(source=result.context["iql"]["filters"]),
+                    aggregation=IQL(source=result.context["iql"]["aggregation"]),
                 ),
                 sql=result.context["sql"],
             )
@@ -135,12 +116,10 @@ class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
                 filters=IQL(
                     source=data["iql_filters"],
                     unsupported=data["iql_filters_unsupported"],
-                    valid=True,
                 ),
                 aggregation=IQL(
                     source=data["iql_aggregation"],
                     unsupported=data["iql_aggregation_unsupported"],
-                    valid=True,
                 ),
                 context=data["iql_context"],
             ),
@@ -149,6 +128,7 @@ class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
 
         return EvaluationResult(
             db_id=data["db_id"],
+            question_id=data["question_id"],
             question=data["question"],
             reference=reference,
             prediction=prediction,
@@ -209,6 +189,7 @@ class SQLViewEvaluationPipeline(ViewEvaluationPipeline):
 
         return EvaluationResult(
             db_id=data["db_id"],
+            question_id=data["question_id"],
             question=data["question"],
             reference=reference,
             prediction=prediction,

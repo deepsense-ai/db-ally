@@ -1,26 +1,29 @@
-from typing import TYPE_CHECKING, List, Optional
+from abc import ABC
+from typing import TYPE_CHECKING, Generic, List, Optional, Type
 
 from ..audit.event_tracker import EventTracker
 from . import syntax
-from ._processor import IQLProcessor
+from ._processor import IQLAggregationProcessor, IQLFiltersProcessor, IQLProcessor, RootT
 
 if TYPE_CHECKING:
     from dbally.views.structured import ExposedFunction
 
 
-class IQLQuery:
+class IQLQuery(Generic[RootT], ABC):
     """
     IQLQuery container. It stores IQL as a syntax tree defined in `IQL` class.
     """
 
-    root: syntax.Node
+    root: RootT
+    source: str
+    _processor: Type[IQLProcessor[RootT]]
 
-    def __init__(self, root: syntax.Node, source: str) -> None:
+    def __init__(self, root: RootT, source: str) -> None:
         self.root = root
-        self._source = source
+        self.source = source
 
     def __str__(self) -> str:
-        return self._source
+        return self.source
 
     @classmethod
     async def parse(
@@ -28,7 +31,7 @@ class IQLQuery:
         source: str,
         allowed_functions: List["ExposedFunction"],
         event_tracker: Optional[EventTracker] = None,
-    ) -> "IQLQuery":
+    ) -> "IQLQuery[RootT]":
         """
         Parse IQL string to IQLQuery object.
 
@@ -43,5 +46,21 @@ class IQLQuery:
         Raises:
             IQLError: If parsing fails.
         """
-        root = await IQLProcessor(source, allowed_functions, event_tracker=event_tracker).process()
+        root = await cls._processor(source, allowed_functions, event_tracker=event_tracker).process()
         return cls(root=root, source=source)
+
+
+class IQLFiltersQuery(IQLQuery[syntax.Node]):
+    """
+    IQL filters query container.
+    """
+
+    _processor: Type[IQLFiltersProcessor] = IQLFiltersProcessor
+
+
+class IQLAggregationQuery(IQLQuery[syntax.FunctionCall]):
+    """
+    IQL aggregation query container.
+    """
+
+    _processor: Type[IQLAggregationProcessor] = IQLAggregationProcessor

@@ -1,8 +1,10 @@
 # pylint: disable=C0301
 
-from typing import List
+from typing import List, Optional
 
+from dbally.audit.event_tracker import EventTracker
 from dbally.exceptions import DbAllyError
+from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.prompt.elements import FewShotExample
 from dbally.prompt.template import PromptFormat, PromptTemplate
 from dbally.views.exposed_functions import ExposedFunction
@@ -15,26 +17,65 @@ class UnsupportedQueryError(DbAllyError):
     """
 
 
-def _validate_iql_response(llm_response: str) -> str:
+async def _iql_filters_parser(
+    response: str,
+    allowed_functions: List[ExposedFunction],
+    event_tracker: Optional[EventTracker] = None,
+) -> IQLFiltersQuery:
     """
-    Validates LLM response to IQL
+    Parses the response from the LLM to IQL.
 
     Args:
-        llm_response: LLM response
+        response: LLM response.
+        allowed_functions: List of functions that can be used in the IQL.
+        event_tracker: Event tracker to be used for auditing.
 
     Returns:
-        A string containing IQL for filters.
+        IQL query for filters.
 
     Raises:
-        UnsuppotedQueryError: When IQL generator is unable to construct a query
-        with given filters.
+        UnsuppotedQueryError: When IQL generator is unable to construct a query with given filters.
     """
-    if "unsupported query" in llm_response.lower():
+    if "unsupported query" in response.lower():
         raise UnsupportedQueryError
-    return llm_response
+
+    return await IQLFiltersQuery.parse(
+        source=response,
+        allowed_functions=allowed_functions,
+        event_tracker=event_tracker,
+    )
 
 
-def _decision_iql_response_parser(response: str) -> bool:
+async def _iql_aggregation_parser(
+    response: str,
+    allowed_functions: List[ExposedFunction],
+    event_tracker: Optional[EventTracker] = None,
+) -> IQLAggregationQuery:
+    """
+    Parses the response from the LLM to IQL.
+
+    Args:
+        response: LLM response.
+        allowed_functions: List of functions that can be used in the IQL.
+        event_tracker: Event tracker to be used for auditing.
+
+    Returns:
+        IQL query for aggregations.
+
+    Raises:
+        UnsuppotedQueryError: When IQL generator is unable to construct a query with given aggregations.
+    """
+    if "unsupported query" in response.lower():
+        raise UnsupportedQueryError
+
+    return await IQLAggregationQuery.parse(
+        source=response,
+        allowed_functions=allowed_functions,
+        event_tracker=event_tracker,
+    )
+
+
+def _decision_parser(response: str) -> bool:
     """
     Parses the response from the decision prompt.
 
@@ -52,7 +93,7 @@ def _decision_iql_response_parser(response: str) -> bool:
     return "true" in decision
 
 
-class FilteringDecisionPromptFormat(PromptFormat):
+class DecisionPromptFormat(PromptFormat):
     """
     IQL prompt format, providing a question and filters to be used in the conversation.
     """
@@ -71,58 +112,31 @@ class FilteringDecisionPromptFormat(PromptFormat):
 
 class IQLGenerationPromptFormat(PromptFormat):
     """
-    IQL prompt format, providing a question and filters to be used in the conversation.
+    IQL prompt format, providing a question and methods to be used in the conversation.
     """
 
     def __init__(
         self,
         *,
         question: str,
-        filters: List[ExposedFunction],
-        examples: List[FewShotExample] = None,
+        methods: List[ExposedFunction],
+        examples: Optional[List[FewShotExample]] = None,
     ) -> None:
         """
         Constructs a new IQLGenerationPromptFormat instance.
 
         Args:
             question: Question to be asked.
-            filters: List of filters exposed by the view.
+            methods: List of methods exposed by the view.
             examples: List of examples to be injected into the conversation.
+            aggregations: List of aggregations exposed by the view.
         """
         super().__init__(examples)
         self.question = question
-        self.filters = "\n".join([str(filter) for filter in filters])
+        self.methods = "\n".join(str(method) for method in methods)
 
 
-IQL_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
-    [
-        {
-            "role": "system",
-            "content": (
-                "You have access to API that lets you query a database:\n"
-                "\n{filters}\n"
-                "Please suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
-                "Remember! Don't give any comments, just the function calls.\n"
-                "The output will look like this:\n"
-                'filter1("arg1") AND (NOT filter2(120) OR filter3(True))\n'
-                "DO NOT INCLUDE arguments names in your response. Only the values.\n"
-                "You MUST use only these methods:\n"
-                "\n{filters}\n"
-                "It is VERY IMPORTANT not to use methods other than those listed above."
-                """If you DON'T KNOW HOW TO ANSWER DON'T SAY \"\", SAY: `UNSUPPORTED QUERY` INSTEAD! """
-                "This is CRUCIAL, otherwise the system will crash. "
-            ),
-        },
-        {
-            "role": "user",
-            "content": "{question}",
-        },
-    ],
-    response_parser=_validate_iql_response,
-)
-
-
-FILTERING_DECISION_TEMPLATE = PromptTemplate[FilteringDecisionPromptFormat](
+FILTERING_DECISION_TEMPLATE = PromptTemplate[DecisionPromptFormat](
     [
         {
             "role": "system",
@@ -148,5 +162,81 @@ FILTERING_DECISION_TEMPLATE = PromptTemplate[FilteringDecisionPromptFormat](
             ),
         },
     ],
-    response_parser=_decision_iql_response_parser,
+    response_parser=_decision_parser,
+)
+
+AGGREGATION_DECISION_TEMPLATE = PromptTemplate[DecisionPromptFormat](
+    [
+        {
+            "role": "system",
+            "content": (
+                "Given a question, determine whether the answer requires computing the aggregation in order to compute it.\n"
+                "Aggregation is a process in which the result set is reduced to a single value.\n\n"
+                "---\n\n"
+                "Follow the following format.\n\n"
+                "Question: ${{question}}\n"
+                "Reasoning: Let's think step by step in order to ${{produce the decision}}. We...\n"
+                "Decision: indicates whether the answer to the question requires initial data filtering. "
+                "(Respond with True or False)\n\n"
+            ),
+        },
+        {
+            "role": "user",
+            "content": ("Question: {question}\n" "Reasoning: Let's think step by step in order to "),
+        },
+    ],
+    response_parser=_decision_parser,
+)
+
+FILTERS_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
+    [
+        {
+            "role": "system",
+            "content": (
+                "You have access to an API that lets you query a database:\n"
+                "\n{methods}\n"
+                "Suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
+                "Remember! Don't give any comments, just the function calls.\n"
+                "The output will look like this:\n"
+                'filter1("arg1") AND (NOT filter2(120) OR filter3(True))\n'
+                "DO NOT INCLUDE arguments names in your response. Only the values.\n"
+                "You MUST use only these methods:\n"
+                "\n{methods}\n"
+                "It is VERY IMPORTANT not to use methods other than those listed above."
+                """If you DON'T KNOW HOW TO ANSWER DON'T SAY anything other than `UNSUPPORTED QUERY`"""
+                "This is CRUCIAL, otherwise the system will crash. "
+            ),
+        },
+        {
+            "role": "user",
+            "content": "{question}",
+        },
+    ],
+    response_parser=_iql_filters_parser,
+)
+
+AGGREGATION_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
+    [
+        {
+            "role": "system",
+            "content": (
+                "You have access to an API that lets you query a database supporting a SINGLE aggregation.\n"
+                "When prompted for an aggregation, use the following methods: \n"
+                "{methods}"
+                "DO NOT INCLUDE arguments names in your response. Only the values.\n"
+                "You MUST use only these methods:\n"
+                "\n{methods}\n"
+                "It is VERY IMPORTANT not to use methods other than those listed above."
+                """If you DON'T KNOW HOW TO ANSWER DON'T SAY anything other than `UNSUPPORTED QUERY`"""
+                "This is CRUCIAL to put `UNSUPPORTED QUERY` text only, otherwise the system will crash. "
+                "Structure output to resemble the following pattern:\n"
+                'aggregation1("arg1", arg2)\n'
+            ),
+        },
+        {
+            "role": "user",
+            "content": "{question}",
+        },
+    ],
+    response_parser=_iql_aggregation_parser,
 )

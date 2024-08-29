@@ -1,21 +1,21 @@
-from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, IQLGenerationPromptFormat
+from dbally.iql_generator.prompt import FILTERS_GENERATION_TEMPLATE, IQLGenerationPromptFormat
 from dbally.prompt.elements import FewShotExample
 
 
 async def test_iql_prompt_format_default() -> None:
     prompt_format = IQLGenerationPromptFormat(
         question="",
-        filters=[],
+        methods=[],
         examples=[],
     )
-    formatted_prompt = IQL_GENERATION_TEMPLATE.format_prompt(prompt_format)
+    formatted_prompt = FILTERS_GENERATION_TEMPLATE.format_prompt(prompt_format)
 
     assert formatted_prompt.chat == [
         {
             "role": "system",
-            "content": "You have access to API that lets you query a database:\n"
+            "content": "You have access to an API that lets you query a database:\n"
             "\n\n"
-            "Please suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
+            "Suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
             "Remember! Don't give any comments, just the function calls.\n"
             "The output will look like this:\n"
             'filter1("arg1") AND (NOT filter2(120) OR filter3(True))\n'
@@ -23,7 +23,7 @@ async def test_iql_prompt_format_default() -> None:
             "You MUST use only these methods:\n"
             "\n\n"
             "It is VERY IMPORTANT not to use methods other than those listed above."
-            """If you DON'T KNOW HOW TO ANSWER DON'T SAY \"\", SAY: `UNSUPPORTED QUERY` INSTEAD! """
+            """If you DON'T KNOW HOW TO ANSWER DON'T SAY anything other than `UNSUPPORTED QUERY`"""
             "This is CRUCIAL, otherwise the system will crash. ",
             "is_example": False,
         },
@@ -35,17 +35,17 @@ async def test_iql_prompt_format_few_shots_injected() -> None:
     examples = [FewShotExample("q1", "a1")]
     prompt_format = IQLGenerationPromptFormat(
         question="",
-        filters=[],
+        methods=[],
         examples=examples,
     )
-    formatted_prompt = IQL_GENERATION_TEMPLATE.format_prompt(prompt_format)
+    formatted_prompt = FILTERS_GENERATION_TEMPLATE.format_prompt(prompt_format)
 
     assert formatted_prompt.chat == [
         {
             "role": "system",
-            "content": "You have access to API that lets you query a database:\n"
+            "content": "You have access to an API that lets you query a database:\n"
             "\n\n"
-            "Please suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
+            "Suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
             "Remember! Don't give any comments, just the function calls.\n"
             "The output will look like this:\n"
             'filter1("arg1") AND (NOT filter2(120) OR filter3(True))\n'
@@ -53,7 +53,7 @@ async def test_iql_prompt_format_few_shots_injected() -> None:
             "You MUST use only these methods:\n"
             "\n\n"
             "It is VERY IMPORTANT not to use methods other than those listed above."
-            """If you DON'T KNOW HOW TO ANSWER DON'T SAY \"\", SAY: `UNSUPPORTED QUERY` INSTEAD! """
+            """If you DON'T KNOW HOW TO ANSWER DON'T SAY anything other than `UNSUPPORTED QUERY`"""
             "This is CRUCIAL, otherwise the system will crash. ",
             "is_example": False,
         },
@@ -67,12 +67,12 @@ async def test_iql_input_format_few_shot_examples_repeat_no_example_duplicates()
     examples = [FewShotExample("q1", "a1")]
     prompt_format = IQLGenerationPromptFormat(
         question="",
-        filters=[],
+        methods=[],
         examples=examples,
     )
-    formatted_prompt = IQL_GENERATION_TEMPLATE.format_prompt(prompt_format)
+    formatted_prompt = FILTERS_GENERATION_TEMPLATE.format_prompt(prompt_format)
 
-    assert len(formatted_prompt.chat) == len(IQL_GENERATION_TEMPLATE.chat) + (len(examples) * 2)
+    assert len(formatted_prompt.chat) == len(FILTERS_GENERATION_TEMPLATE.chat) + (len(examples) * 2)
     assert formatted_prompt.chat[1]["role"] == "user"
     assert formatted_prompt.chat[1]["content"] == examples[0].question
     assert formatted_prompt.chat[2]["role"] == "assistant"
