@@ -28,6 +28,7 @@ jobs_data = pd.DataFrame.from_records([
     {"title": "Machine Learning Engineer", "company": "Company C", "location": "Berlin", "salary": 90000},
     {"title": "Data Scientist", "company": "Company D", "location": "London", "salary": 110000},
     {"title": "Data Scientist", "company": "Company E", "location": "Warsaw", "salary": 80000},
+    {"title": "Data Scientist", "company": "Company F", "location": "Warsaw", "salary": 100000},
 ])
 ```
 

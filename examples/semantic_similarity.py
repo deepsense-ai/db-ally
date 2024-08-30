@@ -76,6 +76,45 @@ class CandidateView(SqlAlchemyBaseView):
         """
         return Candidate.country == country
 
+    @decorators.view_aggregation()
+    def average_years_of_experience(self) -> sqlalchemy.Select:
+        """
+        Calculates the average years of experience of candidates.
+        """
+        return self.select.with_only_columns(
+            sqlalchemy.func.avg(Candidate.years_of_experience).label("average_years_of_experience")
+        )
+
+    @decorators.view_aggregation()
+    def positions_per_country(self) -> sqlalchemy.Select:
+        """
+        Returns the number of candidates per position per country.
+        """
+        return (
+            self.select.with_only_columns(
+                sqlalchemy.func.count(Candidate.position).label("number_of_candidates"),
+                Candidate.position,
+                Candidate.country,
+            )
+            .group_by(Candidate.position, Candidate.country)
+            .order_by(sqlalchemy.desc("number_of_candidates"))
+        )
+
+    @decorators.view_aggregation()
+    def top_universities(self, limit: int) -> sqlalchemy.Select:
+        """
+        Returns the top universities by the number of candidates.
+        """
+        return (
+            self.select.with_only_columns(
+                sqlalchemy.func.count(Candidate.id).label("number_of_candidates"),
+                Candidate.university,
+            )
+            .group_by(Candidate.university)
+            .order_by(sqlalchemy.desc("number_of_candidates"))
+            .limit(limit)
+        )
+
 
 async def main():
     dbally.event_handlers = [CLIEventHandler()]

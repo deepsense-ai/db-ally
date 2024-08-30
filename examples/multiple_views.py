@@ -15,6 +15,7 @@ from dbally.audit import CLIEventHandler
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 from dbally.llms.litellm import LiteLLM
 from dbally.similarity import FaissStore, SimilarityIndex, SimpleSqlAlchemyFetcher
+from dbally.views.pandas_base import Aggregation, AggregationGroup
 
 engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
 
@@ -76,6 +77,45 @@ class CandidateView(SqlAlchemyBaseView):
         """
         return Candidate.country == country
 
+    @decorators.view_aggregation()
+    def average_years_of_experience(self) -> sqlalchemy.Select:
+        """
+        Calculates the average years of experience of candidates.
+        """
+        return self.select.with_only_columns(
+            sqlalchemy.func.avg(Candidate.years_of_experience).label("average_years_of_experience")
+        )
+
+    @decorators.view_aggregation()
+    def positions_per_country(self) -> sqlalchemy.Select:
+        """
+        Returns the number of candidates per position per country.
+        """
+        return (
+            self.select.with_only_columns(
+                sqlalchemy.func.count(Candidate.position).label("number_of_candidates"),
+                Candidate.position,
+                Candidate.country,
+            )
+            .group_by(Candidate.position, Candidate.country)
+            .order_by(sqlalchemy.desc("number_of_candidates"))
+        )
+
+    @decorators.view_aggregation()
+    def top_universities(self, limit: int) -> sqlalchemy.Select:
+        """
+        Returns the top universities by the number of candidates.
+        """
+        return (
+            self.select.with_only_columns(
+                sqlalchemy.func.count(Candidate.id).label("number_of_candidates"),
+                Candidate.university,
+            )
+            .group_by(Candidate.university)
+            .order_by(sqlalchemy.desc("number_of_candidates"))
+            .limit(limit)
+        )
+
 
 jobs_data = pd.DataFrame.from_records(
     [
@@ -84,6 +124,7 @@ jobs_data = pd.DataFrame.from_records(
         {"title": "Machine Learning Engineer", "company": "Company C", "location": "Berlin", "salary": 90000},
         {"title": "Data Scientist", "company": "Company D", "location": "London", "salary": 110000},
         {"title": "Data Scientist", "company": "Company E", "location": "Warsaw", "salary": 80000},
+        {"title": "Data Scientist", "company": "Company F", "location": "Warsaw", "salary": 100000},
     ]
 )
 
@@ -113,6 +154,46 @@ class JobView(DataFrameBaseView):
         Filters job offers from a specific company.
         """
         return self.df.company == company
+
+    @decorators.view_aggregation()
+    def average_salary(self) -> AggregationGroup:
+        """
+        Calculates the average salary of job offers.
+        """
+        return AggregationGroup(
+            aggregations=[
+                Aggregation(column="salary", function="mean"),
+            ],
+        )
+
+    @decorators.view_aggregation()
+    def average_salary_per_location(self) -> AggregationGroup:
+        """
+        Calculates the average salary of job offers per location and title.
+        """
+        return AggregationGroup(
+            aggregations=[
+                Aggregation(column="salary", function="mean"),
+            ],
+            groupbys=[
+                "location",
+                "title",
+            ],
+        )
+
+    @decorators.view_aggregation()
+    def count_per_title(self) -> AggregationGroup:
+        """
+        Counts the number of job offers per title.
+        """
+        return AggregationGroup(
+            aggregations=[
+                Aggregation(column="title", function="count"),
+            ],
+            groupbys=[
+                "title",
+            ],
+        )
 
 
 def display_results(result: ExecutionResult):
