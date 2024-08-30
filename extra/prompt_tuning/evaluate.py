@@ -61,8 +61,9 @@ async def evaluate(config: DictConfig) -> None:
         run = neptune.init_run()
         run["sys/tags"].add(
             [
-                config.program.type,
-                config.program.name,
+                config.prompt.type.id,
+                config.prompt.signature.id,
+                config.prompt.program.id,
                 *config.data.db_ids,
                 *config.data.difficulties,
             ]

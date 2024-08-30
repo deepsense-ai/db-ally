@@ -1,6 +1,6 @@
 name: COPRO
 params:
-  breadth: 3
-  depth: 10
-  init_temperature: 1.4
+  breadth: 4
+  depth: 15
+  init_temperature: 1.5
 compile:

@@ -32,8 +32,8 @@ class FilteringAssessorBaseline(FilteringAssessor):
 class FilteringAssessorOptimized(FilteringAssessor):
     """
     Given a question, determine whether the answer requires initial data filtering in order to compute it.
-    Initial data filtering is a process in which the result set is reduced to only include the rows that
-    meet certain criteria specified in the question.
+    Initial data filtering is a process in which the result set is filtered based on the specific features
+    stated in the question.
     """
 
 
@@ -61,6 +61,11 @@ class AggregationAssessorBaseline(AggregationAssessor):
 
 class AggregationAssessorOptimized(AggregationAssessor):
     """
-    Given a question, determine whether the answer requires data aggregation in order to compute it.
-    Data aggregation is a process in which we calculate a single values for a group of rows in the result set.
+    Look at the dependencies between the elements in the question and distinguish whether a single value can be obtained
+    for a groupof entities in the data table by aggregating necessary values.
     """
+
+    decision = OutputField(
+        prefix="Instructions to identify aggregated computations given a question, analyze dependencies -> ",
+        desc="indicates whether the answer to the question requires data aggregation. (Respond with True or False)",
+    )
