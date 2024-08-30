@@ -1,9 +1,9 @@
-from typing import Dict
+from typing import Dict, List, Optional
 
 from dspy import Prediction
 
 
-def filtering_assess_acc(gold: Dict, pred: Prediction) -> bool:
+def filtering_assess_acc(gold: Dict, pred: Prediction, _trace: Optional[List] = None) -> bool:
     """
     IQL filtering decision metric.
 
@@ -19,7 +19,7 @@ def filtering_assess_acc(gold: Dict, pred: Prediction) -> bool:
     )
 
 
-def aggregation_assess_acc(gold: Dict, pred: Prediction) -> bool:
+def aggregation_assess_acc(gold: Dict, pred: Prediction, _trace: Optional[List] = None) -> bool:
     """
     IQL aggregation decision metric.
 

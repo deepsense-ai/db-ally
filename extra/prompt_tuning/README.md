@@ -2,8 +2,8 @@
 
 This folder contains scripts for prompt tuning and evaluation. Prompts (programs) used in dbally:
 
-- `FILTERING_ASSESSOR` - assesses whether a question requires filtering.
-- `AGGREGATION_ASSESSOR` - assesses whether a question requires aggregation.
+- `FilteringAssessor` - assesses whether a question requires filtering.
+- `AggregationAssessor` - assesses whether a question requires aggregation.
 
 All evaluations are run on a dev split of the [BIRD](https://bird-bench.github.io/) dataset. For now, one configuration is available to run the suite against the `superhero` database.
 
@@ -15,6 +15,12 @@ Tune `filtering-assessor` prompt on base signature using [COPRO](https://dspy-do
 
 ```bash
 python train.py prompt/type=filtering-assessor prompt/signature=baseline prompt/program=predict
+```
+
+Change optimizer to [MIPRO](https://dspy-docs.vercel.app/docs/cheatsheet#mipro):
+
+```bash
+python train.py prompt/type=filtering-assessor prompt/signature=baseline prompt/program=predict optimizer=mipro
 ```
 
 Train multiple prompts:
@@ -30,6 +36,7 @@ Tweak optimizer params to get different results:
 
 ```bash
 python train.py \
+    optimizer=copro \
     optimizer.params.breadth=2 \
     optimizer.params.depth=3 \
     optimizer.params.init_temperature=1.0
