@@ -121,3 +121,29 @@ class AggregationAssessorCoT(Module):
         """
         decision = self.decide(question=question).decision
         return Prediction(decision=decision.lower() == "true")
+
+
+class AggregationAssessorCoTH(Module):
+    """
+    Program that assesses whether a question requires aggregation.
+    """
+
+    def __init__(self, signature: Type[AggregationAssessor]) -> None:
+        super().__init__()
+        self.decide = ChainOfThoughtWithHint(signature)
+
+    def forward(self, question: str) -> Prediction:
+        """
+        Assess whether a question requires aggregation.
+
+        Args:
+            question: The question to assess.
+
+        Returns:
+            The prediction.
+        """
+        decision = self.decide(
+            question=question,
+            hint="Look for words indicating aggregation functions.",
+        ).decision
+        return Prediction(decision=decision.lower() == "true")

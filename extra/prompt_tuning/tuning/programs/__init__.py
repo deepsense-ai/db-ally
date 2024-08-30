@@ -1,5 +1,6 @@
 from .iql import (
     AggregationAssessorCoT,
+    AggregationAssessorCoTH,
     AggregationAssessorPredict,
     FilteringAssessorCoT,
     FilteringAssessorCoTH,
@@ -12,6 +13,7 @@ PROGRAMS = {
     FilteringAssessorCoTH.__name__: FilteringAssessorCoTH,
     AggregationAssessorPredict.__name__: AggregationAssessorPredict,
     AggregationAssessorCoT.__name__: AggregationAssessorCoT,
+    AggregationAssessorCoTH.__name__: AggregationAssessorCoTH,
 }
 
 __all__ = [
@@ -21,4 +23,5 @@ __all__ = [
     "FilteringAssessorPredict",
     "FilteringAssessorCoT",
     "FilteringAssessorCoTH",
+    "AggregationAssessorCoTH",
 ]

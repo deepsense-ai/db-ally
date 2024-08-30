@@ -61,11 +61,7 @@ class AggregationAssessorBaseline(AggregationAssessor):
 
 class AggregationAssessorOptimized(AggregationAssessor):
     """
-    Look at the dependencies between the elements in the question and distinguish whether a single value can be obtained
-    for a groupof entities in the data table by aggregating necessary values.
+    Given a question, determine whether the answer requires data aggregation in order to compute it.
+    Data aggregation is a process in which we calculate a single values for a group of rows in the result set.
+    Most common aggregation functions are counting, averaging, summing, but other types of aggregation are possible.
     """
-
-    decision = OutputField(
-        prefix="Instructions to identify aggregated computations given a question, analyze dependencies -> ",
-        desc="indicates whether the answer to the question requires data aggregation. (Respond with True or False)",
-    )
