@@ -54,21 +54,59 @@ class CandidateView(SqlAlchemyBaseView):
         """
         return Candidate.country == country
 
+    @decorators.view_aggregation()
+    def average_years_of_experience(self) -> sqlalchemy.Select:
+        """
+        Calculates the average years of experience of candidates.
+        """
+        return self.select.with_only_columns(
+            sqlalchemy.func.avg(Candidate.years_of_experience).label("average_years_of_experience")
+        )
 
-async def main():
+    @decorators.view_aggregation()
+    def positions_per_country(self) -> sqlalchemy.Select:
+        """
+        Returns the number of candidates per position per country.
+        """
+        return (
+            self.select.with_only_columns(
+                sqlalchemy.func.count(Candidate.position).label("number_of_candidates"),
+                Candidate.position,
+                Candidate.country,
+            )
+            .group_by(Candidate.position, Candidate.country)
+            .order_by(sqlalchemy.desc("number_of_candidates"))
+        )
+
+    @decorators.view_aggregation()
+    def top_universities(self, limit: int) -> sqlalchemy.Select:
+        """
+        Returns the top universities by the number of candidates.
+        """
+        return (
+            self.select.with_only_columns(
+                sqlalchemy.func.count(Candidate.id).label("number_of_candidates"),
+                Candidate.university,
+            )
+            .group_by(Candidate.university)
+            .order_by(sqlalchemy.desc("number_of_candidates"))
+            .limit(limit)
+        )
+
+
+async def main() -> None:
     llm = LiteLLM(model_name="gpt-3.5-turbo")
     dbally.event_handlers = [CLIEventHandler()]
 
     collection = dbally.create_collection("recruitment", llm)
     collection.add(CandidateView, lambda: CandidateView(engine))
 
-    result = await collection.ask("Find me French candidates suitable for a senior data scientist position.")
+    result = await collection.ask("What is the average years of experience of candidates?")
 
     print(f"The generated SQL query is: {result.context.get('sql')}")
     print()
-    print(f"Retrieved {len(result.results)} candidates:")
-    for candidate in result.results:
-        print(candidate)
+    for row in result.results:
+        print(row)
 
 
 if __name__ == "__main__":
