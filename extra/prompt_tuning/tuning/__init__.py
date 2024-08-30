@@ -9,8 +9,8 @@ class ProgramType(Enum):
     Program types.
     """
 
-    FILTERING_ASSESSOR = "FILTERING_ASSESSOR"
-    AGGREGATION_ASSESSOR = "AGGREGATION_ASSESSOR"
+    FILTERING_ASSESSOR = "FilteringAssessor"
+    AGGREGATION_ASSESSOR = "AggregationAssessor"
 
 
 DATALOADERS = {

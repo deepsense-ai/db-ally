@@ -1,16 +1,16 @@
-from .iql import AggregationAssessorBaseline, AggregationAssessorCoT, FilteringAssessorBaseline, FilteringAssessorCoT
+from .iql import AggregationAssessorCoT, AggregationAssessorPredict, FilteringAssessorCoT, FilteringAssessorPredict
 
 PROGRAMS = {
-    FilteringAssessorBaseline.__name__: FilteringAssessorBaseline,
+    FilteringAssessorPredict.__name__: FilteringAssessorPredict,
     FilteringAssessorCoT.__name__: FilteringAssessorCoT,
-    AggregationAssessorBaseline.__name__: AggregationAssessorBaseline,
+    AggregationAssessorPredict.__name__: AggregationAssessorPredict,
     AggregationAssessorCoT.__name__: AggregationAssessorCoT,
 }
 
 __all__ = [
     "PROGRAMS",
-    "AggregationAssessorBaseline",
+    "AggregationAssessorPredict",
     "AggregationAssessorCoT",
-    "FilteringAssessorBaseline",
+    "FilteringAssessorPredict",
     "FilteringAssessorCoT",
 ]

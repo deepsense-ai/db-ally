@@ -8,6 +8,7 @@ import hydra
 from omegaconf import DictConfig
 from tuning import DATALOADERS, METRICS
 from tuning.programs import PROGRAMS
+from tuning.signatures import SIGNATURES
 
 logging.getLogger("httpx").setLevel(logging.ERROR)
 logging.getLogger("anthropic").setLevel(logging.ERROR)
@@ -21,11 +22,15 @@ async def train(config: DictConfig) -> None:
     Args:
         config: Hydra configuration.
     """
-    log.info("Starting training %s with %s", config.program.name, config.optimizer.name)
+    signature_name = f"{config.prompt.type.id}{config.prompt.signature.id}"
+    program_name = f"{config.prompt.type.id}{config.prompt.program.id}"
 
-    dataloader = DATALOADERS[config.program.type](config)
-    metric = METRICS[config.program.type]
-    program = PROGRAMS[config.program.name]()
+    log.info("Starting training: %s(%s) program with %s optimizer", program_name, signature_name, config.optimizer.name)
+
+    dataloader = DATALOADERS[config.prompt.type.id](config)
+    metric = METRICS[config.prompt.type.id]
+    signature = SIGNATURES[signature_name]
+    program = PROGRAMS[program_name](signature)
 
     dataset = await dataloader.load()
 

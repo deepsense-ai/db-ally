@@ -1,16 +1,18 @@
+from typing import Type
+
 from dspy import ChainOfThought, Module, Predict, Prediction
 
-from ..signatures.iql import CheckQuestionAggregation, CheckQuestionFiltering
+from ..signatures.iql import AggregationAssessor, FilteringAssessor
 
 
-class FilteringAssessorBaseline(Module):
+class FilteringAssessorPredict(Module):
     """
     Program that assesses whether a question requires filtering.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, signature: Type[FilteringAssessor]) -> None:
         super().__init__()
-        self.decide = Predict(CheckQuestionFiltering)
+        self.decide = Predict(signature)
 
     def forward(self, question: str) -> Prediction:
         """
@@ -31,9 +33,9 @@ class FilteringAssessorCoT(Module):
     Program that assesses whether a question requires filtering.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, signature: Type[FilteringAssessor]) -> None:
         super().__init__()
-        self.decide = ChainOfThought(CheckQuestionFiltering)
+        self.decide = ChainOfThought(signature)
 
     def forward(self, question: str) -> Prediction:
         """
@@ -49,14 +51,14 @@ class FilteringAssessorCoT(Module):
         return Prediction(decision=decision.lower() == "true")
 
 
-class AggregationAssessorBaseline(Module):
+class AggregationAssessorPredict(Module):
     """
     Program that assesses whether a question requires aggregation.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, signature: Type[AggregationAssessor]) -> None:
         super().__init__()
-        self.decide = Predict(CheckQuestionAggregation)
+        self.decide = Predict(signature)
 
     def forward(self, question: str) -> Prediction:
         """
@@ -77,9 +79,9 @@ class AggregationAssessorCoT(Module):
     Program that assesses whether a question requires aggregation.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, signature: Type[AggregationAssessor]) -> None:
         super().__init__()
-        self.decide = ChainOfThought(CheckQuestionAggregation)
+        self.decide = ChainOfThought(signature)
 
     def forward(self, question: str) -> Prediction:
         """

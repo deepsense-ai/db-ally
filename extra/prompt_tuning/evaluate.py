@@ -10,6 +10,7 @@ from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
 from tuning import DATALOADERS, METRICS
 from tuning.programs import PROGRAMS
+from tuning.signatures import SIGNATURES
 from tuning.utils import save, serialize_results
 
 logging.getLogger("httpx").setLevel(logging.ERROR)
@@ -24,11 +25,15 @@ async def evaluate(config: DictConfig) -> None:
     Args:
         config: Hydra configuration.
     """
-    log.info("Starting evaluation: %s", config.program.name)
+    signature_name = f"{config.prompt.type.id}{config.prompt.signature.id}"
+    program_name = f"{config.prompt.type.id}{config.prompt.program.id}"
 
-    dataloader = DATALOADERS[config.program.type](config)
-    metric = METRICS[config.program.type]
-    program = PROGRAMS[config.program.name]()
+    log.info("Starting evaluation: %s(%s) program", program_name, signature_name)
+
+    dataloader = DATALOADERS[config.prompt.type.id](config)
+    metric = METRICS[config.prompt.type.id]
+    signature = SIGNATURES[signature_name]
+    program = PROGRAMS[program_name](signature)
 
     dataset = await dataloader.load()
 
