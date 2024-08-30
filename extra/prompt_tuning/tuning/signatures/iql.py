@@ -14,26 +14,25 @@ class FilteringAssessor(Signature, ABC):
     )
     decision = OutputField(
         prefix="Decision: ",
-        desc=(
-            "indicates whether the answer to the question requires initial data filtering. "
-            "(Respond with True or False)"
-        ),
+        desc=("indicates whether the answer to the question requires data filtering. " "(Respond with True or False)"),
     )
 
 
 class FilteringAssessorBaseline(FilteringAssessor):
     """
-    Given a question, determine whether the answer requires initial data filtering in order to compute it.
-    Initial data filtering is a process in which the result set is reduced to only include the rows that
+    Given a question, determine whether the answer requires data filtering in order to compute it.
+    Data filtering is a process in which the result set is reduced to only include the rows that
     meet certain criteria specified in the question.
     """
 
 
 class FilteringAssessorOptimized(FilteringAssessor):
     """
-    Given a question, determine whether the answer requires initial data filtering in order to compute it.
-    Initial data filtering is a process in which the result set is filtered based on the specific features
-    stated in the question.
+    Given a question, determine whether the answer requires data filtering in order to compute it.
+    Data filtering is a process in which the result set is filtered based on the specific features
+    stated in the question. Such a question can be easily identified by using words that refer to
+    specific feature values (rather than feature names). Look for words indicating specific values
+    that the answer should contain.
     """
 
 
