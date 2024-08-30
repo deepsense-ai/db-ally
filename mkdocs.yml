@@ -8,6 +8,7 @@ nav:
   - db-ally docs: index.md
   - Quickstart:
       - quickstart/index.md
+      - quickstart/aggregations.md
       - quickstart/semantic-similarity.md
       - quickstart/multiple-views.md
   - Concepts:
