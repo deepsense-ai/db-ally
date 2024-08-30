@@ -104,7 +104,6 @@ async def main() -> None:
     result = await collection.ask("What is the average years of experience of candidates?")
 
     print(f"The generated SQL query is: {result.context.get('sql')}")
-    print()
     for row in result.results:
         print(row)
 

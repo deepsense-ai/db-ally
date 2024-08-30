@@ -6,7 +6,7 @@ In this guide, we will add aggregations to our view so that we can calculate som
 
 ## View Definition
 
-tbd
+To add aggregations to our [structured view](../concepts/structured_views.md), we'll define new methods. These methods will allow the LLM model to perform calculations and summarize data across multiple rows. Let's add three aggregation methods to our `CandidateView`:
 
 ```python
 class CandidateView(SqlAlchemyBaseView):
@@ -62,9 +62,31 @@ class CandidateView(SqlAlchemyBaseView):
         )
 ```
 
+By setting up these aggregations, you enable the LLM to calculate metrics about the average years of experience, the number of candidates per position per country, and the top universities based on the number of candidates.
+
 ## Query Execution
 
-tbd
+Having already defined and registered the view with the collection, we can now execute the query:
+
+```python
+result = await collection.ask("What is the average years of experience of candidates?")
+print(result.results)
+```
+
+This will return the average years of experience of candidates.
+
+<details>
+  <summary>The expected output</summary>
+```
+The generated SQL query is: SELECT avg(candidates.years_of_experience) AS average_years_of_experience
+FROM candidates
+
+Number of rows: 1
+{'average_years_of_experience': 4.98}
+```
+</details>
+
+Feel free to try other questions like: "What's the distribution of candidates across different positions and countries?" or "What are the top 3 universities with the most candidates?".
 
 ## Full Example
 
