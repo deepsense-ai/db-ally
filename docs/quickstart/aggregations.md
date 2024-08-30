@@ -35,30 +35,26 @@ class CandidateView(SqlAlchemyBaseView):
         Returns the number of candidates per position per country.
         """
         return (
-            self.select
-                .with_only_columns(
-                    sqlalchemy.func.count(Candidate.position).label("number_of_candidates"),
-                    Candidate.position,
-                    Candidate.country,
-                )
-                .group_by(Candidate.position, Candidate.country)
-                .order_by(sqlalchemy.desc("number_of_candidates"))
+            self.select.with_only_columns(
+                sqlalchemy.func.count(Candidate.position).label("number_of_positions"),
+                Candidate.position,
+                Candidate.country,
+            )
+            .group_by(Candidate.position, Candidate.country)
+            .order_by(sqlalchemy.desc("number_of_positions"))
         )
 
     @decorators.view_aggregation()
-    def top_universities(self, limit: int) -> sqlalchemy.Select:
+    def candidates_per_country(self) -> sqlalchemy.Select:
         """
-        Returns the top universities by the number of candidates.
+        Returns the number of candidates per country.
         """
         return (
-            self.select
-                .with_only_columns(
-                    sqlalchemy.func.count(Candidate.id).label("number_of_candidates"),
-                    Candidate.university,
-                )
-                .group_by(Candidate.university)
-                .order_by(sqlalchemy.desc("number_of_candidates"))
-                .limit(limit)
+            self.select.with_only_columns(
+                sqlalchemy.func.count(Candidate.id).label("number_of_candidates"),
+                Candidate.country,
+            )
+            .group_by(Candidate.country)
         )
 ```
 
@@ -86,7 +82,7 @@ Number of rows: 1
 ```
 </details>
 
-Feel free to try other questions like: "What's the distribution of candidates across different positions and countries?" or "What are the top 3 universities with the most candidates?".
+Feel free to try other questions like: "What's the distribution of candidates across different positions and countries?" or "How many candidates are from China?".
 
 ## Full Example
 

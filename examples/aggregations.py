@@ -70,28 +70,23 @@ class CandidateView(SqlAlchemyBaseView):
         """
         return (
             self.select.with_only_columns(
-                sqlalchemy.func.count(Candidate.position).label("number_of_candidates"),
+                sqlalchemy.func.count(Candidate.position).label("number_of_positions"),
                 Candidate.position,
                 Candidate.country,
             )
             .group_by(Candidate.position, Candidate.country)
-            .order_by(sqlalchemy.desc("number_of_candidates"))
+            .order_by(sqlalchemy.desc("number_of_positions"))
         )
 
     @decorators.view_aggregation()
-    def top_universities(self, limit: int) -> sqlalchemy.Select:
+    def candidates_per_country(self) -> sqlalchemy.Select:
         """
-        Returns the top universities by the number of candidates.
+        Returns the number of candidates per country.
         """
-        return (
-            self.select.with_only_columns(
-                sqlalchemy.func.count(Candidate.id).label("number_of_candidates"),
-                Candidate.university,
-            )
-            .group_by(Candidate.university)
-            .order_by(sqlalchemy.desc("number_of_candidates"))
-            .limit(limit)
-        )
+        return self.select.with_only_columns(
+            sqlalchemy.func.count(Candidate.id).label("number_of_candidates"),
+            Candidate.country,
+        ).group_by(Candidate.country)
 
 
 async def main() -> None:
