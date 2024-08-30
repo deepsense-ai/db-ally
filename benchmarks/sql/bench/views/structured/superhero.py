@@ -1,4 +1,4 @@
-# pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, singleton-comparison, consider-using-in, too-many-ancestors, too-many-public-methods
+# pylint: disable=attribute-defined-outside-init, missing-docstring, missing-return-doc, missing-param-doc, singleton-comparison, consider-using-in, too-many-ancestors, too-many-public-methods
 # flake8: noqa
 
 from typing import Literal
@@ -549,6 +549,7 @@ class RaceFilterMixin:
 
 class SuperheroView(
     DBInitMixin,
+    SqlAlchemyBaseView,
     SuperheroAggregationMixin,
     SuperheroFilterMixin,
     SuperheroColourAggregationMixin,
@@ -560,18 +561,11 @@ class SuperheroView(
     PublisherAggregationMixin,
     PublisherFilterMixin,
     RaceFilterMixin,
-    SqlAlchemyBaseView,
 ):
     """
     View for querying only superheros data. Contains the superhero id, superhero name, full name, height, weight,
     publisher name, gender, race, alignment, eye colour, hair colour, skin colour.
     """
-
-    def __init__(self, *args, **kwargs) -> None:
-        self.eye_colour = aliased(Colour)
-        self.hair_colour = aliased(Colour)
-        self.skin_colour = aliased(Colour)
-        super().__init__(*args, **kwargs)
 
     def get_select(self) -> Select:
         """
@@ -580,6 +574,10 @@ class SuperheroView(
         Returns:
             The select object.
         """
+        self.eye_colour = aliased(Colour)
+        self.hair_colour = aliased(Colour)
+        self.skin_colour = aliased(Colour)
+
         return (
             select(
                 Superhero.id,
