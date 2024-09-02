@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.6.0 (2024-09-02)
+
+### Feature
+
+* feat: aggregations in structured views (#62) ([`139ab9b`](https://github.com/deepsense-ai/db-ally/commit/139ab9be6514cb0777251efafc3e272cac00e6cd))
+
+* feat(extra): prompt tuning (#79) ([`2714e7c`](https://github.com/deepsense-ai/db-ally/commit/2714e7c839137a9fc617270c086167d273a16f1a))
+
+* feat(views): optional filtering for structured views (#78) ([`11a7b21`](https://github.com/deepsense-ai/db-ally/commit/11a7b21956ab33f47c1a9986deb6a5c154988579))
+
+### Documentation
+
+* docs(aggregations): structured view aggregations (#87) ([`9f6b5df`](https://github.com/deepsense-ai/db-ally/commit/9f6b5df380fe7a48a36eb3810a6712bc46d9b728))
+
+* docs(quickstart): update quickstart (#88) ([`9a1e9d8`](https://github.com/deepsense-ai/db-ally/commit/9a1e9d8bcad5e124f3faa9a5798e8b2daefeee1a))
+
+* docs: update logo (#86) ([`23e50ff`](https://github.com/deepsense-ai/db-ally/commit/23e50ff7159112dea3c1988eacbe85de3696628e))
+
+### Refactor
+
+* refactor(benchmarks): evaluation pipeline (#71) ([`cd2cece`](https://github.com/deepsense-ai/db-ally/commit/cd2cece73cb3ae2d4d5efe61cbfbec03c4968543))
+
+* refactor(iql): add iql gen exception (#77) ([`90b0e66`](https://github.com/deepsense-ai/db-ally/commit/90b0e669394655c28e3256e24321cbeaea2a91c6))
+
+### Chore
+
+* chore: update changelog ([`0a22942`](https://github.com/deepsense-ai/db-ally/commit/0a22942451c80ee5d572805ac67981b6e96d96ae))
+
 ## v0.5.0 (2024-07-23)
 
 ### Feature
