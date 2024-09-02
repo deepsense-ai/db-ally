@@ -1,5 +1,6 @@
 from .base import Metric, MetricSet
 from .iql import (
+    AggregationAccuracy,
     FilteringAccuracy,
     FilteringPrecision,
     FilteringRecall,
@@ -17,6 +18,7 @@ from .sql import ExecutionAccuracy, SQLExactMatch
 __all__ = [
     "Metric",
     "MetricSet",
+    "AggregationAccuracy",
     "FilteringAccuracy",
     "FilteringPrecision",
     "FilteringRecall",

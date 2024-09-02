@@ -5,20 +5,23 @@ from ..pipelines import EvaluationResult
 from .base import Metric
 
 
-class FilteringAccuracy(Metric):
+class AssessingAccuracy(Metric, ABC):
     """
-    Filtering accuracy is proportion of correct decisions (to filter or not) out of all decisions made.
+    Assessing accuracy is proportion of correct decisions out of all decisions made.
     """
+
+    prefix: str
+    iql: str
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
-        Computes the filtering accuracy.
+        Computes the assessing accuracy.
 
         Args:
             results: List of evaluation results.
 
         Returns:
-            Filtering accuracy.
+            Assessing accuracy.
         """
         results = [
             result
@@ -27,14 +30,20 @@ class FilteringAccuracy(Metric):
             and result.prediction.iql
             and result.reference.view_name
             and result.prediction.view_name
-            and result.reference.iql.filters.generated
-            and result.prediction.iql.filters.generated
+            and getattr(result.reference.iql, self.iql).generated
+            and getattr(result.prediction.iql, self.iql).generated
         ]
         return {
-            "DM/FLT/ACC": (
+            f"DM/{self.prefix}/ACC": (
                 sum(
-                    (result.reference.iql.filters.source is not None or result.reference.iql.filters.unsupported)
-                    == (result.prediction.iql.filters.source is not None or result.prediction.iql.filters.unsupported)
+                    (
+                        getattr(result.reference.iql, self.iql).source is not None
+                        or getattr(result.reference.iql, self.iql).unsupported
+                    )
+                    == (
+                        getattr(result.prediction.iql, self.iql).source is not None
+                        or getattr(result.prediction.iql, self.iql).unsupported
+                    )
                     for result in results
                 )
                 / len(results)
@@ -42,6 +51,24 @@ class FilteringAccuracy(Metric):
                 else None
             )
         }
+
+
+class FilteringAccuracy(AssessingAccuracy):
+    """
+    Filtering accuracy is proportion of correct decisions (to filter or not) out of all decisions made.
+    """
+
+    prefix: str = "FLT"
+    iql: str = "filters"
+
+
+class AggregationAccuracy(AssessingAccuracy):
+    """
+    Aggregation accuracy is proportion of correct decisions (to aggregate or not) out of all decisions made.
+    """
+
+    prefix: str = "AGG"
+    iql: str = "aggregation"
 
 
 class FilteringPrecision(Metric):
