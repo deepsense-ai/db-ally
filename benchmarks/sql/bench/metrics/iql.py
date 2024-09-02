@@ -1,3 +1,4 @@
+from abc import ABC
 from typing import Any, Dict, List
 
 from ..pipelines import EvaluationResult
@@ -19,12 +20,21 @@ class FilteringAccuracy(Metric):
         Returns:
             Filtering accuracy.
         """
-        results = [result for result in results if result.reference.iql and result.prediction.iql]
+        results = [
+            result
+            for result in results
+            if result.reference.iql
+            and result.prediction.iql
+            and result.reference.view_name
+            and result.prediction.view_name
+            and result.reference.iql.filters.generated
+            and result.prediction.iql.filters.generated
+        ]
         return {
             "DM/FLT/ACC": (
                 sum(
-                    isinstance(result.prediction.iql.filters.source, type(result.reference.iql.filters.source))
-                    and result.prediction.iql.filters.unsupported == result.reference.iql.filters.unsupported
+                    (result.reference.iql.filters.source is not None or result.reference.iql.filters.unsupported)
+                    == (result.prediction.iql.filters.source is not None or result.prediction.iql.filters.unsupported)
                     for result in results
                 )
                 / len(results)
@@ -222,10 +232,13 @@ class IQLFiltersRecall(Metric):
         }
 
 
-class IQLFiltersParseability(Metric):
+class IQLParseability(Metric, ABC):
     """
     IQL filters parseability is proportion of syntactically correct (parseable) IQLs out of all generated IQLs.
     """
+
+    prefix: str
+    iql: str
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
@@ -241,46 +254,90 @@ class IQLFiltersParseability(Metric):
             result
             for result in results
             if (result.reference.iql and result.prediction.iql)
-            and (result.reference.iql.filters and result.prediction.iql.filters)
-            and (result.reference.iql.filters.source and result.prediction.iql.filters.source)
+            and (getattr(result.reference.iql, self.iql) and getattr(result.prediction.iql, self.iql))
+            and (getattr(result.reference.iql, self.iql).source and getattr(result.prediction.iql, self.iql).source)
         ]
         return {
-            "IQL/FLT/PARSEABILITY": (
-                sum(result.prediction.iql.filters.valid for result in results) / len(results) if results else None
+            f"IQL/{self.prefix}/PARSEABILITY": (
+                sum(getattr(result.prediction.iql, self.iql).valid for result in results) / len(results)
+                if results
+                else None
             )
         }
 
 
-class IQLFiltersCorrectness(Metric):
+class IQLFiltersParseability(IQLParseability):
     """
-    IQL filters correctness is proportion of IQLs that produce correct results out of all parseable IQLs.
+    IQL filters parseability is proportion of syntactically correct (parseable) IQLs out of all generated IQLs.
     """
+
+    prefix: str = "FLT"
+    iql: str = "filters"
+
+
+class IQLAggregationParseability(IQLParseability):
+    """
+    IQL aggregation parseability is proportion of syntactically correct (parseable) IQLs out of all generated IQLs.
+    """
+
+    prefix: str = "AGG"
+    iql: str = "aggregation"
+
+
+class IQLCorrectness(Metric, ABC):
+    """
+    IQL correctness is proportion of IQLs that produce correct results out of all parseable IQLs.
+    """
+
+    prefix: str
+    iql: str
 
     def compute(self, results: List[EvaluationResult]) -> Dict[str, Any]:
         """
-        Computes the IQL filters correctness.
+        Computes the IQL correctness.
 
         Args:
             results: List of evaluation results.
 
         Returns:
-            IQL filters correctness.
+            IQL correctness.
         """
         results = [
             result
             for result in results
             if (result.reference.iql and result.prediction.iql)
             and (
-                result.reference.iql.filters.source
-                and result.prediction.iql.filters.source
-                and result.prediction.iql.filters.valid
+                getattr(result.reference.iql, self.iql).source
+                and getattr(result.prediction.iql, self.iql).source
+                and getattr(result.prediction.iql, self.iql).valid
             )
         ]
         return {
-            "IQL/FLT/CORRECTNESS": (
-                sum(result.prediction.iql.filters.source == result.reference.iql.filters.source for result in results)
+            f"IQL/{self.prefix}/CORRECTNESS": (
+                sum(
+                    getattr(result.prediction.iql, self.iql).source == getattr(result.reference.iql, self.iql).source
+                    for result in results
+                )
                 / len(results)
                 if results
                 else None
             )
         }
+
+
+class IQLFiltersCorrectness(IQLCorrectness):
+    """
+    IQL filters correctness is proportion of IQLs that produce correct results out of all parseable IQLs.
+    """
+
+    prefix: str = "FLT"
+    iql: str = "filters"
+
+
+class IQLAggregationCorrectness(IQLCorrectness):
+    """
+    IQL aggregation correctness is proportion of IQLs that produce correct results out of all parseable IQLs.
+    """
+
+    prefix: str = "AGG"
+    iql: str = "aggregation"

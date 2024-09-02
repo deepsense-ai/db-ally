@@ -293,7 +293,7 @@ class SuperheroAggregationMixin:
         Returns:
             The superheros count.
         """
-        return self.data.with_only_columns(func.count(Superhero.id).label("count_superheroes")).group_by(Superhero.id)
+        return self.select.with_only_columns(func.count(Superhero.id).label("count_superheroes")).group_by(Superhero.id)
 
     @view_aggregation()
     def average_height(self) -> Select:
@@ -303,7 +303,9 @@ class SuperheroAggregationMixin:
         Returns:
             The superheros average height.
         """
-        return self.data.with_only_columns(func.avg(Superhero.height_cm).label("average_height")).group_by(Superhero.id)
+        return self.select.with_only_columns(func.avg(Superhero.height_cm).label("average_height")).group_by(
+            Superhero.id
+        )
 
 
 class SuperheroColourFilterMixin:
@@ -387,7 +389,7 @@ class SuperheroColourAggregationMixin:
         Returns:
             The percentage of objects with eye colour.
         """
-        return self.data.with_only_columns(
+        return self.select.with_only_columns(
             (
                 cast(func.count(case((self.eye_colour.colour == eye_colour, Superhero.id), else_=None)), Float)
                 * 100
@@ -431,7 +433,7 @@ class PublisherAggregationMixin:
         Returns:
             The percentage of objects with publisher.
         """
-        return self.data.with_only_columns(
+        return self.select.with_only_columns(
             (
                 cast(func.count(case((Publisher.publisher_name == publisher_name, Superhero.id), else_=None)), Float)
                 * 100
@@ -475,7 +477,7 @@ class AlignmentAggregationMixin:
         Returns:
             The percentage of objects with alignment.
         """
-        return self.data.with_only_columns(
+        return self.select.with_only_columns(
             (
                 cast(func.count(case((Alignment.alignment == alignment, Superhero.id), else_=None)), Float)
                 * 100
@@ -519,7 +521,7 @@ class GenderAggregationMixin:
         Returns:
             The percentage of objects with gender.
         """
-        return self.data.with_only_columns(
+        return self.select.with_only_columns(
             (
                 cast(func.count(case((Gender.gender == gender, Superhero.id), else_=None)), Float)
                 * 100
