@@ -2,7 +2,7 @@
 
 This guide is a continuation of the [Intro](./intro.md) guide. It assumes that you have already set up the views and the collection. If not, please refer to the complete Part 1 code on [GitHub](https://github.com/deepsense-ai/db-ally/blob/main/examples/intro.py){:target="_blank"}.
 
-In this guide, we will add aggregations to our view so that we can calculate some general metrics about the candidates.
+In this guide, we will add aggregations to our view to calculate general metrics about the candidates.
 
 ## View Definition
 
