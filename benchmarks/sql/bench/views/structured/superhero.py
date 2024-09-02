@@ -153,12 +153,6 @@ class SuperheroFilterMixin:
     def filter_by_weight_kg(self, weight_kg: int) -> ColumnElement:
         """
         Filters the view by the weight of the superhero.
-
-        Args:
-            weight_kg: The weight of the superhero.
-
-        Returns:
-            The filter condition.
         """
         return Superhero.weight_kg == weight_kg
 
