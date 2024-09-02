@@ -25,6 +25,7 @@ class SQLExactMatch(Metric):
         Returns:
             The exact match ratio.
         """
+        results = [result for result in results if result.reference.sql and result.prediction.sql]
         return {
             "SQL/EM": (
                 sum(result.prediction.sql == result.reference.sql for result in results) / len(results)
@@ -95,6 +96,7 @@ class ExecutionAccuracy(_DBMixin, Metric):
         Returns:
             Execution accuracy score and valid efficiency score.
         """
+        results = [result for result in results if result.reference.sql and result.prediction.sql]
         accurate_results = [result for result in results if self._execution_accuracy(result)]
         return {
             "EX": len(accurate_results) / len(results) if results else None,
@@ -121,9 +123,6 @@ class ExecutionAccuracy(_DBMixin, Metric):
         Returns:
             True if the execution results are identical, False otherwise.
         """
-        if result.prediction.sql is None:
-            return False
-
         try:
             ref_results = self._execute_query(result.reference.sql, result.db_id)
             pred_results = self._execute_query(result.prediction.sql, result.db_id)
@@ -137,6 +136,10 @@ class ExecutionAccuracy(_DBMixin, Metric):
         # TODO: Sometimes a different number of rows is okay, e.g. if df has aggregated values that are expanded in gt
         if reference.shape[0] != prediction.shape[0]:
             return False
+
+        # If both dataframes have only one column, compare the values directly
+        if reference.shape[1] == prediction.shape[1] == 1:
+            return reference.iloc[:, 0].equals(prediction.iloc[:, 0])
 
         # Returned view may have the same columns, or more columns than the ground truth
         if not reference.columns.isin(prediction.columns).all():
