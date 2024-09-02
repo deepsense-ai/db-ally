@@ -33,7 +33,7 @@ The benefits of db-ally can be described in terms of its four main characteristi
 
 ## Quickstart
 
-In db-ally, developers define their use cases by implementing [**views**](https://db-ally.deepsense.ai/concepts/views) and **filters**. A list of possible filters is presented to the LLM in terms of [**IQL**](https://db-ally.deepsense.ai/concepts/iql) (Intermediate Query Language). Views are grouped and registered within a [**collection**](https://db-ally.deepsense.ai/concepts/views), which then serves as an entry point for asking questions in natural language.
+In db-ally, developers define their use cases by implementing [**views**](https://db-ally.deepsense.ai/concepts/views), **filters** and **aggregations**. A list of possible filters and aggregations is presented to the LLM in terms of [**IQL**](https://db-ally.deepsense.ai/concepts/iql) (Intermediate Query Language). Views are grouped and registered within a [**collection**](https://db-ally.deepsense.ai/concepts/views), which then serves as an entry point for asking questions in natural language.
 
 This is a basic implementation of a db-ally view for an example HR application, which retrieves candidates from an SQL database:
 
@@ -60,8 +60,10 @@ class CandidateView(SqlAlchemyBaseView):
         """
         return Candidate.country == country
 
-engine = create_engine('sqlite:///examples/recruiting/data/candidates.db')
+
 llm = LiteLLM(model_name="gpt-3.5-turbo")
+engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
+
 my_collection = create_collection("collection_name", llm)
 my_collection.add(CandidateView, lambda: CandidateView(engine))
 
