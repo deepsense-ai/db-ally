@@ -552,7 +552,6 @@ class SuperheroView(
     SqlAlchemyBaseView,
     SuperheroAggregationMixin,
     SuperheroFilterMixin,
-    SuperheroColourAggregationMixin,
     SuperheroColourFilterMixin,
     AlignmentAggregationMixin,
     AlignmentFilterMixin,

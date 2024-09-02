@@ -1,5 +1,6 @@
 import ast
-from typing import TYPE_CHECKING, Any, List, Optional, Union
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Any, Generic, List, Optional, TypeVar, Union
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql import syntax
@@ -19,10 +20,12 @@ from dbally.iql._type_validators import validate_arg_type
 if TYPE_CHECKING:
     from dbally.views.structured import ExposedFunction
 
+RootT = TypeVar("RootT", bound=syntax.Node)
 
-class IQLProcessor:
+
+class IQLProcessor(Generic[RootT], ABC):
     """
-    Parses IQL string to tree structure.
+    Base class for IQL processors.
     """
 
     def __init__(
@@ -32,9 +35,9 @@ class IQLProcessor:
         self.allowed_functions = {func.name: func for func in allowed_functions}
         self._event_tracker = event_tracker or EventTracker()
 
-    async def process(self) -> syntax.Node:
+    async def process(self) -> RootT:
         """
-        Process IQL string to root IQL.Node.
+        Process IQL string to IQL root node.
 
         Returns:
             IQL node which is root of the tree representing IQL query.
@@ -60,25 +63,17 @@ class IQLProcessor:
 
         return await self._parse_node(ast_tree.body[0].value)
 
-    async def _parse_node(self, node: Union[ast.expr, ast.Expr]) -> syntax.Node:
-        if isinstance(node, ast.BoolOp):
-            return await self._parse_bool_op(node)
-        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
-            return syntax.Not(await self._parse_node(node.operand))
-        if isinstance(node, ast.Call):
-            return await self._parse_call(node)
+    @abstractmethod
+    async def _parse_node(self, node: Union[ast.expr, ast.Expr]) -> RootT:
+        """
+        Parses AST node to IQL node.
 
-        raise IQLUnsupportedSyntaxError(node, self.source)
+        Args:
+            node: AST node to parse.
 
-    async def _parse_bool_op(self, node: ast.BoolOp) -> syntax.BoolOp:
-        if isinstance(node.op, ast.Not):
-            return syntax.Not(await self._parse_node(node.values[0]))
-        if isinstance(node.op, ast.And):
-            return syntax.And([await self._parse_node(x) for x in node.values])
-        if isinstance(node.op, ast.Or):
-            return syntax.Or([await self._parse_node(x) for x in node.values])
-
-        raise IQLUnsupportedSyntaxError(node, self.source, context="BoolOp")
+        Returns:
+            IQL node.
+        """
 
     async def _parse_call(self, node: ast.Call) -> syntax.FunctionCall:
         func = node.func
@@ -153,3 +148,41 @@ class IQLProcessor:
                     converted_text = converted_text[: len(converted_text) - len(keyword)] + keyword.lower()
 
         return converted_text
+
+
+class IQLFiltersProcessor(IQLProcessor[syntax.Node]):
+    """
+    IQL processor for filters.
+    """
+
+    async def _parse_node(self, node: Union[ast.expr, ast.Expr]) -> syntax.Node:
+        if isinstance(node, ast.BoolOp):
+            return await self._parse_bool_op(node)
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+            return syntax.Not(await self._parse_node(node.operand))
+        if isinstance(node, ast.Call):
+            return await self._parse_call(node)
+
+        raise IQLUnsupportedSyntaxError(node, self.source)
+
+    async def _parse_bool_op(self, node: ast.BoolOp) -> syntax.BoolOp:
+        if isinstance(node.op, ast.Not):
+            return syntax.Not(await self._parse_node(node.values[0]))
+        if isinstance(node.op, ast.And):
+            return syntax.And([await self._parse_node(x) for x in node.values])
+        if isinstance(node.op, ast.Or):
+            return syntax.Or([await self._parse_node(x) for x in node.values])
+
+        raise IQLUnsupportedSyntaxError(node, self.source, context="BoolOp")
+
+
+class IQLAggregationProcessor(IQLProcessor[syntax.FunctionCall]):
+    """
+    IQL processor for aggregation.
+    """
+
+    async def _parse_node(self, node: Union[ast.expr, ast.Expr]) -> syntax.FunctionCall:
+        if isinstance(node, ast.Call):
+            return await self._parse_call(node)
+
+        raise IQLUnsupportedSyntaxError(node, self.source)

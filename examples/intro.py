@@ -1,15 +1,15 @@
-# pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring
-import dbally
+# pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring, duplicate-code
+
 import asyncio
 
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 
-from dbally import decorators, SqlAlchemyBaseView
+import dbally
+from dbally import SqlAlchemyBaseView, decorators
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.llms.litellm import LiteLLM
-
 
 engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
 

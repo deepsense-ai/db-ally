@@ -52,7 +52,7 @@ Candidate = Base.classes.candidates
 
 ## View Definition
 
-To use db-ally, define the views you want to use. A [structured view](../concepts/structured_views.md) is a class that specifies what to select from the database and includes methods that the AI model can use to filter rows. These methods are known as "filters".
+To use db-ally, define the views you want to use. A [structured view](../concepts/structured_views.md) is a class that specifies what to select from the database and includes methods that the AI model can use to filter rows. These methods are known as **filters**.
 
 ```python
 from dbally import decorators, SqlAlchemyBaseView
@@ -97,7 +97,7 @@ class CandidateView(SqlAlchemyBaseView):
 By setting up these filters, you enable the LLM to fetch candidates while optionally applying filters based on experience, country, and eligibility for a senior data scientist position.
 
 !!! note
-    The `from_country` filter defined above supports only exact matches, which is not always ideal. Thankfully, db-ally comes with a solution for this problem - Similarity Indexes, which can be used to find the most similar value from the ones available. Refer to [Quickstart Part 2: Semantic Similarity](./quickstart2.md) for an example of using semantic similarity when filtering candidates by country.
+    The `from_country` filter defined above supports only exact matches, which is not always ideal. Thankfully, db-ally comes with a solution for this problem - Similarity Indexes, which can be used to find the most similar value from the ones available. Refer to [Quickstart Part 2: Semantic Similarity](./semantic-similarity.md) for an example of using semantic similarity when filtering candidates by country.
 
 ## OpenAI Access Configuration
 
@@ -170,8 +170,8 @@ Retrieved 1 candidates:
 
 ## Full Example
 
-Access the full example here: [quickstart_code.py](quickstart_code.py)
+Access the full example on [GitHub](https://github.com/deepsense-ai/db-ally/blob/main/examples/intro.py){:target="_blank"}.
 
 ## Next Steps
 
-Explore [Quickstart Part 2: Semantic Similarity](./quickstart2.md) to expand on the example and learn about using semantic similarity.
+Explore [Quickstart Part 2: Semantic Similarity](./semantic-similarity.md) to expand on the example and learn about using semantic similarity.

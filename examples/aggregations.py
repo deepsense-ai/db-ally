@@ -1,43 +1,22 @@
-# pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring
-import os
-import asyncio
-from typing_extensions import Annotated
+# pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring, duplicate-code
 
-from dotenv import load_dotenv
+import asyncio
+
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 
 import dbally
-from dbally import decorators, SqlAlchemyBaseView
+from dbally import SqlAlchemyBaseView, decorators
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
-from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
-from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 from dbally.llms.litellm import LiteLLM
 
-load_dotenv()
 engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
 
 Base = automap_base()
 Base.prepare(autoload_with=engine)
 
 Candidate = Base.classes.candidates
-
-country_similarity = SimilarityIndex(
-    fetcher=SimpleSqlAlchemyFetcher(
-        engine,
-        table=Candidate,
-        column=Candidate.country,
-    ),
-    store=FaissStore(
-        index_dir="./similarity_indexes",
-        index_name="country_similarity",
-        embedding_client=LiteLLMEmbeddingClient(
-            model="text-embedding-3-small",  # to use openai embedding model
-            api_key=os.environ["OPENAI_API_KEY"],
-        ),
-    ),
-)
 
 
 class CandidateView(SqlAlchemyBaseView):
@@ -69,28 +48,59 @@ class CandidateView(SqlAlchemyBaseView):
         )
 
     @decorators.view_filter()
-    def from_country(self, country: Annotated[str, country_similarity]) -> sqlalchemy.ColumnElement:
+    def from_country(self, country: str) -> sqlalchemy.ColumnElement:
         """
         Filters candidates from a specific country.
         """
         return Candidate.country == country
 
+    @decorators.view_aggregation()
+    def average_years_of_experience(self) -> sqlalchemy.Select:
+        """
+        Calculates the average years of experience of candidates.
+        """
+        return self.select.with_only_columns(
+            sqlalchemy.func.avg(Candidate.years_of_experience).label("average_years_of_experience")
+        )
 
-async def main():
-    dbally.event_handlers = [CLIEventHandler()]
-    await country_similarity.update()
+    @decorators.view_aggregation()
+    def positions_per_country(self) -> sqlalchemy.Select:
+        """
+        Returns the number of candidates per position per country.
+        """
+        return (
+            self.select.with_only_columns(
+                sqlalchemy.func.count(Candidate.position).label("number_of_positions"),
+                Candidate.position,
+                Candidate.country,
+            )
+            .group_by(Candidate.position, Candidate.country)
+            .order_by(sqlalchemy.desc("number_of_positions"))
+        )
 
+    @decorators.view_aggregation()
+    def candidates_per_country(self) -> sqlalchemy.Select:
+        """
+        Returns the number of candidates per country.
+        """
+        return self.select.with_only_columns(
+            sqlalchemy.func.count(Candidate.id).label("number_of_candidates"),
+            Candidate.country,
+        ).group_by(Candidate.country)
+
+
+async def main() -> None:
     llm = LiteLLM(model_name="gpt-3.5-turbo")
+    dbally.event_handlers = [CLIEventHandler()]
+
     collection = dbally.create_collection("recruitment", llm)
     collection.add(CandidateView, lambda: CandidateView(engine))
 
-    result = await collection.ask("Find someone from the United States with more than 2 years of experience.")
+    result = await collection.ask("What is the average years of experience of candidates?")
 
     print(f"The generated SQL query is: {result.context.get('sql')}")
-    print()
-    print(f"Retrieved {len(result.results)} candidates:")
-    for candidate in result.results:
-        print(candidate)
+    for row in result.results:
+        print(row)
 
 
 if __name__ == "__main__":

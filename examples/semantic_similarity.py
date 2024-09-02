@@ -1,27 +1,28 @@
-# pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring
-import os
+# pylint: disable=missing-return-doc, missing-param-doc, missing-function-docstring, duplicate-code
+
 import asyncio
-from typing_extensions import Annotated
+import os
 
 import sqlalchemy
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
-import pandas as pd
+from typing_extensions import Annotated
 
 import dbally
-from dbally import decorators, SqlAlchemyBaseView, DataFrameBaseView, ExecutionResult
-from dbally.audit import CLIEventHandler
-from dbally.similarity import SimpleSqlAlchemyFetcher, FaissStore, SimilarityIndex
+from dbally import SqlAlchemyBaseView, decorators
+from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
 from dbally.llms.litellm import LiteLLM
+from dbally.similarity import FaissStore, SimilarityIndex, SimpleSqlAlchemyFetcher
 
+load_dotenv()
 engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
 
 Base = automap_base()
 Base.prepare(autoload_with=engine)
 
 Candidate = Base.classes.candidates
-
 
 country_similarity = SimilarityIndex(
     fetcher=SimpleSqlAlchemyFetcher(
@@ -75,54 +76,44 @@ class CandidateView(SqlAlchemyBaseView):
         """
         return Candidate.country == country
 
-
-jobs_data = pd.DataFrame.from_records(
-    [
-        {"title": "Data Scientist", "company": "Company A", "location": "New York", "salary": 100000},
-        {"title": "Data Engineer", "company": "Company B", "location": "San Francisco", "salary": 120000},
-        {"title": "Machine Learning Engineer", "company": "Company C", "location": "Berlin", "salary": 90000},
-        {"title": "Data Scientist", "company": "Company D", "location": "London", "salary": 110000},
-        {"title": "Data Scientist", "company": "Company E", "location": "Warsaw", "salary": 80000},
-    ]
-)
-
-
-class JobView(DataFrameBaseView):
-    """
-    View for retrieving information about job offers.
-    """
-
-    @decorators.view_filter()
-    def with_salary_at_least(self, salary: int) -> pd.Series:
+    @decorators.view_aggregation()
+    def average_years_of_experience(self) -> sqlalchemy.Select:
         """
-        Filters job offers with a salary of at least `salary`.
+        Calculates the average years of experience of candidates.
         """
-        return self.df.salary >= salary
+        return self.select.with_only_columns(
+            sqlalchemy.func.avg(Candidate.years_of_experience).label("average_years_of_experience")
+        )
 
-    @decorators.view_filter()
-    def in_location(self, location: str) -> pd.Series:
+    @decorators.view_aggregation()
+    def positions_per_country(self) -> sqlalchemy.Select:
         """
-        Filters job offers in a specific location.
+        Returns the number of candidates per position per country.
         """
-        return self.df.location == location
+        return (
+            self.select.with_only_columns(
+                sqlalchemy.func.count(Candidate.position).label("number_of_candidates"),
+                Candidate.position,
+                Candidate.country,
+            )
+            .group_by(Candidate.position, Candidate.country)
+            .order_by(sqlalchemy.desc("number_of_candidates"))
+        )
 
-    @decorators.view_filter()
-    def from_company(self, company: str) -> pd.Series:
+    @decorators.view_aggregation()
+    def top_universities(self, limit: int) -> sqlalchemy.Select:
         """
-        Filters job offers from a specific company.
+        Returns the top universities by the number of candidates.
         """
-        return self.df.company == company
-
-
-def display_results(result: ExecutionResult):
-    if result.view_name == "CandidateView":
-        print(f"{len(result.results)} Candidates:")
-        for candidate in result.results:
-            print(f"{candidate['name']} - {candidate['skills']}")
-    elif result.view_name == "JobView":
-        print(f"{len(result.results)} Job Offers:")
-        for job in result.results:
-            print(f"{job['title']} at {job['company']} in {job['location']}")
+        return (
+            self.select.with_only_columns(
+                sqlalchemy.func.count(Candidate.id).label("number_of_candidates"),
+                Candidate.university,
+            )
+            .group_by(Candidate.university)
+            .order_by(sqlalchemy.desc("number_of_candidates"))
+            .limit(limit)
+        )
 
 
 async def main():
@@ -132,15 +123,14 @@ async def main():
     llm = LiteLLM(model_name="gpt-3.5-turbo")
     collection = dbally.create_collection("recruitment", llm)
     collection.add(CandidateView, lambda: CandidateView(engine))
-    collection.add(JobView, lambda: JobView(jobs_data))
 
-    result = await collection.ask("Find me job offers in New York with a salary of at least 100000.")
-    display_results(result)
+    result = await collection.ask("Find someone from the United States with more than 2 years of experience.")
 
+    print(f"The generated SQL query is: {result.context.get('sql')}")
     print()
-
-    result = await collection.ask("Find me candidates from Poland.")
-    display_results(result)
+    print(f"Retrieved {len(result.results)} candidates:")
+    for candidate in result.results:
+        print(candidate)
 
 
 if __name__ == "__main__":

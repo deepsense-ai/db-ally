@@ -4,57 +4,33 @@ from typing import Any, Dict, List, Optional, TypeVar
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
-from dbally.exceptions import UnsupportedAggregationError
-from dbally.iql import IQLQuery
-from dbally.iql._exceptions import IQLError
+from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.views.exceptions import IQLGenerationError
+from dbally.views.exceptions import ViewExecutionError
 from dbally.views.exposed_functions import ExposedFunction
 
-from ..prompt.aggregation import AggregationFormatter
 from ..similarity import AbstractSimilarityIndex
 from .base import BaseView, IndexLocation
 
 DataT = TypeVar("DataT", bound=Any)
 
 
-# TODO(Python 3.9+): Make BaseStructuredView a generic class
 class BaseStructuredView(BaseView):
     """
     Base class for all structured [Views](../../concepts/views.md). All classes implementing this interface has\
     to be able to list all available filters, apply them and execute queries.
     """
 
-    def __init__(self, data: DataT) -> None:
-        super().__init__()
-        self.data = data
-
-    def get_iql_generator(self, llm: LLM) -> IQLGenerator:
+    def get_iql_generator(self) -> IQLGenerator:
         """
         Returns the IQL generator for the view.
-
-        Args:
-            llm: LLM used to generate the IQL queries.
 
         Returns:
             IQL generator for the view.
         """
-        return IQLGenerator(llm=llm)
-
-    def get_agg_formatter(self, llm: LLM) -> AggregationFormatter:
-        """
-        Returns the AggregtionFormatter for the view.
-
-        Args:
-            llm: LLM used to generate the queries.
-
-        Returns:
-            AggregtionFormatter for the view.
-        """
-        return AggregationFormatter(llm=llm)
+        return IQLGenerator()
 
     async def ask(
         self,
@@ -81,68 +57,41 @@ class BaseStructuredView(BaseView):
             The result of the query.
 
         Raises:
-            LLMError: If LLM text generation API fails.
-            IQLGenerationError: If the IQL generation fails.
+            ViewExecutionError: When an error occurs while executing the view.
         """
-        iql_generator = self.get_iql_generator(llm)
-        agg_formatter = self.get_agg_formatter(llm)
         filters = self.list_filters()
         examples = self.list_few_shots()
         aggregations = self.list_aggregations()
 
-        try:
-            iql = await iql_generator.generate(
-                question=query,
-                filters=filters,
-                examples=examples,
-                event_tracker=event_tracker,
-                llm_options=llm_options,
-                n_retries=n_retries,
+        iql_generator = self.get_iql_generator()
+        iql = await iql_generator(
+            question=query,
+            filters=filters,
+            aggregations=aggregations,
+            examples=examples,
+            llm=llm,
+            event_tracker=event_tracker,
+            llm_options=llm_options,
+            n_retries=n_retries,
+        )
+
+        if iql.failed:
+            raise ViewExecutionError(
+                view_name=self.__class__.__name__,
+                iql=iql,
             )
-        except UnsupportedQueryError as exc:
-            raise IQLGenerationError(
-                view_name=self.__class__.__name__,
-                filters=None,
-                aggregation=None,
-            ) from exc
-        except IQLError as exc:
-            raise IQLGenerationError(
-                view_name=self.__class__.__name__,
-                filters=exc.source,
-                aggregation=None,
-            ) from exc
 
-        if iql:
-            await self.apply_filters(iql)
+        if iql.filters:
+            await self.apply_filters(iql.filters)
 
-        try:
-            agg_node = await agg_formatter.format_to_query_object(
-                question=query,
-                aggregations=aggregations,
-                event_tracker=event_tracker,
-                llm_options=llm_options,
-            )
-        except UnsupportedAggregationError as exc:
-            raise IQLGenerationError(
-                view_name=self.__class__.__name__,
-                filters=str(iql) if iql else None,
-                aggregation=None,
-            ) from exc
-        except IQLError as exc:
-            raise IQLGenerationError(
-                view_name=self.__class__.__name__,
-                filters=str(iql) if iql else None,
-                aggregation=exc.source,
-            ) from exc
-
-        await self.apply_aggregation(agg_node)
+        if iql.aggregation:
+            await self.apply_aggregation(iql.aggregation)
 
         result = self.execute(dry_run=dry_run)
         result.context["iql"] = {
-            "filters": str(iql) if iql else None,
-            "aggregation": str(agg_node),
+            "filters": str(iql.filters) if iql.filters else None,
+            "aggregation": str(iql.aggregation) if iql.aggregation else None,
         }
-
         return result
 
     @abc.abstractmethod
@@ -164,21 +113,21 @@ class BaseStructuredView(BaseView):
         """
 
     @abc.abstractmethod
-    async def apply_filters(self, filters: IQLQuery) -> None:
+    async def apply_filters(self, filters: IQLFiltersQuery) -> None:
         """
         Applies the chosen filters to the view.
 
         Args:
-            filters: [IQLQuery](../../concepts/iql.md) object representing the filters to apply.
+            filters: IQLQuery object representing the filters to apply.
         """
 
     @abc.abstractmethod
-    async def apply_aggregation(self, aggregation: IQLQuery) -> None:
+    async def apply_aggregation(self, aggregation: IQLAggregationQuery) -> None:
         """
         Applies the chosen aggregation to the view.
 
         Args:
-            aggregation: [IQLQuery](../../concepts/iql.md) object representing the filters to apply.
+            aggregation: IQLQuery object representing the aggregation to apply.
         """
 
     @abc.abstractmethod

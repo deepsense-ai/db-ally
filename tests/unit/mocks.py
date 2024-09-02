@@ -9,11 +9,10 @@ from functools import cached_property
 from typing import List, Optional, Union
 
 from dbally import NOT_GIVEN, NotGiven
-from dbally.iql import IQLQuery
-from dbally.iql_generator.iql_generator import IQLGenerator
+from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
+from dbally.iql_generator.iql_generator import IQLGenerator, IQLGeneratorState
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMClient, LLMOptions
-from dbally.prompt.aggregation import AggregationFormatter
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.structured import BaseStructuredView, ExposedFunction, ViewExecutionResult
@@ -24,19 +23,16 @@ class MockViewBase(BaseStructuredView):
     Mock view base class
     """
 
-    def __init__(self) -> None:
-        super().__init__([])
-
     def list_filters(self) -> List[ExposedFunction]:
         return []
-
-    async def apply_filters(self, filters: IQLQuery) -> None:
-        ...
 
     def list_aggregations(self) -> List[ExposedFunction]:
         return []
 
-    async def apply_aggregation(self, filters: IQLQuery) -> None:
+    async def apply_filters(self, filters: IQLFiltersQuery) -> None:
+        ...
+
+    async def apply_aggregation(self, aggregation: IQLAggregationQuery) -> None:
         ...
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
@@ -44,21 +40,12 @@ class MockViewBase(BaseStructuredView):
 
 
 class MockIQLGenerator(IQLGenerator):
-    def __init__(self, iql: IQLQuery) -> None:
-        self.iql = iql
-        super().__init__(llm=MockLLM())
+    def __init__(self, state: IQLGeneratorState) -> None:
+        self.state = state
+        super().__init__()
 
-    async def generate(self, *_, **__) -> IQLQuery:
-        return self.iql
-
-
-class MockAggregationFormatter(AggregationFormatter):
-    def __init__(self, iql_query: IQLQuery) -> None:
-        self.iql_query = iql_query
-        super().__init__(llm=MockLLM())
-
-    async def format_to_query_object(self, *_, **__) -> IQLQuery:
-        return self.iql_query
+    async def __call__(self, *_, **__) -> IQLGeneratorState:
+        return self.state
 
 
 class MockViewSelector(ViewSelector):

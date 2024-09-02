@@ -7,7 +7,7 @@ Structured views are a type of [view](../concepts/views.md), which provide a way
 
 Given different natural language queries, a db-ally view will produce different responses while maintaining a consistent data structure. This consistency offers a reliable interface for integration - the code consuming responses from a particular structured view knows what data structure to expect and can utilize this knowledge when displaying or processing the data. This feature of db-ally makes it stand out in terms of reliability and stability compared to standard text-to-SQL approaches.
 
-Each structured view can contain one or more “filters”, which the LLM may decide to choose and apply to the extracted data so that it meets the criteria specified in the natural language query. Given such a query, LLM chooses which filters to use, provides arguments to the filters, and connects the filters with Boolean operators. The LLM expresses these filter combinations using a special language called [IQL](iql.md), in which the defined view filters provide a layer of abstraction between the LLM and the raw syntax used to query the data source (e.g., SQL).
+Each structured view can contain one or more **filters** or **aggregations**, which the LLM may decide to choose and apply to the extracted data so that it meets the criteria specified in the natural language query. Given such a query, LLM chooses which filters to use, provides arguments to the filters, and connects the filters with boolean operators. For aggregations, the LLM selects an appropriate aggregation method and applies it to the data. The LLM expresses these filter combinations and aggregation using a special language called [IQL](iql.md), in which the defined view filters and aggregations provide a layer of abstraction between the LLM and the raw syntax used to query the data source (e.g., SQL).
 
 !!! example
     For instance, this is a simple [view that uses SQLAlchemy](../how-to/views/sql.md) to select data from specific columns in a SQL database. It contains a single filter, that the LLM may optionally use to control which table rows to fetch:
@@ -18,14 +18,14 @@ Each structured view can contain one or more “filters”, which the LLM may de
         A view for retrieving candidates from the database.
         """
 
-        def get_select(self):
+        def get_select(self) -> Select:
             """
             Defines which columns to select
             """
             return sqlalchemy.select(Candidate.id, Candidate.name, Candidate.country)
 
         @decorators.view_filter()
-        def from_country(self, country: str):
+        def from_country(self, country: str) -> ColumnElement:
             """
             Filter candidates from a specific country.
             """
