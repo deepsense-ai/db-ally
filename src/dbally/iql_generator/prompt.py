@@ -141,25 +141,22 @@ FILTERING_DECISION_TEMPLATE = PromptTemplate[DecisionPromptFormat](
         {
             "role": "system",
             "content": (
-                "Given a question, determine whether the answer requires initial data filtering in order to compute it.\n"
-                "Initial data filtering is a process in which the result set is reduced to only include the rows "
-                "that meet certain criteria specified in the question.\n\n"
+                "Given a question, determine whether the answer requires data filtering in order to compute it.\n"
+                "Data filtering is a process in which the result set is filtered based on the specific features "
+                "stated in the question. Such a question can be easily identified by using words that refer to "
+                "specific feature values (rather than feature names).\n"
+                "Look for words indicating specific values that the answer should contain. \n\n"
                 "---\n\n"
                 "Follow the following format.\n\n"
                 "Question: ${{question}}\n"
-                "Hint: ${{hint}}"
                 "Reasoning: Let's think step by step in order to ${{produce the decision}}. We...\n"
-                "Decision: indicates whether the answer to the question requires initial data filtering. "
+                "Decision: indicates whether the answer to the question requires data filtering. "
                 "(Respond with True or False)\n\n"
             ),
         },
         {
             "role": "user",
-            "content": (
-                "Question: {question}\n"
-                "Hint: Look for words indicating data specific features.\n"
-                "Reasoning: Let's think step by step in order to "
-            ),
+            "content": ("Question: {question}\n" "Reasoning: Let's think step by step in order to "),
         },
     ],
     response_parser=_decision_parser,
@@ -170,8 +167,11 @@ AGGREGATION_DECISION_TEMPLATE = PromptTemplate[DecisionPromptFormat](
         {
             "role": "system",
             "content": (
-                "Given a question, determine whether the answer requires computing the aggregation in order to compute it.\n"
-                "Aggregation is a process in which the result set is reduced to a single value.\n\n"
+                "Given a question, determine whether the answer requires data aggregation in order to compute it.\n"
+                "Data aggregation is a process in which we calculate a single values for a group of rows in the "
+                "result set.\n"
+                "Most common aggregation functions are counting, averaging, summing, but other types of aggregation "
+                "are possible.\n\n"
                 "---\n\n"
                 "Follow the following format.\n\n"
                 "Question: ${{question}}\n"
@@ -182,7 +182,7 @@ AGGREGATION_DECISION_TEMPLATE = PromptTemplate[DecisionPromptFormat](
         },
         {
             "role": "user",
-            "content": ("Question: {question}\n" "Reasoning: Let's think step by step in order to "),
+            "content": "Question: {question}\n" "Reasoning: Let's think step by step in order to ",
         },
     ],
     response_parser=_decision_parser,
