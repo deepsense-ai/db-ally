@@ -206,7 +206,7 @@ class GradioAdapter:
                     with gr.Column():
                         api_key = gr.Textbox(
                             label="API Key",
-                            placeholder="Enter your API Key (optional)",
+                            placeholder="Enter your API Key",
                             type="password",
                             interactive=bool(views),
                         )
