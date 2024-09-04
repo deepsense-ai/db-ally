@@ -1,4 +1,4 @@
-# pylint: disable=too-many-locals,unused-variable
+# pylint: disable=unused-variable
 # flake8: noqa: F841
 
 import json
@@ -190,13 +190,8 @@ class GradioAdapter:
         Returns:
             The Gradio interface.
         """
-        view_list = [*self.collection.list()]
-        if view_list:
-            selected_view_name = view_list[0]
-            question_interactive = True
-        else:
-            selected_view_name = None
-            question_interactive = False
+        views = list(self.collection.list())
+        selected_view = views[0] if views else None
 
         with gr.Blocks(title="db-ally lab") as demo:
             gr.Markdown("# 🔍 db-ally lab")
@@ -208,45 +203,45 @@ class GradioAdapter:
                             label="API Key",
                             placeholder="Enter your API Key",
                             type="password",
-                            interactive=question_interactive,
+                            interactive=bool(views),
                         )
                         model_name = gr.Textbox(
                             label="Model Name",
                             placeholder="Enter your model name",
                             value="gpt-3.5-turbo",
-                            interactive=question_interactive,
+                            interactive=bool(views),
                             max_lines=1,
                         )
                         query = gr.Textbox(
                             label="Question",
                             placeholder="Enter your question",
-                            interactive=question_interactive,
+                            interactive=bool(views),
                             max_lines=1,
                         )
                         natural_language_response_checkbox = gr.Checkbox(
                             label="Use Natural Language Responder",
-                            interactive=question_interactive,
+                            interactive=bool(views),
                         )
                         query_button = gr.Button(
                             value="Ask",
-                            interactive=question_interactive,
                             variant="primary",
+                            interactive=bool(views),
                         )
                         clear_button = gr.ClearButton(
                             value="Reset",
                             components=[query],
-                            interactive=question_interactive,
+                            interactive=bool(views),
                         )
 
                     with gr.Column():
                         view_dropdown = gr.Dropdown(
                             label="View Preview",
-                            choices=view_list,
-                            value=selected_view_name,
-                            interactive=question_interactive,
+                            choices=views,
+                            value=selected_view,
+                            interactive=bool(views),
                         )
-                        if selected_view_name:
-                            view_preview, view_preview_label = self._render_view_preview(selected_view_name)
+                        if selected_view:
+                            view_preview, view_preview_label = self._render_view_preview(selected_view)
                         else:
                             view_preview, view_preview_label = self._render_dataframe(
                                 pd.DataFrame(), "No view selected"
