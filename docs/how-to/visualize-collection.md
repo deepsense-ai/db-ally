@@ -12,7 +12,7 @@ pip install dbally["gradio"]
 
 ## Run the app
 
-Pick the collection created using `create_collection` and lunch the gradio interface.
+Pick the collection created using [`create_collection`][dbally.create_collection] and lunch the gradio interface.
 
 ```python
 from dbally.gradio import create_gradio_interface
