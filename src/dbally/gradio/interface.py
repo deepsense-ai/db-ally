@@ -106,7 +106,7 @@ class GradioAdapter:
         self,
         question: str,
         return_natural_response: bool,
-    ) -> Tuple[str, str, str, gr.Text, gr.DataFrame, str]:
+    ) -> Tuple[gr.Code, gr.Code, gr.Code, gr.Textbox, gr.Dataframe, gr.Label, str]:
         """
         Processes the question and returns the results.
 
@@ -153,7 +153,7 @@ class GradioAdapter:
             log_content,
         )
 
-    def _clear_results(self) -> Tuple[gr.DataFrame, gr.Label, gr.Text, gr.Text]:
+    def _clear_results(self) -> Tuple[gr.Textbox, gr.Code, gr.Code, gr.Code, gr.Dataframe, gr.Label]:
         """
         Clears the results from the gradio interface.
 
