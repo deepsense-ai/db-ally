@@ -13,13 +13,13 @@ from dbally.collection.exceptions import NoViewFoundError
 from dbally.views.exceptions import ViewExecutionError
 
 
-def create_gradio_interface(collection: Collection, preview_limit: int = 10) -> gr.Interface:
+def create_gradio_interface(collection: Collection, *, preview_limit: Optional[int] = None) -> gr.Interface:
     """
     Creates a Gradio interface for interacting with the user collection and similarity stores.
 
     Args:
         collection: The collection to interact with.
-        preview_limit: The maximum number of preview data records to display. Default is 10.
+        preview_limit: The maximum number of preview data records to display. Default is None.
 
     Returns:
         The created Gradio interface.
@@ -30,10 +30,10 @@ def create_gradio_interface(collection: Collection, preview_limit: int = 10) -> 
 
 class GradioAdapter:
     """
-    A class to adapt and integrate data collection and query execution with Gradio interface components.
+    Gradio adapter for the db-ally lab.
     """
 
-    def __init__(self, collection: Collection, preview_limit: int = 10) -> None:
+    def __init__(self, collection: Collection, *, preview_limit: Optional[int] = None) -> None:
         """
         Creates the gradio adapter.
 
@@ -95,7 +95,8 @@ class GradioAdapter:
         if isinstance(view, BaseStructuredView):
             results = view.execute().results
             data = self._load_results_into_dataframe(results)
-            data = data.head(self.preview_limit)
+            if self.preview_limit is not None:
+                data = data.head(self.preview_limit)
 
         return self._render_dataframe(data, "Preview not available")
 
@@ -205,14 +206,14 @@ class GradioAdapter:
                     with gr.Column():
                         api_key = gr.Textbox(
                             label="API Key",
-                            placeholder="Enter your API Key",
+                            placeholder="Enter your API Key (optional)",
                             type="password",
                             interactive=bool(views),
                         )
                         model_name = gr.Textbox(
                             label="Model Name",
                             placeholder="Enter your model name",
-                            value="gpt-3.5-turbo",
+                            value=self.collection._llm.model_name,  # pylint: disable=protected-access
                             interactive=bool(views),
                             max_lines=1,
                         )
@@ -251,9 +252,6 @@ class GradioAdapter:
                                 pd.DataFrame(), "No view selected"
                             )
 
-                with gr.Tab("Logs"):
-                    log_console = gr.Code(label="Logs", language="shell")
-
                 with gr.Tab("Results"):
                     natural_language_response = gr.Textbox(
                         label="Natural Language Response",
@@ -280,18 +278,19 @@ class GradioAdapter:
                         language="sql",
                         visible=False,
                     )
+                    retrieved_rows = gr.Dataframe(
+                        interactive=False,
+                        height=325,
+                        visible=False,
+                    )
+                    retrieved_rows_label = gr.Label(
+                        value="No rows retrieved",
+                        visible=True,
+                        show_label=False,
+                    )
 
-                    with gr.Accordion("See Retrieved Rows", open=False):
-                        retrieved_rows = gr.Dataframe(
-                            interactive=False,
-                            height=325,
-                            visible=False,
-                        )
-                        retrieved_rows_label = gr.Label(
-                            value="No rows retrieved",
-                            visible=True,
-                            show_label=False,
-                        )
+                with gr.Tab("Logs"):
+                    log_console = gr.Code(label="Logs", language="shell")
 
             with gr.Tab("Help"):
                 gr.Markdown(
