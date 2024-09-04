@@ -5,7 +5,7 @@ import json
 from io import StringIO
 from typing import Any, Dict, List, Optional, Tuple
 
-import gradio
+import gradio as gr
 import pandas as pd
 
 import dbally
@@ -16,7 +16,7 @@ from dbally.collection.exceptions import NoViewFoundError
 from dbally.views.exceptions import ViewExecutionError
 
 
-def create_gradio_interface(collection: Collection, preview_limit: int = 10) -> gradio.Interface:
+def create_gradio_interface(collection: Collection, preview_limit: int = 10) -> gr.Interface:
     """
     Creates a Gradio interface for interacting with the user collection and similarity stores.
 
@@ -66,9 +66,7 @@ class GradioAdapter:
 
         return buffer_event_handler.buffer
 
-    def _render_dataframe(
-        self, df: pd.DataFrame, message: Optional[str] = None
-    ) -> Tuple[gradio.Dataframe, gradio.Label]:
+    def _render_dataframe(self, df: pd.DataFrame, message: Optional[str] = None) -> Tuple[gr.Dataframe, gr.Label]:
         """
         Renders the dataframe and label for the gradio interface.
 
@@ -80,11 +78,11 @@ class GradioAdapter:
             A tuple containing the dataframe and label.
         """
         return (
-            gradio.Dataframe(value=df, visible=not df.empty, height=325),
-            gradio.Label(value=message, visible=df.empty, show_label=False),
+            gr.Dataframe(value=df, visible=not df.empty, height=325),
+            gr.Label(value=message, visible=df.empty, show_label=False),
         )
 
-    def _render_view_preview(self, view_name: str) -> Tuple[gradio.Dataframe, gradio.Label]:
+    def _render_view_preview(self, view_name: str) -> Tuple[gr.Dataframe, gr.Label]:
         """
         Loads preview data for a selected view name.
 
@@ -108,7 +106,7 @@ class GradioAdapter:
         self,
         question: str,
         return_natural_response: bool,
-    ) -> Tuple[str, str, str, gradio.Text, gradio.DataFrame, str]:
+    ) -> Tuple[str, str, str, gr.Text, gr.DataFrame, str]:
         """
         Processes the question and returns the results.
 
@@ -146,16 +144,16 @@ class GradioAdapter:
         log_content = self.log.read()
 
         return (
-            gradio.Code(value=iql_filters, visible=bool(iql_filters)),
-            gradio.Code(value=iql_aggregation, visible=bool(iql_aggregation)),
-            gradio.Code(value=sql, visible=bool(sql)),
-            gradio.Textbox(value=textual_response, visible=return_natural_response),
+            gr.Code(value=iql_filters, visible=bool(iql_filters)),
+            gr.Code(value=iql_aggregation, visible=bool(iql_aggregation)),
+            gr.Code(value=sql, visible=bool(sql)),
+            gr.Textbox(value=textual_response, visible=return_natural_response),
             retrieved_rows,
             empty_retrieved_rows_warning,
             log_content,
         )
 
-    def _clear_results(self) -> Tuple[gradio.DataFrame, gradio.Label, gradio.Text, gradio.Text]:
+    def _clear_results(self) -> Tuple[gr.DataFrame, gr.Label, gr.Text, gr.Text]:
         """
         Clears the results from the gradio interface.
 
@@ -164,10 +162,10 @@ class GradioAdapter:
         """
         retrieved_rows, retrieved_rows_label = self._render_dataframe(pd.DataFrame(), "No rows retrieved")
         return (
-            gradio.Textbox(visible=False),
-            gradio.Code(visible=False),
-            gradio.Code(visible=False),
-            gradio.Code(visible=False),
+            gr.Textbox(visible=False),
+            gr.Code(visible=False),
+            gr.Code(visible=False),
+            gr.Code(visible=False),
             retrieved_rows,
             retrieved_rows_label,
         )
@@ -185,7 +183,7 @@ class GradioAdapter:
         """
         return pd.DataFrame(json.loads(json.dumps(results, default=str)))
 
-    def create_interface(self) -> gradio.Interface:
+    def create_interface(self) -> gr.Interface:
         """
         Creates a Gradio interface for interacting with the collection.
 
@@ -200,48 +198,48 @@ class GradioAdapter:
             selected_view_name = None
             question_interactive = False
 
-        with gradio.Blocks(title="db-ally lab") as demo:
-            gradio.Markdown("# 🔍 db-ally lab")
+        with gr.Blocks(title="db-ally lab") as demo:
+            gr.Markdown("# 🔍 db-ally lab")
 
-            with gradio.Tab("Collection"):
-                with gradio.Row():
-                    with gradio.Column():
-                        api_key = gradio.Textbox(
+            with gr.Tab("Collection"):
+                with gr.Row():
+                    with gr.Column():
+                        api_key = gr.Textbox(
                             label="API Key",
                             placeholder="Enter your API Key",
                             type="password",
                             interactive=question_interactive,
                         )
-                        model_name = gradio.Textbox(
+                        model_name = gr.Textbox(
                             label="Model Name",
                             placeholder="Enter your model name",
                             value="gpt-3.5-turbo",
                             interactive=question_interactive,
                             max_lines=1,
                         )
-                        query = gradio.Textbox(
+                        query = gr.Textbox(
                             label="Question",
                             placeholder="Enter your question",
                             interactive=question_interactive,
                             max_lines=1,
                         )
-                        natural_language_response_checkbox = gradio.Checkbox(
+                        natural_language_response_checkbox = gr.Checkbox(
                             label="Use Natural Language Responder",
                             interactive=question_interactive,
                         )
-                        query_button = gradio.Button(
+                        query_button = gr.Button(
                             value="Ask",
                             interactive=question_interactive,
                             variant="primary",
                         )
-                        clear_button = gradio.ClearButton(
+                        clear_button = gr.ClearButton(
                             value="Reset",
                             components=[query],
                             interactive=question_interactive,
                         )
 
-                    with gradio.Column():
-                        view_dropdown = gradio.Dropdown(
+                    with gr.Column():
+                        view_dropdown = gr.Dropdown(
                             label="View Preview",
                             choices=view_list,
                             value=selected_view_name,
@@ -254,50 +252,50 @@ class GradioAdapter:
                                 pd.DataFrame(), "No view selected"
                             )
 
-                with gradio.Tab("Logs"):
-                    log_console = gradio.Code(label="Logs", language="shell")
+                with gr.Tab("Logs"):
+                    log_console = gr.Code(label="Logs", language="shell")
 
-                with gradio.Tab("Results"):
-                    natural_language_response = gradio.Textbox(
+                with gr.Tab("Results"):
+                    natural_language_response = gr.Textbox(
                         label="Natural Language Response",
                         visible=False,
                     )
 
-                    with gradio.Row():
-                        iql_fitlers_result = gradio.Code(
+                    with gr.Row():
+                        iql_fitlers_result = gr.Code(
                             label="IQL Filters Query",
                             lines=1,
                             language="python",
                             visible=False,
                         )
-                        iql_aggregation_result = gradio.Code(
+                        iql_aggregation_result = gr.Code(
                             label="IQL Aggreagation Query",
                             lines=1,
                             language="python",
                             visible=False,
                         )
 
-                    sql_result = gradio.Code(
+                    sql_result = gr.Code(
                         label="SQL Query",
                         lines=3,
                         language="sql",
                         visible=False,
                     )
 
-                    with gradio.Accordion("See Retrieved Rows", open=False):
-                        retrieved_rows = gradio.Dataframe(
+                    with gr.Accordion("See Retrieved Rows", open=False):
+                        retrieved_rows = gr.Dataframe(
                             interactive=False,
                             height=325,
                             visible=False,
                         )
-                        retrieved_rows_label = gradio.Label(
+                        retrieved_rows_label = gr.Label(
                             value="No rows retrieved",
                             visible=True,
                             show_label=False,
                         )
 
-            with gradio.Tab("Help"):
-                gradio.Markdown(
+            with gr.Tab("Help"):
+                gr.Markdown(
                     """
                     ## How to use this app:
                     1. Enter your API Key for the LLM you want to use in the provided field.
