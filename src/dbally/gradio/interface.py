@@ -216,7 +216,7 @@ class GradioAdapter:
                             interactive=bool(views),
                             max_lines=1,
                         )
-                        query = gr.Textbox(
+                        question = gr.Textbox(
                             label="Question",
                             placeholder="Enter your question",
                             interactive=bool(views),
@@ -226,14 +226,14 @@ class GradioAdapter:
                             label="Use Natural Language Responder",
                             interactive=bool(views),
                         )
-                        query_button = gr.Button(
+                        ask_button = gr.Button(
                             value="Ask",
                             variant="primary",
                             interactive=bool(views),
                         )
                         clear_button = gr.ClearButton(
                             value="Reset",
-                            components=[query],
+                            components=[question],
                             interactive=bool(views),
                         )
 
@@ -341,10 +341,10 @@ class GradioAdapter:
                     view_preview_label,
                 ],
             )
-            query_button.click(
+            ask_button.click(
                 fn=self._ask_collection,
                 inputs=[
-                    query,
+                    question,
                     model_name,
                     api_key,
                     natural_language_response_checkbox,
