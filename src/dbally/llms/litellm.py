@@ -1,4 +1,3 @@
-from functools import cached_property
 from typing import Optional
 
 try:
@@ -53,7 +52,7 @@ class LiteLLM(LLM[LiteLLMOptions]):
         self.api_key = api_key
         self.api_version = api_version
 
-    @cached_property
+    @property
     def client(self) -> LiteLLMClient:
         """
         Client for the LLM.

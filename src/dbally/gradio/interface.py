@@ -1,6 +1,3 @@
-# pylint: disable=unused-variable
-# flake8: noqa: F841
-
 import json
 from io import StringIO
 from typing import Any, Dict, List, Optional, Tuple
@@ -105,6 +102,8 @@ class GradioAdapter:
     async def _ask_collection(
         self,
         question: str,
+        model_name: str,
+        api_key: str,
         return_natural_response: bool,
     ) -> Tuple[gr.Code, gr.Code, gr.Code, gr.Textbox, gr.Dataframe, gr.Label, str]:
         """
@@ -119,6 +118,11 @@ class GradioAdapter:
         """
         self.log.seek(0)
         self.log.truncate(0)
+
+        # pylint: disable=protected-access
+        self.collection._llm.model_name = model_name
+        if hasattr(self.collection._llm, "api_key"):
+            self.collection._llm.api_key = api_key
 
         try:
             result = await self.collection.ask(
@@ -341,6 +345,8 @@ class GradioAdapter:
                 fn=self._ask_collection,
                 inputs=[
                     query,
+                    model_name,
+                    api_key,
                     natural_language_response_checkbox,
                 ],
                 outputs=[
