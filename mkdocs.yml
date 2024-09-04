@@ -36,7 +36,7 @@ nav:
           - how-to/use_elastic_store.md
           - how-to/use_custom_similarity_store.md
           - how-to/update_similarity_indexes.md
-      - how-to/visualize_views.md
+      - how-to/visualize-collection.md
       - how-to/log_runs_to_langsmith.md
       - how-to/trace_runs_with_otel.md
       - how-to/create_custom_event_handler.md
