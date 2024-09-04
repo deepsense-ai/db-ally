@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.7.0 (2024-09-04)
+
+### Feature
+
+* feat(gradio): enhance gradio interface (#90) ([`8692637`](https://github.com/deepsense-ai/db-ally/commit/8692637d491385a2e6fe18bd0476c70dbd3997e5))
+
+### Fix
+
+* fix: pin griffe dependency ([`c562c01`](https://github.com/deepsense-ai/db-ally/commit/c562c014a38ed02f0a1df6f5bee2223610be5d5d))
+
 ## v0.6.0 (2024-09-02)
 
 ### Feature
