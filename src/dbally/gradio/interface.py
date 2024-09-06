@@ -13,18 +13,37 @@ from dbally.collection.exceptions import NoViewFoundError
 from dbally.views.exceptions import ViewExecutionError
 
 
-def create_gradio_interface(collection: Collection, *, preview_limit: Optional[int] = None) -> gr.Interface:
+def create_gradio_interface(
+    collection: Collection,
+    *,
+    title: str = "db-ally lab",
+    header: str = "🔍 db-ally lab",
+    examples: Optional[List[str]] = None,
+    examples_per_page: int = 4,
+    preview_limit: Optional[int] = None,
+) -> gr.Interface:
     """
     Creates a Gradio interface for interacting with the user collection and similarity stores.
 
     Args:
         collection: The collection to interact with.
+        title: The title of the gradio interface.
+        header: The header of the gradio interface.
+        examples: The example questions to display.
+        examples_per_page: The number of examples to display per page.
         preview_limit: The maximum number of preview data records to display. Default is None.
 
     Returns:
         The created Gradio interface.
     """
-    adapter = GradioAdapter(collection=collection, preview_limit=preview_limit)
+    adapter = GradioAdapter(
+        collection=collection,
+        title=title,
+        header=header,
+        examples=examples,
+        examples_per_page=examples_per_page,
+        preview_limit=preview_limit,
+    )
     return adapter.create_interface()
 
 
@@ -33,16 +52,33 @@ class GradioAdapter:
     Gradio adapter for the db-ally lab.
     """
 
-    def __init__(self, collection: Collection, *, preview_limit: Optional[int] = None) -> None:
+    def __init__(
+        self,
+        collection: Collection,
+        *,
+        title: str = "db-ally lab",
+        header: str = "🔍 db-ally lab",
+        examples: Optional[List[str]] = None,
+        examples_per_page: int = 4,
+        preview_limit: Optional[int] = None,
+    ) -> None:
         """
         Creates the gradio adapter.
 
         Args:
             collection: The collection to interact with.
+            title: The title of the gradio interface.
+            header: The header of the gradio interface.
+            examples: The example questions to display.
+            examples_per_page: The number of examples to display per page.
             preview_limit: The maximum number of preview data records to display.
         """
         self.collection = collection
         self.preview_limit = preview_limit
+        self.title = title
+        self.header = header
+        self.examples = examples or []
+        self.examples_per_page = examples_per_page
         self.log = self._setup_event_buffer()
 
     def _setup_event_buffer(self) -> StringIO:
@@ -93,8 +129,8 @@ class GradioAdapter:
         view = self.collection.get(view_name)
 
         if isinstance(view, BaseStructuredView):
-            results = view.execute().results
-            data = self._load_results_into_dataframe(results)
+            result = view.execute()
+            data = self._load_results_into_dataframe(result.results)
             if self.preview_limit is not None:
                 data = data.head(self.preview_limit)
 
@@ -198,8 +234,8 @@ class GradioAdapter:
         views = list(self.collection.list())
         selected_view = views[0] if views else None
 
-        with gr.Blocks(title="db-ally lab") as demo:
-            gr.Markdown("# 🔍 db-ally lab")
+        with gr.Blocks(title=self.title) as demo:
+            gr.Markdown(f"# {self.header}")
 
             with gr.Tab("Collection"):
                 with gr.Row():
@@ -208,34 +244,52 @@ class GradioAdapter:
                             label="API Key",
                             placeholder="Enter your API Key",
                             type="password",
-                            interactive=bool(views),
+                            interactive=bool(selected_view),
                         )
                         model_name = gr.Textbox(
                             label="Model Name",
                             placeholder="Enter your model name",
                             value=self.collection._llm.model_name,  # pylint: disable=protected-access
-                            interactive=bool(views),
+                            interactive=bool(selected_view),
                             max_lines=1,
                         )
                         question = gr.Textbox(
                             label="Question",
                             placeholder="Enter your question",
-                            interactive=bool(views),
+                            interactive=bool(selected_view),
                             max_lines=1,
                         )
                         natural_language_response_checkbox = gr.Checkbox(
                             label="Use Natural Language Responder",
-                            interactive=bool(views),
+                            interactive=bool(selected_view),
                         )
-                        ask_button = gr.Button(
-                            value="Ask",
-                            variant="primary",
-                            interactive=bool(views),
-                        )
-                        clear_button = gr.ClearButton(
-                            value="Reset",
-                            components=[question],
-                            interactive=bool(views),
+
+                        if self.examples and selected_view:
+                            gr.Examples(
+                                label="Example questions",
+                                examples=self.examples,
+                                inputs=question,
+                                examples_per_page=self.examples_per_page,
+                            )
+
+                        with gr.Row():
+                            clear_button = gr.ClearButton(
+                                value="Reset",
+                                components=[question],
+                                interactive=bool(selected_view),
+                            )
+                            ask_button = gr.Button(
+                                value="Ask",
+                                variant="primary",
+                                interactive=bool(selected_view),
+                            )
+
+                        gr.HTML(
+                            """
+                            <div style="text-align: end; font-weight: bold;">
+                            POWERED BY <a href="https://github.com/deepsense-ai/db-ally" target="_blank">DB-ALLY</a>
+                            </div>
+                            """
                         )
 
                     with gr.Column():
@@ -243,7 +297,7 @@ class GradioAdapter:
                             label="View Preview",
                             choices=views,
                             value=selected_view,
-                            interactive=bool(views),
+                            interactive=bool(selected_view),
                         )
                         if selected_view:
                             view_preview, view_preview_label = self._render_view_preview(selected_view)
@@ -266,7 +320,7 @@ class GradioAdapter:
                             visible=False,
                         )
                         iql_aggregation_result = gr.Code(
-                            label="IQL Aggreagation Query",
+                            label="IQL Aggregation Query",
                             lines=1,
                             language="python",
                             visible=False,
@@ -290,18 +344,18 @@ class GradioAdapter:
                     )
 
                 with gr.Tab("Logs"):
-                    log_console = gr.Code(label="Logs", language="shell")
+                    log_console = gr.Code(language="shell", show_label=False)
 
             with gr.Tab("Help"):
                 gr.Markdown(
                     """
-                    ## How to use this app:
+                    ## How to use this app
                     1. Enter your API Key for the LLM you want to use in the provided field.
                     2. Choose the [model](https://docs.litellm.ai/docs/providers) you want to use.
                     3. Type your question in the textbox.
                     4. Click on `Ask`. The retrieval results will appear in the `Results` tab.
 
-                    ## Learn more:
+                    ## Learn more
                     Want to learn more about db-ally? Check out our resources:
                     - [Website](https://deepsense.ai/db-ally)
                     - [GitHub](https://github.com/deepsense-ai/db-ally)
