@@ -1,7 +1,6 @@
 import re
 from dataclasses import dataclass
-from typing import _GenericAlias  # type: ignore
-from typing import List, Optional, Union
+from typing import List, Optional, Union, _AnnotatedAlias, _GenericAlias  # type: ignore
 
 from dbally.similarity import AbstractSimilarityIndex
 
@@ -16,10 +15,14 @@ def parse_param_type(param_type: Union[type, _GenericAlias]) -> str:
     Returns:
         str: string representation of the type
     """
-    if param_type in {int, float, str, bool, list, dict, set, tuple}:
+    if hasattr(param_type, "__name__"):
         return param_type.__name__
+
     if param_type.__module__ == "typing":
         return re.sub(r"\btyping\.", "", str(param_type))
+
+    if isinstance(param_type, _AnnotatedAlias):
+        return parse_param_type(param_type.__origin__)
 
     return str(param_type)
 
