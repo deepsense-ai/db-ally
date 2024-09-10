@@ -11,6 +11,7 @@ from dbally.audit.event_handlers.buffer_event_handler import BufferEventHandler
 from dbally.collection import Collection
 from dbally.collection.exceptions import NoViewFoundError
 from dbally.views.exceptions import ViewExecutionError
+from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 
 
 def create_gradio_interface(
@@ -115,27 +116,6 @@ class GradioAdapter:
             gr.Label(value=message, visible=df.empty, show_label=False),
         )
 
-    def _render_view_preview(self, view_name: str) -> Tuple[gr.Dataframe, gr.Label]:
-        """
-        Loads preview data for a selected view name.
-
-        Args:
-            view_name: The name of the selected view to load preview data for.
-
-        Returns:
-            A tuple containing the preview dataframe, load status text, and four None values to clean gradio fields.
-        """
-        data = pd.DataFrame()
-        view = self.collection.get(view_name)
-
-        if isinstance(view, BaseStructuredView):
-            result = view.execute()
-            data = self._load_results_into_dataframe(result.results)
-            if self.preview_limit is not None:
-                data = data.head(self.preview_limit)
-
-        return self._render_dataframe(data, "Preview not available")
-
     async def _ask_collection(
         self,
         question: str,
@@ -166,13 +146,15 @@ class GradioAdapter:
                 question=question,
                 return_natural_response=return_natural_response,
             )
-        except (NoViewFoundError, ViewExecutionError):
+        except (NoViewFoundError, ViewExecutionError) as e:
+            view_name = e.view_name
             sql = ""
             iql_filters = ""
             iql_aggregation = ""
             retrieved_rows = pd.DataFrame()
             textual_response = ""
         else:
+            view_name = result.view_name
             sql = result.context.get("sql", "")
             iql_filters = result.context.get("iql", {}).get("filters", "")
             iql_aggregation = result.context.get("iql", {}).get("aggregation", "")
@@ -185,10 +167,11 @@ class GradioAdapter:
         log_content = self.log.read()
 
         return (
+            gr.Textbox(value=textual_response, visible=return_natural_response),
+            gr.Textbox(value=view_name, visible=True),
             gr.Code(value=iql_filters, visible=bool(iql_filters)),
             gr.Code(value=iql_aggregation, visible=bool(iql_aggregation)),
             gr.Code(value=sql, visible=bool(sql)),
-            gr.Textbox(value=textual_response, visible=return_natural_response),
             retrieved_rows,
             empty_retrieved_rows_warning,
             log_content,
@@ -223,6 +206,36 @@ class GradioAdapter:
             The loaded DataFrame.
         """
         return pd.DataFrame(json.loads(json.dumps(results, default=str)))
+
+    def _render_param(self, param: MethodParamWithTyping) -> str:
+        if param.similarity_index:
+            return f"{param.name}: {str(param.type).replace('typing.', '')}"
+        return str(param)
+
+    def _render_tab_data(self, data: pd.DataFrame) -> None:
+        with gr.Tab("Data"):
+            if data.empty:
+                gr.Label("No data available", show_label=False)
+            else:
+                gr.Dataframe(value=data, height=320)
+
+    def _render_tab_iql(self, methods: List[ExposedFunction], label: str) -> None:
+        with gr.Tab(f"IQL {label}"):
+            if methods:
+                gr.Dataframe(
+                    value=[
+                        [
+                            f"{method.name}({', '.join(self._render_param(param) for param in method.parameters)})",
+                            method.description,
+                        ]
+                        for method in methods
+                    ],
+                    headers=["signature", "description"],
+                    interactive=False,
+                    height=325,
+                )
+            else:
+                gr.Label(f"No {label.lower()} available", show_label=False)
 
     def create_interface(self) -> gr.Interface:
         """
@@ -299,17 +312,40 @@ class GradioAdapter:
                             value=selected_view,
                             interactive=bool(selected_view),
                         )
-                        if selected_view:
-                            view_preview, view_preview_label = self._render_view_preview(selected_view)
-                        else:
-                            view_preview, view_preview_label = self._render_dataframe(
-                                pd.DataFrame(), "No view selected"
-                            )
+
+                        @gr.render(inputs=view_dropdown, triggers=[demo.load, view_dropdown.change])
+                        def render_view_preview(view_name: Optional[str]) -> None:
+                            if view_name is None:
+                                gr.Label("No views", show_label=False)
+                                return
+
+                            view = self.collection.get(view_name)
+
+                            if not isinstance(view, BaseStructuredView):
+                                gr.Label(value="Preview not available", show_label=False)
+                                return
+
+                            result = view.execute()
+                            data = self._load_results_into_dataframe(result.results)
+                            if self.preview_limit is not None:
+                                data = data.head(self.preview_limit)
+
+                            filters = view.list_filters()
+                            aggregations = view.list_aggregations()
+
+                            self._render_tab_data(data)
+                            self._render_tab_iql(filters, "Filters")
+                            self._render_tab_iql(aggregations, "Aggregations")
 
                 with gr.Tab("Results"):
                     natural_language_response = gr.Textbox(
                         label="Natural Language Response",
                         visible=False,
+                    )
+                    selected_view_name = gr.Textbox(
+                        label="Selected View",
+                        visible=False,
+                        max_lines=1,
                     )
 
                     with gr.Row():
@@ -367,6 +403,7 @@ class GradioAdapter:
                 [
                     natural_language_response_checkbox,
                     natural_language_response,
+                    selected_view_name,
                     iql_fitlers_result,
                     iql_aggregation_result,
                     sql_result,
@@ -379,19 +416,12 @@ class GradioAdapter:
                 fn=self._clear_results,
                 outputs=[
                     natural_language_response,
+                    selected_view_name,
                     iql_fitlers_result,
                     iql_aggregation_result,
                     sql_result,
                     retrieved_rows,
                     retrieved_rows_label,
-                ],
-            )
-            view_dropdown.change(
-                fn=self._render_view_preview,
-                inputs=view_dropdown,
-                outputs=[
-                    view_preview,
-                    view_preview_label,
                 ],
             )
             ask_button.click(
@@ -403,10 +433,11 @@ class GradioAdapter:
                     natural_language_response_checkbox,
                 ],
                 outputs=[
+                    natural_language_response,
+                    selected_view_name,
                     iql_fitlers_result,
                     iql_aggregation_result,
                     sql_result,
-                    natural_language_response,
                     retrieved_rows,
                     retrieved_rows_label,
                     log_console,
