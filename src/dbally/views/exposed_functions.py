@@ -1,6 +1,8 @@
 import re
 from dataclasses import dataclass
-from typing import List, Optional, Union, _AnnotatedAlias, _GenericAlias  # type: ignore
+from typing import List, Optional, Union, _GenericAlias  # type: ignore
+
+from typing_extensions import _AnnotatedAlias
 
 from dbally.similarity import AbstractSimilarityIndex
 
