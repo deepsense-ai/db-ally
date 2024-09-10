@@ -16,6 +16,15 @@ class AbstractSimilarityIndex(metaclass=abc.ABCMeta):
     is not a useful abstraction.
     """
 
+    def __repr__(self) -> str:
+        """
+        Returns the string representation of the AbstractSimilarityIndex.
+
+        Returns:
+            str: The string representation of the AbstractSimilarityIndex.
+        """
+        return f"{self.__class__.__name__}()"
+
     @abc.abstractmethod
     async def update(self) -> None:
         """
@@ -50,6 +59,15 @@ class SimilarityIndex(AbstractSimilarityIndex):
         """
         self.store = store
         self.fetcher = fetcher
+
+    def __repr__(self) -> str:
+        """
+        Returns the string representation of the SimilarityIndex.
+
+        Returns:
+            str: The string representation of the SimilarityIndex.
+        """
+        return f"{self.__class__.__name__}(store={self.store}, fetcher={self.fetcher})"
 
     async def update(self) -> None:
         """
