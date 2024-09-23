@@ -1,8 +1,9 @@
 import re
 from dataclasses import dataclass
-from typing import Annotated, List, Union
+from typing import List, Union
 
 import pytest
+from typing_extensions import Annotated
 
 from dbally.context.context import BaseCallerContext
 from dbally.iql import IQLArgumentParsingError, IQLUnsupportedSyntaxError, syntax
