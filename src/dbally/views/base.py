@@ -5,7 +5,7 @@ from typing_extensions import TypeAlias
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
-from dbally.context.context import BaseCallerContext
+from dbally.context import Context
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.prompt.elements import FewShotExample
@@ -25,7 +25,7 @@ class BaseView(metaclass=abc.ABCMeta):
         self,
         query: str,
         llm: LLM,
-        contexts: Optional[List[BaseCallerContext]] = None,
+        contexts: Optional[List[Context]] = None,
         event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
         dry_run: bool = False,
@@ -38,7 +38,7 @@ class BaseView(metaclass=abc.ABCMeta):
             query: The natural language query to execute.
             llm: The LLM used to execute the query.
             contexts: An iterable (typically a list) of context objects, each being
-                an instance of a subclass of BaseCallerContext.
+                an instance of a subclass of Context.
             event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.

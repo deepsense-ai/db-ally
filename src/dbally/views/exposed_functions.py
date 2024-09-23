@@ -4,7 +4,7 @@ from typing import List, Optional, Type, Union, _GenericAlias  # type: ignore
 
 from typing_extensions import _AnnotatedAlias, get_origin
 
-from dbally.context.context import BaseCallerContext
+from dbally.context import Context
 from dbally.similarity import AbstractSimilarityIndex
 
 
@@ -21,11 +21,11 @@ class MethodParamWithTyping:
         return f"{self.name}: {self._parse_type()}"
 
     @property
-    def contexts(self) -> List[Type[BaseCallerContext]]:
+    def contexts(self) -> List[Type[Context]]:
         """
         Returns the contexts if the type is annotated with them.
         """
-        return [arg for arg in getattr(self.type, "__args__", []) if issubclass(arg, BaseCallerContext)]
+        return [arg for arg in getattr(self.type, "__args__", []) if issubclass(arg, Context)]
 
     @property
     def similarity_index(self) -> Optional[AbstractSimilarityIndex]:
@@ -51,7 +51,7 @@ class MethodParamWithTyping:
             if param_type.__module__ == "typing":
                 return re.sub(r"\btyping\.", "", str(param_type))
 
-            if issubclass(param_type, BaseCallerContext):
+            if issubclass(param_type, Context):
                 return param_type.type_name
 
             if hasattr(param_type, "__name__"):

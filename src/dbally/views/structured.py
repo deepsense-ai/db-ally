@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
-from dbally.context.context import BaseCallerContext
+from dbally.context import Context
 from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
@@ -35,7 +35,7 @@ class BaseStructuredView(BaseView):
         self,
         query: str,
         llm: LLM,
-        contexts: Optional[List[BaseCallerContext]] = None,
+        contexts: Optional[List[Context]] = None,
         event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
         dry_run: bool = False,

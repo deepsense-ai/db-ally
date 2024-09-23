@@ -4,7 +4,7 @@ import logging
 import textwrap
 import time
 from collections import defaultdict
-from typing import Callable, Dict, Iterable, List, Optional, Type, TypeVar
+from typing import Callable, Dict, List, Optional, Type, TypeVar
 
 import dbally
 from dbally.audit.event_handlers.base import EventHandler
@@ -12,7 +12,7 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.audit.events import FallbackEvent, RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult, ViewExecutionResult
-from dbally.context.context import BaseCallerContext
+from dbally.context import Context
 from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
@@ -228,7 +228,7 @@ class Collection:
         event_tracker: EventTracker,
         llm_options: Optional[LLMOptions],
         dry_run: bool,
-        contexts: Iterable[BaseCallerContext],
+        contexts: List[Context],
     ) -> ViewExecutionResult:
         """
         Ask the selected view to provide an answer to the question.
@@ -247,11 +247,11 @@ class Collection:
         view_result = await selected_view.ask(
             query=question,
             llm=self._llm,
+            contexts=contexts,
             event_tracker=event_tracker,
             n_retries=self.n_retries,
             dry_run=dry_run,
             llm_options=llm_options,
-            contexts=contexts,
         )
         return view_result
 
@@ -298,9 +298,11 @@ class Collection:
             return self._event_handlers
         return list(set(self._event_handlers).union(self._fallback_collection.get_all_event_handlers()))
 
+    # pylint: disable=too-many-arguments
     async def _handle_fallback(
         self,
         question: str,
+        contexts: Optional[List[Context]],
         dry_run: bool,
         return_natural_response: bool,
         llm_options: Optional[LLMOptions],
@@ -322,7 +324,6 @@ class Collection:
 
         Returns:
             The result from the fallback collection.
-
         """
         if not self._fallback_collection:
             raise caught_exception
@@ -337,6 +338,7 @@ class Collection:
         async with event_tracker.track_event(fallback_event) as span:
             result = await self._fallback_collection.ask(
                 question=question,
+                contexts=contexts,
                 dry_run=dry_run,
                 return_natural_response=return_natural_response,
                 llm_options=llm_options,
@@ -348,10 +350,10 @@ class Collection:
     async def ask(
         self,
         question: str,
+        contexts: Optional[List[Context]] = None,
         dry_run: bool = False,
         return_natural_response: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        contexts: Optional[Iterable[BaseCallerContext]] = None,
         event_tracker: Optional[EventTracker] = None,
     ) -> ExecutionResult:
         """
@@ -366,14 +368,14 @@ class Collection:
 
         Args:
             question: question posed using natural language representation e.g\
-            "What job offers for Data Scientists do we have?"
+                "What job offers for Data Scientists do we have?"
+            contexts: list of context objects, each being an instance of
+                a subclass of Context. May contain contexts irrelevant for the currently processed query.
             dry_run: if True, only generate the query without executing it
             return_natural_response: if True (and dry_run is False as natural response requires query results),
                 the natural response will be included in the answer
             llm_options: options to use for the LLM client. If provided, these options will be merged with the default
                 options provided to the LLM client, prioritizing option values other than NOT_GIVEN
-            contexts: An iterable (typically a list) of context objects, each being an instance of
-                a subclass of BaseCallerContext. May contain contexts irrelevant for the currently processed query.
             event_tracker: Event tracker object for given ask.
 
         Returns:
@@ -433,6 +435,7 @@ class Collection:
             if self._fallback_collection:
                 result = await self._handle_fallback(
                     question=question,
+                    contexts=contexts,
                     dry_run=dry_run,
                     return_natural_response=return_natural_response,
                     llm_options=llm_options,

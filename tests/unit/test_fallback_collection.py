@@ -8,7 +8,7 @@ import dbally
 from dbally.audit import CLIEventHandler, EventTracker, OtelEventHandler
 from dbally.audit.event_handlers.buffer_event_handler import BufferEventHandler
 from dbally.collection import Collection, ViewExecutionResult
-from dbally.context.context import BaseCallerContext
+from dbally.context import Context
 from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.llms import LLM
 from dbally.llms.clients import LLMOptions
@@ -42,7 +42,7 @@ class MyText2SqlView(BaseText2SQLView):
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        contexts: Optional[Iterable[BaseCallerContext]] = None,
+        contexts: Optional[Iterable[Context]] = None,
     ) -> ViewExecutionResult:
         return ViewExecutionResult(
             results=[{"mock_result": "fallback_result"}], metadata={"mock_context": "fallback_context"}

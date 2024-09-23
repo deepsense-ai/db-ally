@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import List, Literal, Tuple, Union
 
 from dbally.collection.results import ViewExecutionResult
-from dbally.context import BaseCallerContext
+from dbally.context import Context
 from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.views.decorators import view_aggregation, view_filter
 from dbally.views.exposed_functions import MethodParamWithTyping
@@ -12,7 +12,7 @@ from dbally.views.methods_base import MethodsBaseView
 
 
 @dataclass
-class CallerContext(BaseCallerContext):
+class CallerContext(Context):
     """
     Mock class for testing context.
     """

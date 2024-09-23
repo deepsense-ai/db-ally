@@ -6,14 +6,14 @@ from typing import Union
 
 import sqlalchemy
 
-from dbally.context import BaseCallerContext
+from dbally.context import Context
 from dbally.iql import IQLAggregationQuery, IQLFiltersQuery
 from dbally.views.decorators import view_aggregation, view_filter
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
 
 @dataclass
-class SomeTestContext(BaseCallerContext):
+class SomeTestContext(Context):
     age: int
 
 

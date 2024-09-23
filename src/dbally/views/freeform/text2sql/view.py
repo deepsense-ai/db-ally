@@ -8,7 +8,7 @@ from sqlalchemy import ColumnClause, Engine, MetaData, Table, text
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
-from dbally.context.context import BaseCallerContext
+from dbally.context import Context
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.prompt.template import PromptTemplate
@@ -100,7 +100,7 @@ class BaseText2SQLView(BaseView, ABC):
         self,
         query: str,
         llm: LLM,
-        contexts: Optional[List[BaseCallerContext]] = None,
+        contexts: Optional[List[Context]] = None,
         event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
         dry_run: bool = False,

@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Generic, List, Optional, TypeVar, Union
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.context.context import BaseCallerContext
+from dbally.context import Context
 from dbally.iql import syntax
 from dbally.iql._exceptions import (
     IQLArgumentParsingError,
@@ -34,7 +34,7 @@ class IQLProcessor(Generic[RootT], ABC):
         self,
         source: str,
         allowed_functions: List[ExposedFunction],
-        allowed_contexts: Optional[List[BaseCallerContext]] = None,
+        allowed_contexts: Optional[List[Context]] = None,
         event_tracker: Optional[EventTracker] = None,
     ) -> None:
         self.source = source

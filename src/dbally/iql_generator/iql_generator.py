@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Generic, List, Optional, TypeVar, Union
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.context.context import BaseCallerContext
+from dbally.context import Context
 from dbally.iql import IQLError, IQLQuery
 from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.iql_generator.prompt import (
@@ -67,7 +67,7 @@ class IQLGenerator:
         question: str,
         filters: List[ExposedFunction],
         aggregations: List[ExposedFunction],
-        contexts: List[BaseCallerContext],
+        contexts: List[Context],
         examples: List[FewShotExample],
         llm: LLM,
         event_tracker: Optional[EventTracker] = None,
@@ -146,7 +146,7 @@ class IQLOperationGenerator(Generic[IQLQueryT]):
         *,
         question: str,
         methods: List[ExposedFunction],
-        contexts: List[BaseCallerContext],
+        contexts: List[Context],
         examples: List[FewShotExample],
         llm: LLM,
         event_tracker: Optional[EventTracker] = None,
@@ -265,7 +265,7 @@ class IQLQueryGenerator(Generic[IQLQueryT]):
         *,
         question: str,
         methods: List[ExposedFunction],
-        contexts: List[BaseCallerContext],
+        contexts: List[Context],
         examples: List[FewShotExample],
         llm: LLM,
         llm_options: Optional[LLMOptions] = None,

@@ -8,7 +8,7 @@ from . import syntax
 from ._processor import IQLAggregationProcessor, IQLFiltersProcessor, IQLProcessor, RootT
 
 if TYPE_CHECKING:
-    from dbally.context.context import BaseCallerContext
+    from dbally.context import Context
     from dbally.views.exposed_functions import ExposedFunction
 
 
@@ -33,7 +33,7 @@ class IQLQuery(Generic[RootT], ABC):
         cls,
         source: str,
         allowed_functions: List["ExposedFunction"],
-        allowed_contexts: Optional[List["BaseCallerContext"]] = None,
+        allowed_contexts: Optional[List["Context"]] = None,
         event_tracker: Optional[EventTracker] = None,
     ) -> Self:
         """

@@ -5,7 +5,7 @@ from typing import List, Union
 import pytest
 from typing_extensions import Annotated
 
-from dbally.context.context import BaseCallerContext
+from dbally.context import Context
 from dbally.iql import IQLArgumentParsingError, IQLUnsupportedSyntaxError, syntax
 from dbally.iql._exceptions import (
     IQLArgumentValidationError,
@@ -59,7 +59,7 @@ async def test_iql_filter_parser():
 
 async def test_iql_filter_context_parser():
     @dataclass
-    class TestCustomContext(BaseCallerContext):
+    class TestCustomContext(Context):
         city: str
 
     test_context = TestCustomContext(city="cracow")
@@ -109,7 +109,7 @@ async def test_iql_filter_context_parser():
 
 async def test_iql_filter_context_not_allowed_error():
     @dataclass
-    class TestCustomContext(BaseCallerContext):
+    class TestCustomContext(Context):
         city: str
 
     with pytest.raises(IQLContextNotAllowedError) as exc_info:
@@ -140,7 +140,7 @@ async def test_iql_filter_context_not_allowed_error():
 
 async def test_iql_filter_context_not_found_error():
     @dataclass
-    class TestCustomContext(BaseCallerContext):
+    class TestCustomContext(Context):
         city: str
 
     with pytest.raises(IQLContextNotFoundError) as exc_info:
@@ -360,7 +360,7 @@ async def test_iql_aggregation_parser():
 
 async def test_iql_aggregation_context_parser():
     @dataclass
-    class TestCustomContext(BaseCallerContext):
+    class TestCustomContext(Context):
         city: str
 
     test_context = TestCustomContext(city="cracow")
@@ -387,7 +387,7 @@ async def test_iql_aggregation_context_parser():
 
 async def test_iql_aggregation_context_not_allowed_error():
     @dataclass
-    class TestCustomContext(BaseCallerContext):
+    class TestCustomContext(Context):
         city: str
 
     with pytest.raises(IQLContextNotAllowedError) as exc_info:
@@ -412,7 +412,7 @@ async def test_iql_aggregation_context_not_allowed_error():
 
 async def test_iql_aggregation_context_not_found_error():
     @dataclass
-    class TestCustomContext(BaseCallerContext):
+    class TestCustomContext(Context):
         city: str
 
     with pytest.raises(IQLContextNotFoundError) as exc_info:

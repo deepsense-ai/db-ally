@@ -3,7 +3,7 @@
 from typing import List, Optional
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.context.context import BaseCallerContext
+from dbally.context import Context
 from dbally.exceptions import DbAllyError
 from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.prompt.elements import FewShotExample
@@ -21,7 +21,7 @@ class UnsupportedQueryError(DbAllyError):
 async def _iql_filters_parser(
     response: str,
     allowed_functions: List[ExposedFunction],
-    allowed_contexts: List[BaseCallerContext],
+    allowed_contexts: List[Context],
     event_tracker: Optional[EventTracker] = None,
 ) -> IQLFiltersQuery:
     """
@@ -53,7 +53,7 @@ async def _iql_filters_parser(
 async def _iql_aggregation_parser(
     response: str,
     allowed_functions: List[ExposedFunction],
-    allowed_contexts: List[BaseCallerContext],
+    allowed_contexts: List[Context],
     event_tracker: Optional[EventTracker] = None,
 ) -> IQLAggregationQuery:
     """
@@ -127,7 +127,7 @@ class IQLGenerationPromptFormat(PromptFormat):
         *,
         question: str,
         methods: List[ExposedFunction],
-        contexts: List[BaseCallerContext],
+        contexts: List[Context],
         examples: Optional[List[FewShotExample]] = None,
     ) -> None:
         """
