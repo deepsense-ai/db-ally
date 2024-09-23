@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import (  # type: ignore
-    Annotated,
     Any,
     Callable,
     Dict,
@@ -12,6 +11,8 @@ from typing import (  # type: ignore
     get_args,
     get_origin,
 )
+
+from typing_extensions import Annotated
 
 
 @dataclass

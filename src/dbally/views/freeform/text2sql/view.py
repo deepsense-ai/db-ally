@@ -100,11 +100,11 @@ class BaseText2SQLView(BaseView, ABC):
         self,
         query: str,
         llm: LLM,
+        contexts: Optional[List[BaseCallerContext]] = None,
         event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        contexts: Optional[Iterable[BaseCallerContext]] = None,
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result. It generates the SQL query from the natural language query and
@@ -113,11 +113,11 @@ class BaseText2SQLView(BaseView, ABC):
         Args:
             query: The natural language query to execute.
             llm: The LLM used to execute the query.
+            contexts: Currently not used.
             event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
             llm_options: Options to use for the LLM.
-            contexts: Currently not used.
 
         Returns:
             The result of the query.
