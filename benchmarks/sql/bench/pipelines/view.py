@@ -104,10 +104,10 @@ class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
             prediction = ExecutionResult(
                 view_name=data["view_name"],
                 iql=IQLResult(
-                    filters=IQL(source=result.context["iql"]["filters"]),
-                    aggregation=IQL(source=result.context["iql"]["aggregation"]),
+                    filters=IQL(source=result.metadata["iql"]["filters"]),
+                    aggregation=IQL(source=result.metadata["iql"]["aggregation"]),
                 ),
-                sql=result.context["sql"],
+                sql=result.metadata["sql"],
             )
 
         reference = ExecutionResult(
@@ -179,7 +179,7 @@ class SQLViewEvaluationPipeline(ViewEvaluationPipeline):
         else:
             prediction = ExecutionResult(
                 view_name=view.__class__.__name__,
-                sql=result.context["sql"],
+                sql=result.metadata["sql"],
             )
 
         reference = ExecutionResult(

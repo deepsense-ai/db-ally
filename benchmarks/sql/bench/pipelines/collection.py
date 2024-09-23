@@ -85,10 +85,10 @@ class CollectionEvaluationPipeline(EvaluationPipeline):
             prediction = ExecutionResult(
                 view_name=result.view_name,
                 iql=IQLResult(
-                    filters=IQL(source=result.context["iql"]["filters"]),
-                    aggregation=IQL(source=result.context["iql"]["aggregation"]),
+                    filters=IQL(source=result.metadata["iql"]["filters"]),
+                    aggregation=IQL(source=result.metadata["iql"]["aggregation"]),
                 ),
-                sql=result.context["sql"],
+                sql=result.metadata["sql"],
             )
 
         reference = ExecutionResult(
