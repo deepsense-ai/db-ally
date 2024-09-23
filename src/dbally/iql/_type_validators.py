@@ -1,18 +1,7 @@
 from dataclasses import dataclass
-from typing import (  # type: ignore
-    Any,
-    Callable,
-    Dict,
-    Literal,
-    Optional,
-    Type,
-    Union,
-    _GenericAlias,
-    get_args,
-    get_origin,
-)
+from typing import Any, Callable, Dict, Literal, Optional, Type, Union, _GenericAlias  # type: ignore
 
-from typing_extensions import Annotated
+from typing_extensions import Annotated, get_args, get_origin
 
 
 @dataclass
