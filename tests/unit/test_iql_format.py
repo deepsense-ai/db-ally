@@ -1,41 +1,30 @@
-from dbally.iql_generator.prompt import IQL_GENERATION_TEMPLATE, IQLGenerationPromptFormat
+from dbally.iql_generator.prompt import FILTERS_GENERATION_TEMPLATE, IQLGenerationPromptFormat
 from dbally.prompt.elements import FewShotExample
 
 
 async def test_iql_prompt_format_default() -> None:
     prompt_format = IQLGenerationPromptFormat(
         question="",
-        filters=[],
+        methods=[],
+        contexts=[],
         examples=[],
     )
-    formatted_prompt = IQL_GENERATION_TEMPLATE.format_prompt(prompt_format)
+    formatted_prompt = FILTERS_GENERATION_TEMPLATE.format_prompt(prompt_format)
 
     assert formatted_prompt.chat == [
         {
             "role": "system",
-            "content": "You have access to API that lets you query a database:\n"
+            "content": "You have access to an API that lets you query a database:\n"
             "\n\n"
-            "Please suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
+            "Suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
             "Remember! Don't give any comments, just the function calls.\n"
             "The output will look like this:\n"
             'filter1("arg1") AND (NOT filter2(120) OR filter3(True))\n'
             "DO NOT INCLUDE arguments names in your response. Only the values.\n"
             "You MUST use only these methods:\n"
             "\n\n"
-            "It is VERY IMPORTANT not to use methods other than those listed above.\n"
-            "Finally, if a called function argument value is not directly specified in the query but instead requires "
-            "some additional execution context, than substitute that argument value with: AskerContext().\n"
-            "The typical input phrase suggesting that the additional execution context need to be referenced \n"
-            'contains words like: "I", "my", "mine", "current", "the" etc..\n'
-            'For example: "my position name", "my company valuation", "current day", "the ongoing project".\n'
-            "In that case, the part of the output will look like this:\n"
-            "filter4(AskerContext())\n"
-            "Outside this situation DO NOT combine filters like this:\n"
-            "filter4(filter2())\n"
-            "And NEVER quote the filter argument unless you're sure it represents the string/literal datatype, \n"
-            "Especially do not quote AskerContext() calls like this:\n"
-            "filter2('AskerContext()')\n"
-            """If you DON'T KNOW HOW TO ANSWER DON'T SAY \"\", SAY: `UNSUPPORTED QUERY` INSTEAD! """
+            "It is VERY IMPORTANT not to use methods other than those listed above."
+            """If you DON'T KNOW HOW TO ANSWER DON'T SAY anything other than `UNSUPPORTED QUERY`"""
             "This is CRUCIAL, otherwise the system will crash. ",
             "is_example": False,
         },
@@ -47,37 +36,26 @@ async def test_iql_prompt_format_few_shots_injected() -> None:
     examples = [FewShotExample("q1", "a1")]
     prompt_format = IQLGenerationPromptFormat(
         question="",
-        filters=[],
+        methods=[],
+        contexts=[],
         examples=examples,
     )
-    formatted_prompt = IQL_GENERATION_TEMPLATE.format_prompt(prompt_format)
+    formatted_prompt = FILTERS_GENERATION_TEMPLATE.format_prompt(prompt_format)
 
     assert formatted_prompt.chat == [
         {
             "role": "system",
-            "content": "You have access to API that lets you query a database:\n"
+            "content": "You have access to an API that lets you query a database:\n"
             "\n\n"
-            "Please suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
+            "Suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
             "Remember! Don't give any comments, just the function calls.\n"
             "The output will look like this:\n"
             'filter1("arg1") AND (NOT filter2(120) OR filter3(True))\n'
             "DO NOT INCLUDE arguments names in your response. Only the values.\n"
             "You MUST use only these methods:\n"
             "\n\n"
-            "It is VERY IMPORTANT not to use methods other than those listed above.\n"
-            "Finally, if a called function argument value is not directly specified in the query but instead requires "
-            "some additional execution context, than substitute that argument value with: AskerContext().\n"
-            "The typical input phrase suggesting that the additional execution context need to be referenced \n"
-            'contains words like: "I", "my", "mine", "current", "the" etc..\n'
-            'For example: "my position name", "my company valuation", "current day", "the ongoing project".\n'
-            "In that case, the part of the output will look like this:\n"
-            "filter4(AskerContext())\n"
-            "Outside this situation DO NOT combine filters like this:\n"
-            "filter4(filter2())\n"
-            "And NEVER quote the filter argument unless you're sure it represents the string/literal datatype, \n"
-            "Especially do not quote AskerContext() calls like this:\n"
-            "filter2('AskerContext()')\n"
-            """If you DON'T KNOW HOW TO ANSWER DON'T SAY \"\", SAY: `UNSUPPORTED QUERY` INSTEAD! """
+            "It is VERY IMPORTANT not to use methods other than those listed above."
+            """If you DON'T KNOW HOW TO ANSWER DON'T SAY anything other than `UNSUPPORTED QUERY`"""
             "This is CRUCIAL, otherwise the system will crash. ",
             "is_example": False,
         },
@@ -91,12 +69,13 @@ async def test_iql_input_format_few_shot_examples_repeat_no_example_duplicates()
     examples = [FewShotExample("q1", "a1")]
     prompt_format = IQLGenerationPromptFormat(
         question="",
-        filters=[],
+        methods=[],
+        contexts=[],
         examples=examples,
     )
-    formatted_prompt = IQL_GENERATION_TEMPLATE.format_prompt(prompt_format)
+    formatted_prompt = FILTERS_GENERATION_TEMPLATE.format_prompt(prompt_format)
 
-    assert len(formatted_prompt.chat) == len(IQL_GENERATION_TEMPLATE.chat) + (len(examples) * 2)
+    assert len(formatted_prompt.chat) == len(FILTERS_GENERATION_TEMPLATE.chat) + (len(examples) * 2)
     assert formatted_prompt.chat[1]["role"] == "user"
     assert formatted_prompt.chat[1]["content"] == examples[0].question
     assert formatted_prompt.chat[2]["role"] == "assistant"

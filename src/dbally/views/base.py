@@ -1,5 +1,5 @@
 import abc
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from typing_extensions import TypeAlias
 
@@ -25,11 +25,11 @@ class BaseView(metaclass=abc.ABCMeta):
         self,
         query: str,
         llm: LLM,
+        contexts: Optional[List[BaseCallerContext]] = None,
         event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        contexts: Optional[Iterable[BaseCallerContext]] = None,
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result.
@@ -37,12 +37,12 @@ class BaseView(metaclass=abc.ABCMeta):
         Args:
             query: The natural language query to execute.
             llm: The LLM used to execute the query.
+            contexts: An iterable (typically a list) of context objects, each being
+                an instance of a subclass of BaseCallerContext.
             event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
             llm_options: Options to use for the LLM.
-            contexts: An iterable (typically a list) of context objects, each being
-                an instance of a subclass of BaseCallerContext.
 
         Returns:
             The result of the query.

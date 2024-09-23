@@ -2,12 +2,6 @@
   --md-primary-fg-color:        #00b0e0;
 }
 
-.md-header__button.md-logo {
-    margin: 0;
-    padding: 0;
-}
-
-.md-header__button.md-logo img, .md-header__button.md-logo svg {
-    height: 1.8rem;
-    width: 1.8rem;
+.md-header__title {
+  margin-left: 0.5rem !important;
 }

@@ -1,17 +1,15 @@
 import abc
 from collections import defaultdict
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, List, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
 from dbally.context.context import BaseCallerContext
-from dbally.iql import IQLQuery
-from dbally.iql._exceptions import IQLError
+from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
-from dbally.views.exceptions import IQLGenerationError
+from dbally.views.exceptions import ViewExecutionError
 from dbally.views.exposed_functions import ExposedFunction
 
 from ..similarity import AbstractSimilarityIndex
@@ -24,43 +22,24 @@ class BaseStructuredView(BaseView):
     to be able to list all available filters, apply them and execute queries.
     """
 
-    def get_iql_generator(self, llm: LLM) -> IQLGenerator:
+    def get_iql_generator(self) -> IQLGenerator:
         """
         Returns the IQL generator for the view.
-
-        Args:
-            llm: LLM used to generate the IQL queries.
 
         Returns:
             IQL generator for the view.
         """
-        return IQLGenerator(llm=llm)
-
-    @classmethod
-    def contextualize_filters(
-        cls, filters: Iterable[ExposedFunction], contexts: Optional[Iterable[BaseCallerContext]]
-    ) -> None:
-        """
-        Updates a list of filters packed as ExposedFunction's by ingesting the matching context objects.
-
-        Args:
-            filters: An iterable of filters.
-            contexts: An iterable of context objects.
-        """
-
-        contexts = contexts or []
-        for filter_ in filters:
-            filter_.inject_context(contexts)
+        return IQLGenerator()
 
     async def ask(
         self,
         query: str,
         llm: LLM,
+        contexts: Optional[List[BaseCallerContext]] = None,
         event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
-        contexts: Optional[Iterable[BaseCallerContext]] = None,
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result. It generates the IQL query from the natural language query\
@@ -69,53 +48,53 @@ class BaseStructuredView(BaseView):
         Args:
             query: The natural language query to execute.
             llm: The LLM used to execute the query.
+            contexts: The context data to be used in the query.
             event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
             llm_options: Options to use for the LLM.
-            contexts: An iterable (typically a list) of context objects, each being
-                an instance of a subclass of BaseCallerContext.
 
         Returns:
             The result of the query.
 
         Raises:
-            LLMError: If LLM text generation API fails.
-            IQLGenerationError: If the IQL generation fails.
+            ViewExecutionError: When an error occurs while executing the view.
         """
-        iql_generator = self.get_iql_generator(llm)
-
+        contexts = contexts or []
         filters = self.list_filters()
+        aggregations = self.list_aggregations()
         examples = self.list_few_shots()
 
-        self.contextualize_filters(filters, contexts)
-        try:
-            iql = await iql_generator.generate_iql(
-                question=query,
-                filters=filters,
-                examples=examples,
-                event_tracker=event_tracker,
-                llm_options=llm_options,
-                n_retries=n_retries,
-            )
-        except UnsupportedQueryError as exc:
-            raise IQLGenerationError(
-                view_name=self.__class__.__name__,
-                filters=None,
-                aggregation=None,
-            ) from exc
-        except IQLError as exc:
-            raise IQLGenerationError(
-                view_name=self.__class__.__name__,
-                filters=exc.source,
-                aggregation=None,
-            ) from exc
+        iql_generator = self.get_iql_generator()
+        iql = await iql_generator(
+            question=query,
+            filters=filters,
+            aggregations=aggregations,
+            contexts=contexts,
+            examples=examples,
+            llm=llm,
+            event_tracker=event_tracker,
+            llm_options=llm_options,
+            n_retries=n_retries,
+        )
 
-        await self.apply_filters(iql)
+        if isinstance(iql.filters, BaseException) or isinstance(iql.aggregation, BaseException):
+            raise ViewExecutionError(
+                view_name=self.__class__.__name__,
+                iql=iql,
+            )
+
+        if iql.filters:
+            await self.apply_filters(iql.filters)
+
+        if iql.aggregation:
+            await self.apply_aggregation(iql.aggregation)
 
         result = self.execute(dry_run=dry_run)
-        result.metadata["iql"] = f"{iql}"
-
+        result.metadata["iql"] = {
+            "filters": str(iql.filters) if iql.filters else None,
+            "aggregation": str(iql.aggregation) if iql.aggregation else None,
+        }
         return result
 
     @abc.abstractmethod
@@ -128,12 +107,30 @@ class BaseStructuredView(BaseView):
         """
 
     @abc.abstractmethod
-    async def apply_filters(self, filters: IQLQuery) -> None:
+    def list_aggregations(self) -> List[ExposedFunction]:
+        """
+        Lists all available aggregations for the View.
+
+        Returns:
+            Aggregations defined inside the View.
+        """
+
+    @abc.abstractmethod
+    async def apply_filters(self, filters: IQLFiltersQuery) -> None:
         """
         Applies the chosen filters to the view.
 
         Args:
-            filters: [IQLQuery](../../concepts/iql.md) object representing the filters to apply
+            filters: IQLQuery object representing the filters to apply.
+        """
+
+    @abc.abstractmethod
+    async def apply_aggregation(self, aggregation: IQLAggregationQuery) -> None:
+        """
+        Applies the chosen aggregation to the view.
+
+        Args:
+            aggregation: IQLQuery object representing the aggregation to apply.
         """
 
     @abc.abstractmethod
@@ -142,7 +139,10 @@ class BaseStructuredView(BaseView):
         Executes the query and returns the result.
 
         Args:
-            dry_run: if True, should only generate the query without executing it
+            dry_run: if True, should only generate the query without executing it.
+
+        Returns:
+            The view execution result.
         """
 
     def list_similarity_indexes(self) -> Dict[AbstractSimilarityIndex, List[IndexLocation]]:
@@ -154,9 +154,11 @@ class BaseStructuredView(BaseView):
         """
         indexes = defaultdict(list)
         filters = self.list_filters()
-        for filter_ in filters:
-            for param in filter_.parameters:
+        aggregations = self.list_aggregations()
+
+        for method in filters + aggregations:
+            for param in method.parameters:
                 if param.similarity_index:
-                    indexes[param.similarity_index].append((self.__class__.__name__, filter_.name, param.name))
+                    indexes[param.similarity_index].append((self.__class__.__name__, method.name, param.name))
 
         return indexes

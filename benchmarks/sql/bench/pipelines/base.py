@@ -1,8 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
+from dbally.iql._exceptions import IQLError
+from dbally.iql._query import IQLQuery
+from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.llms.base import LLM
+from dbally.llms.clients.exceptions import LLMError
 from dbally.llms.litellm import LiteLLM
 from dbally.llms.local import LocalLLM
 
@@ -16,6 +20,25 @@ class IQL:
     source: Optional[str] = None
     unsupported: bool = False
     valid: bool = True
+    generated: bool = True
+
+    @classmethod
+    def from_query(cls, query: Optional[Union[IQLQuery, Exception]]) -> "IQL":
+        """
+        Creates an IQL object from the query.
+
+        Args:
+            query: The IQL query or exception.
+
+        Returns:
+            The IQL object.
+        """
+        return cls(
+            source=query.source if isinstance(query, (IQLQuery, IQLError)) else None,
+            unsupported=isinstance(query, UnsupportedQueryError),
+            valid=not isinstance(query, IQLError),
+            generated=not isinstance(query, LLMError),
+        )
 
 
 @dataclass
@@ -47,6 +70,7 @@ class EvaluationResult:
     """
 
     db_id: str
+    question_id: str
     question: str
     reference: ExecutionResult
     prediction: ExecutionResult

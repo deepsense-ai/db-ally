@@ -1,0 +1,4 @@
+path: "micpst/bird-iql"
+split: "dev"
+db_ids: ["superhero"]
+difficulties: ["simple", "moderate", "challenging"]

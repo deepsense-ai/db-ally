@@ -1,4 +1,6 @@
-from typing import List, Literal
+from typing import List, Literal, Union
+
+from typing_extensions import Annotated
 
 from dbally.iql._type_validators import validate_arg_type
 
@@ -18,6 +20,38 @@ def test_list_validator():
 
     result = validate_arg_type(list, "wrong")
     assert result.valid is False
+
+
+def test_annotated_validator():
+    result = validate_arg_type(Annotated[str, "This is some value"], "smth")
+    assert result.valid is True
+    assert result.casted_value == ...
+    assert result.reason is None
+
+    result = validate_arg_type(Annotated[str, "This is some value"], 5)
+    assert result.valid is False
+
+
+def test_union_validator():
+    result = validate_arg_type(Union[str, int], "smth")
+    assert result.valid is True
+    assert result.casted_value == ...
+    assert result.reason is None
+
+    result = validate_arg_type(Union[str, int], 5)
+    assert result.valid is True
+    assert result.casted_value == ...
+    assert result.reason is None
+
+    result = validate_arg_type(Union[str, int], 5.0)
+    assert result.valid is True
+    assert result.casted_value == ...
+    assert result.reason is None
+
+    result = validate_arg_type(Union[str, int], [1, 2, 3])
+    assert result.valid is False
+    assert result.casted_value == ...
+    assert result.reason == "[1, 2, 3] is not of type <class 'str'>, <class 'int'>"
 
 
 def test_simple_types():

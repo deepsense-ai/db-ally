@@ -1,10 +1,12 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name
 
+
 import pandas as pd
 
-from dbally.iql import IQLQuery
-from dbally.views.decorators import view_filter
-from dbally.views.pandas_base import DataFrameBaseView
+from dbally.iql import IQLFiltersQuery
+from dbally.iql._query import IQLAggregationQuery
+from dbally.views.decorators import view_aggregation, view_filter
+from dbally.views.pandas_base import Aggregation, AggregationGroup, DataFrameBaseView
 
 MOCK_DATA = [
     {"name": "Alice", "city": "London", "year": 2020, "age": 30},
@@ -53,13 +55,30 @@ class MockDataFrameView(DataFrameBaseView):
     def filter_name(self, name: str) -> pd.Series:
         return self.df["name"] == name
 
+    @view_aggregation()
+    def mean_age_by_city(self) -> AggregationGroup:
+        return AggregationGroup(
+            aggregations=[
+                Aggregation(column="age", function="mean"),
+            ],
+            groupbys="city",
+        )
+
+    @view_aggregation()
+    def count_records(self) -> AggregationGroup:
+        return AggregationGroup(
+            aggregations=[
+                Aggregation(column="name", function="count"),
+            ],
+        )
+
 
 async def test_filter_or() -> None:
     """
     Test that the filtering the DataFrame with logical OR works correctly
     """
     mock_view = MockDataFrameView(pd.DataFrame.from_records(MOCK_DATA))
-    query = await IQLQuery.parse(
+    query = await IQLFiltersQuery.parse(
         'filter_city("Berlin") or filter_city("London")',
         allowed_functions=mock_view.list_filters(),
     )
@@ -67,6 +86,8 @@ async def test_filter_or() -> None:
     result = mock_view.execute()
     assert result.results == MOCK_DATA_BERLIN_OR_LONDON
     assert result.metadata["filter_mask"].tolist() == [True, False, True, False, True]
+    assert result.metadata["groupbys"] is None
+    assert result.metadata["aggregations"] is None
 
 
 async def test_filter_and() -> None:
@@ -74,7 +95,7 @@ async def test_filter_and() -> None:
     Test that the filtering the DataFrame with logical AND works correctly
     """
     mock_view = MockDataFrameView(pd.DataFrame.from_records(MOCK_DATA))
-    query = await IQLQuery.parse(
+    query = await IQLFiltersQuery.parse(
         'filter_city("Paris") and filter_year(2020)',
         allowed_functions=mock_view.list_filters(),
     )
@@ -82,6 +103,8 @@ async def test_filter_and() -> None:
     result = mock_view.execute()
     assert result.results == MOCK_DATA_PARIS_2020
     assert result.metadata["filter_mask"].tolist() == [False, True, False, False, False]
+    assert result.metadata["groupbys"] is None
+    assert result.metadata["aggregations"] is None
 
 
 async def test_filter_not() -> None:
@@ -89,7 +112,7 @@ async def test_filter_not() -> None:
     Test that the filtering the DataFrame with logical NOT works correctly
     """
     mock_view = MockDataFrameView(pd.DataFrame.from_records(MOCK_DATA))
-    query = await IQLQuery.parse(
+    query = await IQLFiltersQuery.parse(
         'not (filter_city("Paris") and filter_year(2020))',
         allowed_functions=mock_view.list_filters(),
     )
@@ -97,3 +120,67 @@ async def test_filter_not() -> None:
     result = mock_view.execute()
     assert result.results == MOCK_DATA_NOT_PARIS_2020
     assert result.metadata["filter_mask"].tolist() == [True, False, True, True, True]
+    assert result.metadata["groupbys"] is None
+    assert result.metadata["aggregations"] is None
+
+
+async def test_aggregation() -> None:
+    """
+    Test that DataFrame aggregation works correctly
+    """
+    mock_view = MockDataFrameView(pd.DataFrame.from_records(MOCK_DATA))
+    query = await IQLAggregationQuery.parse(
+        "count_records()",
+        allowed_functions=mock_view.list_aggregations(),
+    )
+    await mock_view.apply_aggregation(query)
+    result = mock_view.execute()
+    assert result.results == [
+        {"index": "name_count", "name": 5},
+    ]
+    assert result.metadata["filter_mask"] is None
+    assert result.metadata["groupbys"] is None
+    assert result.metadata["aggregations"] == [Aggregation(column="name", function="count")]
+
+
+async def test_aggregtion_with_groupby() -> None:
+    """
+    Test that DataFrame aggregation with groupby works correctly
+    """
+    mock_view = MockDataFrameView(pd.DataFrame.from_records(MOCK_DATA))
+    query = await IQLAggregationQuery.parse(
+        "mean_age_by_city()",
+        allowed_functions=mock_view.list_aggregations(),
+    )
+    await mock_view.apply_aggregation(query)
+    result = mock_view.execute()
+    assert result.results == [
+        {"city": "Berlin", "age_mean": 45.0},
+        {"city": "London", "age_mean": 32.5},
+        {"city": "Paris", "age_mean": 32.5},
+    ]
+    assert result.metadata["filter_mask"] is None
+    assert result.metadata["groupbys"] == "city"
+    assert result.metadata["aggregations"] == [Aggregation(column="age", function="mean")]
+
+
+async def test_filters_and_aggregtion() -> None:
+    """
+    Test that DataFrame filtering and aggregation works correctly
+    """
+    mock_view = MockDataFrameView(pd.DataFrame.from_records(MOCK_DATA))
+    query = await IQLFiltersQuery.parse(
+        "filter_city('Paris')",
+        allowed_functions=mock_view.list_filters(),
+    )
+    await mock_view.apply_filters(query)
+    query = await IQLAggregationQuery.parse(
+        "mean_age_by_city()",
+        allowed_functions=mock_view.list_aggregations(),
+    )
+    await mock_view.apply_aggregation(query)
+    result = mock_view.execute()
+    assert result.results == [{"city": "Paris", "age_mean": 32.5}]
+    assert result.metadata["filter_mask"].tolist() == [False, True, False, True, False]
+    assert result.metadata["groupbys"] == "city"
+    assert result.metadata["aggregations"] == [Aggregation(column="age", function="mean")]

@@ -1,18 +1,26 @@
-# <h1 align="center">🦮 db-ally</h1>
+<div align="center">
 
-<p align="center">
-    <em>Efficient, consistent and secure library for querying structured data with natural language</em>
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/banner-light.svg">
+  <img alt="dbally logo" src="docs/assets/banner-dark.svg" width="40%" height="40%">
+</picture>
+
+<br/>
+<br/>
+
+<p>
+  <em>Efficient, consistent and secure library for querying structured data with natural language</em>
 </p>
 
+[![PyPI - License](https://img.shields.io/pypi/l/dbally)](https://pypi.org/project/dbally)
+[![PyPI - Version](https://img.shields.io/pypi/v/dbally)](https://pypi.org/project/dbally)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dbally)](https://pypi.org/project/dbally)
+
+</div>
+
 ---
 
-* **Documentation:** [db-ally.deepsense.ai](https://db-ally.deepsense.ai/)
-* **Source code:** [github.com/deepsense-ai/db-ally](https://github.com/deepsense-ai/db-ally)
-
----
-
-
-**db-ally** is an LLM-powered library for creating natural language interfaces to data sources. While it occupies a similar space to the text-to-SQL solutions, its goals and methods are different. db-ally allows developers to outline specific use cases for the LLM to handle, detailing the desired data format and the possible operations to fetch this data.
+db-ally is an LLM-powered library for creating natural language interfaces to data sources. While it occupies a similar space to the text-to-SQL solutions, its goals and methods are different. db-ally allows developers to outline specific use cases for the LLM to handle, detailing the desired data format and the possible operations to fetch this data.
 
 db-ally effectively shields the complexity of the underlying data source from the model, presenting only the essential information needed for solving the specific use cases. Instead of generating arbitrary SQL, the model is asked to generate responses in a simplified query language.
 
@@ -25,7 +33,7 @@ The benefits of db-ally can be described in terms of its four main characteristi
 
 ## Quickstart
 
-In db-ally, developers define their use cases by implementing [**views**](https://db-ally.deepsense.ai/concepts/views) and **filters**. A list of possible filters is presented to the LLM in terms of [**IQL**](https://db-ally.deepsense.ai/concepts/iql) (Intermediate Query Language). Views are grouped and registered within a [**collection**](https://db-ally.deepsense.ai/concepts/views), which then serves as an entry point for asking questions in natural language.
+In db-ally, developers define their use cases by implementing [**views**](https://db-ally.deepsense.ai/concepts/views), **filters** and **aggregations**. A list of possible filters and aggregations is presented to the LLM in terms of [**IQL**](https://db-ally.deepsense.ai/concepts/iql) (Intermediate Query Language). Views are grouped and registered within a [**collection**](https://db-ally.deepsense.ai/concepts/views), which then serves as an entry point for asking questions in natural language.
 
 This is a basic implementation of a db-ally view for an example HR application, which retrieves candidates from an SQL database:
 
@@ -52,8 +60,10 @@ class CandidateView(SqlAlchemyBaseView):
         """
         return Candidate.country == country
 
-engine = create_engine('sqlite:///examples/recruiting/data/candidates.db')
+
 llm = LiteLLM(model_name="gpt-3.5-turbo")
+engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
+
 my_collection = create_collection("collection_name", llm)
 my_collection.add(CandidateView, lambda: CandidateView(engine))
 

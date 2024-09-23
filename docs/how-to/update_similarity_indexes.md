@@ -2,7 +2,7 @@
 
 The Similarity Index is a feature provided by db-ally that takes user input and maps it to the closest matching value in the data source using a chosen similarity metric. This feature is handy when the user input does not exactly match the data source, such as when the user asks to "list all employees in the IT department," while the database categorizes this group as the "computer department." To learn more about Similarity Indexes, refer to the [Concept: Similarity Indexes](../concepts/similarity_indexes.md) page.
 
-While Similarity Indexes can be used directly, they are usually used with [Views](../concepts/views.md), annotating arguments to filter methods. This technique lets db-ally automatically match user-provided arguments to the most similar value in the data source. You can see an example of using similarity indexes with views on the [Quickstart Part 2: Semantic Similarity](../quickstart/quickstart2.md) page.
+While Similarity Indexes can be used directly, they are usually used with [Views](../concepts/views.md), annotating arguments to filter methods. This technique lets db-ally automatically match user-provided arguments to the most similar value in the data source. You can see an example of using similarity indexes with views on the [Quickstart Part 2: Semantic Similarity](../quickstart/semantic-similarity.md) page.
 
 Similarity Indexes are designed to index all possible values (e.g., on disk or in a different data store). Consequently, when the data source undergoes changes, the Similarity Index must update to reflect these alterations. This guide will explain how to update Similarity Indexes in your code.
 

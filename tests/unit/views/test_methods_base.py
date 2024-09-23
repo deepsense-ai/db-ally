@@ -5,8 +5,8 @@ from typing import List, Literal, Tuple, Union
 
 from dbally.collection.results import ViewExecutionResult
 from dbally.context import BaseCallerContext
-from dbally.iql import IQLQuery
-from dbally.views.decorators import view_filter
+from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
+from dbally.views.decorators import view_aggregation, view_filter
 from dbally.views.exposed_functions import MethodParamWithTyping
 from dbally.views.methods_base import MethodsBaseView
 
@@ -37,7 +37,22 @@ class MockMethodsBase(MethodsBaseView):
     ) -> str:
         return f"hello {cities} in {year} of {pairs}"
 
-    async def apply_filters(self, filters: IQLQuery) -> None:
+    @view_aggregation()
+    def method_baz(self) -> None:
+        """
+        Some documentation string
+        """
+
+    @view_aggregation()
+    def method_qux(
+        self, ages: List[int], years: Union[Literal["2023", "2024"], TestCallerContext], names: List[str]
+    ) -> str:
+        return f"hello {ages} and {names}"
+
+    async def apply_filters(self, filters: IQLFiltersQuery) -> None:
+        ...
+
+    async def apply_aggregation(self, aggregation: IQLAggregationQuery) -> None:
         ...
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
@@ -64,20 +79,26 @@ def test_list_filters() -> None:
     ]
     assert (
         str(method_bar)
-        == "method_bar(cities: List[str], year: Literal['2023', '2024'] | AskerContext, pairs: List[Tuple[str, int]])"
+        == "method_bar(cities: List[str], year: Literal['2023', '2024'] | Context, pairs: List[Tuple[str, int]])"
     )
 
 
-async def test_contextualization() -> None:
+def test_list_aggregations() -> None:
+    """
+    Tests that the list_aggregations method works correctly
+    """
     mock_view = MockMethodsBase()
-    filters = mock_view.list_filters()
-    test_context = TestCallerContext("2024")
-    mock_view.contextualize_filters(filters, [test_context])
-
-    method_foo = [f for f in filters if f.name == "method_foo"][0]
-    assert method_foo.context_class is None
-    assert method_foo.context is None
-
-    method_bar = [f for f in filters if f.name == "method_bar"][0]
-    assert method_bar.context_class is TestCallerContext
-    assert method_bar.context is test_context
+    aggregations = mock_view.list_aggregations()
+    assert len(aggregations) == 2
+    method_baz = [f for f in aggregations if f.name == "method_baz"][0]
+    assert method_baz.description == "Some documentation string"
+    assert method_baz.parameters == []
+    assert str(method_baz) == "method_baz() - Some documentation string"
+    method_qux = [f for f in aggregations if f.name == "method_qux"][0]
+    assert method_qux.description == ""
+    assert method_qux.parameters == [
+        MethodParamWithTyping("ages", List[int]),
+        MethodParamWithTyping("years", Union[Literal["2023", "2024"], TestCallerContext]),
+        MethodParamWithTyping("names", List[str]),
+    ]
+    assert str(method_qux) == "method_qux(ages: List[int], years: Literal['2023', '2024'] | Context, names: List[str])"
