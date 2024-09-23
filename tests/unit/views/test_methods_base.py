@@ -12,7 +12,7 @@ from dbally.views.methods_base import MethodsBaseView
 
 
 @dataclass
-class TestCallerContext(BaseCallerContext):
+class CallerContext(BaseCallerContext):
     """
     Mock class for testing context.
     """
@@ -33,7 +33,7 @@ class MockMethodsBase(MethodsBaseView):
 
     @view_filter()
     def method_bar(
-        self, cities: List[str], year: Union[Literal["2023", "2024"], TestCallerContext], pairs: List[Tuple[str, int]]
+        self, cities: List[str], year: Union[Literal["2023", "2024"], CallerContext], pairs: List[Tuple[str, int]]
     ) -> str:
         return f"hello {cities} in {year} of {pairs}"
 
@@ -45,7 +45,7 @@ class MockMethodsBase(MethodsBaseView):
 
     @view_aggregation()
     def method_qux(
-        self, ages: List[int], years: Union[Literal["2023", "2024"], TestCallerContext], names: List[str]
+        self, ages: List[int], years: Union[Literal["2023", "2024"], CallerContext], names: List[str]
     ) -> str:
         return f"hello {ages} and {names}"
 
@@ -74,7 +74,7 @@ def test_list_filters() -> None:
     assert method_bar.description == ""
     assert method_bar.parameters == [
         MethodParamWithTyping("cities", List[str]),
-        MethodParamWithTyping("year", Union[Literal["2023", "2024"], TestCallerContext]),
+        MethodParamWithTyping("year", Union[Literal["2023", "2024"], CallerContext]),
         MethodParamWithTyping("pairs", List[Tuple[str, int]]),
     ]
     assert (
@@ -98,7 +98,7 @@ def test_list_aggregations() -> None:
     assert method_qux.description == ""
     assert method_qux.parameters == [
         MethodParamWithTyping("ages", List[int]),
-        MethodParamWithTyping("years", Union[Literal["2023", "2024"], TestCallerContext]),
+        MethodParamWithTyping("years", Union[Literal["2023", "2024"], CallerContext]),
         MethodParamWithTyping("names", List[str]),
     ]
     assert str(method_qux) == "method_qux(ages: List[int], years: Literal['2023', '2024'] | Context, names: List[str])"
