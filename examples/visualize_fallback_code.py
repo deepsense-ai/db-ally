@@ -28,7 +28,7 @@ async def main():
 
     user_collection.set_fallback(fallback_collection).set_fallback(second_fallback_collection)
 
-    gradio_interface = await create_gradio_interface(user_collection=user_collection)
+    gradio_interface = create_gradio_interface(user_collection)
     gradio_interface.launch()
 
 

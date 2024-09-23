@@ -13,6 +13,7 @@ pip-licenses>=4.0.0,<5.0.0
 bump2version>=1.0.1,<2.0.0
 mypy==1.8.0
 # for building docs
+griffe==0.44.0
 griffe-typingdoc==0.2.5
 mkdocs==1.5.3
 mkdocs-autorefs==1.0.1
