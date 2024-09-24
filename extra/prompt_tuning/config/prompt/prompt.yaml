@@ -1,0 +1,8 @@
+defaults:
+  - type: filtering-assessor
+  - signature: baseline
+  - program: predict
+  - _self_
+
+num_threads: 32
+neptune: False

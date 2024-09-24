@@ -1,0 +1,9 @@
+name: MIPRO
+params:
+  num_candidates: 3
+  init_temperature: 1.4
+
+compile:
+  max_bootstrapped_demos: 3
+  max_labeled_demos: 0
+  num_trials: 10
