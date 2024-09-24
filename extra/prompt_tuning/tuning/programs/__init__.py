@@ -1,8 +1,27 @@
-from .iql import FilteringAssessorBaseline, FilteringAssessorCoT
+from .iql import (
+    AggregationAssessorCoT,
+    AggregationAssessorCoTH,
+    AggregationAssessorPredict,
+    FilteringAssessorCoT,
+    FilteringAssessorCoTH,
+    FilteringAssessorPredict,
+)
 
 PROGRAMS = {
-    FilteringAssessorBaseline.__name__: FilteringAssessorBaseline,
+    FilteringAssessorPredict.__name__: FilteringAssessorPredict,
     FilteringAssessorCoT.__name__: FilteringAssessorCoT,
+    FilteringAssessorCoTH.__name__: FilteringAssessorCoTH,
+    AggregationAssessorPredict.__name__: AggregationAssessorPredict,
+    AggregationAssessorCoT.__name__: AggregationAssessorCoT,
+    AggregationAssessorCoTH.__name__: AggregationAssessorCoTH,
 }
 
-__all__ = ["PROGRAMS", "FilteringAssessorBaseline", "FilteringAssessorCoT"]
+__all__ = [
+    "PROGRAMS",
+    "AggregationAssessorPredict",
+    "AggregationAssessorCoT",
+    "FilteringAssessorPredict",
+    "FilteringAssessorCoT",
+    "FilteringAssessorCoTH",
+    "AggregationAssessorCoTH",
+]
