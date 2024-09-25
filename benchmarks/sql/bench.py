@@ -8,10 +8,13 @@ import neptune
 from bench.evaluator import Evaluator
 from bench.loaders import CollectionDataLoader, IQLViewDataLoader, SQLViewDataLoader
 from bench.metrics import (
+    AggregationAccuracy,
     ExecutionAccuracy,
     FilteringAccuracy,
     FilteringPrecision,
     FilteringRecall,
+    IQLAggregationCorrectness,
+    IQLAggregationParseability,
     IQLFiltersAccuracy,
     IQLFiltersCorrectness,
     IQLFiltersParseability,
@@ -57,9 +60,12 @@ EVALUATION_PIPELINES = {
 
 EVALUATION_METRICS = {
     EvaluationType.IQL.value: MetricSet(
+        AggregationAccuracy,
         FilteringAccuracy,
         FilteringPrecision,
         FilteringRecall,
+        IQLAggregationParseability,
+        IQLAggregationCorrectness,
         IQLFiltersAccuracy,
         IQLFiltersPrecision,
         IQLFiltersRecall,
@@ -72,9 +78,12 @@ EVALUATION_METRICS = {
         ExecutionAccuracy,
     ),
     EvaluationType.E2E.value: MetricSet(
+        AggregationAccuracy,
         FilteringAccuracy,
         FilteringPrecision,
         FilteringRecall,
+        IQLAggregationParseability,
+        IQLAggregationCorrectness,
         IQLFiltersAccuracy,
         IQLFiltersPrecision,
         IQLFiltersRecall,
