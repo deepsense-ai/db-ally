@@ -1,9 +1,9 @@
-# pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, singleton-comparison, consider-using-in, too-many-ancestors, too-many-public-methods
+# pylint: disable=attribute-defined-outside-init, missing-docstring, missing-return-doc, missing-param-doc, singleton-comparison, consider-using-in, too-many-ancestors, too-many-public-methods
 # flake8: noqa
 
 from typing import Literal
 
-from sqlalchemy import ColumnElement, Engine, Select, func, select
+from sqlalchemy import ColumnElement, Engine, Float, Select, case, cast, func, select
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import aliased, declarative_base
 
@@ -192,16 +192,32 @@ class SuperheroFilterMixin:
         return Superhero.publisher_id == None
 
 
+class SuperheroAggregationMixin:
+    """
+    Mixin for aggregating the view by the superhero attributes.
+    """
+
+    @view_aggregation()
+    def count_superheroes(self) -> Select:
+        """
+        Counts the number of superheros.
+        """
+        return self.select.with_only_columns(func.count(Superhero.id).label("count_superheroes")).group_by(Superhero.id)
+
+    @view_aggregation()
+    def average_height(self) -> Select:
+        """
+        Averages the height of the superheros.
+        """
+        return self.select.with_only_columns(func.avg(Superhero.height_cm).label("average_height")).group_by(
+            Superhero.id
+        )
+
+
 class SuperheroColourFilterMixin:
     """
     Mixin for filtering the view by the superhero colour attributes.
     """
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.eye_colour = aliased(Colour)
-        self.hair_colour = aliased(Colour)
-        self.skin_colour = aliased(Colour)
 
     @view_filter()
     def filter_by_eye_colour(self, eye_colour: str) -> ColumnElement:
@@ -239,6 +255,25 @@ class SuperheroColourFilterMixin:
         return self.hair_colour.colour == self.skin_colour.colour
 
 
+class SuperheroColourAggregationMixin:
+    """
+    Mixin for aggregating the view by the superhero colour attributes.
+    """
+
+    @view_aggregation()
+    def percentage_of_eye_colour(self, eye_colour: str) -> Select:
+        """
+        Calculates the percentage of objects with eye colour.
+        """
+        return self.select.with_only_columns(
+            (
+                cast(func.count(case((self.eye_colour.colour == eye_colour, Superhero.id), else_=None)), Float)
+                * 100
+                / func.count(Superhero.id)
+            ).label(f"percentage_of_{eye_colour.lower()}")
+        )
+
+
 class PublisherFilterMixin:
     """
     Mixin for filtering the view by the publisher attributes.
@@ -250,6 +285,25 @@ class PublisherFilterMixin:
         Filters the view by the publisher name.
         """
         return Publisher.publisher_name == publisher_name
+
+
+class PublisherAggregationMixin:
+    """
+    Mixin for aggregating the view by the publisher attributes.
+    """
+
+    @view_aggregation()
+    def percentage_of_publisher(self, publisher_name: str) -> Select:
+        """
+        Calculates the percentage of objects with publisher.
+        """
+        return self.select.with_only_columns(
+            (
+                cast(func.count(case((Publisher.publisher_name == publisher_name, Superhero.id), else_=None)), Float)
+                * 100
+                / func.count(Superhero.id)
+            ).label(f"percentage_of_{publisher_name.lower()}")
+        )
 
 
 class AlignmentFilterMixin:
@@ -265,6 +319,25 @@ class AlignmentFilterMixin:
         return Alignment.alignment == alignment
 
 
+class AlignmentAggregationMixin:
+    """
+    Mixin for aggregating the view by the alignment.
+    """
+
+    @view_aggregation()
+    def percentage_of_alignment(self, alignment: Literal["Good", "Bad", "Neutral", "N/A"]) -> Select:
+        """
+        Calculates the percentage of objects with alignment.
+        """
+        return self.select.with_only_columns(
+            (
+                cast(func.count(case((Alignment.alignment == alignment, Superhero.id), else_=None)), Float)
+                * 100
+                / func.count(Superhero.id)
+            ).label(f"percentage_of_{alignment.lower()}")
+        )
+
+
 class GenderFilterMixin:
     """
     Mixin for filtering the view by the gender.
@@ -276,6 +349,25 @@ class GenderFilterMixin:
         Filters the view by the object gender.
         """
         return Gender.gender == gender
+
+
+class GenderAggregationMixin:
+    """
+    Mixin for aggregating the view by the gender.
+    """
+
+    @view_aggregation()
+    def percentage_of_gender(self, gender: Literal["Male", "Female", "N/A"]) -> Select:
+        """
+        Calculates the percentage of objects with gender.
+        """
+        return self.select.with_only_columns(
+            (
+                cast(func.count(case((Gender.gender == gender, Superhero.id), else_=None)), Float)
+                * 100
+                / func.count(Superhero.id)
+            ).label(f"percentage_of_{gender.lower()}")
+        )
 
 
 class RaceFilterMixin:
@@ -291,27 +383,17 @@ class RaceFilterMixin:
         return Race.race == race
 
 
-class SuperheroAggregationMixin:
-    """
-    Mixin for aggregating the view by the superhero attributes.
-    """
-
-    @view_aggregation()
-    def count_superheroes(self) -> Select:
-        """
-        Counts the number of superheros.
-        """
-        return self.select.with_only_columns(func.count(Superhero.id).label("count_superheroes")).group_by(Superhero.id)
-
-
 class SuperheroView(
     DBInitMixin,
     SqlAlchemyBaseView,
-    SuperheroFilterMixin,
     SuperheroAggregationMixin,
+    SuperheroFilterMixin,
     SuperheroColourFilterMixin,
+    AlignmentAggregationMixin,
     AlignmentFilterMixin,
+    GenderAggregationMixin,
     GenderFilterMixin,
+    PublisherAggregationMixin,
     PublisherFilterMixin,
     RaceFilterMixin,
 ):
@@ -327,6 +409,10 @@ class SuperheroView(
         Returns:
             The select object.
         """
+        self.eye_colour = aliased(Colour)
+        self.hair_colour = aliased(Colour)
+        self.skin_colour = aliased(Colour)
+
         return (
             select(
                 Superhero.id,

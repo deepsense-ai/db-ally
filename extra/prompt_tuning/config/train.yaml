@@ -1,0 +1,8 @@
+defaults:
+  - data: superhero
+  - llm: gpt-3.5-turbo
+  - prompt: prompt
+  - optimizer: copro
+  - _self_
+
+num_threads: 32

@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from enum import Enum
 from pathlib import Path
 
 import dspy
@@ -9,31 +8,14 @@ import neptune
 from dspy.evaluate import Evaluate
 from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
-from tuning.loaders import IQLGenerationDataLoader
-from tuning.metrics import filtering_assess_acc
+from tuning import DATALOADERS, METRICS
 from tuning.programs import PROGRAMS
+from tuning.signatures import SIGNATURES
 from tuning.utils import save, serialize_results
 
 logging.getLogger("httpx").setLevel(logging.ERROR)
 logging.getLogger("anthropic").setLevel(logging.ERROR)
 log = logging.getLogger(__name__)
-
-
-class EvaluationType(Enum):
-    """
-    Enum representing the evaluation type.
-    """
-
-    FILTERING_ASSESSOR = "FILTERING_ASSESSOR"
-
-
-EVALUATION_DATALOADERS = {
-    EvaluationType.FILTERING_ASSESSOR.value: IQLGenerationDataLoader,
-}
-
-EVALUATION_METRICS = {
-    EvaluationType.FILTERING_ASSESSOR.value: filtering_assess_acc,
-}
 
 
 async def evaluate(config: DictConfig) -> None:
@@ -43,11 +25,15 @@ async def evaluate(config: DictConfig) -> None:
     Args:
         config: Hydra configuration.
     """
-    log.info("Starting evaluation: %s", config.program.name)
+    signature_name = f"{config.prompt.type.id}{config.prompt.signature.id}"
+    program_name = f"{config.prompt.type.id}{config.prompt.program.id}"
 
-    dataloader = EVALUATION_DATALOADERS[config.program.type](config)
-    metric = EVALUATION_METRICS[config.program.type]
-    program = PROGRAMS[config.program.name]()
+    log.info("Starting evaluation: %s(%s) program", program_name, signature_name)
+
+    dataloader = DATALOADERS[config.prompt.type.id](config)
+    metric = METRICS[config.prompt.type.id]
+    signature = SIGNATURES[signature_name]
+    program = PROGRAMS[program_name](signature)
 
     dataset = await dataloader.load()
 
@@ -57,7 +43,7 @@ async def evaluate(config: DictConfig) -> None:
     evaluator = Evaluate(
         devset=dataset,
         metric=metric,
-        num_threads=32,
+        num_threads=config.num_threads,
         display_progress=True,
         return_outputs=True,
     )
@@ -75,8 +61,9 @@ async def evaluate(config: DictConfig) -> None:
         run = neptune.init_run()
         run["sys/tags"].add(
             [
-                config.program.type,
-                config.program.name,
+                config.prompt.type.id,
+                config.prompt.signature.id,
+                config.prompt.program.id,
                 *config.data.db_ids,
                 *config.data.difficulties,
             ]
@@ -86,7 +73,7 @@ async def evaluate(config: DictConfig) -> None:
         run["evaluation/results.json"].upload(results_file.as_posix())
 
 
-@hydra.main(config_path="config", config_name="config", version_base="3.2")
+@hydra.main(config_path="config", config_name="evaluate", version_base="3.2")
 def main(config: DictConfig) -> None:
     """
     Function running evaluation for all datasets and evaluation tasks defined in hydra config.

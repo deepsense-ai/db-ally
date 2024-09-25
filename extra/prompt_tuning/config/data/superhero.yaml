@@ -1,4 +1,4 @@
-path: "micpst/bird-iql"
+path: "deepsense-ai/bird-iql"
 split: "dev"
 db_ids: ["superhero"]
 difficulties: ["simple", "moderate", "challenging"]

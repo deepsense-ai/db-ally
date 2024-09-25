@@ -1,19 +1,35 @@
-from typing import Dict
+from typing import Dict, List, Optional
 
 from dspy import Prediction
 
 
-def filtering_assess_acc(gold: Dict, pred: Prediction) -> bool:
+def filtering_assess_acc(gold: Dict, pred: Prediction, _trace: Optional[List] = None) -> bool:
     """
-    IQL decision metric.
+    IQL filtering decision metric.
 
     Args:
         gold: The ground truth data point.
         pred: The prediction.
 
     Returns:
-        The decision metric.
+        The filtering decision accuracy.
     """
     return ((gold["iql_filters"] is None and not gold["iql_filters_unsupported"]) and not pred.decision) or (
         (gold["iql_filters"] is not None or gold["iql_filters_unsupported"]) and pred.decision
+    )
+
+
+def aggregation_assess_acc(gold: Dict, pred: Prediction, _trace: Optional[List] = None) -> bool:
+    """
+    IQL aggregation decision metric.
+
+    Args:
+        gold: The ground truth data point.
+        pred: The prediction.
+
+    Returns:
+        The aggregation decision accuracy.
+    """
+    return ((gold["iql_aggregation"] is None and not gold["iql_aggregation_unsupported"]) and not pred.decision) or (
+        (gold["iql_aggregation"] is not None or gold["iql_aggregation_unsupported"]) and pred.decision
     )
