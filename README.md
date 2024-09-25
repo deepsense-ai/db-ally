@@ -12,6 +12,13 @@
   <em>Efficient, consistent and secure library for querying structured data with natural language</em>
 </p>
 
+<h3>
+
+[Homepage](https://deepsense.ai/db-ally) | [Documentation](https://db-ally.deepsense.ai/) | [Contact](mailto:db-ally@deepsense.ai)
+
+</h3>
+
+[![HuggingFace - Spaces](https://img.shields.io/badge/🤗-Open%20in%20Spaces-blue.svg)](https://huggingface.co/spaces/deepsense-ai/db-ally)
 [![PyPI - License](https://img.shields.io/pypi/l/dbally)](https://pypi.org/project/dbally)
 [![PyPI - Version](https://img.shields.io/pypi/v/dbally)](https://pypi.org/project/dbally)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dbally)](https://pypi.org/project/dbally)
