@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
+from omegaconf import DictConfig
+
+from dbally.context import Context
 from dbally.iql._exceptions import IQLError
 from dbally.iql._query import IQLQuery
 from dbally.iql_generator.prompt import UnsupportedQueryError
@@ -9,6 +12,8 @@ from dbally.llms.base import LLM
 from dbally.llms.clients.exceptions import LLMError
 from dbally.llms.litellm import LiteLLM
 from dbally.llms.local import LocalLLM
+
+from ..contexts import CONTEXTS_REGISTRY
 
 
 @dataclass
@@ -23,7 +28,7 @@ class IQL:
     generated: bool = True
 
     @classmethod
-    def from_query(cls, query: Optional[Union[IQLQuery, Exception]]) -> "IQL":
+    def from_query(cls, query: Optional[Union[IQLQuery, BaseException]]) -> "IQL":
         """
         Creates an IQL object from the query.
 
@@ -81,7 +86,11 @@ class EvaluationPipeline(ABC):
     Collection evaluation pipeline.
     """
 
-    def get_llm(self, config: Dict) -> LLM:
+    def __init__(self, config: DictConfig) -> None:
+        super().__init__()
+        self.contexts = self.get_contexts(config.setup)
+
+    def get_llm(self, config: DictConfig) -> LLM:
         """
         Returns the LLM based on the configuration.
 
@@ -94,6 +103,18 @@ class EvaluationPipeline(ABC):
         if config.model_name.startswith("local/"):
             return LocalLLM(config.model_name.split("/", 1)[1])
         return LiteLLM(config.model_name)
+
+    def get_contexts(self, config: DictConfig) -> List[Context]:
+        """
+        Returns the contexts based on the configuration.
+
+        Args:
+            config: The contexts configuration.
+
+        Returns:
+            The contexts.
+        """
+        return [CONTEXTS_REGISTRY[context]() for contexts in config.contexts.values() for context in contexts]
 
     @abstractmethod
     async def __call__(self, data: Dict[str, Any]) -> EvaluationResult:

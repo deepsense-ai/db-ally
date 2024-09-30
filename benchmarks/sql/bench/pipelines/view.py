@@ -3,11 +3,11 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Type
 
+from omegaconf import DictConfig
 from sqlalchemy import create_engine
 
+from dbally.views.base import BaseView
 from dbally.views.exceptions import ViewExecutionError
-from dbally.views.freeform.text2sql.view import BaseText2SQLView
-from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
 from ..views import VIEWS_REGISTRY
 from .base import IQL, EvaluationPipeline, EvaluationResult, ExecutionResult, IQLResult
@@ -18,18 +18,19 @@ class ViewEvaluationPipeline(EvaluationPipeline, ABC):
     View evaluation pipeline.
     """
 
-    def __init__(self, config: Dict) -> None:
+    def __init__(self, config: DictConfig) -> None:
         """
         Constructs the pipeline for evaluating IQL predictions.
 
         Args:
             config: The configuration for the pipeline.
         """
+        super().__init__(config)
         self.llm = self.get_llm(config.setup.llm)
         self.dbs = self.get_dbs(config.setup)
         self.views = self.get_views(config.setup)
 
-    def get_dbs(self, config: Dict) -> Dict:
+    def get_dbs(self, config: DictConfig) -> Dict:
         """
         Returns the database object based on the database name.
 
@@ -42,7 +43,7 @@ class ViewEvaluationPipeline(EvaluationPipeline, ABC):
         return {db: create_engine(f"sqlite:///data/{db}.db") for db in config.views}
 
     @abstractmethod
-    def get_views(self, config: Dict) -> Dict[str, Type[SqlAlchemyBaseView]]:
+    def get_views(self, config: DictConfig) -> Dict[str, Type[BaseView]]:
         """
         Creates the view classes mapping based on the configuration.
 
@@ -59,7 +60,7 @@ class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
     IQL view evaluation pipeline.
     """
 
-    def get_views(self, config: Dict) -> Dict[str, Type[SqlAlchemyBaseView]]:
+    def get_views(self, config: DictConfig) -> Dict[str, Type[BaseView]]:
         """
         Creates the view classes mapping based on the configuration.
 
@@ -89,6 +90,7 @@ class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
             result = await view.ask(
                 query=data["question"],
                 llm=self.llm,
+                contexts=self.contexts,
                 dry_run=True,
                 n_retries=0,
             )
@@ -140,7 +142,7 @@ class SQLViewEvaluationPipeline(ViewEvaluationPipeline):
     SQL view evaluation pipeline.
     """
 
-    def get_views(self, config: Dict) -> Dict[str, Type[BaseText2SQLView]]:
+    def get_views(self, config: DictConfig) -> Dict[str, Type[BaseView]]:
         """
         Creates the view classes mapping based on the configuration.
 

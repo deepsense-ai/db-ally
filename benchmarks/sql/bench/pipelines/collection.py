@@ -1,5 +1,6 @@
 from typing import Any, Dict
 
+from omegaconf import DictConfig
 from sqlalchemy import create_engine
 
 import dbally
@@ -17,16 +18,17 @@ class CollectionEvaluationPipeline(EvaluationPipeline):
     Collection evaluation pipeline.
     """
 
-    def __init__(self, config: Dict) -> None:
+    def __init__(self, config: DictConfig) -> None:
         """
         Constructs the pipeline for evaluating collection predictions.
 
         Args:
             config: The configuration for the pipeline.
         """
+        super().__init__(config)
         self.collection = self.get_collection(config.setup)
 
-    def get_collection(self, config: Dict) -> Collection:
+    def get_collection(self, config: DictConfig) -> Collection:
         """
         Sets up the collection based on the configuration.
 
@@ -68,6 +70,7 @@ class CollectionEvaluationPipeline(EvaluationPipeline):
         try:
             result = await self.collection.ask(
                 question=data["question"],
+                contexts=self.contexts,
                 dry_run=True,
                 return_natural_response=False,
             )

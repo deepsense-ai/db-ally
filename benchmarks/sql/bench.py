@@ -28,6 +28,7 @@ from bench.metrics import (
 )
 from bench.pipelines import CollectionEvaluationPipeline, IQLViewEvaluationPipeline, SQLViewEvaluationPipeline
 from bench.utils import save
+from hydra.core.hydra_config import HydraConfig
 from neptune.utils import stringify_unsupported
 from omegaconf import DictConfig
 
@@ -120,7 +121,7 @@ async def bench(config: DictConfig) -> None:
 
     log.info("Evaluation finished. Saving results...")
 
-    output_dir = Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
+    output_dir = Path(HydraConfig.get().runtime.output_dir)
     metrics_file = output_dir / "metrics.json"
     results_file = output_dir / "results.json"
 

@@ -4,3 +4,5 @@ defaults:
   - llm: gpt-3.5-turbo
   - views/freeform@views:
     - superhero
+  - contexts:
+    - superhero
