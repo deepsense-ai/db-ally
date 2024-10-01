@@ -1,59 +1,68 @@
-from typing import Any, Dict
-
-from omegaconf import DictConfig
-from sqlalchemy import create_engine
+from functools import cached_property
+from typing import Any, Dict, Type, Union
 
 import dbally
 from dbally.collection.collection import Collection
 from dbally.collection.exceptions import NoViewFoundError
+from dbally.llms.base import LLM
 from dbally.view_selection.llm_view_selector import LLMViewSelector
 from dbally.views.exceptions import ViewExecutionError
+from dbally.views.freeform.text2sql.view import BaseText2SQLView
+from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
 from ..views import VIEWS_REGISTRY
-from .base import IQL, EvaluationPipeline, EvaluationResult, ExecutionResult, IQLResult
+from .base import IQL, EvaluationPipeline, EvaluationResult, ExecutionResult, IQLResult, ViewEvaluationMixin
 
 
-class CollectionEvaluationPipeline(EvaluationPipeline):
+class CollectionEvaluationPipeline(
+    EvaluationPipeline, ViewEvaluationMixin[Union[SqlAlchemyBaseView, BaseText2SQLView]]
+):
     """
     Collection evaluation pipeline.
     """
 
-    def __init__(self, config: DictConfig) -> None:
+    @cached_property
+    def selector(self) -> LLM:
         """
-        Constructs the pipeline for evaluating collection predictions.
-
-        Args:
-            config: The configuration for the pipeline.
+        Returns the selector LLM.
         """
-        super().__init__(config)
-        self.collection = self.get_collection(config.setup)
+        return self._get_llm(self.config.setup.selector_llm)
 
-    def get_collection(self, config: DictConfig) -> Collection:
+    @cached_property
+    def generator(self) -> LLM:
         """
-        Sets up the collection based on the configuration.
-
-        Args:
-            config: The collection configuration.
-
-        Returns:
-            The collection.
+        Returns the generator LLM.
         """
-        generator_llm = self.get_llm(config.generator_llm)
-        selector_llm = self.get_llm(config.selector_llm)
-        view_selector = LLMViewSelector(selector_llm)
+        return self._get_llm(self.config.setup.generator_llm)
+
+    @cached_property
+    def views(self) -> Dict[str, Type[Union[SqlAlchemyBaseView, BaseText2SQLView]]]:
+        """
+        Returns the view classes mapping based on the configuration.
+        """
+        return {
+            db: cls
+            for db, views in self.config.setup.views.items()
+            for view in views
+            if issubclass(cls := VIEWS_REGISTRY[view], (SqlAlchemyBaseView, BaseText2SQLView))
+        }
+
+    @cached_property
+    def collection(self) -> Collection:
+        """
+        Returns the collection used for evaluation.
+        """
+        view_selector = LLMViewSelector(self.selector)
 
         collection = dbally.create_collection(
-            name=config.name,
-            llm=generator_llm,
+            name=self.config.setup.name,
+            llm=self.generator,
             view_selector=view_selector,
         )
         collection.n_retries = 0
 
-        for db_name, view_names in config.views.items():
-            db = create_engine(f"sqlite:///data/{db_name}.db")
-            for view_name in view_names:
-                view_cls = VIEWS_REGISTRY[view_name]
-                collection.add(view_cls, lambda: view_cls(db))  # pylint: disable=cell-var-from-loop
+        for db, view in self.views.items():
+            collection.add(view, lambda: view(self.dbs[db]))  # pylint: disable=cell-var-from-loop
 
         return collection
 

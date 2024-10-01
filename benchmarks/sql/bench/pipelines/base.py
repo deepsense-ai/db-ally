@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from functools import cached_property
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from omegaconf import DictConfig
+from sqlalchemy import Engine, create_engine
 
 from dbally.context import Context
 from dbally.iql._exceptions import IQLError
@@ -12,8 +14,11 @@ from dbally.llms.base import LLM
 from dbally.llms.clients.exceptions import LLMError
 from dbally.llms.litellm import LiteLLM
 from dbally.llms.local import LocalLLM
+from dbally.views.base import BaseView
 
 from ..contexts import CONTEXTS_REGISTRY
+
+ViewT = TypeVar("ViewT", bound=BaseView)
 
 
 @dataclass
@@ -88,9 +93,10 @@ class EvaluationPipeline(ABC):
 
     def __init__(self, config: DictConfig) -> None:
         super().__init__()
-        self.contexts = self.get_contexts(config.setup)
+        self.config = config
 
-    def get_llm(self, config: DictConfig) -> LLM:
+    @staticmethod
+    def _get_llm(config: DictConfig) -> LLM:
         """
         Returns the LLM based on the configuration.
 
@@ -104,17 +110,12 @@ class EvaluationPipeline(ABC):
             return LocalLLM(config.model_name.split("/", 1)[1])
         return LiteLLM(config.model_name)
 
-    def get_contexts(self, config: DictConfig) -> List[Context]:
+    @cached_property
+    def dbs(self) -> Dict[str, Engine]:
         """
-        Returns the contexts based on the configuration.
-
-        Args:
-            config: The contexts configuration.
-
-        Returns:
-            The contexts.
+        Returns the database engines based on the configuration.
         """
-        return [CONTEXTS_REGISTRY[context]() for contexts in config.contexts.values() for context in contexts]
+        return {db: create_engine(f"sqlite:///data/{db}.db") for db in self.config.setup.views}
 
     @abstractmethod
     async def __call__(self, data: Dict[str, Any]) -> EvaluationResult:
@@ -126,4 +127,26 @@ class EvaluationPipeline(ABC):
 
         Returns:
             The evaluation result.
+        """
+
+
+class ViewEvaluationMixin(Generic[ViewT]):
+    """
+    View evaluation mixin.
+    """
+
+    @cached_property
+    def contexts(self) -> List[Context]:
+        """
+        Returns the contexts based on the configuration.
+        """
+        return [
+            CONTEXTS_REGISTRY[context]() for contexts in self.config.setup.contexts.values() for context in contexts
+        ]
+
+    @cached_property
+    @abstractmethod
+    def views(self) -> Dict[str, Type[ViewT]]:
+        """
+        Returns the view classes mapping based on the configuration
         """
