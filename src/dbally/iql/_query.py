@@ -1,12 +1,15 @@
 from abc import ABC
 from typing import TYPE_CHECKING, Generic, List, Optional, Type
 
+from typing_extensions import Self
+
 from ..audit.event_tracker import EventTracker
 from . import syntax
 from ._processor import IQLAggregationProcessor, IQLFiltersProcessor, IQLProcessor, RootT
 
 if TYPE_CHECKING:
-    from dbally.views.structured import ExposedFunction
+    from dbally.context import Context
+    from dbally.views.exposed_functions import ExposedFunction
 
 
 class IQLQuery(Generic[RootT], ABC):
@@ -30,14 +33,16 @@ class IQLQuery(Generic[RootT], ABC):
         cls,
         source: str,
         allowed_functions: List["ExposedFunction"],
+        allowed_contexts: Optional[List["Context"]] = None,
         event_tracker: Optional[EventTracker] = None,
-    ) -> "IQLQuery[RootT]":
+    ) -> Self:
         """
         Parse IQL string to IQLQuery object.
 
         Args:
             source: IQL string that needs to be parsed.
             allowed_functions: List of IQL functions that are allowed for this query.
+            allowed_contexts: List of contexts that are allowed for this query.
             event_tracker: EventTracker object to track events.
 
         Returns:
@@ -46,7 +51,12 @@ class IQLQuery(Generic[RootT], ABC):
         Raises:
             IQLError: If parsing fails.
         """
-        root = await cls._processor(source, allowed_functions, event_tracker=event_tracker).process()
+        root = await cls._processor(
+            source=source,
+            allowed_functions=allowed_functions,
+            allowed_contexts=allowed_contexts,
+            event_tracker=event_tracker,
+        ).process()
         return cls(root=root, source=source)
 
 
@@ -55,7 +65,7 @@ class IQLFiltersQuery(IQLQuery[syntax.Node]):
     IQL filters query container.
     """
 
-    _processor: Type[IQLFiltersProcessor] = IQLFiltersProcessor
+    _processor: Type[IQLProcessor[syntax.Node]] = IQLFiltersProcessor
 
 
 class IQLAggregationQuery(IQLQuery[syntax.FunctionCall]):
@@ -63,4 +73,4 @@ class IQLAggregationQuery(IQLQuery[syntax.FunctionCall]):
     IQL aggregation query container.
     """
 
-    _processor: Type[IQLAggregationProcessor] = IQLAggregationProcessor
+    _processor: Type[IQLProcessor[syntax.FunctionCall]] = IQLAggregationProcessor

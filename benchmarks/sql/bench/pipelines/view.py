@@ -1,76 +1,53 @@
 # pylint: disable=duplicate-code
 
 from abc import ABC, abstractmethod
+from functools import cached_property
 from typing import Any, Dict, Type
 
-from sqlalchemy import create_engine
-
+from dbally.llms.base import LLM
 from dbally.views.exceptions import ViewExecutionError
 from dbally.views.freeform.text2sql.view import BaseText2SQLView
 from dbally.views.sqlalchemy_base import SqlAlchemyBaseView
 
 from ..views import VIEWS_REGISTRY
-from .base import IQL, EvaluationPipeline, EvaluationResult, ExecutionResult, IQLResult
+from .base import IQL, EvaluationPipeline, EvaluationResult, ExecutionResult, IQLResult, ViewEvaluationMixin, ViewT
 
 
-class ViewEvaluationPipeline(EvaluationPipeline, ABC):
+class ViewEvaluationPipeline(EvaluationPipeline, ViewEvaluationMixin[ViewT], ABC):
     """
     View evaluation pipeline.
     """
 
-    def __init__(self, config: Dict) -> None:
+    @cached_property
+    def llm(self) -> LLM:
         """
-        Constructs the pipeline for evaluating IQL predictions.
-
-        Args:
-            config: The configuration for the pipeline.
+        Returns the LLM based on the configuration.
         """
-        self.llm = self.get_llm(config.setup.llm)
-        self.dbs = self.get_dbs(config.setup)
-        self.views = self.get_views(config.setup)
+        return self._get_llm(self.config.setup.llm)
 
-    def get_dbs(self, config: Dict) -> Dict:
-        """
-        Returns the database object based on the database name.
-
-        Args:
-            config: The database configuration.
-
-        Returns:
-            The database object.
-        """
-        return {db: create_engine(f"sqlite:///data/{db}.db") for db in config.views}
-
+    @cached_property
     @abstractmethod
-    def get_views(self, config: Dict) -> Dict[str, Type[SqlAlchemyBaseView]]:
+    def views(self) -> Dict[str, Type[ViewT]]:
         """
-        Creates the view classes mapping based on the configuration.
-
-        Args:
-            config: The views configuration.
-
-        Returns:
-            The view classes mapping.
+        Returns the view classes mapping based on the configuration
         """
 
 
-class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
+class IQLViewEvaluationPipeline(ViewEvaluationPipeline[SqlAlchemyBaseView]):
     """
     IQL view evaluation pipeline.
     """
 
-    def get_views(self, config: Dict) -> Dict[str, Type[SqlAlchemyBaseView]]:
+    @cached_property
+    def views(self) -> Dict[str, Type[SqlAlchemyBaseView]]:
         """
-        Creates the view classes mapping based on the configuration.
-
-        Args:
-            config: The views configuration.
-
-        Returns:
-            The view classes mapping.
+        Returns the view classes mapping based on the configuration.
         """
         return {
-            view_name: VIEWS_REGISTRY[view_name] for view_names in config.views.values() for view_name in view_names
+            view: cls
+            for views in self.config.setup.views.values()
+            for view in views
+            if issubclass(cls := VIEWS_REGISTRY[view], SqlAlchemyBaseView)
         }
 
     async def __call__(self, data: Dict[str, Any]) -> EvaluationResult:
@@ -89,6 +66,7 @@ class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
             result = await view.ask(
                 query=data["question"],
                 llm=self.llm,
+                contexts=self.contexts,
                 dry_run=True,
                 n_retries=0,
             )
@@ -104,10 +82,10 @@ class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
             prediction = ExecutionResult(
                 view_name=data["view_name"],
                 iql=IQLResult(
-                    filters=IQL(source=result.context["iql"]["filters"]),
-                    aggregation=IQL(source=result.context["iql"]["aggregation"]),
+                    filters=IQL(source=result.metadata["iql"]["filters"]),
+                    aggregation=IQL(source=result.metadata["iql"]["aggregation"]),
                 ),
-                sql=result.context["sql"],
+                sql=result.metadata["sql"],
             )
 
         reference = ExecutionResult(
@@ -135,22 +113,21 @@ class IQLViewEvaluationPipeline(ViewEvaluationPipeline):
         )
 
 
-class SQLViewEvaluationPipeline(ViewEvaluationPipeline):
+class SQLViewEvaluationPipeline(ViewEvaluationPipeline[BaseText2SQLView]):
     """
     SQL view evaluation pipeline.
     """
 
-    def get_views(self, config: Dict) -> Dict[str, Type[BaseText2SQLView]]:
+    @cached_property
+    def views(self) -> Dict[str, Type[BaseText2SQLView]]:
         """
-        Creates the view classes mapping based on the configuration.
-
-        Args:
-            config: The views configuration.
-
-        Returns:
-            The view classes mapping.
+        Returns the view classes mapping based on the configuration.
         """
-        return {db_id: VIEWS_REGISTRY[view_name] for db_id, view_name in config.views.items()}
+        return {
+            db: cls
+            for db, view in self.config.setup.views.items()
+            if issubclass(cls := VIEWS_REGISTRY[view], BaseText2SQLView)
+        }
 
     async def __call__(self, data: Dict[str, Any]) -> EvaluationResult:
         """
@@ -179,7 +156,7 @@ class SQLViewEvaluationPipeline(ViewEvaluationPipeline):
         else:
             prediction = ExecutionResult(
                 view_name=view.__class__.__name__,
-                sql=result.context["sql"],
+                sql=result.metadata["sql"],
             )
 
         reference = ExecutionResult(

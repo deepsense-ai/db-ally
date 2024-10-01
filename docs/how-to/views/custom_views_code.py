@@ -64,7 +64,7 @@ class FilteredIterableBaseView(MethodsBaseView):
         print(self._filter)
         filtered_data = list(filter(self._filter, self.get_data()))
 
-        return ViewExecutionResult(results=filtered_data, context={})
+        return ViewExecutionResult(results=filtered_data, metadata={})
 
 
 class CandidateView(FilteredIterableBaseView):

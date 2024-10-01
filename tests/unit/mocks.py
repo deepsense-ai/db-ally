@@ -36,7 +36,7 @@ class MockViewBase(BaseStructuredView):
         ...
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
-        return ViewExecutionResult(results=[], context={})
+        return ViewExecutionResult(results=[], metadata={})
 
 
 class MockIQLGenerator(IQLGenerator):

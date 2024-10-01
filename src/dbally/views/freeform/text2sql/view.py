@@ -8,6 +8,7 @@ from sqlalchemy import ColumnClause, Engine, MetaData, Table, text
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
+from dbally.context import Context
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.prompt.template import PromptTemplate
@@ -99,6 +100,7 @@ class BaseText2SQLView(BaseView, ABC):
         self,
         query: str,
         llm: LLM,
+        contexts: Optional[List[Context]] = None,
         event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
         dry_run: bool = False,
@@ -111,6 +113,7 @@ class BaseText2SQLView(BaseView, ABC):
         Args:
             query: The natural language query to execute.
             llm: The LLM used to execute the query.
+            contexts: Currently not used.
             event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
@@ -148,7 +151,7 @@ class BaseText2SQLView(BaseView, ABC):
                 )
 
                 if dry_run:
-                    return ViewExecutionResult(results=[], context={"sql": sql})
+                    return ViewExecutionResult(results=[], metadata={"sql": sql})
 
                 rows = await self._execute_sql(sql, parameters, event_tracker=event_tracker)
                 break
@@ -164,7 +167,7 @@ class BaseText2SQLView(BaseView, ABC):
         # pylint: disable=protected-access
         return ViewExecutionResult(
             results=[dict(row._mapping) for row in rows],
-            context={
+            metadata={
                 "sql": sql,
             },
         )

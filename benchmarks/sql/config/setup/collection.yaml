@@ -5,3 +5,5 @@ defaults:
   - llm@generator_llm: gpt-3.5-turbo
   - views/structured@views:
     - superhero
+  - contexts:
+    - superhero

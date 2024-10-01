@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
+from dbally.context import Context
 from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
 from dbally.llms.base import LLM
@@ -34,6 +35,7 @@ class BaseStructuredView(BaseView):
         self,
         query: str,
         llm: LLM,
+        contexts: Optional[List[Context]] = None,
         event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
         dry_run: bool = False,
@@ -46,6 +48,7 @@ class BaseStructuredView(BaseView):
         Args:
             query: The natural language query to execute.
             llm: The LLM used to execute the query.
+            contexts: The context data to be used in the query.
             event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
@@ -57,15 +60,17 @@ class BaseStructuredView(BaseView):
         Raises:
             ViewExecutionError: When an error occurs while executing the view.
         """
+        contexts = contexts or []
         filters = self.list_filters()
-        examples = self.list_few_shots()
         aggregations = self.list_aggregations()
+        examples = self.list_few_shots()
 
         iql_generator = self.get_iql_generator()
         iql = await iql_generator(
             question=query,
             filters=filters,
             aggregations=aggregations,
+            contexts=contexts,
             examples=examples,
             llm=llm,
             event_tracker=event_tracker,
@@ -73,7 +78,7 @@ class BaseStructuredView(BaseView):
             n_retries=n_retries,
         )
 
-        if iql.failed:
+        if isinstance(iql.filters, BaseException) or isinstance(iql.aggregation, BaseException):
             raise ViewExecutionError(
                 view_name=self.__class__.__name__,
                 iql=iql,
@@ -86,7 +91,7 @@ class BaseStructuredView(BaseView):
             await self.apply_aggregation(iql.aggregation)
 
         result = self.execute(dry_run=dry_run)
-        result.context["iql"] = {
+        result.metadata["iql"] = {
             "filters": str(iql.filters) if iql.filters else None,
             "aggregation": str(iql.aggregation) if iql.aggregation else None,
         }
@@ -149,8 +154,11 @@ class BaseStructuredView(BaseView):
         """
         indexes = defaultdict(list)
         filters = self.list_filters()
-        for filter_ in filters:
-            for param in filter_.parameters:
+        aggregations = self.list_aggregations()
+
+        for method in filters + aggregations:
+            for param in method.parameters:
                 if param.similarity_index:
-                    indexes[param.similarity_index].append((self.__class__.__name__, filter_.name, param.name))
+                    indexes[param.similarity_index].append((self.__class__.__name__, method.name, param.name))
+
         return indexes

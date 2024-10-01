@@ -6,6 +6,7 @@ async def test_iql_prompt_format_default() -> None:
     prompt_format = IQLGenerationPromptFormat(
         question="",
         methods=[],
+        contexts=[],
         examples=[],
     )
     formatted_prompt = FILTERS_GENERATION_TEMPLATE.format_prompt(prompt_format)
@@ -36,6 +37,7 @@ async def test_iql_prompt_format_few_shots_injected() -> None:
     prompt_format = IQLGenerationPromptFormat(
         question="",
         methods=[],
+        contexts=[],
         examples=examples,
     )
     formatted_prompt = FILTERS_GENERATION_TEMPLATE.format_prompt(prompt_format)
@@ -68,6 +70,7 @@ async def test_iql_input_format_few_shot_examples_repeat_no_example_duplicates()
     prompt_format = IQLGenerationPromptFormat(
         question="",
         methods=[],
+        contexts=[],
         examples=examples,
     )
     formatted_prompt = FILTERS_GENERATION_TEMPLATE.format_prompt(prompt_format)

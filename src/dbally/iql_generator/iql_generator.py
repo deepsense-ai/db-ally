@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Generic, List, Optional, TypeVar, Union
 
 from dbally.audit.event_tracker import EventTracker
+from dbally.context import Context
 from dbally.iql import IQLError, IQLQuery
 from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.iql_generator.prompt import (
@@ -29,18 +30,8 @@ class IQLGeneratorState:
     State of the IQL generator.
     """
 
-    filters: Optional[Union[IQLFiltersQuery, Exception]] = None
-    aggregation: Optional[Union[IQLAggregationQuery, Exception]] = None
-
-    @property
-    def failed(self) -> bool:
-        """
-        Checks if the generation failed.
-
-        Returns:
-            True if the generation failed, False otherwise.
-        """
-        return isinstance(self.filters, Exception) or isinstance(self.aggregation, Exception)
+    filters: Optional[Union[IQLFiltersQuery, BaseException]] = None
+    aggregation: Optional[Union[IQLAggregationQuery, BaseException]] = None
 
 
 class IQLGenerator:
@@ -76,6 +67,7 @@ class IQLGenerator:
         question: str,
         filters: List[ExposedFunction],
         aggregations: List[ExposedFunction],
+        contexts: List[Context],
         examples: List[FewShotExample],
         llm: LLM,
         event_tracker: Optional[EventTracker] = None,
@@ -89,6 +81,7 @@ class IQLGenerator:
             question: User question.
             filters: List of filters exposed by the view.
             aggregations: List of aggregations exposed by the view.
+            contexts: List of contexts to be injected after filters and aggregation generation.
             examples: List of examples to be injected during filters and aggregation generation.
             llm: LLM used to generate IQL.
             event_tracker: Event store used to audit the generation process.
@@ -98,10 +91,11 @@ class IQLGenerator:
         Returns:
             Generated IQL operations.
         """
-        filters, aggregation = await asyncio.gather(
+        iql_filters, iql_aggregation = await asyncio.gather(
             self._filters_generation(
                 question=question,
                 methods=filters,
+                contexts=contexts,
                 examples=examples,
                 llm=llm,
                 llm_options=llm_options,
@@ -111,6 +105,7 @@ class IQLGenerator:
             self._aggregation_generation(
                 question=question,
                 methods=aggregations,
+                contexts=contexts,
                 examples=examples,
                 llm=llm,
                 llm_options=llm_options,
@@ -120,8 +115,8 @@ class IQLGenerator:
             return_exceptions=True,
         )
         return IQLGeneratorState(
-            filters=filters,
-            aggregation=aggregation,
+            filters=iql_filters,
+            aggregation=iql_aggregation,
         )
 
 
@@ -145,11 +140,13 @@ class IQLOperationGenerator(Generic[IQLQueryT]):
         self.assessor = IQLQuestionAssessor(assessor_prompt)
         self.generator = IQLQueryGenerator[IQLQueryT](generator_prompt)
 
+    # pylint: disable=too-many-arguments
     async def __call__(
         self,
         *,
         question: str,
         methods: List[ExposedFunction],
+        contexts: List[Context],
         examples: List[FewShotExample],
         llm: LLM,
         event_tracker: Optional[EventTracker] = None,
@@ -163,6 +160,7 @@ class IQLOperationGenerator(Generic[IQLQueryT]):
             llm: LLM used to generate IQL.
             question: User question.
             methods: List of methods exposed by the view.
+            contexts: List of contexts to be injected as method arguments.
             examples: List of examples to be injected into the conversation.
             event_tracker: Event store used to audit the generation process.
             llm_options: Options to use for the LLM client.
@@ -189,6 +187,7 @@ class IQLOperationGenerator(Generic[IQLQueryT]):
         return await self.generator(
             question=question,
             methods=methods,
+            contexts=contexts,
             examples=examples,
             llm=llm,
             llm_options=llm_options,
@@ -213,7 +212,7 @@ class IQLQuestionAssessor:
         llm_options: Optional[LLMOptions] = None,
         event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
-    ) -> bool:
+    ) -> Optional[bool]:
         """
         Decides whether the question requires generating IQL or not.
 
@@ -260,23 +259,26 @@ class IQLQueryGenerator(Generic[IQLQueryT]):
     def __init__(self, prompt: PromptTemplate[IQLGenerationPromptFormat]) -> None:
         self.prompt = prompt
 
+    # pylint: disable=too-many-arguments
     async def __call__(
         self,
         *,
         question: str,
         methods: List[ExposedFunction],
+        contexts: List[Context],
         examples: List[FewShotExample],
         llm: LLM,
         llm_options: Optional[LLMOptions] = None,
         event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
-    ) -> IQLQueryT:
+    ) -> Optional[IQLQueryT]:
         """
         Generates IQL query for the given question.
 
         Args:
             question: User question.
-            filters: List of filters exposed by the view.
+            methods: List of methods exposed by the view.
+            contexts: List of contexts to be injected as method arguments.
             examples: List of examples to be injected into the conversation.
             llm: LLM used to generate IQL.
             llm_options: Options to use for the LLM client.
@@ -294,6 +296,7 @@ class IQLQueryGenerator(Generic[IQLQueryT]):
         prompt_format = IQLGenerationPromptFormat(
             question=question,
             methods=methods,
+            contexts=contexts,
             examples=examples,
         )
         formatted_prompt = self.prompt.format_prompt(prompt_format)
@@ -309,13 +312,12 @@ class IQLQueryGenerator(Generic[IQLQueryT]):
                 return await formatted_prompt.response_parser(
                     response=response,
                     allowed_functions=methods,
+                    allowed_contexts=contexts,
                     event_tracker=event_tracker,
                 )
-            except LLMError as exc:
+            except (IQLError, LLMError) as exc:
                 if retry == n_retries:
                     raise exc
-            except IQLError as exc:
-                if retry == n_retries:
-                    raise exc
-                formatted_prompt = formatted_prompt.add_assistant_message(response)
-                formatted_prompt = formatted_prompt.add_user_message(self.ERROR_MESSAGE.format(error=exc))
+                if isinstance(exc, IQLError):
+                    formatted_prompt = formatted_prompt.add_assistant_message(response)
+                    formatted_prompt = formatted_prompt.add_user_message(self.ERROR_MESSAGE.format(error=exc))

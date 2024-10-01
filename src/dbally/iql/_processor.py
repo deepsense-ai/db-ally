@@ -1,12 +1,16 @@
 import ast
+import asyncio
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Generic, List, Optional, TypeVar, Union
+from typing import Any, Generic, List, Optional, TypeVar, Union
 
 from dbally.audit.event_tracker import EventTracker
+from dbally.context import Context
 from dbally.iql import syntax
 from dbally.iql._exceptions import (
     IQLArgumentParsingError,
     IQLArgumentValidationError,
+    IQLContextNotAllowedError,
+    IQLContextNotFoundError,
     IQLFunctionNotExists,
     IQLIncorrectNumberArgumentsError,
     IQLMultipleStatementsError,
@@ -16,9 +20,7 @@ from dbally.iql._exceptions import (
     IQLUnsupportedSyntaxError,
 )
 from dbally.iql._type_validators import validate_arg_type
-
-if TYPE_CHECKING:
-    from dbally.views.structured import ExposedFunction
+from dbally.views.exposed_functions import ExposedFunction, MethodParamWithTyping
 
 RootT = TypeVar("RootT", bound=syntax.Node)
 
@@ -29,10 +31,15 @@ class IQLProcessor(Generic[RootT], ABC):
     """
 
     def __init__(
-        self, source: str, allowed_functions: List["ExposedFunction"], event_tracker: Optional[EventTracker] = None
+        self,
+        source: str,
+        allowed_functions: List[ExposedFunction],
+        allowed_contexts: Optional[List[Context]] = None,
+        event_tracker: Optional[EventTracker] = None,
     ) -> None:
         self.source = source
         self.allowed_functions = {func.name: func for func in allowed_functions}
+        self.contexts = {context.alias_name: context for context in allowed_contexts or []}
         self._event_tracker = event_tracker or EventTracker()
 
     async def process(self) -> RootT:
@@ -64,54 +71,61 @@ class IQLProcessor(Generic[RootT], ABC):
         return await self._parse_node(ast_tree.body[0].value)
 
     @abstractmethod
-    async def _parse_node(self, node: Union[ast.expr, ast.Expr]) -> RootT:
-        """
-        Parses AST node to IQL node.
-
-        Args:
-            node: AST node to parse.
-
-        Returns:
-            IQL node.
-        """
+    async def _parse_node(self, node: ast.expr) -> RootT:
+        ...
 
     async def _parse_call(self, node: ast.Call) -> syntax.FunctionCall:
-        func = node.func
-
-        if not isinstance(func, ast.Name):
+        if not isinstance(node.func, ast.Name):
             raise IQLUnsupportedSyntaxError(node, self.source, context="FunctionCall")
 
-        if func.id not in self.allowed_functions:
-            raise IQLFunctionNotExists(func, self.source)
+        if node.func.id not in self.allowed_functions:
+            raise IQLFunctionNotExists(node.func, self.source)
 
-        func_def = self.allowed_functions[func.id]
-        args = []
+        func_def = self.allowed_functions[node.func.id]
 
         if len(func_def.parameters) != len(node.args):
             raise IQLIncorrectNumberArgumentsError(node, self.source)
 
-        for arg, arg_def in zip(node.args, func_def.parameters):
-            arg_value = self._parse_arg(arg)
+        parsed_args = await asyncio.gather(
+            *[self._parse_arg(arg, arg_def) for arg, arg_def in zip(node.args, func_def.parameters)]
+        )
 
-            if arg_def.similarity_index:
-                arg_value = await arg_def.similarity_index.similar(arg_value, event_tracker=self._event_tracker)
+        args = [
+            self._validate_and_cast_arg(arg, arg_def, node_arg)
+            for arg, arg_def, node_arg in zip(parsed_args, func_def.parameters, node.args)
+        ]
 
-            check_result = validate_arg_type(arg_def.type, arg_value)
+        return syntax.FunctionCall(node.func.id, args)
 
-            if not check_result.valid:
-                raise IQLArgumentValidationError(message=check_result.reason or "", node=arg, source=self.source)
-
-            args.append(check_result.casted_value if check_result.casted_value is not ... else arg_value)
-
-        return syntax.FunctionCall(func.id, args)
-
-    def _parse_arg(self, arg: ast.expr) -> Any:
+    async def _parse_arg(self, arg: ast.expr, arg_def: MethodParamWithTyping) -> Any:
         if isinstance(arg, ast.List):
-            return [self._parse_arg(x) for x in arg.elts]
+            return await asyncio.gather(*[self._parse_arg(x, arg_def) for x in arg.elts])
+
+        if isinstance(arg, ast.Name):
+            aliases = [context.alias_name for context in arg_def.contexts]
+
+            if arg.id not in aliases:
+                raise IQLContextNotAllowedError(arg, self.source)
+
+            if context := self.contexts.get(arg.id):
+                return context
+
+            raise IQLContextNotFoundError(arg, self.source)
 
         if not isinstance(arg, ast.Constant):
             raise IQLArgumentParsingError(arg, self.source)
-        return arg.value
+
+        return (
+            await arg_def.similarity_index.similar(arg.value, self._event_tracker)
+            if arg_def.similarity_index is not None
+            else arg.value
+        )
+
+    def _validate_and_cast_arg(self, arg: Any, arg_def: MethodParamWithTyping, node: ast.expr) -> Any:
+        check_result = validate_arg_type(arg_def.type, arg)
+        if not check_result.valid:
+            raise IQLArgumentValidationError(message=check_result.reason or "", node=node, source=self.source)
+        return check_result.casted_value if check_result.casted_value is not ... else arg
 
     @staticmethod
     def _to_lower_except_in_quotes(text: str, keywords: List[str]) -> str:
@@ -155,7 +169,7 @@ class IQLFiltersProcessor(IQLProcessor[syntax.Node]):
     IQL processor for filters.
     """
 
-    async def _parse_node(self, node: Union[ast.expr, ast.Expr]) -> syntax.Node:
+    async def _parse_node(self, node: ast.expr) -> syntax.Node:
         if isinstance(node, ast.BoolOp):
             return await self._parse_bool_op(node)
         if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
@@ -181,7 +195,7 @@ class IQLAggregationProcessor(IQLProcessor[syntax.FunctionCall]):
     IQL processor for aggregation.
     """
 
-    async def _parse_node(self, node: Union[ast.expr, ast.Expr]) -> syntax.FunctionCall:
+    async def _parse_node(self, node: ast.expr) -> syntax.FunctionCall:
         if isinstance(node, ast.Call):
             return await self._parse_call(node)
 

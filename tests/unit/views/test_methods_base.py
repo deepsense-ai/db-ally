@@ -1,13 +1,23 @@
 # pylint: disable=missing-docstring, missing-return-doc, missing-param-doc, disallowed-name
 
-
-from typing import List, Literal, Tuple
+from dataclasses import dataclass
+from typing import List, Literal, Tuple, Union
 
 from dbally.collection.results import ViewExecutionResult
+from dbally.context import Context
 from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.views.decorators import view_aggregation, view_filter
 from dbally.views.exposed_functions import MethodParamWithTyping
 from dbally.views.methods_base import MethodsBaseView
+
+
+@dataclass
+class CallerContext(Context):
+    """
+    Mock class for testing context.
+    """
+
+    current_year: Literal["2023", "2024"]
 
 
 class MockMethodsBase(MethodsBaseView):
@@ -22,7 +32,9 @@ class MockMethodsBase(MethodsBaseView):
         """
 
     @view_filter()
-    def method_bar(self, cities: List[str], year: Literal["2023", "2024"], pairs: List[Tuple[str, int]]) -> str:
+    def method_bar(
+        self, cities: List[str], year: Union[Literal["2023", "2024"], CallerContext], pairs: List[Tuple[str, int]]
+    ) -> str:
         return f"hello {cities} in {year} of {pairs}"
 
     @view_aggregation()
@@ -32,7 +44,9 @@ class MockMethodsBase(MethodsBaseView):
         """
 
     @view_aggregation()
-    def method_qux(self, ages: List[int], names: List[str]) -> str:
+    def method_qux(
+        self, ages: List[int], years: Union[Literal["2023", "2024"], CallerContext], names: List[str]
+    ) -> str:
         return f"hello {ages} and {names}"
 
     async def apply_filters(self, filters: IQLFiltersQuery) -> None:
@@ -42,7 +56,7 @@ class MockMethodsBase(MethodsBaseView):
         ...
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
-        return ViewExecutionResult(results=[], context={})
+        return ViewExecutionResult(results=[], metadata={})
 
 
 def test_list_filters() -> None:
@@ -60,11 +74,12 @@ def test_list_filters() -> None:
     assert method_bar.description == ""
     assert method_bar.parameters == [
         MethodParamWithTyping("cities", List[str]),
-        MethodParamWithTyping("year", Literal["2023", "2024"]),
+        MethodParamWithTyping("year", Union[Literal["2023", "2024"], CallerContext]),
         MethodParamWithTyping("pairs", List[Tuple[str, int]]),
     ]
     assert (
-        str(method_bar) == "method_bar(cities: List[str], year: Literal['2023', '2024'], pairs: List[Tuple[str, int]])"
+        str(method_bar)
+        == "method_bar(cities: List[str], year: Literal['2023', '2024'] | Context, pairs: List[Tuple[str, int]])"
     )
 
 
@@ -83,6 +98,7 @@ def test_list_aggregations() -> None:
     assert method_qux.description == ""
     assert method_qux.parameters == [
         MethodParamWithTyping("ages", List[int]),
+        MethodParamWithTyping("years", Union[Literal["2023", "2024"], CallerContext]),
         MethodParamWithTyping("names", List[str]),
     ]
-    assert str(method_qux) == "method_qux(ages: List[int], names: List[str])"
+    assert str(method_qux) == "method_qux(ages: List[int], years: Literal['2023', '2024'] | Context, names: List[str])"

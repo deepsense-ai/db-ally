@@ -55,7 +55,7 @@ class MockViewWithResults(MockViewBase):
     """
 
     def execute(self, dry_run=False) -> ViewExecutionResult:
-        return ViewExecutionResult(results=[{"foo": "bar"}], context={"baz": "qux"})
+        return ViewExecutionResult(results=[{"foo": "bar"}], metadata={"baz": "qux"})
 
     def list_filters(self) -> List[ExposedFunction]:
         return [ExposedFunction("test_filter", "", [])]
@@ -88,7 +88,7 @@ def mock_similarity_classes() -> (
         """
 
         def execute(self, dry_run=False) -> ViewExecutionResult:
-            return ViewExecutionResult(results=[{"foo": "bar"}], context={"baz": "qux"})
+            return ViewExecutionResult(results=[{"foo": "bar"}], metadata={"baz": "qux"})
 
         def list_filters(self) -> List[ExposedFunction]:
             return [
@@ -115,7 +115,7 @@ def mock_similarity_classes() -> (
         """
 
         def execute(self, dry_run=False) -> ViewExecutionResult:
-            return ViewExecutionResult(results=[{"foo": "bar"}], context={"baz": "qux"})
+            return ViewExecutionResult(results=[{"foo": "bar"}], metadata={"baz": "qux"})
 
         def list_filters(self) -> List[ExposedFunction]:
             return [
@@ -300,7 +300,7 @@ async def test_ask_view_selection_single_view() -> None:
     result = await collection.ask("Mock question")
     assert result.view_name == "MockViewWithResults"
     assert result.results == [{"foo": "bar"}]
-    assert result.context == {"baz": "qux", "iql": {"aggregation": "test_aggregation()", "filters": "test_filter()"}}
+    assert result.metadata == {"baz": "qux", "iql": {"aggregation": "test_aggregation()", "filters": "test_filter()"}}
 
 
 async def test_ask_view_selection_multiple_views() -> None:
@@ -321,7 +321,7 @@ async def test_ask_view_selection_multiple_views() -> None:
     result = await collection.ask("Mock question")
     assert result.view_name == "MockViewWithResults"
     assert result.results == [{"foo": "bar"}]
-    assert result.context == {"baz": "qux", "iql": {"aggregation": "test_aggregation()", "filters": "test_filter()"}}
+    assert result.metadata == {"baz": "qux", "iql": {"aggregation": "test_aggregation()", "filters": "test_filter()"}}
 
 
 async def test_ask_view_selection_no_views() -> None:

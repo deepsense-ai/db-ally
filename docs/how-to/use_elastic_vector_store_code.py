@@ -91,7 +91,7 @@ async def main(country="United States", years_of_experience="2"):
         f"Find someone from the {country} with more than {years_of_experience} years of experience."
     )
 
-    print(f"The generated SQL query is: {result.context.get('sql')}")
+    print(f"The generated SQL query is: {result.metadata.get('sql')}")
     print()
     print(f"Retrieved {len(result.results)} candidates:")
     for candidate in result.results:

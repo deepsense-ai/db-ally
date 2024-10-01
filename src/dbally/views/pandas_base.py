@@ -128,7 +128,7 @@ class DataFrameBaseView(MethodsBaseView):
 
         return ViewExecutionResult(
             results=results.to_dict(orient="records"),
-            context={
+            metadata={
                 "filter_mask": self._filter_mask,
                 "groupbys": self._aggregation_group.groupbys,
                 "aggregations": self._aggregation_group.aggregations,

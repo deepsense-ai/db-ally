@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Iterable, List, Optional
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -8,6 +8,7 @@ import dbally
 from dbally.audit import CLIEventHandler, EventTracker, OtelEventHandler
 from dbally.audit.event_handlers.buffer_event_handler import BufferEventHandler
 from dbally.collection import Collection, ViewExecutionResult
+from dbally.context import Context
 from dbally.iql_generator.prompt import UnsupportedQueryError
 from dbally.llms import LLM
 from dbally.llms.clients import LLMOptions
@@ -37,13 +38,14 @@ class MyText2SqlView(BaseText2SQLView):
         self,
         query: str,
         llm: LLM,
-        event_tracker: EventTracker,
+        event_tracker: Optional[EventTracker],
         n_retries: int = 3,
         dry_run: bool = False,
         llm_options: Optional[LLMOptions] = None,
+        contexts: Optional[Iterable[Context]] = None,
     ) -> ViewExecutionResult:
         return ViewExecutionResult(
-            results=[{"mock_result": "fallback_result"}], context={"mock_context": "fallback_context"}
+            results=[{"mock_result": "fallback_result"}], metadata={"mock_context": "fallback_context"}
         )
 
 
@@ -53,7 +55,7 @@ class MockView1(MockViewBase):
     """
 
     def execute(self, dry_run=False) -> ViewExecutionResult:
-        return ViewExecutionResult(results=[{"foo": "bar"}], context={"baz": "qux"})
+        return ViewExecutionResult(results=[{"foo": "bar"}], metadata={"baz": "qux"})
 
     def get_iql_generator(self, *_, **__) -> MockIQLGenerator:
         raise UnsupportedQueryError
@@ -107,7 +109,7 @@ async def test_fallback_collection(base_collection: Collection, fallback_collect
     base_collection.set_fallback(fallback_collection)
     result = await base_collection.ask("Mock fallback question")
     assert result.results == [{"mock_result": "fallback_result"}]
-    assert result.context == {"mock_context": "fallback_context"}
+    assert result.metadata == {"mock_context": "fallback_context"}
 
 
 def test_get_all_event_handlers_no_fallback():

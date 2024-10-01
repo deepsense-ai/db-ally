@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Type
 
+from omegaconf import DictConfig
 from typing_extensions import Self
 
 from ..pipelines import EvaluationResult
@@ -11,7 +12,7 @@ class Metric(ABC):
     Base class for metrics.
     """
 
-    def __init__(self, config: Optional[Dict] = None) -> None:
+    def __init__(self, config: Optional[DictConfig] = None) -> None:
         """
         Initializes the metric.
 
@@ -38,7 +39,7 @@ class MetricSet:
     Represents a set of metrics.
     """
 
-    def __init__(self, *metrics: List[Type[Metric]]) -> None:
+    def __init__(self, *metrics: Type[Metric]) -> None:
         """
         Initializes the metric set.
 
@@ -48,7 +49,7 @@ class MetricSet:
         self._metrics = metrics
         self.metrics: List[Metric] = []
 
-    def __call__(self, config: Dict) -> Self:
+    def __call__(self, config: DictConfig) -> Self:
         """
         Initializes the metrics.
 

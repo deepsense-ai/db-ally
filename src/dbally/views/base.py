@@ -1,14 +1,17 @@
 import abc
 from typing import Dict, List, Optional, Tuple
 
+from typing_extensions import TypeAlias
+
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
+from dbally.context import Context
 from dbally.llms.base import LLM
 from dbally.llms.clients.base import LLMOptions
 from dbally.prompt.elements import FewShotExample
 from dbally.similarity import AbstractSimilarityIndex
 
-IndexLocation = Tuple[str, str, str]
+IndexLocation: TypeAlias = Tuple[str, str, str]
 
 
 class BaseView(metaclass=abc.ABCMeta):
@@ -22,6 +25,7 @@ class BaseView(metaclass=abc.ABCMeta):
         self,
         query: str,
         llm: LLM,
+        contexts: Optional[List[Context]] = None,
         event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
         dry_run: bool = False,
@@ -33,6 +37,8 @@ class BaseView(metaclass=abc.ABCMeta):
         Args:
             query: The natural language query to execute.
             llm: The LLM used to execute the query.
+            contexts: An iterable (typically a list) of context objects, each being
+                an instance of a subclass of Context.
             event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
@@ -53,9 +59,9 @@ class BaseView(metaclass=abc.ABCMeta):
 
     def list_few_shots(self) -> List[FewShotExample]:
         """
-        List all examples to be injected into few-shot prompt.
+        Lists all examples to be injected into few-shot prompt.
 
         Returns:
-            List of few-shot examples
+            List of few-shot examples.
         """
         return []

@@ -14,7 +14,7 @@ class ViewExecutionResult:
     """
 
     results: List[Dict[str, Any]]
-    context: Dict[str, Any]
+    metadata: Dict[str, Any]
 
 
 @dataclass
@@ -37,7 +37,7 @@ class ExecutionResult:
     """
 
     results: List[Dict[str, Any]]
-    context: Dict[str, Any]
+    metadata: Dict[str, Any]
     execution_time: float
     execution_time_view: float
     view_name: str
