@@ -1,10 +1,11 @@
 from typing import TYPE_CHECKING, List, Optional
 
 from dbally.audit import EventHandler
-from dbally.llms import LLM
 from dbally.nl_responder.nl_responder import NLResponder
 from dbally.view_selection import LLMViewSelector
 from dbally.view_selection.base import ViewSelector
+
+from ragbits.core.llms import LLM
 
 if TYPE_CHECKING:
     from dbally.collection import Collection

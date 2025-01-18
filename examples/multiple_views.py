@@ -13,9 +13,10 @@ import dbally
 from dbally import DataFrameBaseView, ExecutionResult, SqlAlchemyBaseView, decorators
 from dbally.audit import CLIEventHandler
 from dbally.embeddings.litellm import LiteLLMEmbeddingClient
-from dbally.llms.litellm import LiteLLM
 from dbally.similarity import FaissStore, SimilarityIndex, SimpleSqlAlchemyFetcher
 from dbally.views.pandas_base import Aggregation, AggregationGroup
+
+from ragbits.core.llms import LiteLLM
 
 engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
 
@@ -211,7 +212,7 @@ async def main():
     dbally.event_handlers = [CLIEventHandler()]
     await country_similarity.update()
 
-    llm = LiteLLM(model_name="gpt-3.5-turbo")
+    llm = LiteLLM(model_name="gpt-4o")
     collection = dbally.create_collection("recruitment", llm)
     collection.add(CandidateView, lambda: CandidateView(engine))
     collection.add(JobView, lambda: JobView(jobs_data))

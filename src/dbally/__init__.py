@@ -20,7 +20,6 @@ from .embeddings.exceptions import (
     EmbeddingStatusError,
 )
 from .exceptions import DbAllyError
-from .llms.clients.exceptions import LLMConnectionError, LLMError, LLMResponseError, LLMStatusError
 
 if TYPE_CHECKING:
     from .audit import EventHandler
@@ -40,10 +39,6 @@ __all__ = [
     "EmbeddingConnectionError",
     "EmbeddingResponseError",
     "EmbeddingStatusError",
-    "LLMError",
-    "LLMConnectionError",
-    "LLMResponseError",
-    "LLMStatusError",
     "MethodsBaseView",
     "NotGiven",
     "NOT_GIVEN",

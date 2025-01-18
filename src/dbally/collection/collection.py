@@ -13,12 +13,14 @@ from dbally.audit.events import FallbackEvent, RequestEnd, RequestStart
 from dbally.collection.exceptions import IndexUpdateError, NoViewFoundError
 from dbally.collection.results import ExecutionResult, ViewExecutionResult
 from dbally.iql_generator.prompt import UnsupportedQueryError
-from dbally.llms.base import LLM
-from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.nl_responder import NLResponder
 from dbally.similarity.index import AbstractSimilarityIndex
 from dbally.view_selection.base import ViewSelector
 from dbally.views.base import BaseView, IndexLocation
+
+from ragbits.core.llms import LLM
+from ragbits.core.audit import trace
+from ragbits.core.options import Options
 
 HANDLED_EXCEPTION_TYPES = (NoViewFoundError, UnsupportedQueryError, IndexUpdateError)
 
@@ -185,8 +187,7 @@ class Collection:
     async def _select_view(
         self,
         question: str,
-        event_tracker: EventTracker,
-        llm_options: Optional[LLMOptions],
+        llm_options: Optional, # TODO: figure out LLMoptions
     ) -> str:
         """
         Select a view based on the provided question and options.
@@ -215,7 +216,6 @@ class Collection:
             selected_view_name = await self._view_selector.select_view(
                 question=question,
                 views=views,
-                event_tracker=event_tracker,
                 llm_options=llm_options,
             )
         return selected_view_name
@@ -224,8 +224,7 @@ class Collection:
         self,
         selected_view_name: str,
         question: str,
-        event_tracker: EventTracker,
-        llm_options: Optional[LLMOptions],
+        llm_options: Optional[Options],
         dry_run: bool,
     ):
         """
@@ -245,7 +244,6 @@ class Collection:
         view_result = await selected_view.ask(
             query=question,
             llm=self._llm,
-            event_tracker=event_tracker,
             n_retries=self.n_retries,
             dry_run=dry_run,
             llm_options=llm_options,
@@ -257,7 +255,7 @@ class Collection:
         view_result: ViewExecutionResult,
         question: str,
         event_tracker: EventTracker,
-        llm_options: Optional[LLMOptions],
+        llm_options: Optional[Options],
     ) -> str:
         """
         Generate a textual response from the view result.
@@ -300,9 +298,8 @@ class Collection:
         question: str,
         dry_run: bool,
         return_natural_response: bool,
-        llm_options: Optional[LLMOptions],
+        llm_options: Optional[Options],
         selected_view_name: str,
-        event_tracker: EventTracker,
         caught_exception: Exception,
     ) -> ExecutionResult:
         """
@@ -337,7 +334,6 @@ class Collection:
                 dry_run=dry_run,
                 return_natural_response=return_natural_response,
                 llm_options=llm_options,
-                event_tracker=event_tracker,
             )
             span(fallback_event)
         return result
@@ -347,8 +343,7 @@ class Collection:
         question: str,
         dry_run: bool = False,
         return_natural_response: bool = False,
-        llm_options: Optional[LLMOptions] = None,
-        event_tracker: Optional[EventTracker] = None,
+        llm_options: Optional = None,  # TODO: figure out LLMOptions
     ) -> ExecutionResult:
         """
         Ask question in a text form and retrieve the answer based on the available views.
@@ -368,7 +363,6 @@ class Collection:
                 the natural response will be included in the answer
             llm_options: options to use for the LLM client. If provided, these options will be merged with the default
                 options provided to the LLM client, prioritizing option values other than NOT_GIVEN
-            event_tracker: Event tracker object for given ask.
 
         Returns:
             ExecutionResult object representing the result of the query execution.
@@ -381,63 +375,51 @@ class Collection:
             UnsupportedQueryError: if the question could not be answered
             IndexUpdateError: if index update failed
         """
-        if not event_tracker:
-            is_fallback_call = False
-            event_handlers = self.get_all_event_handlers()
-            event_tracker = EventTracker.initialize_with_handlers(event_handlers)
-            await event_tracker.request_start(RequestStart(question=question, collection_name=self.name))
-        else:
-            is_fallback_call = True
-
         selected_view_name = ""
 
-        try:
-            start_time = time.monotonic()
-            selected_view_name = await self._select_view(
-                question=question, event_tracker=event_tracker, llm_options=llm_options
-            )
-
-            start_time_view = time.monotonic()
-            view_result = await self._ask_view(
-                selected_view_name=selected_view_name,
-                question=question,
-                event_tracker=event_tracker,
-                llm_options=llm_options,
-                dry_run=dry_run,
-            )
-            end_time_view = time.monotonic()
-
-            natural_response = (
-                await self._generate_textual_response(view_result, question, event_tracker, llm_options)
-                if not dry_run and return_natural_response
-                else ""
-            )
-
-            result = ExecutionResult(
-                results=view_result.results,
-                context=view_result.context,
-                execution_time=time.monotonic() - start_time,
-                execution_time_view=end_time_view - start_time_view,
-                view_name=selected_view_name,
-                textual_response=natural_response,
-            )
-
-        except HANDLED_EXCEPTION_TYPES as caught_exception:
-            if self._fallback_collection:
-                result = await self._handle_fallback(
-                    question=question,
-                    dry_run=dry_run,
-                    return_natural_response=return_natural_response,
-                    llm_options=llm_options,
-                    selected_view_name=selected_view_name,
-                    event_tracker=event_tracker,
-                    caught_exception=caught_exception,
+        with trace("dbally.RequestStart", question=question, collection_name=self.name) as span:
+            try:
+                start_time = time.monotonic()
+                selected_view_name = await self._select_view(
+                    question=question, llm_options=llm_options
                 )
-            else:
-                raise caught_exception
 
-        if not is_fallback_call:
-            await event_tracker.request_end(RequestEnd(result=result))
+                start_time_view = time.monotonic()
+                view_result = await self._ask_view(
+                    selected_view_name=selected_view_name,
+                    question=question,
+                    llm_options=llm_options,
+                    dry_run=dry_run,
+                )
+                end_time_view = time.monotonic()
+
+                natural_response = (
+                    await self._generate_textual_response(view_result, question,llm_options)
+                    if not dry_run and return_natural_response
+                    else ""
+                )
+
+                result = ExecutionResult(
+                    results=view_result.results,
+                    context=view_result.context,
+                    execution_time=time.monotonic() - start_time,
+                    execution_time_view=end_time_view - start_time_view,
+                    view_name=selected_view_name,
+                    textual_response=natural_response,
+                )
+
+            except HANDLED_EXCEPTION_TYPES as caught_exception:
+                if self._fallback_collection:
+                    result = await self._handle_fallback(
+                        question=question,
+                        dry_run=dry_run,
+                        return_natural_response=return_natural_response,
+                        llm_options=llm_options,
+                        selected_view_name=selected_view_name,
+                        caught_exception=caught_exception,
+                    )
+                else:
+                    raise caught_exception
 
         return result
 

@@ -1,12 +1,13 @@
 from typing import Dict, Optional
 
 from dbally.audit.event_tracker import EventTracker
-from dbally.llms.base import LLM
-from dbally.llms.clients.base import LLMOptions
 from dbally.prompt.template import PromptTemplate
 from dbally.view_selection.base import ViewSelector
-from dbally.view_selection.prompt import VIEW_SELECTION_TEMPLATE, ViewSelectionPromptFormat
+from dbally.view_selection.prompt import ViewSelectionPrompt, ViewSelectionPromptInput
 
+from ragbits.core.llms import LLM
+from ragbits.core.prompt import Prompt
+from ragbits.core.options import Options
 
 class LLMViewSelector(ViewSelector):
     """
@@ -19,7 +20,7 @@ class LLMViewSelector(ViewSelector):
     ultimately returning the name of the most suitable view.
     """
 
-    def __init__(self, llm: LLM, prompt_template: Optional[PromptTemplate[ViewSelectionPromptFormat]] = None) -> None:
+    def __init__(self, llm: LLM, prompt_template: Optional[Prompt] = None) -> None:
         """
         Constructs a new LLMViewSelector instance.
 
@@ -28,14 +29,13 @@ class LLMViewSelector(ViewSelector):
             prompt_template: template for the prompt used for the view selection
         """
         self._llm = llm
-        self._prompt_template = prompt_template or VIEW_SELECTION_TEMPLATE
+        self._prompt_template = prompt_template or ViewSelectionPrompt
 
     async def select_view(
         self,
         question: str,
         views: Dict[str, str],
-        event_tracker: EventTracker,
-        llm_options: Optional[LLMOptions] = None,
+        llm_options: Optional[Options] = None,
     ) -> str:
         """
         Based on user question and list of available views select the most relevant one by prompting LLM.
@@ -43,7 +43,6 @@ class LLMViewSelector(ViewSelector):
         Args:
             question: user question asked in the natural language e.g "Do we have any data scientists?"
             views: dictionary of available view names with corresponding descriptions.
-            event_tracker: event tracker used to audit the selection process.
             llm_options: options to use for the LLM client.
 
         Returns:
@@ -52,13 +51,9 @@ class LLMViewSelector(ViewSelector):
         Raises:
             LLMError: If LLM text generation fails.
         """
-        prompt_format = ViewSelectionPromptFormat(question=question, views=views)
-        formatted_prompt = self._prompt_template.format_prompt(prompt_format)
 
-        llm_response = await self._llm.generate_text(
-            prompt=formatted_prompt,
-            event_tracker=event_tracker,
+        selected_view = await self._llm.generate(
+            self._prompt_template(ViewSelectionPromptInput(question=question, views=views)),
             options=llm_options,
         )
-        selected_view = self._prompt_template.response_parser(llm_response)
         return selected_view

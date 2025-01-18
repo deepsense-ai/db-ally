@@ -2,8 +2,6 @@ from typing import Optional
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
-from dbally.llms.base import LLM
-from dbally.llms.clients.base import LLMOptions
 from dbally.nl_responder.prompts import (
     NL_RESPONSE_TEMPLATE,
     QUERY_EXPLANATION_TEMPLATE,
@@ -12,6 +10,8 @@ from dbally.nl_responder.prompts import (
 )
 from dbally.prompt.template import PromptTemplate
 
+from ragbits.core.llms import LLM
+from ragbits.core.options import Options
 
 class NLResponder:
     """
@@ -46,7 +46,7 @@ class NLResponder:
         result: ViewExecutionResult,
         question: str,
         event_tracker: EventTracker,
-        llm_options: Optional[LLMOptions] = None,
+        llm_options: Optional[Options] = None,
     ) -> str:
         """
         Uses LLM to generate a response in natural language form.

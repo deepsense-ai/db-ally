@@ -9,7 +9,7 @@ from sqlalchemy.ext.automap import automap_base
 import dbally
 from dbally import SqlAlchemyBaseView, decorators
 from dbally.audit.event_handlers.cli_event_handler import CLIEventHandler
-from dbally.llms.litellm import LiteLLM
+from ragbits.core.llms import LiteLLM
 
 engine = create_engine("sqlite:///examples/recruiting/data/candidates.db")
 

@@ -1,9 +1,71 @@
-[build-system]
-requires = [
-    "setuptools >= 40.9.0",
-    "wheel",
+[project]
+name = "dbally"
+version = "1.0.0"
+description = "Efficient, consistent and secure library for querying structured data with natural language"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "ragbits-core~=0.6.0",
+    "pandas~=2.2.3",
+    "python-dotenv>=0.5.1",
+    "SQLAlchemy==2.0.25",
+    "tabulate>=0.9.0",
+    "click~=8.1.7",
+    "numpy>=1.24.0",
+    "opentelemetry-api>=1.0.0",
 ]
-build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+faiss = [
+    "faiss-cpu>=1.8.0"
+]
+chromadb = [
+    "chromadb~=0.6.3",
+    "tenacity~=8.3.0",
+]
+langsmith = [
+    "langsmith~=0.1.57"
+]
+elasticsearch = [
+    "elasticsearch~=8.13.1"
+]
+gradio = [
+    "gradio~=4.44.1",
+    "gradio-client~=1.3.0",
+]
+local = [
+    "accelerate~=0.31.0",
+    "torch~=2.2.1",
+    "transformers~=4.41.2",
+]
+dev = [
+    "datasets~=2.20.0",
+    "dspy-ai~=2.4.13",
+    "hydra-core~=1.3.2",
+    "neptune~=1.6.3",
+    "pydantic>=2.9.1",
+    "pydantic_settings~=2.1.0",
+    "psycopg2-binary~=2.9.9",
+]
+
+
+[tool.uv]
+dev-dependencies = [
+    "dbally[dev,faiss,chromadb,langsmith,gradio]",
+]
+
+[tool.uv.sources]
+ragbits-core = { path = "/home/mateusz/workspace/oss/ragbits/packages/ragbits-core" }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dbally"]
 
 [tool.isort]
 multi_line_output=3

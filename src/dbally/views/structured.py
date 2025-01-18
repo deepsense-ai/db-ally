@@ -6,10 +6,11 @@ from dbally.audit.event_tracker import EventTracker
 from dbally.collection.results import ViewExecutionResult
 from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.iql_generator.iql_generator import IQLGenerator
-from dbally.llms.base import LLM
-from dbally.llms.clients.base import LLMOptions
 from dbally.views.exceptions import ViewExecutionError
 from dbally.views.exposed_functions import ExposedFunction
+
+from ragbits.core.llms import LLM
+from ragbits.core.options import Options
 
 from ..similarity import AbstractSimilarityIndex
 from .base import BaseView, IndexLocation
@@ -34,10 +35,9 @@ class BaseStructuredView(BaseView):
         self,
         query: str,
         llm: LLM,
-        event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
         dry_run: bool = False,
-        llm_options: Optional[LLMOptions] = None,
+        llm_options: Optional[Options] = None,
     ) -> ViewExecutionResult:
         """
         Executes the query and returns the result. It generates the IQL query from the natural language query\
@@ -46,7 +46,6 @@ class BaseStructuredView(BaseView):
         Args:
             query: The natural language query to execute.
             llm: The LLM used to execute the query.
-            event_tracker: The event tracker used to audit the query execution.
             n_retries: The number of retries to execute the query in case of errors.
             dry_run: If True, the query will not be used to fetch data from the datasource.
             llm_options: Options to use for the LLM.
@@ -68,7 +67,6 @@ class BaseStructuredView(BaseView):
             aggregations=aggregations,
             examples=examples,
             llm=llm,
-            event_tracker=event_tracker,
             llm_options=llm_options,
             n_retries=n_retries,
         )

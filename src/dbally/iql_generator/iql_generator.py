@@ -1,24 +1,21 @@
 import asyncio
 from dataclasses import dataclass
-from typing import Generic, List, Optional, TypeVar, Union
+from typing import Generic, List, Optional, TypeVar, Union, Type
 
 from dbally.audit.event_tracker import EventTracker
 from dbally.iql import IQLError, IQLQuery
 from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.iql_generator.prompt import (
-    AGGREGATION_DECISION_TEMPLATE,
-    AGGREGATION_GENERATION_TEMPLATE,
-    FILTERING_DECISION_TEMPLATE,
-    FILTERS_GENERATION_TEMPLATE,
-    DecisionPromptFormat,
-    IQLGenerationPromptFormat,
+    FilteringDecisionPrompt, DecisionPromptInput, IQLGenerationPromptInput,
+    UnsupportedQueryError, FiltersGenerationPrompt, AggregationDecisionPrompt, AggregationsGenerationPrompt
 )
-from dbally.llms.base import LLM
-from dbally.llms.clients.base import LLMOptions
-from dbally.llms.clients.exceptions import LLMError
 from dbally.prompt.elements import FewShotExample
 from dbally.prompt.template import PromptTemplate
 from dbally.views.exposed_functions import ExposedFunction
+
+from ragbits.core.llms import LLM
+from ragbits.core.options import Options
+from ragbits.core.prompt import Prompt
 
 IQLQueryT = TypeVar("IQLQueryT", bound=IQLQuery)
 
@@ -61,12 +58,12 @@ class IQLGenerator:
             generation_prompt: Prompt template for IQL generation.
         """
         self._filters_generation = filters_generation or IQLOperationGenerator[IQLFiltersQuery](
-            FILTERING_DECISION_TEMPLATE,
-            FILTERS_GENERATION_TEMPLATE,
+            FilteringDecisionPrompt,
+            FiltersGenerationPrompt,
         )
         self._aggregation_generation = aggregation_generation or IQLOperationGenerator[IQLAggregationQuery](
-            AGGREGATION_DECISION_TEMPLATE,
-            AGGREGATION_GENERATION_TEMPLATE,
+            AggregationDecisionPrompt,
+            AggregationsGenerationPrompt,
         )
 
     # pylint: disable=too-many-arguments
@@ -78,8 +75,7 @@ class IQLGenerator:
         aggregations: List[ExposedFunction],
         examples: List[FewShotExample],
         llm: LLM,
-        event_tracker: Optional[EventTracker] = None,
-        llm_options: Optional[LLMOptions] = None,
+        llm_options: Optional[Options] = None,
         n_retries: int = 3,
     ) -> IQLGeneratorState:
         """
@@ -105,7 +101,6 @@ class IQLGenerator:
                 examples=examples,
                 llm=llm,
                 llm_options=llm_options,
-                event_tracker=event_tracker,
                 n_retries=n_retries,
             ),
             self._aggregation_generation(
@@ -114,7 +109,6 @@ class IQLGenerator:
                 examples=examples,
                 llm=llm,
                 llm_options=llm_options,
-                event_tracker=event_tracker,
                 n_retries=n_retries,
             ),
             return_exceptions=True,
@@ -132,8 +126,8 @@ class IQLOperationGenerator(Generic[IQLQueryT]):
 
     def __init__(
         self,
-        assessor_prompt: PromptTemplate[DecisionPromptFormat],
-        generator_prompt: PromptTemplate[IQLGenerationPromptFormat],
+        assessor_prompt: Type[Prompt],
+        generator_prompt: Type[Prompt],
     ) -> None:
         """
         Constructs a new IQLGenerator instance.
@@ -152,8 +146,7 @@ class IQLOperationGenerator(Generic[IQLQueryT]):
         methods: List[ExposedFunction],
         examples: List[FewShotExample],
         llm: LLM,
-        event_tracker: Optional[EventTracker] = None,
-        llm_options: Optional[LLMOptions] = None,
+        llm_options: Optional[Options] = None,
         n_retries: int = 3,
     ) -> Optional[IQLQueryT]:
         """
@@ -180,7 +173,6 @@ class IQLOperationGenerator(Generic[IQLQueryT]):
             question=question,
             llm=llm,
             llm_options=llm_options,
-            event_tracker=event_tracker,
             n_retries=n_retries,
         )
         if not decision:
@@ -192,7 +184,6 @@ class IQLOperationGenerator(Generic[IQLQueryT]):
             examples=examples,
             llm=llm,
             llm_options=llm_options,
-            event_tracker=event_tracker,
             n_retries=n_retries,
         )
 
@@ -202,7 +193,7 @@ class IQLQuestionAssessor:
     Assesses whether a question requires applying IQL operation or not.
     """
 
-    def __init__(self, prompt: PromptTemplate[DecisionPromptFormat]) -> None:
+    def __init__(self, prompt: Type[Prompt]) -> None:
         self.prompt = prompt
 
     async def __call__(
@@ -210,8 +201,7 @@ class IQLQuestionAssessor:
         *,
         question: str,
         llm: LLM,
-        llm_options: Optional[LLMOptions] = None,
-        event_tracker: Optional[EventTracker] = None,
+        llm_options: Optional[Options] = None,
         n_retries: int = 3,
     ) -> bool:
         """
@@ -230,21 +220,16 @@ class IQLQuestionAssessor:
         Raises:
             LLMError: If LLM text generation fails after all retries.
         """
-        prompt_format = DecisionPromptFormat(
-            question=question,
-        )
-        formatted_prompt = self.prompt.format_prompt(prompt_format)
+        formatted_prompt = self.prompt(DecisionPromptInput(question=question))
 
         for retry in range(n_retries + 1):
             try:
-                response = await llm.generate_text(
+                response = await llm.generate(
                     prompt=formatted_prompt,
-                    event_tracker=event_tracker,
                     options=llm_options,
                 )
-                # TODO: Move response parsing to llm generate_text method
-                return formatted_prompt.response_parser(response)
-            except LLMError as exc:
+                return response
+            except Exception as exc:  # TODO: LLMError is not defined
                 if retry == n_retries:
                     raise exc
 
@@ -257,7 +242,7 @@ class IQLQueryGenerator(Generic[IQLQueryT]):
     ERROR_MESSAGE = "Unfortunately, generated IQL is not valid. Please try again, \
         generation of correct IQL is very important. Below you have errors generated by the system:\n{error}"
 
-    def __init__(self, prompt: PromptTemplate[IQLGenerationPromptFormat]) -> None:
+    def __init__(self, prompt: Type[Prompt]) -> None:
         self.prompt = prompt
 
     async def __call__(
@@ -267,7 +252,7 @@ class IQLQueryGenerator(Generic[IQLQueryT]):
         methods: List[ExposedFunction],
         examples: List[FewShotExample],
         llm: LLM,
-        llm_options: Optional[LLMOptions] = None,
+        llm_options: Optional[Options] = None,
         event_tracker: Optional[EventTracker] = None,
         n_retries: int = 3,
     ) -> IQLQueryT:
@@ -291,27 +276,27 @@ class IQLQueryGenerator(Generic[IQLQueryT]):
             IQLError: If IQL parsing fails after all retries.
             UnsupportedQueryError: If the question is not supported by the view.
         """
-        prompt_format = IQLGenerationPromptFormat(
+        formatted_prompt = self.prompt(IQLGenerationPromptInput(
             question=question,
-            methods=methods,
-            examples=examples,
-        )
-        formatted_prompt = self.prompt.format_prompt(prompt_format)
+            methods=[str(x) for x in methods],
+            # examples=examples,
+        ))
 
         for retry in range(n_retries + 1):
             try:
-                response = await llm.generate_text(
+                response = await llm.generate(
                     prompt=formatted_prompt,
-                    event_tracker=event_tracker,
                     options=llm_options,
                 )
-                # TODO: Move response parsing to llm generate_text method
-                return await formatted_prompt.response_parser(
-                    response=response,
+                if "unsupported query" in response.lower():
+                    raise UnsupportedQueryError
+
+                return await IQLFiltersQuery.parse(
+                    source=response,
                     allowed_functions=methods,
                     event_tracker=event_tracker,
                 )
-            except LLMError as exc:
+            except Exception as exc:  # TODO: LLMError is not defined
                 if retry == n_retries:
                     raise exc
             except IQLError as exc:
