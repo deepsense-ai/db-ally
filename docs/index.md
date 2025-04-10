@@ -18,7 +18,19 @@ hide:
   <em>Efficient, consistent and secure library for querying structured data with natural language</em>
 </p>
 
+<p align="center" style="font-size: 1.25em;">
+  <strong>
+    <a href="https://deepsense.ai/db-ally" target="_blank">Homepage</a> |
+    <a href="https://github.com/deepsense-ai/db-ally" target="_blank">Source Code</a> |
+    <a href="mailto:db-ally@deepsense.ai" target="_blank">Contact</a>
+  </strong>
+</p>
+
 <div align="center">
+
+<a href="https://huggingface.co/spaces/deepsense-ai/db-ally" target="_blank">
+  <img alt="HuggingFace - Spaces" src="https://img.shields.io/badge/🤗-Open%20in%20Spaces-blue.svg">
+</a>
 
 <a href="https://pypi.org/project/dbally" target="_blank">
   <img alt="PyPI - License" src="https://img.shields.io/pypi/l/dbally">
