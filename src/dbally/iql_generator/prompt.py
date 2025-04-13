@@ -3,6 +3,7 @@
 from typing import List, Optional
 
 from dbally.audit.event_tracker import EventTracker
+from dbally.context import Context
 from dbally.exceptions import DbAllyError
 from dbally.iql._query import IQLAggregationQuery, IQLFiltersQuery
 from dbally.prompt.elements import FewShotExample
@@ -20,6 +21,7 @@ class UnsupportedQueryError(DbAllyError):
 async def _iql_filters_parser(
     response: str,
     allowed_functions: List[ExposedFunction],
+    allowed_contexts: List[Context],
     event_tracker: Optional[EventTracker] = None,
 ) -> IQLFiltersQuery:
     """
@@ -28,6 +30,7 @@ async def _iql_filters_parser(
     Args:
         response: LLM response.
         allowed_functions: List of functions that can be used in the IQL.
+        allowed_contexts: List of contexts that can be used in the IQL.
         event_tracker: Event tracker to be used for auditing.
 
     Returns:
@@ -42,6 +45,7 @@ async def _iql_filters_parser(
     return await IQLFiltersQuery.parse(
         source=response,
         allowed_functions=allowed_functions,
+        allowed_contexts=allowed_contexts,
         event_tracker=event_tracker,
     )
 
@@ -49,6 +53,7 @@ async def _iql_filters_parser(
 async def _iql_aggregation_parser(
     response: str,
     allowed_functions: List[ExposedFunction],
+    allowed_contexts: List[Context],
     event_tracker: Optional[EventTracker] = None,
 ) -> IQLAggregationQuery:
     """
@@ -57,6 +62,7 @@ async def _iql_aggregation_parser(
     Args:
         response: LLM response.
         allowed_functions: List of functions that can be used in the IQL.
+        allowed_contexts: List of contexts that can be used in the IQL.
         event_tracker: Event tracker to be used for auditing.
 
     Returns:
@@ -71,6 +77,7 @@ async def _iql_aggregation_parser(
     return await IQLAggregationQuery.parse(
         source=response,
         allowed_functions=allowed_functions,
+        allowed_contexts=allowed_contexts,
         event_tracker=event_tracker,
     )
 
@@ -98,7 +105,7 @@ class DecisionPromptFormat(PromptFormat):
     IQL prompt format, providing a question and filters to be used in the conversation.
     """
 
-    def __init__(self, *, question: str, examples: List[FewShotExample] = None) -> None:
+    def __init__(self, *, question: str, examples: Optional[List[FewShotExample]] = None) -> None:
         """
         Constructs a new IQLGenerationPromptFormat instance.
 
@@ -120,6 +127,7 @@ class IQLGenerationPromptFormat(PromptFormat):
         *,
         question: str,
         methods: List[ExposedFunction],
+        contexts: List[Context],
         examples: Optional[List[FewShotExample]] = None,
     ) -> None:
         """
@@ -128,12 +136,13 @@ class IQLGenerationPromptFormat(PromptFormat):
         Args:
             question: Question to be asked.
             methods: List of methods exposed by the view.
+            contexts: List of contexts to be used in the conversation.
             examples: List of examples to be injected into the conversation.
-            aggregations: List of aggregations exposed by the view.
         """
         super().__init__(examples)
         self.question = question
         self.methods = "\n".join(str(method) for method in methods)
+        self.contexts = "\n".join(str(context) for context in contexts)
 
 
 FILTERING_DECISION_TEMPLATE = PromptTemplate[DecisionPromptFormat](

@@ -139,7 +139,7 @@ class CLIEventHandler(EventHandler):
             self._print_syntax("[green bold]REQUEST OUTPUT:")
             self._print_syntax(f"Number of rows: {len(output.result.results)}")
 
-            if "sql" in output.result.context:
-                self._print_syntax(f"{output.result.context['sql']}", "psql")
+            if "sql" in output.result.metadata:
+                self._print_syntax(f"{output.result.metadata['sql']}", "psql")
         else:
             self._print_syntax("[red bold]No results found")

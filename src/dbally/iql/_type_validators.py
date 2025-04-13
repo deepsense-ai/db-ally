@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from typing import _GenericAlias  # type: ignore
-from typing import Any, Callable, Dict, Literal, Optional, Type, Union
+from typing import Any, Callable, Dict, Literal, Optional, Type, Union, _GenericAlias  # type: ignore
+
+from typing_extensions import Annotated, get_args, get_origin
 
 
 @dataclass
@@ -10,13 +11,28 @@ class _ValidationResult:
     reason: Optional[str] = None
 
 
+def _check_annotated(required_type: Annotated, value: Any) -> _ValidationResult:
+    type_args = get_args(required_type)
+    return validate_arg_type(type_args[0], value)
+
+
 def _check_literal(required_type: _GenericAlias, value: Any) -> _ValidationResult:
-    if value not in required_type.__args__:
-        return _ValidationResult(
-            False, reason=f"{value} must be one of [{', '.join(repr(x) for x in required_type.__args__)}]"
-        )
+    type_args = get_args(required_type)
+    if value not in type_args:
+        return _ValidationResult(False, reason=f"{value} must be one of [{', '.join(repr(x) for x in type_args)}]")
 
     return _ValidationResult(True)
+
+
+def _check_union(required_type: _GenericAlias, value: Any) -> _ValidationResult:
+    type_args = get_args(required_type)
+
+    for subtype in get_args(required_type):
+        res = validate_arg_type(subtype, value)
+        if res.valid:
+            return _ValidationResult(True)
+
+    return _ValidationResult(False, reason=f"{repr(value)} is not of type {', '.join(repr(x) for x in type_args)}")
 
 
 def _check_float(required_type: Type[float], value: Any) -> _ValidationResult:
@@ -47,7 +63,9 @@ def _check_bool(required_type: Type[bool], value: Any) -> _ValidationResult:
 
 
 TYPE_VALIDATOR: Dict[Any, Callable[[Any, Any], _ValidationResult]] = {
+    Annotated: _check_annotated,
     Literal: _check_literal,
+    Union: _check_union,
     float: _check_float,
     int: _check_int,
     bool: _check_bool,
@@ -65,11 +83,9 @@ def validate_arg_type(required_type: Union[Type, _GenericAlias], value: Any) -> 
     Returns:
         _ValidationResult instance
     """
-    actual_type = required_type.__origin__ if isinstance(required_type, _GenericAlias) else required_type
+    actual_type = get_origin(required_type) or required_type
 
-    custom_type_checker = TYPE_VALIDATOR.get(actual_type)
-
-    if custom_type_checker:
+    if custom_type_checker := TYPE_VALIDATOR.get(actual_type):
         return custom_type_checker(required_type, value)
 
     if isinstance(value, actual_type):

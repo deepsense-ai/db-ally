@@ -27,7 +27,7 @@ class FooView(MethodsBaseView):
         ...
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
-        return ViewExecutionResult(results=[], context={})
+        return ViewExecutionResult(results=[], metadata={})
 
 
 class BarView(MethodsBaseView):
@@ -49,4 +49,4 @@ class BarView(MethodsBaseView):
         ...
 
     def execute(self, dry_run: bool = False) -> ViewExecutionResult:
-        return ViewExecutionResult(results=[], context={})
+        return ViewExecutionResult(results=[], metadata={})

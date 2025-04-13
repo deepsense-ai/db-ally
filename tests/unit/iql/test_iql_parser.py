@@ -1,11 +1,16 @@
 import re
-from typing import List
+from dataclasses import dataclass
+from typing import List, Union
 
 import pytest
+from typing_extensions import Annotated
 
+from dbally.context import Context
 from dbally.iql import IQLArgumentParsingError, IQLUnsupportedSyntaxError, syntax
 from dbally.iql._exceptions import (
     IQLArgumentValidationError,
+    IQLContextNotAllowedError,
+    IQLContextNotFoundError,
     IQLFunctionNotExists,
     IQLIncorrectNumberArgumentsError,
     IQLMultipleStatementsError,
@@ -43,13 +48,124 @@ async def test_iql_filter_parser():
     name_filter, city_filter, company_filter = and_op.children
 
     assert isinstance(name_filter, syntax.FunctionCall)
-    assert name_filter.arguments[0] == ["John", "Anne"]
+    assert name_filter.arguments == [["John", "Anne"]]
 
     assert isinstance(city_filter, syntax.FunctionCall)
-    assert city_filter.arguments[0] == "cracow"
+    assert city_filter.arguments == ["cracow"]
 
     assert isinstance(company_filter, syntax.FunctionCall)
-    assert company_filter.arguments[0] == "deepsense.ai"
+    assert company_filter.arguments == ["deepsense.ai"]
+
+
+async def test_iql_filter_context_parser():
+    @dataclass
+    class TestCustomContext(Context):
+        city: str
+
+    test_context = TestCustomContext(city="cracow")
+    parsed = await IQLFiltersQuery.parse(
+        "not (filter_by_city('Bydgoszcz') and filter_by_city(CONTEXT) and filter_by_company('deepsense.ai'))",
+        allowed_functions=[
+            ExposedFunction(
+                name="filter_by_name", description="", parameters=[MethodParamWithTyping(name="name", type=List[str])]
+            ),
+            ExposedFunction(
+                name="filter_by_city",
+                description="",
+                parameters=[MethodParamWithTyping(name="city", type=Union[str, TestCustomContext])],
+            ),
+            ExposedFunction(
+                name="filter_by_company",
+                description="",
+                parameters=[
+                    MethodParamWithTyping(
+                        name="company", type=Annotated[Union[str, TestCustomContext], lambda x: x, "context"]
+                    )
+                ],
+            ),
+        ],
+        allowed_contexts=[
+            test_context,
+        ],
+    )
+
+    not_op = parsed.root
+    assert isinstance(not_op, syntax.Not)
+
+    and_op = not_op.child
+    assert isinstance(and_op, syntax.And)
+
+    name_filter, city_filter, company_filter = and_op.children
+
+    assert isinstance(name_filter, syntax.FunctionCall)
+    assert name_filter.arguments == ["Bydgoszcz"]
+
+    assert isinstance(city_filter, syntax.FunctionCall)
+    assert city_filter.arguments == [test_context]
+
+    assert isinstance(company_filter, syntax.FunctionCall)
+    assert company_filter.arguments == ["deepsense.ai"]
+
+
+async def test_iql_filter_context_not_allowed_error():
+    @dataclass
+    class TestCustomContext(Context):
+        city: str
+
+    with pytest.raises(IQLContextNotAllowedError) as exc_info:
+        await IQLFiltersQuery.parse(
+            "not (filter_by_city('Bydgoszcz') and filter_by_city(CONTEXT) and filter_by_company('deepsense.ai'))",
+            allowed_functions=[
+                ExposedFunction(
+                    name="filter_by_name",
+                    description="",
+                    parameters=[MethodParamWithTyping(name="name", type=List[str])],
+                ),
+                ExposedFunction(
+                    name="filter_by_city", description="", parameters=[MethodParamWithTyping(name="city", type=str)]
+                ),
+                ExposedFunction(
+                    name="filter_by_company",
+                    description="",
+                    parameters=[MethodParamWithTyping(name="company", type=str)],
+                ),
+            ],
+            allowed_contexts=[
+                TestCustomContext(city="cracow"),
+            ],
+        )
+
+    assert exc_info.match(re.escape("The context keyword is not allowed here"))
+
+
+async def test_iql_filter_context_not_found_error():
+    @dataclass
+    class TestCustomContext(Context):
+        city: str
+
+    with pytest.raises(IQLContextNotFoundError) as exc_info:
+        await IQLFiltersQuery.parse(
+            "not (filter_by_city('Bydgoszcz') and filter_by_city(CONTEXT) and filter_by_company('deepsense.ai'))",
+            allowed_functions=[
+                ExposedFunction(
+                    name="filter_by_name",
+                    description="",
+                    parameters=[MethodParamWithTyping(name="name", type=List[str])],
+                ),
+                ExposedFunction(
+                    name="filter_by_city",
+                    description="",
+                    parameters=[MethodParamWithTyping(name="city", type=Union[str, TestCustomContext])],
+                ),
+                ExposedFunction(
+                    name="filter_by_company",
+                    description="",
+                    parameters=[MethodParamWithTyping(name="company", type=str)],
+                ),
+            ],
+        )
+
+    assert exc_info.match(re.escape("The requested context is not found: CONTEXT"))
 
 
 async def test_iql_filter_parser_arg_error():
@@ -240,6 +356,80 @@ async def test_iql_aggregation_parser():
     assert isinstance(parsed.root, syntax.FunctionCall)
     assert parsed.root.name == "mean_age_by_city"
     assert parsed.root.arguments == ["Paris"]
+
+
+async def test_iql_aggregation_context_parser():
+    @dataclass
+    class TestCustomContext(Context):
+        city: str
+
+    test_context = TestCustomContext(city="cracow")
+    parsed = await IQLAggregationQuery.parse(
+        "mean_age_by_city(CONTEXT)",
+        allowed_functions=[
+            ExposedFunction(
+                name="mean_age_by_city",
+                description="",
+                parameters=[
+                    MethodParamWithTyping(name="city", type=Union[str, TestCustomContext]),
+                ],
+            ),
+        ],
+        allowed_contexts=[
+            test_context,
+        ],
+    )
+
+    assert isinstance(parsed.root, syntax.FunctionCall)
+    assert parsed.root.name == "mean_age_by_city"
+    assert parsed.root.arguments == [test_context]
+
+
+async def test_iql_aggregation_context_not_allowed_error():
+    @dataclass
+    class TestCustomContext(Context):
+        city: str
+
+    with pytest.raises(IQLContextNotAllowedError) as exc_info:
+        await IQLAggregationQuery.parse(
+            "mean_age_by_city(CONTEXT)",
+            allowed_functions=[
+                ExposedFunction(
+                    name="mean_age_by_city",
+                    description="",
+                    parameters=[
+                        MethodParamWithTyping(name="city", type=str),
+                    ],
+                ),
+            ],
+            allowed_contexts=[
+                TestCustomContext(city="cracow"),
+            ],
+        )
+
+    assert exc_info.match(re.escape("The context keyword is not allowed here"))
+
+
+async def test_iql_aggregation_context_not_found_error():
+    @dataclass
+    class TestCustomContext(Context):
+        city: str
+
+    with pytest.raises(IQLContextNotFoundError) as exc_info:
+        await IQLAggregationQuery.parse(
+            "mean_age_by_city(CONTEXT)",
+            allowed_functions=[
+                ExposedFunction(
+                    name="mean_age_by_city",
+                    description="",
+                    parameters=[
+                        MethodParamWithTyping(name="city", type=Union[str, TestCustomContext]),
+                    ],
+                ),
+            ],
+        )
+
+    assert exc_info.match(re.escape("The requested context is not found: CONTEXT"))
 
 
 async def test_iql_aggregation_parser_arg_error():

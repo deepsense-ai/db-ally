@@ -22,7 +22,7 @@ def event_tracker() -> EventTracker:
 
 @pytest.fixture
 def answer() -> ViewExecutionResult:
-    return ViewExecutionResult(results=[{"id": 1, "name": "Mock name"}], context={"sql": "Mock SQL"})
+    return ViewExecutionResult(results=[{"id": 1, "name": "Mock name"}], metadata={"sql": "Mock SQL"})
 
 
 @pytest.mark.asyncio

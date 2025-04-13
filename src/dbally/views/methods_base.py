@@ -23,33 +23,34 @@ class MethodsBaseView(BaseStructuredView, ABC):
         Lists all methods decorated with the given decorator.
 
         Args:
-            decorator: The decorator to filter the methods
+            decorator: The decorator to filter the methods.
 
         Returns:
-            List of exposed methods
+            List of exposed methods.
         """
-        methods = []
-        for method_name in dir(cls):
-            method = getattr(cls, method_name)
-            if (
-                hasattr(method, "_methodDecorator")
-                and method._methodDecorator == decorator  # pylint: disable=protected-access
-            ):
-                annotations = method.__annotations__.items()
-                methods.append(
-                    ExposedFunction(
-                        name=method_name,
-                        description=textwrap.dedent(method.__doc__).strip() if method.__doc__ else "",
-                        parameters=[
-                            MethodParamWithTyping(n, t) for n, t in annotations if n not in cls.HIDDEN_ARGUMENTS
-                        ],
+        # pylint: disable=protected-access
+        return [
+            ExposedFunction(
+                name=method_name,
+                description=textwrap.dedent(method.__doc__).strip() if method.__doc__ else "",
+                parameters=[
+                    MethodParamWithTyping(
+                        name=name,
+                        type=type,
                     )
-                )
-        return methods
+                    for name, type in method.__annotations__.items()
+                    if name not in cls.HIDDEN_ARGUMENTS
+                ],
+            )
+            for method_name in dir(cls)
+            if (method := getattr(cls, method_name))
+            and hasattr(method, "_methodDecorator")
+            and method._methodDecorator == decorator
+        ]
 
     def list_filters(self) -> List[ExposedFunction]:
         """
-        List filters in the given view
+        List filters in the given view.
 
         Returns:
             Filters defined inside the View and decorated with `decorators.view_filter`.
@@ -58,7 +59,7 @@ class MethodsBaseView(BaseStructuredView, ABC):
 
     def list_aggregations(self) -> List[ExposedFunction]:
         """
-        List aggregations in the given view
+        List aggregations in the given view.
 
         Returns:
             Aggregations defined inside the View and decorated with `decorators.view_aggregation`.
@@ -72,12 +73,12 @@ class MethodsBaseView(BaseStructuredView, ABC):
         Converts a IQL FunctionCall node to a method object and its arguments.
 
         Args:
-            func: IQL FunctionCall node
+            func: IQL FunctionCall node.
             method_decorator: The decorator that the method should have
-                (currently allows discrimination between filters and aggregations)
+                (currently allows discrimination between filters and aggregations).
 
         Returns:
-            Tuple with the method object and its arguments
+            Tuple with the method object and its arguments.
         """
         decorator_name = method_decorator.__name__
 
@@ -114,10 +115,10 @@ class MethodsBaseView(BaseStructuredView, ABC):
         Converts a IQL FunctonCall filter to a method call. If the method is a coroutine, it will be awaited.
 
         Args:
-            func: IQL FunctionCall node
+            func: IQL FunctionCall node.
 
         Returns:
-            The result of the method call
+            The result of the method call.
         """
         method, args = self._method_with_args_from_call(func, decorators.view_filter)
         return await self._call_method(method, args)
@@ -127,10 +128,10 @@ class MethodsBaseView(BaseStructuredView, ABC):
         Converts a IQL FunctonCall aggregation to a method call. If the method is a coroutine, it will be awaited.
 
         Args:
-            func: IQL FunctionCall node
+            func: IQL FunctionCall node.
 
         Returns:
-            The result of the method call
+            The result of the method call.
         """
         method, args = self._method_with_args_from_call(func, decorators.view_aggregation)
         return await self._call_method(method, args)
