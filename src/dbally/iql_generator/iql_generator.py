@@ -98,6 +98,10 @@ class IQLGenerator:
         Returns:
             Generated IQL operations.
         """
+
+        async def async_none():
+            return None
+
         filters, aggregation = await asyncio.gather(
             self._filters_generation(
                 question=question,
@@ -107,7 +111,9 @@ class IQLGenerator:
                 llm_options=llm_options,
                 event_tracker=event_tracker,
                 n_retries=n_retries,
-            ),
+            )
+            if filters
+            else async_none(),
             self._aggregation_generation(
                 question=question,
                 methods=aggregations,
@@ -116,7 +122,9 @@ class IQLGenerator:
                 llm_options=llm_options,
                 event_tracker=event_tracker,
                 n_retries=n_retries,
-            ),
+            )
+            if aggregations
+            else async_none(),
             return_exceptions=True,
         )
         return IQLGeneratorState(

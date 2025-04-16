@@ -31,6 +31,10 @@ class MockView(MethodsBaseView):
     def filter_by_name(self, city: str) -> sqlalchemy.ColumnElement:
         ...
 
+    @decorators.view_aggregation()
+    def aggregate_by_id(self) -> sqlalchemy.ColumnElement:
+        ...
+
 
 @pytest.fixture
 def view() -> MockView:
