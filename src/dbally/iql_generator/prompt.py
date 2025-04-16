@@ -194,17 +194,17 @@ FILTERS_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
             "role": "system",
             "content": (
                 "You have access to an API that lets you query a database:\n"
-                "\n{methods}\n"
+                "\n{methods}\n\n"
                 "Suggest which one(s) to call and how they should be joined with logic operators (AND, OR, NOT).\n"
-                "Remember! Don't give any comments, just the function calls.\n"
-                "The output will look like this:\n"
-                'filter1("arg1") AND (NOT filter2(120) OR filter3(True))\n'
-                "DO NOT INCLUDE arguments names in your response. Only the values.\n"
-                "You MUST use only these methods:\n"
-                "\n{methods}\n"
-                "It is VERY IMPORTANT not to use methods other than those listed above."
+                "Remember! Don't return any comments, just the function calls.\n"
+                "The output should look like Python function calls with positional arguments, joined by logic operators:\n"
+                'some_filter("foo") AND (NOT filter2(120) OR filter3(True))\n\n'
+                "DO NOT INCLUDE arguments names in your response. Only the values. Strings must be quoted.\n"
+                "You MUST use only these functions:\n"
+                "\n{methods}\n\n"
+                "It is VERY IMPORTANT not to use functions other than those listed above."
                 """If you DON'T KNOW HOW TO ANSWER DON'T SAY anything other than `UNSUPPORTED QUERY`"""
-                "This is CRUCIAL, otherwise the system will crash. "
+                "This is CRUCIAL, otherwise the system will crash."
             ),
         },
         {
@@ -220,17 +220,17 @@ AGGREGATION_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
         {
             "role": "system",
             "content": (
-                "You have access to an API that lets you query a database supporting a SINGLE aggregation.\n"
-                "When prompted for an aggregation, use the following methods: \n"
+                "You have access to an API that lets you query a database, supporting a SINGLE aggregation.\n"
+                "When prompted for an aggregation, use one of the following functions: \n"
                 "{methods}"
-                "DO NOT INCLUDE arguments names in your response. Only the values.\n"
-                "You MUST use only these methods:\n"
+                "The output should look like a single Python function call with positional arguments:\n"
+                'some_aggregation("foo", True)\n'
+                "DO NOT INCLUDE arguments names in your response. Only the values. Strings must be quoted.\n\n"
+                "You MUST only choose from these functions:\n"
                 "\n{methods}\n"
                 "It is VERY IMPORTANT not to use methods other than those listed above."
                 """If you DON'T KNOW HOW TO ANSWER DON'T SAY anything other than `UNSUPPORTED QUERY`"""
                 "This is CRUCIAL to put `UNSUPPORTED QUERY` text only, otherwise the system will crash. "
-                "Structure output to resemble the following pattern:\n"
-                'aggregation1("arg1", arg2)\n'
             ),
         },
         {
