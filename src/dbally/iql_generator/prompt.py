@@ -221,12 +221,12 @@ AGGREGATION_GENERATION_TEMPLATE = PromptTemplate[IQLGenerationPromptFormat](
             "role": "system",
             "content": (
                 "You have access to an API that lets you query a database, supporting a SINGLE aggregation.\n"
-                "When prompted for an aggregation, use one the following functions: \n"
+                "When prompted for an aggregation, use one of the following functions: \n"
                 "{methods}"
                 "The output should look like a single Python function call with positional arguments:\n"
                 'some_aggregation("foo", True)\n'
                 "DO NOT INCLUDE arguments names in your response. Only the values. Strings must be quoted.\n\n"
-                "You MUST use choose from these functions:\n"
+                "You MUST only choose from these functions:\n"
                 "\n{methods}\n"
                 "It is VERY IMPORTANT not to use methods other than those listed above."
                 """If you DON'T KNOW HOW TO ANSWER DON'T SAY anything other than `UNSUPPORTED QUERY`"""
